@@ -103,7 +103,7 @@
 - [ ] Список gaps назван явно (не "вроде всё")?
 - [ ] Обоснование почему gaps OK или требуют action?
 - Если < 90% покрыто И no justification → 🟡 WARNING "High-risk gaps not mitigated"
-- Если без явного анализа → ⛔ CRITICAL "Completeness not verified"
+- Если без явного анализа → 🟡 WARNING "Completeness analysis missing"
 
 **Параллельные пути — grep:**
 - Если изменён компонент → grep по аналогичным паттернам в проекте
