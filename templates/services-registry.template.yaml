@@ -1,0 +1,29 @@
+# services-registry.yaml — {{Project Name}}
+#
+# Единый источник правды по компонентам / сервисам платформы.
+# Читается командой /architecture-audit для сверки SYSTEM-MAP против реальности.
+#
+# Статусы:
+#   active     — в работе, поддерживается, должен присутствовать в SYSTEM-MAP
+#   deprecated — в процессе вывода из эксплуатации, ещё работает но новые фичи не добавляются
+#   planned    — запланирован, ещё не создан (важно для отслеживания gap-ов в SYSTEM-MAP)
+#   archived   — выведен из эксплуатации, код заархивирован
+
+services:
+  - name: <service-name-1>
+    status: active
+    # Опционально:
+    # owner: <team-or-person>
+    # repo: <path-or-url>
+    # description: <one-line>
+
+  - name: <service-name-2>
+    status: active
+
+  # - name: <legacy-monolith>
+  #   status: deprecated
+  #   description: Legacy reference code, not active development
+
+  # - name: <future-service>
+  #   status: planned
+  #   description: Will be created when ADR-NNN is implemented
