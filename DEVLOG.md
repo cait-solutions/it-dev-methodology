@@ -86,6 +86,29 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-16 — Phase G1: navigation maps + model recommendation tiers [phase-g1][feat:command][methodology]
+
+**Что:** Реализован Phase G1 через формальный `/plan` → `/code` → `/review` → `/deploy` процесс. 7 атомарных коммитов:
+1. Создан `templates/model-tiers.md` — центральный реестр (4 tier-абстракции, per-command матрица, mid-task escalation + pre-flight model check протоколы).
+2. Секция "Рекомендуемая модель" (5 полей) добавлена во все 12 команд (grep -L подтверждает 0 пропусков).
+3. `/plan` Шаг 3 output расширен блоком "Recommended models"; в Шаге -3.2 каждый trigger-вопрос теперь включает рекомендуемую модель.
+4. Шаг "Complexity reassessment" добавлен в `/code` (1.5), `/review` (3.5), `/diagnose` (2.5) — обязательная остановка при превышении плановой оценки.
+5. Навигационные карты добавлены в `/review` (6 осей × 18 проверок), `/deploy` (6 project-types × 12 шагов), `/onboard` (2 режима × 13 шагов).
+6. Скрипты `new-project-init.sh` и `sync-methodology.sh` копируют `model-tiers.md` → `.claude/model-tiers.md` с банером. Тестировано end-to-end.
+7. VERSION bump v2.4.0 → v2.5.0 (minor, additive). CLAUDE.md получил "Model tier rule" (правило обязательной секции для новых команд). PRODUCT.md — колонка Default tier в таблице команд.
+
+**Почему:** Cost-optimization для разработки + предсказуемое качество выполнения команд. Раньше: developer выбирал модель по интуиции (или дефолту Sonnet) — overpay на простых задачах (Sonnet вместо Haiku) и underdeliver на сложных (Sonnet вместо Opus). Теперь: каждая команда даёт явную рекомендацию tier, и при mismatch ≥ 2 ступени — пауза перед стартом. Mid-task triggers ловят случай когда реальность сложнее плановой оценки.
+
+**Решение:** Tier-абстракция (Fast/Default/Extended/Capable) вместо хардкода имён моделей — single source of truth в `model-tiers.md` секция Mapping. Когда Anthropic выпустит новую модель — правка одной таблицы.
+
+**Scope extension:** В commit 2 добавлено поле "Pre-flight model check" (5-е поле в секции) — было добавлено по запросу владельца mid-execution beyond original plan. Зафиксировано как добавление scope в commit message commit 2.
+
+**Карта данных:** добавлен новый канонический артефакт `templates/model-tiers.md` (производное в консьюмере — `.claude/model-tiers.md` с банером). Per-command матрица — единственный источник правды для tier-рекомендаций; команды ссылаются на путь `.claude/model-tiers.md` (relative to consumer root).
+
+**Связано:** [VISION v2 — нет прямого upgrade оси, но Cost-awareness стал implicit Quality bar], [Phase G2 — следующий план: CLAUDE.md split + Agent TL;DR convention]
+
+---
+
 ## 2026-05-16 — VISION v2: первый формальный /product-vision [product-vision][feat:stack-agnostic][feat:dog-fooding][methodology]
 
 **Что:** Запущен формально `/product-vision` (первый раз через slash-команду, не как ручной анализ). Применил 5-вопросный фильтр + anti-anchoring expansion к заявленным целям владельца методологии. Результат: VISION.md v1 → v2 с 4 активными осями вместо 3 (➕ Stack-agnostic adoption), Quality bar расширен с 1 до 6 пунктов (➕ regression prevention, security awareness, edge case detection, closed product feedback loop), стратегические границы 4 → 6 (➕ "только владелец контролирует канон", "не плагин-система — монолит с флагами"). Введён раздел Watch list для отложенных кандидатов на оси (engineering analytics, multi-tool support, cross-project knowledge propagation) с явными триггерами активации. `triggers.json.global.last_product_vision.date` сброшен в 2026-05-16, `plans_since` = 0.

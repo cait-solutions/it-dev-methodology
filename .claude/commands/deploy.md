@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -7,6 +7,39 @@
 # /deploy — Деплой с safety checks
 
 **ОБЯЗАТЕЛЬНО:** код в правильной ветке, PR создан/одобрен.
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — деплой это чек-листы, structured smoke test, обновление DEVLOG
+**Upgrade to Default tier if:** smoke test failed → нужен диагностический анализ; regression detected at after-effects check
+**Downgrade:** (всегда Fast — это минимально допустимый)
+**Mid-task escalation:** нет (если failed → обычно прерывается и идёт в `/diagnose`)
+**Pre-flight model check:** **да — при старте команды** определи текущую модель. Если используется Capable (Opus) tier — это over-powered для deploy → пауза + рекомендация Fast/Default для cost-savings.
+
+---
+
+## Навигационная карта шагов
+
+Оси: **project_type** (ai-agent / web-app / api-service / cli-tool / library / methodology-platform) × **наличие миграций** × **наличие selftest** × **затрагиваются ли хранилища**.
+
+| Шаг | ai-agent | web-app | api-service | cli-tool | library | methodology |
+|-----|----------|---------|-------------|----------|---------|-------------|
+| 0 Review обязателен | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0.5 Hard blocker на повторный деплой | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0.7 Pre-flight warnings (triggers.json) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 1 Pre-flight check (ветка, коммиты, tests) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 2 DEVLOG.md запись | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3 Деплой (procedure-specific) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (git push) |
+| 3.1 Selftest (если есть в проекте) | ✓ | ✓ | ✓ | ✓ | — | — |
+| 3.5 Инвалидация после деплоя (если меняются данные) | ✓ | ✓ | ✓ | — | — | — |
+| 4 Smoke test — happy path | ✓ | ✓ | ✓ | ✓ | — | — |
+| 4 Smoke test — data smoke (если данные) | ✓ | ✓ | ✓ | — | — | — |
+| 4 Smoke test — after-effects check (только ai-agent) | ✓ | — | — | — | — | — |
+| 5 Обновить triggers.json (last_deploy) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+Прочитай таблицу ПЕРВЫМ. Пропускай шаги не отмеченные для project_type. Для methodology-platform "деплой" = `git push origin main`; smoke test = ручной запуск `new-project-init.sh` + `sync-methodology.sh` на тестовом target.
 
 ---
 

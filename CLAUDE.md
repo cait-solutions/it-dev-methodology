@@ -133,6 +133,18 @@
 
 ---
 
+## Model tier rule
+
+Каждая команда методологии обязана содержать секцию `## Рекомендуемая модель` с 5 полями: Default tier / Upgrade to Capable / Downgrade to Fast / Mid-task escalation / Pre-flight model check.
+
+Канонический реестр tier-mapping и per-command матрица — в [.claude/model-tiers.md](.claude/model-tiers.md) (методологический источник: [templates/model-tiers.md](templates/model-tiers.md)).
+
+При добавлении новой команды — обязательно (1) добавить строку в per-command матрицу `model-tiers.md`, (2) включить секцию "Рекомендуемая модель" в начало command-файла. Без этого команда **не принимается** в методологию (`/review` блокирует merge).
+
+Когда Anthropic переименовывает модели — обновить **только** маппинг в конце `model-tiers.md`. Команды и матрица остаются стабильны.
+
+---
+
 ## DEVLOG теги
 
 См. [DEVLOG.md](DEVLOG.md). Релевантные для методологии:

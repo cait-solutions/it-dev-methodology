@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -7,6 +7,42 @@
 # /onboard — Адаптация нового разработчика
 
 Для новых разработчиков и для передачи легаси домена под Claude Code.
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** legacy domain handover с risk map для AI-агента (требует глубокого анализа существующего кода чтобы определить Forbidden / Approval-required операции)
+**Downgrade to Fast tier if:** new developer mode — pure reading walkthrough, без анализа
+**Mid-task escalation:** нет (single-pass — либо подготовка onboarding документации, либо создание SKILL.md из кода)
+**Pre-flight model check:** **да** — определи текущую модель. Если mismatch ≥ 2 ступени — пауза + рекомендация.
+
+---
+
+## Навигационная карта шагов
+
+Два режима — выбирается по контексту запроса.
+
+| Шаг | new-developer | legacy-handover |
+|-----|---------------|------------------|
+| Чтение README.md | ✓ | — |
+| Чтение CLAUDE.md | ✓ | ✓ (для контекста инвариантов проекта) |
+| Чтение docs/glossary.md | ✓ | ✓ |
+| Чтение docs/VISION.md (или AGENT_VISION) | ✓ | ✓ |
+| Чтение SYSTEM-MAP.md | ✓ | ✓ (для понимания где домен в графе) |
+| Чтение одной команды (plan.md) | ✓ | — |
+| Чтение фундаментальных ADR | ✓ | ✓ (релевантных домену) |
+| Реальный код домена (entry points → services → models → events) | — | ✓ |
+| Создание SKILL.md из реального кода | — | ✓ |
+| Создание .ownership файла | — | ✓ |
+| Risk map для AI-агента (3 уровня: requires-approve / forbidden / safe-autonomous) | — | ✓ |
+| Параллельные пути в коде (для class-bug awareness) | — | ✓ |
+| Финальный тикет — /plan → /code → /review (для new-developer) | ✓ | — |
+
+Прочитай таблицу ПЕРВЫМ. Выбери режим:
+- **new-developer:** первый день, ~2 часа. Знакомство с проектом и workflow.
+- **legacy-handover:** передача существующего домена под AI-агента. Создание SKILL.md.
 
 ---
 

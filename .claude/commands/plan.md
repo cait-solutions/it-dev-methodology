@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -9,6 +9,16 @@
 Ты — архитектурный критик проекта. Задача не просто составить план, а найти всё что может пойти не так — до того как написана первая строка кода.
 
 **ЗАПРЕЩЕНО:** писать код, изменять файлы, создавать миграции. Только план, риски, вопросы и checklist.
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** `[contract]` + threat model; multi-service refactor; 50+ файлов в scope
+**Downgrade to Fast tier if:** Lite mode + < 20 строк изменений
+**Mid-task escalation:** нет (анализ; `/code` переоценивает сложность)
+**Pre-flight model check:** **да — при старте команды** определи текущую модель из system prompt и сравни с Default tier. Если mismatch ≥ 2 ступени (over- или under-powered) — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
 
 ---
 
@@ -77,29 +87,43 @@
 
 ### Подшаг 2 — Триггеры (порядок, по одному вопросу за раз)
 
+Каждый вопрос **обязан** включать рекомендуемую модель для предложенной команды (см. `.claude/model-tiers.md` per-command матрица).
+
 **Триггер: /architecture-audit** (если проект имеет архитектурную карту):
 - `last_architecture_audit.plans_since` ≥ 5
-- → "Архитектурный аудит давно не запускался. Запустить? (y/n/skip)"
+- → "Архитектурный аудит давно не запускался (N=…). Запустить?
+   Рекомендуемая модель: **Default tier** (Sonnet) — типично для audit.
+   (y/n/skip)"
 
 **Триггер: /sync-vision** (если есть vision документы):
 - `last_sync_vision.plans_since` ≥ 5 И задача меняет контракты/архитектуру
-- → "Меняются контракты. Запустить /sync-vision? (y/n/skip)"
+- → "Меняются контракты. Запустить /sync-vision?
+   Рекомендуемая модель: **Default tier** (Capable если 10+ inbox И 5+ OQ одновременно).
+   (y/n/skip)"
 
 **Триггер: /retro:**
 - `last_retro.plans_since` ≥ 15
-- → "Накопилось N планов без ретроспективы. Запустить /retro? (y/n/skip)"
+- → "Накопилось N планов без ретроспективы. Запустить /retro?
+   Рекомендуемая модель: **Default tier** (Capable если 60+ DEVLOG entries за период).
+   (y/n/skip)"
 
 **Триггер: /product-review** (если есть IDEAS.md):
 - Записей в IDEAS.md без `[reviewed]` ≥ 7 ИЛИ `last_product_review.plans_since` ≥ 10
-- → "Накопились сигналы. Запустить /product-review? (y/n/skip)"
+- → "Накопились сигналы (N unreviewed). Запустить /product-review?
+   Рекомендуемая модель: **Default tier** (Fast если < 5 IDEAS, Capable если 20+).
+   (y/n/skip)"
 
 **Триггер: /product-check** (если есть PRODUCT.md):
 - `last_product_check.plans_since` ≥ 5
-- → "Изменено N файлов команд. Запустить /product-check? (y/n/skip)"
+- → "Изменено N файлов команд. Запустить /product-check?
+   Рекомендуемая модель: **Fast tier** (Haiku) — структурное сравнение.
+   (y/n/skip)"
 
 **Триггер: /product-vision:**
 - `last_product_vision.plans_since` ≥ 30
-- → "Стратегическая работа может быть устаревшей. Запустить /product-vision? (y/n/skip)"
+- → "Стратегическая работа может быть устаревшей. Запустить /product-vision?
+   Рекомендуемая модель: **Capable tier** (Opus) — strategic depth обязательна.
+   (y/n/skip)"
 
 **Триггер: новая идея без контекста:**
 - Запрос описывает фичу не упомянутую в IDEAS.md/ROADMAP.md
@@ -330,7 +354,21 @@
 ## До / После
 **Сейчас:** [текущее поведение]
 **После:** [новое поведение]
+
+## Recommended models
+**For /code (immediate next):** [tier] — [reasoning из этой конкретной задачи]
+**For /review after /code:** [tier]
+**For triggered commands** (если предложены в Шаге -3.2):
+  - /<command>: [tier] — [typical + override если задача нетипичная]
+
+**Mid-task escalation signals для /code:**
+  - [конкретные условия из этой задачи которые сигнализируют upgrade]
 ```
+
+**Обязательно для блока Recommended models:**
+- Tier выбирается из `.claude/model-tiers.md` (per-command матрица).
+- Reasoning должен быть про конкретную эту задачу, не generic ("Default для повседневного" — плохо; "Default — 3 файла, без contract — стандарт" — хорошо).
+- Если задача нестандартна для команды (например /code на multi-service refactor) — recommended tier для этой задачи может отличаться от типичного для команды.
 
 ---
 

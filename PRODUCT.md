@@ -33,20 +33,24 @@
 
 ### Slash-команды (синхронизируются в `.claude/commands/` каждого проекта)
 
-| Команда | Что делает |
-|---|---|
-| `/plan` | Pre-flight checks (счётчики триггеров, stale OQ), 5-типовая классификация конфликтов источников (A-E), архитектурный анализ, план с рисками. Не пишет код. |
-| `/code` | Реализация по подтверждённому плану. Self-review (Lite 2 точки / Full 6 точек), self-lint, опциональный `/review`. |
-| `/review` | Архитектурное ревью без правок. Проверка повторных фиксов, регрессий, параллельных путей, контрактов, безопасности. 🔴/🟡/🔵 классификация. |
-| `/deploy` | Pre-flight (hard blocker на повторный деплой за 24h), DEVLOG обновление, smoke test, after-effects check. |
-| `/retro` | Методологическая ретроспектива при `last_retro.plans_since` ≥ 15. Анализ skip-rates триггеров, повторяющихся проблем, M/N reminder health. |
-| `/architecture-audit` | Сверка SYSTEM-MAP с реальным кодом. Stale edges, undocumented edges, phantom services, missing services. |
-| `/sync-vision` | Двусторонняя сверка vision ↔ реальность. 5-типовая классификация (A/B/C/D/E). Отчёт в `docs/sync-vision-reports/`. |
-| `/diagnose` | Глубокая диагностика проблемы. Обязательна перед вторым фиксом одного компонента за 7 дней. 3+ гипотезы перед действием. |
-| `/onboard` | Адаптация нового разработчика (2 часа) или передача legacy домена под AI (создание SKILL.md). |
-| `/product-vision` | Стратегическая оптика. 5-вопросный фильтр калибровки оси. Раз в 1-2 квартала. |
-| `/product-review` | Анализ сигналов из IDEAS.md. 4 вопроса (friction/discovery/visibility/extensions). 5-7 предложений с привязкой к данным. |
-| `/product-check` | Сверка PRODUCT.md с кодом. Каждые 5 планов или перед деплоем. |
+Колонка **Tier** показывает рекомендуемую модель по умолчанию (см. [model-tiers.md](.claude/model-tiers.md) для полной матрицы с условиями upgrade/downgrade).
+
+| Команда | Default tier | Что делает |
+|---|---|---|
+| `/plan` | Default | Pre-flight checks (счётчики триггеров, stale OQ), 5-типовая классификация конфликтов источников (A-E), архитектурный анализ, план с рисками. Не пишет код. |
+| `/code` | inherits from /plan | Реализация по подтверждённому плану. Self-review (Lite 2 точки / Full 6 точек), self-lint, опциональный `/review`. Mid-task complexity reassessment. |
+| `/review` | one tier below /code | Архитектурное ревью без правок. Проверка повторных фиксов, регрессий, параллельных путей, контрактов, безопасности. 🔴/🟡/🔵 классификация. |
+| `/deploy` | Fast | Pre-flight (hard blocker на повторный деплой за 24h), DEVLOG обновление, smoke test, after-effects check. |
+| `/retro` | Default | Методологическая ретроспектива при `last_retro.plans_since` ≥ 15. Анализ skip-rates триггеров, повторяющихся проблем, M/N reminder health. |
+| `/architecture-audit` | Default | Сверка SYSTEM-MAP с реальным кодом. Stale edges, undocumented edges, phantom services, missing services. |
+| `/sync-vision` | Default | Двусторонняя сверка vision ↔ реальность. 5-типовая классификация (A/B/C/D/E). Отчёт в `docs/sync-vision-reports/`. |
+| `/diagnose` | **Capable** | Глубокая диагностика проблемы. Обязательна перед вторым фиксом одного компонента за 7 дней. 3+ гипотезы перед действием. |
+| `/onboard` | Default | Адаптация нового разработчика (2 часа) или передача legacy домена под AI (создание SKILL.md). |
+| `/product-vision` | **Capable** | Стратегическая оптика. 5-вопросный фильтр калибровки оси. Раз в 1-2 квартала. |
+| `/product-review` | Default | Анализ сигналов из IDEAS.md. 4 вопроса (friction/discovery/visibility/extensions). 5-7 предложений с привязкой к данным. |
+| `/product-check` | Fast | Сверка PRODUCT.md с кодом. Каждые 5 планов или перед деплоем. |
+
+При старте любой команды агент **обязан** выполнить Pre-flight model check: определить текущую модель и сравнить с Default tier для команды. Если mismatch ≥ 2 ступени — пауза + рекомендация. Cost-aware методология.
 
 ### Скрипты (для владельца проекта-консьюмера)
 

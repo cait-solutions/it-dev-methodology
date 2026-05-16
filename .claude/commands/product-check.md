@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -9,6 +9,16 @@
 Запускается в двух точках:
 1. В начале сессии — быстрый контекст по расхождениям
 2. Перед деплоем если diff затрагивает команды/UI
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — структурное сравнение текста с кодом, deterministic checklist
+**Upgrade:** (всегда Fast — обычно достаточно)
+**Downgrade:** (всегда Fast — это минимум)
+**Mid-task escalation:** нет (single pass comparison)
+**Pre-flight model check:** **да** — определи текущую модель. Если используется Capable (Opus) tier — это 🟡 over-powered (2 ступени) → пауза + рекомендация Fast/Default для cost-savings.
 
 ---
 

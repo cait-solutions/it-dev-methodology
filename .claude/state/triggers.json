@@ -1,10 +1,10 @@
 {
   "global": {
-    "last_sync_vision":      { "date": null, "plans_since": 0 },
-    "last_retro":            { "date": null, "plans_since": 0 },
-    "last_product_review":   { "date": null, "plans_since": 0 },
-    "last_product_check":    { "date": null, "plans_since": 0 },
-    "last_product_vision":   { "date": "2026-05-16", "plans_since": 0 }
+    "last_sync_vision":      { "date": null, "plans_since": 1 },
+    "last_retro":            { "date": null, "plans_since": 1 },
+    "last_product_review":   { "date": null, "plans_since": 1 },
+    "last_product_check":    { "date": null, "plans_since": 1 },
+    "last_product_vision":   { "date": "2026-05-16", "plans_since": 1 }
   },
   "per_service": {},
   "queues": {
@@ -16,16 +16,16 @@
     "architecture_audit": 0,
     "sync_vision": 0,
     "retro": 0,
-    "review_skipped": 0,
+    "review_skipped": 1,
     "code_skipped": 0,
     "product_review_skipped": 0,
     "product_check_skipped": 0,
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": null,
-    "task_id": null,
-    "service": null,
+    "completed_at": "2026-05-16T00:00:00Z",
+    "task_id": "phase-g1-nav-maps-and-model-tiers",
+    "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
   },

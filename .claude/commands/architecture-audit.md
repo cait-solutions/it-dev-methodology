@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -13,6 +13,16 @@
 - ОБЯЗАТЕЛЬНО при добавлении нового сервиса/компонента
 
 **ЗАПРЕЩЕНО:** обновлять SYSTEM-MAP.md автоматически. Human review required.
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** multi-service + 10+ сервисов; обнаружен drift > 30% (нужен глубокий анализ корректности графа)
+**Downgrade to Fast tier if:** (не downgrade — even single-service audit требует понимания)
+**Mid-task escalation:** нет (single-pass анализ inventory → comparison → report)
+**Pre-flight model check:** **да** — определи текущую модель. Если mismatch ≥ 2 ступени — пауза + рекомендация.
 
 ---
 

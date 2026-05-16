@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -9,6 +9,16 @@
 Запускается при `last_retro.plans_since` ≥ 15 или вручную раз в 30 дней.
 
 **ЗАПРЕЩЕНО:** менять команды / CLAUDE.md / triggers.json автоматически. Только анализ и рекомендации.
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** 60+ DEVLOG entries за период; множественные skip-rate alerts (≥3 триггеров с skip > 50%)
+**Downgrade to Fast tier if:** < 10 DEVLOG entries за период (мало данных для анализа)
+**Mid-task escalation:** нет (single-pass analysis)
+**Pre-flight model check:** **да** — определи текущую модель и сравни с Default tier. Если mismatch ≥ 2 ступени — пауза + рекомендация.
 
 ---
 

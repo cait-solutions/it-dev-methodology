@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.4.0 -->
+<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -7,6 +7,16 @@
 # /diagnose — Глубокая диагностика проблемы
 
 Обязательно перед вторым фиксом одной проблемы (если в DEVLOG есть `[fix:X]` за 7 дней).
+
+---
+
+## Рекомендуемая модель
+
+**Default tier:** **Capable tier** (см. `.claude/model-tiers.md`) — диагностика всегда требует complex reasoning по гипотезам
+**Upgrade:** (всегда Capable — это уже верх)
+**Downgrade to Default tier if:** (никогда — диагностика сложна по определению)
+**Mid-task escalation:** **да — Шаг 2.5 Complexity reassessment** (если 3+ начальных гипотез опровергнуты — нужно reset и переподумать; продолжать на Capable)
+**Pre-flight model check:** **да** — определи текущую модель. Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade. Под-powered диагностика часто пропускает root cause.
 
 ---
 
@@ -31,6 +41,33 @@
 Для каждой:
 - Конкретная проверка (не "посмотреть код" — "grep по X, ожидаем Y")
 - Что докажет / опровергнет
+
+---
+
+## Шаг 2.5 — Complexity reassessment
+
+После формулирования начального набора гипотез — переоценить достаточна ли текущая модель. Триггеры upgrade:
+
+- [ ] Сложно было сформулировать 3 различные гипотезы (модель работает на пределе)?
+- [ ] Гипотезы требуют чтения кода в > 20 файлах для проверки каждой?
+- [ ] Подозрение что root cause — это unusual interaction между нескольких компонентами?
+- [ ] Запущена не на Capable tier (Opus) — диагностика на меньшей tier рискует пропустить root cause?
+
+Если **любой** триггер сработал — СТОП. Вывести:
+
+```
+⚠️ Диагностика требует более глубокого reasoning чем доступно текущей модели.
+   Текущая модель: <current>
+   Рекомендуемая: Capable tier (Opus 4.7) — стандарт для /diagnose
+   Причина: <конкретно что обнаружено>
+
+Варианты:
+  a) Продолжить на текущей — высокий риск пропустить root cause
+  b) Переключиться на Opus 4.7 — рестарт диагностики с fresh context
+  c) Прервать /diagnose и эскалировать к разработчику с описанием
+```
+
+Если все 4 пункта OK — продолжить к Шагу 3.
 
 ---
 
