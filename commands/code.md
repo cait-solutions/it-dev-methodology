@@ -1,28 +1,122 @@
-# /code — Coding Command
+# /code — Реализация по плану
 
-## Purpose
-Guide the implementation phase: writing, reviewing, and iterating on code against an approved plan.
+После `/plan` и его подтверждения — реализация ОБЯЗАТЕЛЬНО через `/code`. Прямая реализация запрещена.
 
-## Trigger
-Use after `/plan` is approved. Also use for hotfixes where a plan is overkill.
+---
 
-## Inputs
-- Approved `PLAN.md` or clear task description
-- `CLAUDE.md` for project conventions
-- Relevant existing code context
+## Режим (наследуется из /plan)
 
-## Process
-1. Read `CLAUDE.md` — follow all conventions defined there
-2. Implement smallest working unit first
-3. Write or update tests alongside code
-4. Self-review: security, edge cases, naming, no dead code
-5. Run linter and tests before declaring done
+**Lite mode** — багфикс < 20 строк, изменения комментариев, простой рефакторинг.
+В Lite: Шаг 0 без warnings, Шаг 1 только целевой файл, Шаг 4 только 2 точки.
 
-## Standards
-- No comments explaining WHAT; only WHY when non-obvious
-- No speculative abstractions — solve the task at hand
-- Validate at system boundaries only (user input, external APIs)
-- No backwards-compatibility shims for dead code
+**Full mode** — всё остальное. Все 6 шагов целиком.
 
-## Exit Criteria
-Tests pass, linter clean, ready for `/review`.
+> При сомнении — Full mode.
+
+---
+
+## Шаг 0 — State check
+
+1. Прочитать `.claude/state/triggers.json`
+2. Если применимо для проекта — проверить триггеры (architecture_audit, etc)
+3. Установить `last_plan_session.code_run = true`
+4. Сохранить triggers.json
+
+---
+
+## Шаг 0.5 — Системная причина (для багфиксов)
+
+Этот баг **локальный** или **системный**?
+
+- **Локальный** → точечный фикс, обосновать почему не может повториться
+- **Системный** → архитектурный фикс предпочтительнее (декоратор, middleware, schema constraint)
+
+⛔ Ответ "локальный" без обоснования — красный флаг.
+
+---
+
+## Шаг 1 — Верификация гипотезы
+
+Перед первой строкой кода:
+- [ ] Прочитан актуальный код целевого файла
+- [ ] Подтверждена точка входа (route → controller → service)
+- [ ] Зависимости существуют (grep импортов)
+
+Если что-то не найдено — СТОП, сообщи разработчику.
+
+---
+
+## Шаг 2 — Реализация
+
+Каждый шаг плана = один атомарный commit.
+
+**Не выходи за рамки плана** — только согласованные изменения.
+
+---
+
+## Шаг 3 — Анализ первопричины (при баге)
+
+1. Воспроизвести → минимальный тест-кейс
+2. Найти корень: данные / логика / контракт / конфигурация?
+3. **Не маскировать симптом:** запрещены `try/except: pass`, `?? null` без обоснования
+4. Если причина в другом сервисе → СТОП, OPEN-QUESTIONS.md
+
+---
+
+## Шаг 4 — Self-review
+
+**Lite mode (2 точки):**
+1. Границы модуля — нет ли логики чужого домена?
+2. Безопасность — нет утечек, нет хардкода
+
+**Full mode (6 точек):**
+1. Границы модуля
+2. Владение данными (data-map)
+3. События/контракты — Outbox/idempotency
+4. Безопасность + audit
+5. Type/Schema constraints используются
+6. Миграции безопасны (rollback)
+
+Если хоть одна точка не пройдена → исправить до коммита.
+
+---
+
+## Шаг 5 — Документация
+
+**Часть PR (коммитится с кодом):**
+- [ ] Если изменилась коммуникация → SYSTEM-MAP.md
+- [ ] Если реализовано ADR → обновить статус ADR
+- [ ] Если изменились данные → data-map.md
+- [ ] Если изменилось поведение → PRODUCT.md
+
+**После деплоя (в /deploy):**
+- [ ] Milestone в DEVLOG.md
+
+---
+
+## Шаг 6 — Запрос /review
+
+<self-lint>
+Lint-1 Параллельные пути: есть ли такая же логика в других файлах не обновлённая? [ответ]
+Lint-2 Регрессии: все ветки изменённых хендлеров пройдены? [ответ]
+Lint-3 Рамки плана: нет ли изменений вне согласованного? [ответ]
+Lint-4 Числовые литералы обоснованы или помечены арбитражными? [ответ]
+Lint-5 Локальный vs системный фикс — где зафиксирован архитектурный? [ответ]
+Lint-6 External state: какое состояние внешнего сервиса я не контролирую? [ответ]
+</self-lint>
+
+✅ Self-lint passed
+
+⚠️ "Запустить /review? (y / n)"
+
+- **Lite mode:** можно пропустить
+- **Full mode:** настоятельно рекомендуется
+- **[security] / [data] / [contract]:** ОБЯЗАТЕЛЬНО
+
+При пропуске → инкремент `skipped_warnings.review_skipped` + запись в DEVLOG.
+
+---
+
+⛔ После review жди подтверждения. Не запускай деплой.
+
+$ARGUMENTS

@@ -1,40 +1,140 @@
-# /review — Code Review Command
+# /review — Архитектурное ревью
 
-## Purpose
-Systematic review of a pull request or diff before merge.
+Ты — строгий критик кода, не автор. Ищешь нарушения архитектурных контрактов, не стилистические мелочи.
 
-## Trigger
-Use after `/code` completes. Can be triggered on any PR or diff.
+**ЗАПРЕЩЕНО:** изменять файлы во время ревью. Только анализ.
 
-## Inputs
-- PR link or branch name
-- Original plan or task description
-- `CLAUDE.md` conventions
+---
 
-## Checklist
+## Шаг 0 — Проверка на повторный фикс
 
-### Correctness
-- [ ] Logic matches the plan / task requirements
-- [ ] Edge cases handled
-- [ ] No silent failures or swallowed errors
+- Открой DEVLOG.md
+- Найди записи с тегом `[fix:X]` для того же компонента за 7 дней
+- Если N ≥ 2 → 🔴 CRITICAL: "N-й деплой одной проблемы — деплой запрещён без новых диагностических данных"
 
-### Security
-- [ ] No injection vectors (SQL, command, XSS)
-- [ ] Secrets not hardcoded or logged
-- [ ] Input validated at system boundaries
+---
 
-### Code Quality
-- [ ] Names are self-explanatory
-- [ ] No dead code, commented-out blocks, or TODOs left behind
-- [ ] No premature abstractions
+## Шаг 1 — Прочитай изменения
 
-### Tests
-- [ ] Tests cover happy path and key edge cases
-- [ ] No mocks masking real integration behavior
+1. `git diff HEAD` и `git diff --staged`
+2. Определи тип изменения: Feature / Bug Fix / Migration / Refactor
+3. Определи затронутые домены
 
-### Conventions
-- [ ] Follows `CLAUDE.md` standards
-- [ ] Commit messages are clear and purposeful
+---
 
-## Output
-Review summary: Approve / Request Changes / Block (with blockers listed).
+## Шаг 2 — Прочитай правила контекста
+
+Всегда:
+- `CLAUDE.md` — операционные правила проекта
+- `.claude/rules/*.md` — технологические правила
+
+По домену:
+- Релевантные ADR (если есть)
+- data-map.md / SYSTEM-MAP.md (если применимо)
+
+---
+
+## Шаг 3 — Проверки
+
+### КРИТИЧНО — блокируют merge
+
+**Архитектурные нарушения:**
+- [ ] Нет ли прямых вызовов внешних API минуя единый интерфейс?
+- [ ] Нет ли запросов к данным чужого модуля?
+- [ ] Нет ли хардкода секретов / токенов / путей?
+
+**Регрессии (обязательная проверка):**
+Для каждого изменённого хендлера — пройди ВСЕ ветки (happy + error + unknown input).
+
+**Параллельные пути — grep:**
+- Если изменён компонент → grep по аналогичным паттернам в проекте
+- **Class bug rule:** если изменён код отправки/обработки данных → grep по аналогичным паттернам без защитных обёрток
+
+**Conversation state pollution check** (только если `project_type: ai-agent` в CLAUDE.md):
+- Tool возвращает > 5 строк текста на error path? → 🟡 WARNING
+- Возвращает список (задачи, файлы) как error response? → 🔴 CRITICAL
+- Тест: что увидит пользователь в следующих 2-3 запросах после этого error?
+
+**Контракты:**
+- [ ] Breaking change в API/событиях? → перечислить consumers
+- [ ] Идемпотентность сохранена для retry-able операций?
+
+**Безопасность:**
+- [ ] Авторизация на новых endpoints?
+- [ ] PII защищена в логах/responses?
+
+---
+
+### ПРЕДУПРЕЖДЕНИЯ
+
+**Тесты:**
+- [ ] Есть тест на главный инвариант изменения?
+- [ ] Negative test (что при невалидных данных)?
+- [ ] Regression test для bugfix?
+
+**Prompt engineering (если менялся промпт):**
+- Доменное ограничение или кейс-ограничение?
+- Кейс → 🟡 WARNING — не закрывает класс проблем
+
+**Уровень регулятора предложенных фиксов:**
+Если review предлагает изменения в командах — обязательно рассмотреть Level 4+ альтернативу:
+- [ ] Можно ли закрыть через schema constraint?
+- [ ] Можно ли закрыть через структуру данных?
+- [ ] Если Level 4 невозможен — явно указать почему
+
+🟡 WARNING если предложены только методологические правила без code-level альтернативы.
+
+**Документация:**
+- Поведение изменилось — PRODUCT.md обновлён?
+- Архитектурные изменения — SYSTEM-MAP.md / data-map.md / ADR обновлены?
+
+**Конкретный тест-сценарий (обязательно):**
+- Не "система отвечает", а "пользователь делает X → код делает Y → результат Z"
+- Если не можешь описать конкретный сценарий → фикс не верифицирован
+
+**Кросс-платформенные различия (если меняется FS работа):**
+- Пути от агента → case-insensitive нормализация?
+- Slashes нормализованы?
+
+---
+
+## Шаг 4 — Вывод
+
+```markdown
+## Ревью: [файл / PR]
+
+### Breaking changes (если есть)
+- [изменение] → consumers: [список]
+- Рекомендация: [versioning / migration / feature flag]
+
+### 🔴 Критические нарушения
+
+#### [Файл:строка] — [Название]
+**Нарушение:** [что не так]
+**Правило:** [ADR / CLAUDE.md правило]
+**Рекомендация:** [конкретно что исправить]
+**Если merge as-is:** [конкретный сценарий поломки]
+
+### 🟡 Предупреждения
+- [описание] → рекомендация
+
+### 🔵 Suggestions
+
+### Архитектурные вопросы
+- [вопрос требующий решения команды]
+- Рекомендация: [предпочтительный вариант]
+
+### Рекомендация агента
+[merge / merge с условиями / не merge]
+
+### Автоматически пофиксено (если применимо)
+- [список 🟡/🔵 которые сразу исправлены]
+
+### Ок
+- [что проверено и соответствует правилам]
+```
+
+---
+
+Код / PR для ревью:
+$ARGUMENTS

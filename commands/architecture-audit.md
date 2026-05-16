@@ -1,46 +1,92 @@
-# /architecture-audit — Architecture Audit Command
+# /architecture-audit — Сверка карты с реальным кодом
 
-## Purpose
-Periodic review of system architecture for drift, tech debt, security gaps, and scalability risks.
+Запускается:
+- `last_architecture_audit.plans_since` ≥ 5-10 (триггер из /plan)
+- Перед квартальным планированием
+- После крупных архитектурных изменений
+- ОБЯЗАТЕЛЬНО при добавлении нового сервиса/компонента
 
-## Trigger
-Quarterly, before major new features, or when team suspects systemic issues.
+**ЗАПРЕЩЕНО:** обновлять SYSTEM-MAP.md автоматически. Human review required.
 
-## Inputs
-- Current `SYSTEM-MAP.md`
-- Recent `PLAN.md` files and retros
-- Dependency list and versions
+---
 
-## Audit Areas
+## Шаг 1 — Inventory
 
-### Structural Health
-- [ ] SYSTEM-MAP matches reality — no phantom components
-- [ ] Clear ownership for each component
-- [ ] No circular dependencies
+1. Загрузить текущий граф из SYSTEM-MAP.md
+2. Загрузить services-registry.yaml (или эквивалент) — active компоненты
+3. Для каждого активного компонента inventory связей:
+   - HTTP клиенты к другим компонентам
+   - Event publishers (поиск по pattern conventions)
+   - Event subscribers
+   - External API integrations
 
-### Technical Debt
-- [ ] Identify components older than 2 years without review
-- [ ] Deprecated libraries or APIs still in use
-- [ ] Duplicated logic across modules
+---
 
-### Security Posture
-- [ ] Auth and authz boundaries correct
-- [ ] Secrets management up to standard
-- [ ] Attack surface reviewed (exposed endpoints, file uploads, etc.)
+## Шаг 2 — Построить граф из кода
 
-### Scalability
-- [ ] Bottlenecks identified (DB, queues, sync calls)
-- [ ] Single points of failure documented
-- [ ] Load estimates vs. current capacity
+Из inventory собрать реальный граф.
 
-### Observability
-- [ ] All critical paths have logging, metrics, and alerts
-- [ ] Runbooks exist for top failure modes
+**Error handling:**
+- Inaccessible repo → list "skipped (inaccessible)"
+- Unparseable patterns → "investigation needed: path:line"
+- Malformed registry → fail с clear error
+- Always produce partial report — partial info > no report
 
-## Output
-- Architecture audit report with findings ranked by severity
-- Updated `SYSTEM-MAP.md` if needed
-- Action items fed into next sprint planning
+---
 
-## Exit Criteria
-Report delivered, critical findings have owners and timelines.
+## Шаг 3 — Сравнить
+
+- В карте, не в коде → **stale edge** (удалить?)
+- В коде, не в карте → **undocumented edge** (добавить?)
+- В карте active, не в registry → **phantom service**
+- В registry active, не в карте → **missing service**
+
+---
+
+## Шаг 4 — Отчёт
+
+```markdown
+# Architecture Audit — YYYY-MM-DD
+
+## Stale edges (in map, not in code)
+- source → target [type] — pattern not found in: path
+
+## Undocumented edges (in code, not in map)
+- source → target [type] — found in path:line
+
+## Phantom services
+- {service-name}
+
+## Missing services
+- {service-name}
+
+## Skipped
+- {service-name} — reason
+
+## Inconsistencies worth noting
+- [ambiguity description with file references]
+
+## Summary
+- Edges in map: X | Edges in code: Y | Drift: Z (W%)
+- Skipped services: N
+- Recommendation: resolve {OQ-XXXX} before next audit
+```
+
+---
+
+## Constraints
+
+- No invented edges — только что в коде
+- No architectural opinions — только diffs
+- Ambiguous patterns (dual HTTP+event) → report as inconsistency, not decision
+
+---
+
+## После завершения
+
+1. Запись в DEVLOG: `[architecture-audit] Report YYYY-MM-DD: N stale, M undocumented, K skipped`
+2. В triggers.json: `last_architecture_audit = { date: today, plans_since: 0 }`
+
+---
+
+$ARGUMENTS

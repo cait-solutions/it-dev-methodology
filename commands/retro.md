@@ -1,34 +1,164 @@
-# /retro — Retrospective Command
+# /retro — Методологическая ретроспектива
 
-## Purpose
-Capture learnings after a sprint, release, or incident to improve future iterations.
+Запускается при `last_retro.plans_since` ≥ 15 или вручную раз в 30 дней.
 
-## Trigger
-End of sprint, post-incident, post-release. Minimum: after every production incident.
+**ЗАПРЕЩЕНО:** менять команды / CLAUDE.md / triggers.json автоматически. Только анализ и рекомендации.
 
-## Format
+---
 
-### What Went Well
-- List specific things that worked — processes, decisions, tooling
+## Шаг 1 — Загрузка данных
 
-### What Went Poorly
-- List specific problems — not people, but systems and processes
+1. Прочитать `.claude/state/triggers.json`
+2. Прочитать DEVLOG.md (записи с `last_retro.date` или последние 30 дней)
+3. Прочитать OPEN-QUESTIONS.md (если есть)
+4. Прочитать HYPOTHESES.md (если есть)
+5. Зафиксировать метрики:
+   - Планов с прошлого retro
+   - `skipped_warnings.*` — сколько warnings игнорировано
 
-### Root Causes
-- For each problem: what was the underlying cause?
+---
 
-### Action Items
-| Action | Owner | Due Date |
-|--------|-------|----------|
-|        |       |          |
+## Шаг 2 — Повторяющиеся проблемы
 
-### Methodology Updates
-- If any methodology file needs updating based on this retro, list which file and what change.
+Найди в DEVLOG паттерны:
+- Записи с одним тегом `[fix:X]` ≥ 3 раз за период → системная проблема?
+- Одни и те же модули в OQ?
+- Одни и те же типы конфликтов (Type C)?
+- Семантические дубли (один баг с разными тегами)?
 
-## Rules
-- Blameless: focus on systems, not individuals
-- Be specific: "deploy took 2 hours because migrations weren't tested on staging" > "deploys are slow"
-- Every retro must produce at least one action item
+---
 
-## Exit Criteria
-Action items assigned with owners and dates. Methodology updated if applicable.
+## Шаг 3 — Статистика триггеров
+
+| Триггер | Показов | Проигнорировано | Skip rate | Оценка |
+|---|---|---|---|---|
+| ... | ... | ... | X% | ... |
+
+**Интерпретация:**
+- Skip rate > 50% → триггер шумный, повысить порог
+- Skip rate ≈ 0% + проблем не найдено → триггер избыточный, рассмотреть удаление
+- Trigger игнорирован > 3 раз но запущенный потом находил проблему → систематическое откладывание, рассмотреть hard-block
+
+---
+
+## Шаг 4 — Анализ команд: Guardrail vs Frequency
+
+**Guardrail-правила** (защищают от дорогих ошибок, срабатывают редко):
+- Не удалять даже если не срабатывали — это deterrent
+
+**Frequency-правила** (должны срабатывать часто):
+- Кандидаты на удаление: не применялись 60+ дней И ни одного случая когда были бы нужны
+
+---
+
+## Шаг 5 — Stale Open Questions
+
+- Возраст 14-30 дней → показать список
+- Возраст > 30 дней → эскалировать или явно закрыть
+- Возраст > 60 дней → рекомендация закрыть как irrelevant
+
+---
+
+## Шаг 5а — Reminder health check
+
+За период подсчитать из OPEN-QUESTIONS:
+- Reminders ставших READY: **N**
+- Из них обработано: **M**
+- Проигнорировано: **K**
+- Expired → Stale: **P**
+
+**Метрика: M / N**
+- ≥ 70% → 🟢 здоров
+- 40-70% → 🟡 нужна корректировка
+- < 40% → 🔴 не работает
+
+---
+
+## Шаг 6 — Здоровье продуктового потока (если применимо)
+
+**IDEAS.md заполнен?**
+- Записи за период есть? Нет → "капчер сигналов не работает"
+
+**Когда последний /product-review?**
+- > 14 дней + IDEAS.md заполнен → рекомендация запустить
+
+**Когда последний /product-vision?**
+- > 60 дней ИЛИ VISION.md пуст → рекомендация запустить
+
+---
+
+## Шаг 7 — VISION alignment (если есть VISION)
+
+Распредели deploy за период по осям VISION:
+- `[feat:axis-1]` — работа на ось 1
+- `[fix:*]` — баги (не осевая работа)
+- без оси — разовые задачи
+
+**Если ≥ 50% feat-деплоев вне осей:** "Дрейф обнаружен. Варианты: (а) пересмотреть VISION; (б) скорректировать курс."
+
+---
+
+## Шаг 8 — Аудит пропущенных сигналов
+
+В DEVLOG искать:
+- Жалобы / удивление / повторные ручные действия
+- Записаны ли в IDEAS.md?
+
+Для каждого пропущенного:
+1. Добавить в IDEAS.md
+2. Добавить в HYPOTHESES.md `[missed-signal]`:
+
+```
+Сигнал: [что]
+Почему пропустил: [триггер не сработал / неверная классификация]
+Как поймать: [конкретное изменение]
+```
+
+---
+
+## Шаг 9 — Отчёт
+
+```
+/retro Report — {date}
+
+Период: {N} планов, {M} деплоев
+
+## Статистика триггеров
+{таблица}
+
+## Повторяющиеся проблемы
+{список или "паттернов не выявлено"}
+
+## Stale Open Questions
+{список с возрастом}
+
+## Reminder health
+{соотношение M/N + status}
+
+## Inbox
+{количество необработанных}
+
+## VISION alignment
+{распределение по осям}
+
+## Рекомендации
+- {конкретная рекомендация — изменить порог, закрыть OQ}
+- {рекомендация}
+
+## Требует решения PM
+- Повысить/понизить порог для {trigger}?
+- Перевести {trigger} из soft в hard-block?
+```
+
+---
+
+## После завершения
+
+1. Запись в DEVLOG: `[retro] {date}: {N} планов, skip rates X/Y/Z, {K} stale OQ, рекомендации: {краткий список}`
+2. Сбросить в triggers.json:
+   - `last_retro = { "date": today, "plans_since": 0 }`
+   - `skipped_warnings = { all zeros }`
+
+---
+
+$ARGUMENTS

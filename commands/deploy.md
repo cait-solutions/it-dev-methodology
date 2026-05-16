@@ -1,33 +1,123 @@
-# /deploy — Deployment Command
+# /deploy — Деплой с safety checks
 
-## Purpose
-Coordinate and verify a safe production deployment.
+**ОБЯЗАТЕЛЬНО:** код в правильной ветке, PR создан/одобрен.
 
-## Trigger
-Use after `/review` approval and CI passes.
+---
 
-## Pre-Deploy Checklist
-- [ ] All review blockers resolved
-- [ ] CI/CD pipeline green
-- [ ] Migrations reviewed and tested on staging
-- [ ] Feature flags configured if needed
-- [ ] Rollback plan documented
-- [ ] On-call engineer notified
+## Шаг 0 — Review обязателен
 
-## Deployment Steps
-1. Merge approved PR to main/production branch
-2. Monitor deployment pipeline output
-3. Verify key metrics (error rate, latency, logs) for 15 min post-deploy
-4. Run smoke tests against production
-5. Update deployment log
+Запусти `/review` если не запускался в этой сессии. Деплой без review запрещён.
 
-## Post-Deploy
-- Close related tickets
-- Update SYSTEM-MAP if architecture changed
-- Document any incidents or surprises in `/retro`
+---
 
-## Rollback Trigger
-If error rate spikes >2x baseline or critical path broken → rollback immediately, then diagnose.
+## Шаг 0.5 — Hard blocker на повторный деплой
 
-## Exit Criteria
-Deployment stable, metrics normal, tickets closed.
+`git log --oneline -5` — сколько деплоев одного компонента за 24 часа?
+
+Если N ≥ 2 → ⛔ ПОЛНЫЙ СТОП. Чтобы разблокировать — явно:
+> "Деплой №N по компоненту [X]. Новые диагностические данные: [конкретно что узнали]."
+
+Без признания деплой не выполняется.
+
+---
+
+## Шаг 0.7 — Pre-flight warnings
+
+Прочитать `.claude/state/triggers.json`:
+
+1. `last_product_check.plans_since` ≥ 5 → 🟡 "PRODUCT.md мог разойтись"
+2. Дней с `last_deploy.date` ≥ 7 → 🟡 "Накопились изменения с прошлого деплоя"
+
+После успешного деплоя обновить `last_deploy.date`.
+
+---
+
+## Шаг 1 — Pre-flight check
+
+- [ ] Текущая ветка корректна
+- [ ] Все изменения закоммичены
+- [ ] Self-review пройден
+- [ ] Tests зелёные
+- [ ] SYSTEM-MAP / data-map / ADR обновлены если применимо
+
+---
+
+## Шаг 2 — DEVLOG.md
+
+Формат записи:
+
+```
+YYYY-MM-DD — [тип: deploy|milestone|risk-change] — [компонент]
+Что: одна строка
+Зачем: одна строка
+Решение: одна строка (если архитектурное)
+```
+
+- Затрагивает карту данных → обновить в этом же коммите
+- Не затрагивает → явно "карта данных не изменилась"
+
+---
+
+## Шаг 3 — Деплой
+
+Покажи что улетит: `git diff HEAD --stat`
+
+Выполни деплой согласно процедуре проекта (CI/CD pipeline или ручной).
+
+---
+
+## Шаг 3.1 — Selftest (если есть)
+
+Если в проекте есть selftest — обязательно после перезапуска.
+- Все [critical] должны быть ✅
+- Если 🔴 — деплой failed, не продолжать
+
+---
+
+## Шаг 3.5 — Инвалидация после деплоя
+
+- Изменился формат данных в хранилище? → миграция / реиндексация
+- Изменилась структура состояния? → reset / cleanup
+- Если ничего — явно "инвалидация не требуется"
+
+---
+
+## Шаг 4 — Smoke test (обязательно)
+
+**Основной happy path:**
+- [ ] Health check отвечает
+- [ ] Основная функция работает согласно acceptance criteria
+- [ ] Нет новых ошибок в логах (первые 5 минут)
+
+**Data smoke test** (если менялась работа с хранилищами):
+- [ ] Чтение данных работает корректно
+- [ ] Запись работает корректно
+
+**After-effects check** (только если `project_type: ai-agent` в CLAUDE.md):
+После основного теста — запустить 3 несвязанных запроса:
+1. Стандартный запрос
+2. Простой вопрос
+3. Любая команда не из теста
+
+Что искать:
+- Молчание / пустой ответ → ⚠️ возможна state pollution
+- Ссылки на данные теста как актуальные → ⚠️ pollution подтверждена
+- Странное поведение "из ниоткуда" → инвалидировать состояние
+
+При обнаружении:
+- Запись в DEVLOG `[regression:state-pollution]`
+- Откатить если критично для UX
+- Сценарий воспроизведения в HYPOTHESES.md
+
+---
+
+## После деплоя
+
+Обновить triggers.json:
+- `last_deploy.date = <today>`
+
+---
+
+⛔ Если в review были 🔴 CRITICAL — не деплоить.
+
+$ARGUMENTS

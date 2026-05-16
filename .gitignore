@@ -1,0 +1,11 @@
+# Claude Code local user settings (not shared across team)
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Test outputs
+/tmp/
