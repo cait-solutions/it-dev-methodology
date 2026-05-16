@@ -141,6 +141,18 @@ $ bash methodology-platform/scripts/sync-methodology.sh ~/projects/my-app
 
 `/plan` → `/code` → `/review` → `/deploy`. Триггеры через счётчики в `triggers.json` запускают `/architecture-audit`, `/sync-vision`, `/retro`, `/product-*` команды периодически.
 
+#### /review suggestions — обязательная обработка
+
+Каждая 🔵 Suggestion из `/review` ОБЯЗАНА быть обработана (не проигнорирована), но способ зависит от класса:
+
+| Класс | Пример | Обработка |
+|---|---|---|
+| **Quick wins** | переименование, comment, простой рефакторинг переменных | Применить в `/code` Шаг 2 как часть текущего коммита |
+| **Стратегические** | новый уровень абстракции, архитектурный паттерн | Добавить в IDEAS.md `[reviewed:suggestion]` для следующего цикла |
+| **Low-priority** | polish, stretch ideas, опциональные улучшения | Skip с рекомендацией + запись в DEVLOG `[suggestion-deferred:reason]` |
+
+**Логика:** suggestions — это actionable guidance от review агента, не опциональный шум. Выбор обработки зависит от scope текущего цикла, не от приоритета.
+
 ---
 
 ## Хранилища данных (с точки зрения консьюмера)
