@@ -86,6 +86,20 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-16 — VISION v2: первый формальный /product-vision [product-vision][feat:stack-agnostic][feat:dog-fooding][methodology]
+
+**Что:** Запущен формально `/product-vision` (первый раз через slash-команду, не как ручной анализ). Применил 5-вопросный фильтр + anti-anchoring expansion к заявленным целям владельца методологии. Результат: VISION.md v1 → v2 с 4 активными осями вместо 3 (➕ Stack-agnostic adoption), Quality bar расширен с 1 до 6 пунктов (➕ regression prevention, security awareness, edge case detection, closed product feedback loop), стратегические границы 4 → 6 (➕ "только владелец контролирует канон", "не плагин-система — монолит с флагами"). Введён раздел Watch list для отложенных кандидатов на оси (engineering analytics, multi-tool support, cross-project knowledge propagation) с явными триггерами активации. `triggers.json.global.last_product_vision.date` сброшен в 2026-05-16, `plans_since` = 0.
+
+**Почему:** После Phase F появилась возможность реально применить методологию к самой себе. Запуск `/product-vision` через настоящий slash-механизм Claude Code (не ручной анализ) — это первая dog-food итерация по оси 4 VISION. Цели владельца методологии (anti-regression, security, edge cases, cross-stack применимость, контроль) после фильтра распределились между: ось 2 (cross-stack стало явной осью stack-agnostic adoption), Quality bar (regression / security / edge cases) и стратегические границы (контроль владельца).
+
+**Решение:** Сделано через `/product-vision` шаги -0.5 (anti-anchoring) → -1 (calibration) → 1 (axes) → 2 (decomposition top-2) → 3 (value hypotheses) → 4 (ranking) → 5 (anti-roadmap). Top-2 для ROADMAP: self-managing methodology (Phase 1 → 2 transition, reminder lifecycle, drift detection) и stack-agnostic adoption (starter rules catalog, `--starter-rules` флаг). Watch list получил конкретные триггеры активации (например engineering analytics — после 3+ месяцев `triggers.json` data и 30+ DEVLOG entries у консьюмеров).
+
+**Карта данных:** не изменилась. `.claude/state/triggers.json` обновлён (поле `last_product_vision` — это его нормальное использование, не схема).
+
+**Связано:** [VISION.md v2], [commands/product-vision.md], [triggers.json], [Phase F dog-fooding axis]
+
+---
+
 ## 2026-05-16 — Phase F: Self-application — методология применена к себе [phase-f][milestone][methodology]
 
 **Что:** Запустил `bash scripts/new-project-init.sh methodology-platform . --with-adr` на самом репозитории методологии. Создались `.claude/{commands,agents,hooks,state,settings.json,.version}`, ADR-структура в `docs/adr/`. Авторил реальный контент для CLAUDE.md / PRODUCT.md / VISION.md / SYSTEM-MAP.md (вместо template-плейсхолдеров). DEVLOG получил историю phase A-F. VERSION bumped до v2.4.0.
