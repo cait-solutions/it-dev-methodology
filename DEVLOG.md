@@ -157,6 +157,30 @@
 
 ---
 
+## 2026-05-17 — Phase И1: close audit gaps from methodology review [phase-i1][feat:process][feat:command]
+
+**Что:** Комплексный аудит методологии выявил 6 ключевых gaps в регрессионном контроле и visibility. Закрыты все:
+
+1. **Gap D3 (async visibility):** /deploy Шаг 5 — async healthcheck (git push verification)
+2. **Gap D4 (class-bug detection):** /code Шаг 1.7 — grep anticipation (где ещё паттерн?)
+3. **Gap D2 (external state):** /code Шаг 4 point 7 — expanded external state checklist
+4. **Gap D6 (semantic tagging):** CLAUDE.md — semantic tag rule (не regex-only)
+5. **Gap F5 (branch tracing):** /deploy Шаг 1.5 + CLAUDE.md — ai-dev branch для agent deploys
+6. **Early pre-mortem:** /plan Шаг 0.1 — moved от конца (98) к началу (0.1)
+
+**Почему:** Audit по Почему.txt выявил что текущая методология:
+- Не отслеживает fire-and-forget failures (git_push, async ops)
+- Не имеет обязательного grep-рефлекса при class bugs
+- Не гарантирует external state visibility до implementation
+- Не различает agent-automated vs manual work в git history
+- Pre-mortem срабатывает слишком поздно (после planning)
+
+**Карта данных:** Не изменилась (добавлены правила, не структуры).
+
+**Связано:** Audit (Phase И1) + Почему.txt recommendations.
+
+---
+
 ## 2026-05-16 — Phase G2: CLAUDE.md split + Agent TL;DR convention + Pre-flight fix [phase-g2][feat:template][methodology][milestone] [BREAKING] v3.0.0
 
 **Что:** 7+1 атомарных коммитов (1 неплановый fix добавлен mid-execution):
