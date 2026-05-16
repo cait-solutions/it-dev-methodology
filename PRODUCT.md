@@ -149,7 +149,7 @@ $ bash methodology-platform/scripts/sync-methodology.sh ~/projects/my-app
 
 | Источник / действие | `.claude/` | Корень проекта | `docs/` (опционально) | Примечание |
 |---|---|---|---|---|
-| bootstrap | ✅ полный | ✅ CLAUDE/PRODUCT/VISION/DEVLOG/IDEAS/ROADMAP/HYPOTHESES/RISKS/OPEN-QUESTIONS | ✅ architecture/SYSTEM-MAP.md | + флаги добавляют data-map, glossary, BEHAVIOR, threat-model, vision/, adr/, inbox/ |
+| bootstrap | ✅ полный | ✅ CLAUDE/PRODUCT/VISION/DEVLOG/IDEAS/ROADMAP/HYPOTHESES/RISKS/OPEN-QUESTIONS | ✅ architecture/SYSTEM-MAP.md, product/USER-MAP.md | + флаги добавляют data-map, glossary, BEHAVIOR, threat-model, vision/, adr/, inbox/ |
 | sync | ✅ commands/hooks overwritten | ❌ не трогается | ❌ | agents preserved |
 | `/plan` (в Claude Code) | ✅ читает state/triggers.json | ✅ читает все корневые артефакты | ✅ читает docs/ | пишет триггер-счётчики |
 | `/code`, `/review`, `/deploy` | ✅ читает commands, hooks | ✅ пишет в DEVLOG | ✅ пишет в data-map если применимо | |
@@ -243,7 +243,8 @@ Sync проверяет наличие банера. Отсутствие → ф
 
 ## Связь с остальной документацией
 
-- Архитектура и техническая реализация: [CLAUDE.md](CLAUDE.md) + [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md)
+- Архитектура и техническая реализация: [CLAUDE.md](CLAUDE.md) + [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md) (как система устроена)
+- Функциональность и user-facing capabilities: [USER-MAP.md](docs/product/USER-MAP.md) (что продукт может делать)
 - Стратегические оси развития: [VISION.md](VISION.md)
 - Дорожная карта реализации: [ROADMAP.md](ROADMAP.md)
 - История изменений и решений: [DEVLOG.md](DEVLOG.md)
