@@ -13,7 +13,7 @@
 #   .claude/state/          — triggers.json initialized
 #   .claude/.version        — records which methodology version is synced
 #   CLAUDE.md, PRODUCT.md, VISION.md, docs/architecture/SYSTEM-MAP.md  — from templates
-#   DEVLOG.md, IDEAS.md, ROADMAP.md, HYPOTHESES.md, RISKS.md  — seeded stubs (full templates land in Phase B)
+#   DEVLOG.md, IDEAS.md, ROADMAP.md, OPEN-QUESTIONS.md, HYPOTHESES.md, RISKS.md  — from templates
 #
 # Idempotent: existing files in target are preserved (only .claude/commands/ is overwritten by sync).
 
@@ -134,35 +134,16 @@ copy_with_subst() {
 }
 
 echo "→ artifacts/"
-copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"     "$TARGET_DIR/CLAUDE.md"
-copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"    "$TARGET_DIR/PRODUCT.md"
-copy_with_subst "$METHODOLOGY_DIR/templates/VISION.template.md"     "$TARGET_DIR/VISION.md"
-copy_with_subst "$METHODOLOGY_DIR/templates/SYSTEM-MAP.template.md" "$TARGET_DIR/docs/architecture/SYSTEM-MAP.md"
-
-# ---------------------------------------------------------------------------
-# Stub artifacts that don't have full templates yet (Phase B will replace these).
-# ---------------------------------------------------------------------------
-create_stub() {
-  local path="$1"
-  local title="$2"
-  if [[ -f "$path" ]]; then
-    echo "  - $(basename "$path") (exists — preserved)"
-    return
-  fi
-  mkdir -p "$(dirname "$path")"
-  cat > "$path" <<EOF
-# $title — $PROJECT_NAME
-
-<!-- STUB. Replace with full template from methodology-platform Phase B. -->
-EOF
-  echo "  ✓ $(basename "$path") (stub)"
-}
-
-create_stub "$TARGET_DIR/DEVLOG.md"     "DEVLOG"
-create_stub "$TARGET_DIR/IDEAS.md"      "IDEAS"
-create_stub "$TARGET_DIR/ROADMAP.md"    "ROADMAP"
-create_stub "$TARGET_DIR/HYPOTHESES.md" "HYPOTHESES"
-create_stub "$TARGET_DIR/RISKS.md"      "RISKS"
+copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGET_DIR/CLAUDE.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"         "$TARGET_DIR/PRODUCT.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/VISION.template.md"          "$TARGET_DIR/VISION.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/SYSTEM-MAP.template.md"      "$TARGET_DIR/docs/architecture/SYSTEM-MAP.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/DEVLOG.template.md"          "$TARGET_DIR/DEVLOG.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/IDEAS.template.md"           "$TARGET_DIR/IDEAS.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/ROADMAP.template.md"         "$TARGET_DIR/ROADMAP.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/OPEN-QUESTIONS.template.md"  "$TARGET_DIR/OPEN-QUESTIONS.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/HYPOTHESES.template.md"      "$TARGET_DIR/HYPOTHESES.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/RISKS.template.md"           "$TARGET_DIR/RISKS.md"
 
 # ---------------------------------------------------------------------------
 # Git init (only if no .git in target).
