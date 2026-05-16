@@ -14,11 +14,13 @@
 #
 # Always created (v3.1.0+):
 #   .claude/{commands,agents,rules,state,hooks}/, .claude/.version
+#   .claude/rules/README.md (template for tech stack rules)
 #   CLAUDE.md, CLAUDE_LONG.md, PRODUCT.md, VISION.md
 #   docs/architecture/SYSTEM-MAP.md, docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
 #   docs/adr/{_TEMPLATE,README}.md, docs/data-map.md
 #   inbox/{README,_processed/,_processed/rejected/}, services-registry.yaml
 #   DEVLOG.md, IDEAS.md, ROADMAP.md, OPEN-QUESTIONS.md, HYPOTHESES.md, RISKS.md
+#   .gitignore (standard ignores)
 #   triggers.json (local state)
 #
 # One methodology, one bootstrap. For solo-dev: ignore docs that don't apply (docs/adr/, services-registry.yaml, etc.).
@@ -241,6 +243,12 @@ copy_with_subst "$METHODOLOGY_DIR/templates/BEHAVIOR.template.md"  "$TARGET_DIR/
 
 echo "→ threat-model/"
 copy_with_subst "$METHODOLOGY_DIR/templates/threat-model.template.md"  "$TARGET_DIR/docs/threat-model.template.md"
+
+echo "→ rules/"
+copy_with_subst "$METHODOLOGY_DIR/templates/.claude/rules/README.template.md"  "$TARGET_DIR/.claude/rules/README.md"
+
+echo "→ gitignore/"
+copy_with_subst "$METHODOLOGY_DIR/templates/.gitignore.template"  "$TARGET_DIR/.gitignore"
 
 # ---------------------------------------------------------------------------
 # Git init.
