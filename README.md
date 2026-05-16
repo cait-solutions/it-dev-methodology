@@ -88,12 +88,25 @@ Initial build (Phases A-F) — **completed 2026-05-16, v2.4.0**:
 - ✅ **Phase F:** apply methodology to this repo itself — real CLAUDE.md, PRODUCT.md, VISION.md, SYSTEM-MAP.md, DEVLOG.md with phase history. Future changes go through the methodology's own `/plan` → `/code` → `/review` → `/deploy` flow.
 - ✅ **Phase G1 (v2.5.0):** navigation maps in `/review`, `/deploy`, `/onboard`; model recommendation tier system (`templates/model-tiers.md`) with Pre-flight check and mid-task complexity reassessment.
 - ✅ **Phase G2 (v3.0.0, breaking):** CLAUDE.md split into short `CLAUDE.md` (WHAT — rules) + new `CLAUDE_LONG.md` (WHY — rationale, edge cases); Agent TL;DR convention in PRODUCT and SYSTEM-MAP templates; migration helper `scripts/migrate-claude-md.sh` for existing consumers; Pre-flight check now asks user (was auto-detect from system prompt — unreliable mid-session).
+- ✅ **Phase H1 (v3.1.0, breaking):** Bootstrap simplification — removed all flags from `new-project-init.sh` (`--multi-service`, `--with-adr`, `--with-inbox`, etc.). One universal init command for all project types. Full artifact structure created by default; solo-dev projects ignore/delete unused dirs, multi-service projects fill in the multi-tier sections. Consumer templates sanitized: removed project-specific names (PAI, ERP, nexchance), replaced with generic abstractions (single-dev, multi-service).
 
 **Breaking change migration for existing consumers:**
+
+*Phase G2 (CLAUDE.md split):*
 ```bash
-# Run on each existing consumer project once:
+# Run once per consumer:
 /path/to/methodology-platform/scripts/migrate-claude-md.sh /path/to/consumer
-# Then follow the 5-step manual extraction instructions printed by the helper.
+# Then follow the 5-step manual extraction instructions.
+```
+
+*Phase H1 (bootstrap flags):*
+```bash
+# Old (v3.0.0):
+bash scripts/new-project-init.sh my-app ~/my-app --multi-service --with-adr --with-inbox
+
+# New (v3.1.0+):
+bash scripts/new-project-init.sh my-app ~/my-app
+# → creates full structure; ignore unused dirs or delete them
 ```
 
 Next planned work — see [ROADMAP.md](ROADMAP.md) for current priorities.
