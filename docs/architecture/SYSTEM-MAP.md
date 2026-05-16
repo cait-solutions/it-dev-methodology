@@ -12,7 +12,7 @@
 
 ## Agent TL;DR
 
-- **Основные подсистемы:** Methodology Platform (canon — commands/templates/hooks/agents/scripts) → Self-application (.claude/ в этом репо) → Consumers (single-dev и multi-service проекты).
+- **Основные подсистемы:** Methodology Platform (canon — commands/templates/hooks/agents/scripts) → Self-application (.claude/ в этом репо) → Consumers (проекты с произвольной архитектурой).
 - **Источники правды:** `commands/`, `templates/`, `hooks/`, `agents/`, `VERSION` — единственный canon. `.claude/` в любом проекте — производное.
 - **Критичные edges:** scripts (`new-project-init.sh`, `sync-methodology.sh`) → консьюмеры (copy + banner). Нарушение banner-механизма ломает версионную трассируемость.
 - **Известные gap-ы:** branch protection не настроен (R-01); CI для idempotent тестирования скриптов отсутствует; нет auto version-drift check у консьюмеров; sync затирает per-project fills в `docs_reminder.py` LIBS.
@@ -42,14 +42,9 @@ graph TB
         SELF_SETTINGS[.claude/settings.json<br/>local config]
     end
 
-    subgraph "Consumer A — Single-developer project"
-        PAI_CLAUDE[.claude/<br/>commands, hooks, agents, state, settings]
-        PAI_ARTIFACTS[CLAUDE.md, PRODUCT.md, VISION.md,<br/>DEVLOG, IDEAS, ROADMAP, ...<br/>заполнены per-project]
-    end
-
-    subgraph "Consumer B — Multi-service platform"
-        ERP_CLAUDE[.claude/<br/>commands, hooks, agents, state, settings]
-        ERP_ARTIFACTS[CLAUDE.md, PRODUCT.md,<br/>docs/vision/AGENT_VISION + LONG_VISION,<br/>docs/adr/, services-registry.yaml,<br/>inbox/, ...]
+    subgraph "Consumer — Any project"
+        CONSUMER_CLAUDE[.claude/<br/>commands, hooks, agents, state, settings]
+        CONSUMER_ARTIFACTS[CLAUDE.md, PRODUCT.md, VISION.md/AGENT_VISION,<br/>DEVLOG, IDEAS, ROADMAP, docs/adr/, ...<br/>структура универсальна, наполнение per-project]
     end
 
     subgraph "GitHub"
@@ -83,20 +78,16 @@ graph TB
     SCRIPTS -->|init| SELF_SETTINGS
 
     %% Distribution to consumers (manually triggered)
-    SCRIPTS -->|copy + banner| PAI_CLAUDE
-    SCRIPTS -->|copy + banner| ERP_CLAUDE
-    SCRIPTS -->|init artifacts| PAI_ARTIFACTS
-    SCRIPTS -->|init artifacts| ERP_ARTIFACTS
+    SCRIPTS -->|copy + banner| CONSUMER_CLAUDE
+    SCRIPTS -->|init artifacts| CONSUMER_ARTIFACTS
 
     %% Runtime reads
     CC -.->|reads slash commands| SELF_CMDS
-    CC -.->|reads slash commands| PAI_CLAUDE
-    CC -.->|reads slash commands| ERP_CLAUDE
+    CC -.->|reads slash commands| CONSUMER_CLAUDE
 
     %% Runtime writes during /plan, /code, etc.
     CC ==>|writes state| SELF_STATE
-    CC ==>|writes DEVLOG/IDEAS/...| PAI_ARTIFACTS
-    CC ==>|writes DEVLOG/IDEAS/...| ERP_ARTIFACTS
+    CC ==>|writes DEVLOG/IDEAS/...| CONSUMER_ARTIFACTS
 
     %% Distribution channel
     CMDS --o|git push/pull| REPO
