@@ -1,0 +1,82 @@
+# USER-MAP — methodology-platform
+
+**Variant A (Simple)** — что может делать пользователь/проект с методологией.
+
+---
+
+## Product Capabilities
+
+```mermaid
+graph TD
+    Dev["👤 Developer/Team Lead<br/>(uses methodology)"]
+    
+    Dev -->|New project| Init["🚀 Initialize Project<br/>(bootstrap all artifacts<br/>+ .claude structure)"]
+    Dev -->|Start coding cycle| Workflow["🔄 Execute Workflow<br/>(/plan → /code →<br/>/review → /deploy)"]
+    Dev -->|Update to latest| Sync["🔄 Sync Methodology<br/>(get new commands,<br/>hooks, templates)"]
+    
+    Init --> Storage["💾 Project State<br/>(CLAUDE.md, PRODUCT.md,<br/>triggers.json, etc.)"]
+    Workflow --> Storage
+    Sync --> Storage
+    
+    Workflow -->|Track decisions| Audit["🏗️ Architecture Audit<br/>(detect drift vs<br/>SYSTEM-MAP)"]
+    Workflow -->|Validate approach| Vision["👁️ Sync Vision<br/>(align reality<br/>with strategy)"]
+    
+    Audit --> Feedback["📊 Feedback Loop<br/>(DEVLOG, /retro,<br/>next cycle)"]
+    Vision --> Feedback
+    
+    style Dev fill:#e1f5ff
+    style Init fill:#fff3e0
+    style Workflow fill:#f3e5f5
+    style Sync fill:#fff3e0
+    style Storage fill:#fce4ec
+    style Audit fill:#e8f5e9
+    style Vision fill:#e8f5e9
+    style Feedback fill:#fce4ec
+```
+
+---
+
+## What Each Capability Does
+
+| Capability | User Action | What Happens | Where Data Lives |
+|---|---|---|---|
+| **Initialize Project** | `new-project-init.sh <name>` | Creates full .claude structure, copies templates with banner, substitutes {{Project Name}}, initializes git | `.claude/{commands,agents,hooks,state}/` + root artifacts |
+| **Execute Workflow** | Runs `/plan` → `/code` → `/review` → `/deploy` in Claude Code | Manages plan approval, code review gates, self-lint checks, smoke tests, DEVLOG updates | `triggers.json` (state), DEVLOG.md (history) |
+| **Sync Methodology** | `sync-methodology.sh <target>` | Updates commands/hooks with fresh banner, detects local edits, preserves project-owned content | `.claude/commands/`, `.claude/hooks/`, `.claude/.version` |
+| **Architecture Audit** | `/architecture-audit` (triggered ~every 5 plans) | Compares real code against SYSTEM-MAP (edges, components, layers) | Reports in DEVLOG, findings in HYPOTHESES.md |
+| **Sync Vision** | `/sync-vision` (triggered when plan changes contracts) | Validates vision matches reality, classifies conflicts (A/B/C/D/E) | Reports in `docs/sync-vision-reports/`, updates OPEN-QUESTIONS.md |
+| **Feedback Loop** | `/retro` (triggered every 15 plans), plus `/product-check`, `/product-review`, `/product-vision` | Analyzes skip-rates, detects repeated problems, validates product behavior, reviews backlog | DEVLOG.md (tagged entries), HYPOTHESES.md |
+
+---
+
+## Data Flow
+
+1. **Bootstrap** → creates initial structure + artifacts template
+2. **Workflow cycle** (plan/code/review/deploy) → increments `triggers.json` counters
+3. **Periodic checks** (architecture-audit, sync-vision, retro) → triggered by counter thresholds
+4. **Sync** → gets new commands/hooks from upstream, preserves local content
+5. **Feedback** → stored in DEVLOG + HYPOTHESES, informs next cycle
+
+---
+
+## Refresh Policy
+
+USER-MAP updated when:
+- New capability added (e.g., new slash-command category)
+- Major workflow changed (e.g., new gate between /code and /review)
+- New artifact type introduced (e.g., threat-model.md becomes standard)
+
+USER-MAP NOT updated when:
+- Internal refactor (no user-facing change)
+- Command behavior tweaked (use PRODUCT.md for detail)
+- Wording improvements
+
+Trigger: See `.claude/state/triggers.json` — `last_user_map_sync.plans_since ≥ 10` + structural change detected.
+
+---
+
+## Notes
+
+- This diagram shows **what methodology provides to users**, not how it's built internally (see SYSTEM-MAP for that)
+- For new projects: This is **one possible USER-MAP**. Each project's USER-MAP will be different (ERP USER-MAP ≠ bot USER-MAP)
+- For template-based projects: Use variant selection logic in [templates/USER-MAP.template.md](../../templates/USER-MAP.template.md)
