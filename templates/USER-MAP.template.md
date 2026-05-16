@@ -7,6 +7,8 @@ It complements [SYSTEM-MAP](../docs/architecture/SYSTEM-MAP.md) (internal struct
 
 **Note:** USER-MAP describes **this product's features/workflows**, not methodology commands.
 
+> ⚠️ **Important:** This file is created ONCE during bootstrap with `{{Project Name}}` substitution. It is NOT synced by `sync-methodology.sh` (unlike commands/hooks). Your project owns and maintains this diagram.
+
 ---
 
 ## How to use this template
