@@ -1,233 +1,161 @@
 # CLAUDE.md — {{Project Name}}
 
-Обязательные правила для AI-агентов работающих в этом проекте. Локальный `CLAUDE.local.md` (если есть) дополняет правила и имеет приоритет при конфликте.
+Operational rules for AI agents. Short form, scan-friendly. For rationale, edge cases, and historical context — see [CLAUDE_LONG.md](CLAUDE_LONG.md).
 
-> **Project type:** `<выбери: ai-agent | web-app | api-service | cli-tool | library | multi-service-platform>` ← используется командами `/review` и `/deploy` для дополнительных проверок.
+> **Convention:**
+> - This file (CLAUDE.md) = **WHAT** — rules, MUST / MUST NOT, conventions. Auto-loaded by Claude Code.
+> - [CLAUDE_LONG.md](CLAUDE_LONG.md) = **WHY** — rationale, edge cases, examples. Read on demand.
+> - Local `CLAUDE.local.md` (if exists) overrides these rules.
 
----
-
-## Обязательно перед началом работы
-
-1. Прочитай `VISION.md` (или `docs/vision/*_GLOBAL_AGENT_VISION.md`) перед каждым `/plan`.
-2. Прочитай ADR / SYSTEM-MAP релевантные задаче (если есть).
-3. Прочитай `data-map.md` (если есть) перед изменениями затрагивающими хранилища.
+**Project type:** `<choose: ai-agent | web-app | api-service | cli-tool | library | multi-service-platform>` — used by `/review` and `/deploy` for additional checks.
 
 ---
 
-## Архитектура
+## Read before any work
 
-См. [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md).
-
-Ключевые архитектурные решения:
-- <решение 1 — например "все вызовы внешнего API через единый адаптер `agents/X.py`">
-- <решение 2>
-
-### Структура слоёв
-
-<!-- Опиши слои и инвариант "что куда не лезет". Пример:
-- `agents/` — AI / бизнес-логика, не знает о Telegram
-- `bot/` — Telegram I/O, не содержит AI-логики
-- `config/` — настройки через .env
--->
+1. `VISION.md` (or `docs/vision/*_GLOBAL_AGENT_VISION.md`) before every `/plan`.
+2. Relevant ADRs / SYSTEM-MAP for the task domain.
+3. `docs/data-map.md` (if exists) before storage-touching changes.
 
 ---
 
-## Стек
+## Architecture invariants (MUST / MUST NOT)
 
-- **Язык:**
-- **Фреймворк:**
-- **БД:**
-- **Очереди / events:**
-- **Тестирование:**
-- **CI/CD:**
-- **Деплой:** <команда / процедура>
+See [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md).
 
----
+**MUST:**
+- `<invariant 1 — e.g. all external API calls via single adapter>`
+- `<invariant 2>`
 
-## Карта данных
+**MUST NOT:**
+- `<anti-pattern 1 — e.g. business logic in controllers>`
+- `<anti-pattern 2>`
 
-Обновлять при каждом изменении затрагивающем хранилища. Перед изменением — свериться. Подробная версия (если есть): [`docs/data-map.md`](docs/data-map.md).
-
-| Хранилище | Что хранит | Источник правды | Кто пишет | Кто читает | Инвалидация |
-|---|---|---|---|---|---|
-| | | да / нет (кэш) | | | |
-
-**Инварианты:**
-- <инвариант 1 — например "vault — источник правды для заметок. Производные индексы никогда не опережают vault.">
+For rationale of each invariant — see [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md#архитектура-расширенно).
 
 ---
 
-## Сила регуляторов поведения (Level-4 framework)
+## Stack
 
-От слабого к сильному:
-
-1. **Правило в системном промпте / MISSION** — игнорируется при достаточном контексте
-2. **Description инструмента** — учитывается, но слабо
-3. **Few-shot примеры в промпте** — средняя сила, дрейфуют со временем
-4. **Структура входных данных** (что физически видит агент) — сильно
-5. **Отсутствие альтернативного пути** (один инструмент для задачи) — очень сильно
-6. **Function Calling schema / type constraint** (required параметры) — гарантия
-
-**Правило:** при добавлении нового поведения — начинать с уровня 4-6, не с уровня 1-3. Промпт-правило как первое решение = 🟡 WARNING в review.
-
-Симптом нарушения: "написал правило, агент игнорирует" = неправильный уровень регулятора. Решение: поднять уровень, не усиливать текст.
+- **Language / framework / DB / queues / testing / CI / deploy:** `<one-line each>`
 
 ---
 
-## Правило: level-4 проверка перед методологическими правилами
+## Data ownership (short)
 
-Перед принятием ЛЮБОГО методологического правила (новый lint, pre-mortem пункт, checklist-пункт, правило в `/review` или `/deploy`) — обязательно спросить:
+| Storage | Source of truth | Writers | Invalidation |
+|---|---|---|---|
+| | yes/no (cache) | | |
 
-> "Есть ли level-4+ структурный фикс той же проблемы?"
-
-- **Level 4+:** schema constraint, type system, отсутствие альтернативного пути, cap на длину данных — срабатывает автоматически
-- **Level 1-3:** правило в команде, lint-чек, prompt-инструкция — требует дисциплины и памяти
-
-Если level-4 фикс существует — он primary, правила secondary.
-Если level-4 невозможен — правила приемлемы как компромисс, но это надо явно зафиксировать.
-
-⛔ **Запрещено:** принимать ТОЛЬКО level 1-3 правила без явного обоснования почему level-4 невозможен.
-
-Симптом нарушения: добавили 3+ checklist-пункта на одну тему, через месяц тот же класс багов повторяется — правила не работают, нужен code-level фикс.
+Full details in [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данных-полная) or [`docs/data-map.md`](docs/data-map.md).
 
 ---
 
-## Don'ts (что НЕЛЬЗЯ)
+## Don'ts
 
-- Не редактировать `.env`, `secrets`, файлы деплоя — содержат credentials, не коммитятся.
-- Не добавлять пакеты в код без обновления `requirements.txt` / `package.json` / эквивалента.
-- Не вызывать внешние API напрямую — только через единый адаптер (см. архитектуру).
-- <добавь project-specific>
-
----
-
-## Реализация через /code
-
-После `/plan` и его подтверждения — реализация **обязательно** через `/code`. Прямая реализация запрещена.
-
-Причина: `/code` обновляет `triggers.json` (`last_plan_session.code_run = true`), без чего следующий `/plan` покажет warning. Если разработчик говорит "просто реализуй" — Claude обязан спросить: "Запустить `/code` или запустить команду самому?".
+- ❌ Don't edit `.env`, secrets, deploy files (`_deploy.*`, `_update.*`).
+- ❌ Don't add packages without updating `requirements.txt` / `package.json`.
+- ❌ Don't call external APIs directly — only via single adapter.
+- ❌ `<project-specific don't>`
 
 ---
 
-## Deploy rule
+## Workflow rules
 
-Перед каждым деплоем (`<команда деплоя>`) — обязательно:
-1. Запустить `/review` (если не запускался в этой сессии).
-2. Обновить `DEVLOG.md` с тегом `[deploy]` или `[feat:X]` / `[fix:X]` — что, зачем, решение, карта данных (см. формат в DEVLOG.md).
-3. Если изменилась карта данных — обновить таблицу выше ИЛИ `docs/data-map.md`.
+**Implementation through /code:** after `/plan` confirmation — implementation **mandatory** via `/code`. Direct edits forbidden for non-trivial changes. Reason: `/code` updates `triggers.json.last_plan_session.code_run` — without this, methodology state drifts.
 
----
+**Deploy rule:** before every deploy → `/review` if not run in session → DEVLOG entry with `[deploy]` / `[feat:X]` / `[fix:X]` tag → update data map if changed.
 
-## Architecture decision rule
+**Architecture decision rule:** new modules / data flows / services / integrations → run `architect` sub-agent. Claude gives own recommendation BEFORE invoking architect (independent second opinion, not confirmation).
 
-Перед любым архитектурным решением (новый модуль, изменение потока данных, новый сервис, новая интеграция):
-1. Запустить subagent `architect` (`.claude/agents/architect.md`).
-2. Claude **всегда** даёт свою рекомендацию ПЕРЕД запуском архитектора — чтобы получить независимое второе мнение, а не подтверждение.
-3. Architect предлагает альтернативы — финальное решение принимает владелец.
+**Fix rule:**
+- Symptom or cause? Symptom → find cause. Cause → class-level fix preferred.
+- Local or systemic? Local needs justification why won't repeat. Default to systemic (decorator / middleware / schema constraint).
 
----
+**Don't advise already-done:** check last 3-5 messages before suggesting an action that may already be running.
 
-## Fix rule
-
-Перед любым фиксом (код или промпт):
-- Это симптом или причина?
-  - Симптом → найди причину, исправь её.
-  - Причина → определи класс проблемы → реализуй на правильном уровне абстракции (см. Level-4 framework).
-- Это локальный или системный баг?
-  - Локальный → точечный фикс, обосновать почему не может повториться.
-  - Системный → архитектурный фикс предпочтительнее (декоратор, middleware, schema constraint).
-
-⛔ "Локальный" без обоснования — красный флаг, переходи к системному.
+For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md#реализация-через-code-расширенно).
 
 ---
 
-## Capture продуктовых сигналов
+## Regulator levels (Level-4 framework)
 
-В любом диалоге (не только `/plan`) — фиксировать сигнал в `IDEAS.md` **молча** (без упоминания пользователю) когда:
+Strong → weak:
+1. Schema / type constraint — guarantee
+2. No alternative path — very strong
+3. Input data structure — strong
+4. Few-shot examples — medium, drifts
+5. Tool description — weak
+6. Prompt rule — ignored
 
-- Пользователь говорит "было бы удобно если...", "почему он не...", "я вынужден каждый раз..."
-- Пользователь выражает удивление: "не знал что...", "я не видел..."
-- Пользователь повторяет одно и то же действие вручную ≥3 раз в диалоге
-- Текст интерфейса вызвал вопрос или непонимание
+**Rule:** when adding behavior — start from level 4-6, not 1-3. Prompt-only rule as first solution = 🟡 WARNING in `/review`. Before accepting any methodology rule — ask "is there a level-4+ structural fix?". If yes — that's primary, rule secondary.
 
-Не прерывать ответ — сначала ответить на запрос, запись добавить параллельно.
-
-Симптом нарушения: IDEAS.md пуст после 10+ диалогов — сигналы были, но не зафиксированы.
-
----
-
-## Не советуй уже выполненное
-
-Перед любым советом пользователю выполнить действие (запустить команду, перезапустить процесс, etc.):
-- Проверь последние 3-5 сообщений диалога — это действие уже выполнялось?
-- Если статус неизвестен — спроси, не советуй вслепую.
+Details: [CLAUDE_LONG.md § Level-4 framework](CLAUDE_LONG.md#сила-регуляторов-поведения-level-4-framework--расширенно).
 
 ---
 
-## DEVLOG теги
+## Model tier rule
 
-Каноническая таксономия — см. [DEVLOG.md](DEVLOG.md). Основные:
+Every methodology command MUST have `## Рекомендуемая модель` section (5 fields). Canonical registry: [.claude/model-tiers.md](.claude/model-tiers.md).
 
-`[fix:component]` `[feat:component]` `[process:X]` `[infra:component]` `[security:component]` `[ops:X]` `[milestone]` `[regression:X]` `[missed-signal]` `[methodology]`
+When adding new command → also add row to per-command matrix in `model-tiers.md`. Without both, `/review` blocks merge.
 
-Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]`
+When Anthropic renames models → update only the Mapping table in `model-tiers.md`; commands stay stable.
 
-**Стратегические теги:** определяются по активным осям из `VISION.md`. Пример: `[feat:knowledge-axis]`.
-
----
-
-## Реальные угрозы безопасности (для [security] / [infra] задач)
-
-Свериться со списком прежде чем предлагать меры защиты:
-
-<!-- Заполни конкретно для проекта. Пример: -->
-
-**Утечка секретов (High impact):**
-- <конкретно: какие токены, где могут утечь>
-
-**Потеря данных (High impact):**
-- <конкретно: какие хранилища без бэкапа>
-
-**Компрометация доступа (High impact):**
-- <конкретно: SSH brute-force / скомпрометированный API key>
-
-**Финансовые риски (Med impact):**
-- <конкретно: API key compromise → биллинг / нет rate limit>
-
-**Операционные (Med impact):**
-- <конкретно: VPS падает, нет мониторинга>
-
-**Правило:** если предлагаемая мера не закрывает ни одной из угроз выше — это security theater. Обосновать зачем, или не делать.
+Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-расширенно).
 
 ---
 
-## Принцип: security theater недопустим
+## Capture product signals (silent)
 
-Любая security-мера должна иметь:
-1. Конкретную угрозу из списка выше против которой работает.
-2. Способ проверить что мера реально работает (тест, не "установлена").
-3. Понимание остаточных рисков.
+In any dialog — silently add to `IDEAS.md` when user says "would be nice if...", "didn't know...", "have to do X manually every time...", expresses surprise / confusion / repeats an action ≥3 times.
 
-Симптомы security theater:
-- "Установить X" без конфигурации под конкретную угрозу.
-- "Закрыть порт Y" без понимания через что реально атакуют.
-- Решение от воображаемой угрозы при наличии реальных непокрытых.
-- `default deny outgoing` без полного списка зависимостей приложения.
+Don't mention IDEAS to user. Don't interrupt response. Add entry in parallel.
+
+Symptom of violation: IDEAS.md empty after 10+ dialogues.
 
 ---
 
-## Ключевые файлы / точки входа
+## DEVLOG tags (taxonomy)
 
-- <main / index>
-- <router / dispatcher>
-- <config loader>
-- <data layer entry>
+Base: `[fix:X]` `[feat:X]` `[process:X]` `[infra:X]` `[security:X]` `[ops:X]` `[milestone]` `[regression:X]` `[missed-signal]` `[methodology]`
+
+Methodology commands: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`
+
+Strategic axes from VISION.md: `[feat:<axis-tag>]`
+
+Full DEVLOG entry format: [DEVLOG.md](DEVLOG.md).
 
 ---
 
-## Внешние ссылки
+## Security: real threats only
 
-- Runbooks: <link>
-- Wiki / docs: <link>
-- Monitoring: <link>
-- Incident response: <link>
+Before proposing security measure — check it closes a concrete threat from project threat-list:
+
+- **Secret leak (High):** `<project-specific tokens / where they may leak>`
+- **Data loss (High):** `<storages without backup>`
+- **Access compromise (High):** `<auth attack vectors>`
+- **Financial (Med):** `<billing-affecting>`
+- **Operational (Med):** `<monitoring gaps>`
+
+**Rule:** if proposed measure closes ZERO threats from this list → it's security theater. Justify or skip.
+
+Details: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md#реальные-угрозы-безопасности-расширенно).
+
+---
+
+## Key entry points
+
+- `<main / index>`
+- `<router / dispatcher>`
+- `<config loader>`
+- `<data layer entry>`
+
+---
+
+## External links
+
+- Runbooks: `<link>`
+- Wiki: `<link>`
+- Monitoring: `<link>`
+- Incident response: `<link>`
