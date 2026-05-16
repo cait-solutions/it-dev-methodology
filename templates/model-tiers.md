@@ -14,20 +14,20 @@ Centralized model recommendation registry. Команды читают этот 
 
 | Tier | Когда использовать |
 |---|---|
-| **Fast tier** | Lite mode, < 20 строк изменений, deterministic checklists (smoke tests, продуктовая проверка, простые подтверждения) |
-| **Default tier** | Full mode стандарт — повседневные задачи. Большинство `[code]`, `[product]`, `[process]`. До ~50 файлов в контексте |
+| **Fast tier** | ТОЛЬКО для non-reasoning validation tasks: smoke tests, структурное сравнение кода/текста, простые чеклист-проверки. ❌ НЕ для /plan, /code, /review которые требуют reasoning и синтеза |
+| **Default tier** | **PRIMARY CHOICE** для большинства work: /plan, /code, /review, /retro, /sync-vision, /product-review, /onboard. Стандарт для Full mode. До ~50 файлов в контексте. Достаточна для reasoning, консистентности, архитектурного анализа |
 | **Extended tier** | Refactor / scan большого количества файлов / монолит-обход. Та же интеллектуальность что Default, но больший контекст |
-| **Capable tier** | Complex reasoning: `[contract]` + threat model, multi-service refactor, root-cause analysis в `/diagnose`, стратегическая работа в `/product-vision` |
+| **Capable tier** | Complex reasoning: `[contract]` + threat model, multi-service refactor, root-cause analysis в `/diagnose`, стратегическая работа в `/product-vision`, обнаружение class-bug при review |
 
 ---
 
 ## Per-command recommendations
 
-| Команда | Default tier | Upgrade to Capable if | Downgrade to Fast if |
+| Команда | Recommended tier | Upgrade to Capable if | Notes |
 |---|---|---|---|
-| `/plan` | Default | `[contract]` + threat model; multi-service refactor; 50+ файлов в scope | Lite mode + < 20 строк |
-| `/code` | inherits from `/plan` | new class bug discovered mid-task; 50+ файлов в scope обнаружено после верификации | scope сократился < 30 строк после уточнения |
-| `/review` | one tier below `/code` | `[security]` + новый endpoint; обнаружен class-bug при review | Lite mode |
+| `/plan` | **Default** | `[contract]` + threat model; multi-service refactor; 50+ файлов в scope | ❌ Не downgrade to Fast — требуется reasoning и синтез |
+| `/code` | **Default** (inherits from `/plan`) | new class bug discovered mid-task; 50+ файлов в scope обнаружено после верификации | ❌ Не downgrade to Fast — даже на < 20 строк |
+| `/review` | **Default** (никогда не ниже) | `[security]` + новый endpoint; обнаружен class-bug при review | ✅ Rule: review_tier ≥ Default всегда. Требуется reasoning для консистентности |
 | `/deploy` | Fast | smoke test failed; regression detected at after-effects | (always Fast — это чек-листы) |
 | `/retro` | Default | 60+ DEVLOG entries за период; multiple skip-rate alerts | < 10 entries за период |
 | `/architecture-audit` | Default | multi-service + 10+ сервисов; 30%+ drift detected | (always Default) |
