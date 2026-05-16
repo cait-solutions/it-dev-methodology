@@ -138,6 +138,25 @@
 
 ---
 
+## 2026-05-16 — Phase H1 (continued): sanitize SYSTEM-MAP from project-specific references [phase-h1][fix:system-map]
+
+**Что:** Обновлена SYSTEM-MAP.md: заменены "Consumer A — Single-developer project" и "Consumer B — Multi-service platform" на единый "Consumer — Any project"; переменные PAI_CLAUDE/ERP_CLAUDE → CONSUMER_CLAUDE, PAI_ARTIFACTS/ERP_ARTIFACTS → CONSUMER_ARTIFACTS.
+
+**Почему:** Методология должна быть полностью универсальной и не привязанной к проектам-консьюмерам. SYSTEM-MAP отражает архитектуру платформы методологии — не должна содержать проектные различия (solo-dev vs multi-service являются наполнением, не структурой).
+
+**Решение:** Единая архитектурная диаграмма. Принцип: структура одинакова для всех проектов, только содержание различается.
+
+**Карта данных:** не изменилась.
+
+**Аудит завершён:**
+- ✅ SYSTEM-MAP.md: обновлена
+- ✅ Все 20 шаблонов (`templates/*.template.md`): чистые, без PAI/ERP/nexchance/Consumer A/B
+- ✅ DEVLOG.md, README.md, CLAUDE_LONG.md, migrate-claude-md.sh: исторические ссылки (приемлемо для контекста)
+- ✅ CLAUDE.md, PRODUCT.md: использовать только {{Project Name}} и generic concepts
+- ✅ Методология полностью проект-агностична
+
+---
+
 ## 2026-05-16 — Phase G2: CLAUDE.md split + Agent TL;DR convention + Pre-flight fix [phase-g2][feat:template][methodology][milestone] [BREAKING] v3.0.0
 
 **Что:** 7+1 атомарных коммитов (1 неплановый fix добавлен mid-execution):
