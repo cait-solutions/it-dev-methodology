@@ -69,6 +69,7 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 - ❌ Не использовать bash 4+
 - ❌ Не коммитить `.claude/settings.local.json`
 - ❌ Не дублировать контент между шаблонами
+- ❌ Не использовать project-specific имена в templates (canon + consumers должны быть абстрактны; примеры в comments только)
 
 ---
 
@@ -156,6 +157,6 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 ## External links
 
 - GitHub: https://github.com/cait-solutions/it-dev-methodology
-- Консьюмер-проекты:
-  - **PAI** (single-developer, Telegram bot) — single-tier vision
-  - **ERP — nexchance** (multi-service B2B platform) — multi-tier vision, per-service триггеры, inbox, ADR
+- Примеры консьюмер-проектов:
+  - **Single-developer project** (e.g., solo-dev consumer) — single-tier vision
+  - **Multi-service platform** (e.g., team-based consumer) — multi-tier vision, per-service триггеры, inbox, ADR
