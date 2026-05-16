@@ -86,6 +86,29 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-16 — Model strategy: Default (Sonnet) as primary, Fast only for validation [methodology][process] v3.1.0+
+
+**Что:** 2 коммита обновляют стратегию выбора моделей:
+1. Команды `/plan`, `/code`, `/review` — обновлены: Default как основной выбор, убраны downgrade to Fast
+2. `templates/model-tiers.md` — обновлена матрица и описания tiers
+
+**Почему:** Phase H1 Extended выявила что Fast (Haiku) опасна для работ требующих reasoning и синтеза. Я рекомендовал Fast для /review но потом сказал что нужен Default — это противоречие возникло потому что Haiku недостаточна для проверки консистентности архитектурных решений.
+
+**Решение:** 
+- **Default (Sonnet)** — PRIMARY для /plan, /code, /review (reasoning, synthesis, consistency checks)
+- **Capable (Opus)** — только при триггерах escalation
+- **Fast (Haiku)** — ТОЛЬКО для validation tasks (smoke tests, grep, structural comparison — no reasoning required)
+
+**Правило:** review_tier ≥ Default всегда (никогда не downgrade even на < 20 строк)
+
+**Следствие:** Будущие работы будут дороже но консистентнее. Лучше переплатить на Sonnet чем недополучить качество на Haiku.
+
+**Карта данных:** не изменилась.
+
+**Связано:** [Phase H1 Extended review](DEVLOG.md), [Reflections on Haiku limitations]
+
+---
+
 ## 2026-05-16 — Phase H1: Unified methodology — sanitize names + simplify bootstrap [methodology][process:discipline][BREAKING] v3.1.0
 
 **Что:** 7 коммитов (4 для sanitization + 3 для bootstrap simplification):
