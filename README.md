@@ -1,10 +1,12 @@
 # IT Dev Methodology Platform
 
-Version: see [VERSION](VERSION)
+Version: see [VERSION](VERSION) (currently **v2.4.0**)
 
-A shared methodology repository for AI-assisted software development. Provides slash commands, agent skeletons, artifact templates, and bootstrap/sync scripts used across all cait.solutions projects.
+Общая методология для AI-assisted разработки на проектах cait.solutions. Slash-команды, скелеты sub-agents, шаблоны артефактов, защитные хуки, bootstrap/sync скрипты — единый источник правды.
 
-The methodology is derived from the ERP platform's mature multi-service approach, with single-developer patterns (hooks, IDEAS taxonomy, ROADMAP structure, level-4 regulator framework) merged in from the PAI project.
+База — ERP-методология (multi-service, scalable). Patterns из PAI (хуки, IDEAS таксономия, ROADMAP структура, level-4 framework) влиты как универсальные дополнения.
+
+С версии v2.4.0 методология применяется к самой себе (eats own dog food) — изменения идут через её собственный `/plan` → `/code` → `/review` → `/deploy` процесс. См. [CLAUDE.md](CLAUDE.md), [PRODUCT.md](PRODUCT.md), [VISION.md](VISION.md).
 
 ## Structure
 
@@ -76,9 +78,13 @@ Semver:
 
 ## Roadmap
 
-- **Phase A (this PR):** rename `product.vision.md`, canonical `triggers.json` template, real bootstrap and sync scripts.
-- **Phase B:** full templates for DEVLOG, IDEAS, ROADMAP, OPEN-QUESTIONS, HYPOTHESES, RISKS.
-- **Phase C:** rewrite CLAUDE/PRODUCT/SYSTEM-MAP/VISION templates with patterns from live projects.
-- **Phase D:** Tier-2 templates — two-tier vision (AGENT_VISION + LONG_VISION), ADR, data-map, glossary, BEHAVIOR, threat-model, SKILL, services-registry, inbox.
-- **Phase E:** agent skeletons (architect/qa/security), hooks (`bash_protect.py`, `protect.py`, `docs_reminder.template.py`), rules guide.
-- **Phase F:** apply methodology to this repo itself — generate its own CLAUDE.md, PRODUCT.md, DEVLOG.md and adopt the `/plan` flow for future changes.
+Initial build (Phases A-F) — **completed 2026-05-16, v2.4.0**:
+
+- ✅ **Phase A:** rename `product.vision.md`, canonical `triggers.json` template, real bootstrap and sync scripts.
+- ✅ **Phase B:** full templates for DEVLOG, IDEAS, ROADMAP, OPEN-QUESTIONS, HYPOTHESES, RISKS.
+- ✅ **Phase C:** rewrite CLAUDE/PRODUCT/SYSTEM-MAP/VISION templates with patterns from live projects.
+- ✅ **Phase D:** Tier-2 templates — two-tier vision (AGENT_VISION + LONG_VISION), ADR, data-map, glossary, BEHAVIOR, threat-model, SKILL, services-registry, inbox.
+- ✅ **Phase E:** agent skeletons (architect/qa/security), hooks (`bash_protect.py`, `protect.py`, `docs_reminder.template.py`), rules guide.
+- ✅ **Phase F:** apply methodology to this repo itself — real CLAUDE.md, PRODUCT.md, VISION.md, SYSTEM-MAP.md, DEVLOG.md with phase history. Future changes go through the methodology's own `/plan` → `/code` → `/review` → `/deploy` flow.
+
+Next planned work — see [ROADMAP.md](ROADMAP.md) for current priorities.
