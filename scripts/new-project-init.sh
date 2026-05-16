@@ -87,7 +87,7 @@ echo ""
 mkdir -p "$TARGET_DIR"/{.claude/{commands,agents,rules,state,hooks},docs/architecture}
 
 # ---------------------------------------------------------------------------
-# Banner injection for markdown commands.
+# Banner injection — picks comment syntax by file extension.
 # ---------------------------------------------------------------------------
 inject_md_banner() {
   local src="$1"
@@ -99,6 +99,22 @@ inject_md_banner() {
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
 <!-- Emergency override: edit locally + open PR within 48h -->
+
+EOF
+    cat "$src"
+  } > "$dest"
+}
+
+inject_py_banner() {
+  local src="$1"
+  local dest="$2"
+  {
+    cat <<EOF
+# AUTO-GENERATED from methodology-platform $VERSION
+# Synced: $SYNCED_AT
+# DO NOT EDIT — changes will be overwritten on next sync
+# Modify via PR to https://github.com/cait-solutions/it-dev-methodology
+# Emergency override: edit locally + open PR within 48h
 
 EOF
     cat "$src"
@@ -134,15 +150,22 @@ if compgen -G "$METHODOLOGY_DIR/agents/*.template.md" >/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Hooks (appear once Phase E lands).
+# Hooks — universal protection. Strips .template from filename so wiring in
+# settings.json resolves (e.g. docs_reminder.template.py → docs_reminder.py).
 # ---------------------------------------------------------------------------
 if [[ -d "$METHODOLOGY_DIR/hooks" ]] && compgen -G "$METHODOLOGY_DIR/hooks/*" >/dev/null; then
   echo "→ hooks/"
   for hook in "$METHODOLOGY_DIR"/hooks/*; do
     [[ -f "$hook" ]] || continue
     name="$(basename "$hook")"
-    cp "$hook" "$TARGET_DIR/.claude/hooks/$name"
-    echo "  ✓ $name"
+    dest_name="${name/.template/}"
+    dest="$TARGET_DIR/.claude/hooks/$dest_name"
+    case "$name" in
+      *.py) inject_py_banner "$hook" "$dest" ;;
+      *.md) inject_md_banner "$hook" "$dest" ;;
+      *)    cp "$hook" "$dest" ;;
+    esac
+    echo "  ✓ $dest_name"
   done
 fi
 
@@ -163,6 +186,16 @@ synced_at: $SYNCED_AT
 source: https://github.com/cait-solutions/it-dev-methodology
 EOF
 echo "  ✓ .version"
+
+# Settings — project-owned after bootstrap. Only created if absent.
+if [[ -f "$TARGET_DIR/.claude/settings.json" ]]; then
+  echo "  - settings.json (exists — preserved)"
+else
+  if [[ -f "$METHODOLOGY_DIR/templates/settings.template.json" ]]; then
+    cp "$METHODOLOGY_DIR/templates/settings.template.json" "$TARGET_DIR/.claude/settings.json"
+    echo "  ✓ settings.json (initialized with hooks wiring)"
+  fi
+fi
 
 # ---------------------------------------------------------------------------
 # Template copy with {{Project Name}} substitution. Preserves existing files.

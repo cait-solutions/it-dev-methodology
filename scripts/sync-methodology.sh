@@ -62,7 +62,7 @@ if [[ ${#LOCAL_MODS[@]} -gt 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Banner injection.
+# Banner injection — picks comment syntax by file extension.
 # ---------------------------------------------------------------------------
 inject_md_banner() {
   local src="$1"
@@ -74,6 +74,22 @@ inject_md_banner() {
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
 <!-- Emergency override: edit locally + open PR within 48h -->
+
+EOF
+    cat "$src"
+  } > "$dest"
+}
+
+inject_py_banner() {
+  local src="$1"
+  local dest="$2"
+  {
+    cat <<EOF
+# AUTO-GENERATED from methodology-platform $VERSION
+# Synced: $SYNCED_AT
+# DO NOT EDIT — changes will be overwritten on next sync
+# Modify via PR to https://github.com/cait-solutions/it-dev-methodology
+# Emergency override: edit locally + open PR within 48h
 
 EOF
     cat "$src"
@@ -120,7 +136,12 @@ if compgen -G "$METHODOLOGY_DIR/agents/*.template.md" >/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Hooks — always overwrite (universal infrastructure).
+# Hooks — universal infrastructure, always overwrite. Strips .template from
+# filename so wiring in settings.json resolves.
+#
+# NOTE: This will overwrite local fills of docs_reminder.py LIBS dict. If your
+# project has filled LIBS, mirror that change in methodology/hooks/docs_reminder.template.py
+# before syncing, or keep a project-local docs_reminder_libs.py and import from it.
 # ---------------------------------------------------------------------------
 if [[ -d "$METHODOLOGY_DIR/hooks" ]] && compgen -G "$METHODOLOGY_DIR/hooks/*" >/dev/null; then
   echo "→ hooks/"
@@ -128,8 +149,14 @@ if [[ -d "$METHODOLOGY_DIR/hooks" ]] && compgen -G "$METHODOLOGY_DIR/hooks/*" >/
   for hook in "$METHODOLOGY_DIR"/hooks/*; do
     [[ -f "$hook" ]] || continue
     name="$(basename "$hook")"
-    cp "$hook" "$TARGET_DIR/.claude/hooks/$name"
-    echo "  ✓ $name"
+    dest_name="${name/.template/}"
+    dest="$TARGET_DIR/.claude/hooks/$dest_name"
+    case "$name" in
+      *.py) inject_py_banner "$hook" "$dest" ;;
+      *.md) inject_md_banner "$hook" "$dest" ;;
+      *)    cp "$hook" "$dest" ;;
+    esac
+    echo "  ✓ $dest_name"
   done
 fi
 
