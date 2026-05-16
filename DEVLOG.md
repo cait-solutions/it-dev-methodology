@@ -86,21 +86,32 @@
 
 <!-- Записи ниже, новые — сверху -->
 
-## 2026-05-16 — Phase H1: Sanitize project-specific names to generic abstractions [methodology][feat:template][process:discipline] v3.0.1
+## 2026-05-16 — Phase H1: Unified methodology — sanitize names + simplify bootstrap [methodology][process:discipline][BREAKING] v3.1.0
 
-**Что:** 4 атомарных коммита:
-1. CLAUDE.md + PRODUCT.md: заменены PAI/ERP на generic abstractions (single-developer, multi-service платформы); добавлено Don't rule "no project-specific names in templates".
-2. VISION.md + SYSTEM-MAP.md + README.md: все mentions PAI/ERP/nexchance заменены на abstract consumer types; diagram labels обновлены.
-3. Templates: templates/CLAUDE_LONG.template.md (3 PAI→real-world mentions) и templates/vision/AGENT_VISION.template.md (B2B ERP→B2B platform).
-4. VERSION 3.0.0 → 3.0.1 (patch, not breaking) + DEVLOG entry.
+**Что:** 7 коммитов (4 для sanitization + 3 для bootstrap simplification):
 
-**Почему:** методология должна быть абстрактна от specific consumers. Все technical patterns универсальны; project names относятся только в DEVLOG (история) и CLAUDE_LONG.md (исторический контекст). Discipline rule предотвращает будущие добавления специфичных имён в templates и канон.
+**Часть 1 — Sanitization (v3.0.1 commit'ы):**
+1. CLAUDE.md + PRODUCT.md: заменены PAI/ERP на generic abstractions; добавлено Don't rule "no project-specific names in templates".
+2. VISION.md + SYSTEM-MAP.md + README.md: все mentions PAI/ERP/nexchance → abstract consumer types.
+3. Templates: CLAUDE_LONG.template.md, AGENT_VISION.template.md (убраны project names).
+4. VERSION 3.0.0 → 3.0.1 + DEVLOG.
 
-**Решение:** generic abstractions everywhere: "single-developer project" / "multi-service platform" вместо PAI/ERP. Историческая мотивация в CLAUDE_LONG.template.md остаётся (rationale) но project names заменены.
+**Часть 2 — Bootstrap simplification (новые 3 commit'а):**
+5. `scripts/new-project-init.sh`: убраны ВСЕ флаги (--multi-service, --with-adr, --with-inbox, --with-data-map, --with-glossary, --with-behavior, --with-threat-model). Одна команда для всех проектов. Всегда создаётся полный набор артефактов.
+6. `PRODUCT.md`: объединены сценарии bootstrap 1 & 2 в один. Объяснено: разница между solo-dev и multi-service только в наполнении, не в структуре.
+7. `README.md`: добавлена Phase H1 в историю, migration guide для флагов. VERSION 3.0.1 → 3.1.0 (minor, breaking).
 
-**Карта данных:** не изменилась (структурная правка, не логика).
+**Почему:** 
+- Сторона 1: методология должна быть абстрактна от specific consumers. Project names → только DEVLOG (история).
+- Сторона 2: "choose your flags" = cognitive load. "One bootstrap for all" = simplicity. Projects can delete unused dirs after init.
 
-**Связано:** [CLAUDE.md Don'ts section], [VISION.md Ось 3 Cross-project standardization], [plan 2026-05-16 Phase H1]
+**Решение:** 
+- Generic abstractions: "single-developer project" / "multi-service platform".
+- One init: `bash new-project-init.sh <name> <target>` (no flags). Full structure always. Projects choose what to use.
+
+**Карта данных:** не изменилась.
+
+**Связано:** [CLAUDE.md Don'ts], [VISION.md Ось 3 Cross-project standardization], [plan H1 original + expansion]
 
 ---
 
