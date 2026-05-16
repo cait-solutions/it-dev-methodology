@@ -10,7 +10,7 @@
 **Upgrade:** (всегда Capable — это уже верх)
 **Downgrade to Default tier if:** (никогда — диагностика сложна по определению)
 **Mid-task escalation:** **да — Шаг 2.5 Complexity reassessment** (если 3+ начальных гипотез опровергнуты — нужно reset и переподумать; продолжать на Capable)
-**Pre-flight model check:** **да** — определи текущую модель. Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade. Под-powered диагностика часто пропускает root cause.
+**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии). Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade. Под-powered диагностика часто пропускает root cause.
 
 ---
 

@@ -12,7 +12,7 @@
 **Upgrade:** (всегда Fast — обычно достаточно)
 **Downgrade:** (всегда Fast — это минимум)
 **Mid-task escalation:** нет (single pass comparison)
-**Pre-flight model check:** **да** — определи текущую модель. Если используется Capable (Opus) tier — это 🟡 over-powered (2 ступени) → пауза + рекомендация Fast/Default для cost-savings.
+**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии). Если используется Capable (Opus) tier — это 🟡 over-powered (2 ступени) → пауза + рекомендация Fast/Default для cost-savings.
 
 ---
 

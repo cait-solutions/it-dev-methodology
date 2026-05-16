@@ -12,7 +12,7 @@
 **Upgrade to Capable tier if:** `[security]` + новый endpoint; обнаружен class-bug при review который требует grep по всему проекту
 **Downgrade to Fast tier if:** Lite mode (review на простом багфиксе < 20 строк)
 **Mid-task escalation:** **да — Шаг 3.5 Complexity reassessment** (если найден class-bug или security gap)
-**Pre-flight model check:** **да — при старте команды** определи текущую модель и сравни с Default tier для review. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом review.
+**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier для review. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом review.
 
 ---
 

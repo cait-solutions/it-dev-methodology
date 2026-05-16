@@ -12,7 +12,7 @@
 **Upgrade to Capable tier if:** `[contract]` + threat model; multi-service refactor; 50+ файлов в scope
 **Downgrade to Fast tier if:** Lite mode + < 20 строк изменений
 **Mid-task escalation:** нет (анализ; `/code` переоценивает сложность)
-**Pre-flight model check:** **да — при старте команды** определи текущую модель из system prompt и сравни с Default tier. Если mismatch ≥ 2 ступени (over- или under-powered) — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
+**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier. Если mismatch ≥ 2 ступени (over- или under-powered) — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
 
 ---
 
