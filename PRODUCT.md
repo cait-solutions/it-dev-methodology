@@ -73,29 +73,27 @@
 
 ## Ключевые сценарии (Happy Path)
 
-### Сценарий 1: Bootstrap нового single-developer проекта
+### Сценарий 1 & 2: Bootstrap — любого проекта (одна команда, v3.1.0+)
 
 ```
 $ bash methodology-platform/scripts/new-project-init.sh my-app ~/projects/my-app
 → создаются .claude/{commands,agents,hooks,state}/ + settings.json + .version
-→ создаются CLAUDE.md, PRODUCT.md, VISION.md, SYSTEM-MAP.md (+ 6 stub-артефактов)
+→ создаются ВСЕ артефакты: CLAUDE.md, PRODUCT.md, VISION.md
+→ создаются многоуровневые структуры: docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
+→ создаются docs/adr/, docs/data-map.md, inbox/, services-registry.yaml, и т.д.
 → git init если нет
 ```
+
+**One methodology, one bootstrap.** Разница между solo-dev и multi-service — только в наполнении:
+
+- **Solo-dev проект:** используешь VISION.md, игнорируешь docs/vision/ и services-registry.yaml (или удаляешь если не нужны)
+- **Multi-service платформа:** заполняешь docs/vision/AGENT_VISION.md и LONG_VISION_v1.md, создаёшь services-registry.yaml
 
 Дальше:
 1. Заполнить CLAUDE.md (project_type, угрозы, карта данных).
 2. Заполнить PRODUCT.md (команды, хранилища, поведение).
-3. Открыть в Claude Code → `/plan` для первой фичи.
-
-### Сценарий 2: Bootstrap multi-service платформы
-
-```
-$ bash methodology-platform/scripts/new-project-init.sh erp-v2 ~/projects/erp-v2 \
-    --multi-service --with-adr --with-data-map --with-inbox
-→ создаётся docs/vision/{AGENT_VISION,LONG_VISION_v1}.md (вместо одного VISION.md)
-→ создаётся services-registry.yaml
-→ создаются docs/adr/{_TEMPLATE.md,README.md}, docs/data-map.md, inbox/{README.md,_processed/}
-```
+3. Для multi-service: заполнить docs/vision/ и services-registry.yaml; для solo-dev: заполнить VISION.md.
+4. Открыть в Claude Code → `/plan` для первой фичи.
 
 ### Сценарий 3: Sync существующего проекта после обновления методологии
 
