@@ -86,6 +86,18 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase K1: Rules and .gitignore templates for bootstrap [methodology][feat:templates] v3.1.0+
+
+**Что:** 3 commits добавляют недостающие templates для новых проектов: (1) `.claude/rules/README.template.md` с примерами tech stack rules (Python, Go, SQL, API contracts, security); (2) `.gitignore.template` с safe defaults (Claude settings, OS ignores, editor ignores, language-specific); (3) интеграция в `new-project-init.sh` для автоматического копирования.
+
+**Почему:** `/review` command явно читает `.claude/rules/*.md` (Шаг 2), `qa.agent` ожидает rules существовать, но bootstrap создавал пустую папку без README. Новые проекты не знали что туда класть. Аналогично, отсутствие `.gitignore` означает что developers вручную должны создавать (или случайно коммитили sensitive files).
+
+**Карта данных:** не изменилась.
+
+**Связано:** [audit bootstrap completeness], [Phase J1 USER-MAP]
+
+---
+
 ## 2026-05-17 — Phase J1: USER-MAP template + trigger-based sync [methodology][feat:templates][milestone] v3.1.0+
 
 **Что:** 6 commits добавляют USER-MAP (user-facing capability artifact). Создан templates/USER-MAP.template.md с Variant A/B/C (простая/средняя/сложная), интегрирована в bootstrap (new-project-init.sh копирует в docs/product/USER-MAP.md), добавлена в triggers.json.template и /plan Шаг -3.2 триггер для периодического обновления.
