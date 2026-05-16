@@ -1,12 +1,22 @@
 # SYSTEM-MAP — methodology-platform
 
-**Версия:** v1.0
+**Версия:** v1.1
 **Обновлён:** 2026-05-16
-**Граф проверен против кода:** 2026-05-16 (Phase F)
+**Граф проверен против кода:** 2026-05-16 (Phase G2)
 
 > Обновлять этот файл в том же PR что и изменения в `scripts/`, `commands/`, `templates/`, или добавления компонентов.
 >
 > В отличие от обычных проектов, "компоненты" здесь — это **слои репозитория**, а "коммуникации" — это **отношения копирования** между методологией и консьюмерами.
+
+---
+
+## Agent TL;DR
+
+- **Основные подсистемы:** Methodology Platform (canon — commands/templates/hooks/agents/scripts) → Self-application (.claude/ в этом репо) → Consumers (PAI, ERP).
+- **Источники правды:** `commands/`, `templates/`, `hooks/`, `agents/`, `VERSION` — единственный canon. `.claude/` в любом проекте — производное.
+- **Критичные edges:** scripts (`new-project-init.sh`, `sync-methodology.sh`) → консьюмеры (copy + banner). Нарушение banner-механизма ломает версионную трассируемость.
+- **Известные gap-ы:** branch protection не настроен (R-01); CI для idempotent тестирования скриптов отсутствует; нет auto version-drift check у консьюмеров; sync затирает per-project fills в `docs_reminder.py` LIBS.
+- **На что обратить внимание при `/plan [data]` или `[contract]`:** изменение схемы `triggers.json.template` = **breaking** (мажор bump + migration). Изменение banner-формата в скриптах = breaking для версионной трассировки.
 
 ---
 

@@ -9,6 +9,16 @@
 
 ---
 
+## Agent TL;DR
+
+- **Продукт одной фразой:** общая методология AI-assisted разработки для всех cait.solutions проектов — slash-команды, шаблоны артефактов, защитные хуки, bootstrap/sync скрипты, model tier system.
+- **Основные точки входа:** 12 slash-команд (`/plan` → `/code` → `/review` → `/deploy` + `/retro`, `/architecture-audit`, `/sync-vision`, `/product-*`, `/diagnose`, `/onboard`) + 2 скрипта (`new-project-init.sh`, `sync-methodology.sh`).
+- **Ключевые хранилища:** methodology repo = git source; consumers получают banner-prefixed копии через sync (commands/hooks); consumers владеют CLAUDE.md, PRODUCT.md, DEVLOG.md, etc. (project-specific content).
+- **Главные инварианты доверия:** локальные правки команд запрещены — все изменения через PR в этот репо; sync не затирает project content; tier-абстракция моделей переживает ребренды Anthropic.
+- **На что обратить внимание при `/plan [product]`:** новая slash-команда → добавь матрицу в `model-tiers.md` + секцию "Рекомендуемая модель" в command-файл (обязательно). Phase G2 ввёл split CLAUDE → CLAUDE_LONG convention.
+
+---
+
 ## Философия
 
 Методология даёт **общий рабочий процесс** для AI-assisted разработки на всех проектах cait.solutions. Один источник правды на slash-команды, шаблоны артефактов, и защитные хуки.
