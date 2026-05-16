@@ -12,7 +12,7 @@
 ## Purpose
 
 <!-- One-paragraph statement of what this product is and the constraints under which it operates. Example:
-Build a fault-tolerant B2B ERP platform for DACH/EU markets supporting sales, inventory, warehouse, marketplace integrations, financial accounting, multi-tenancy, and analytics. -->
+Build a fault-tolerant B2B platform for regional markets supporting sales, inventory, warehouse, marketplace integrations, financial accounting, multi-tenancy, and analytics. -->
 
 For implementation, also read the local service documents (if multi-service):
 - `/services/{service}/VISION.md`
