@@ -24,11 +24,10 @@
   },
   "last_plan_session": {
     "completed_at": "2026-05-17T00:15:00Z",
-    "task_id": "phase-j1-user-map-template",
+    "task_id": "phase-k1-rules-gitignore-templates",
     "service": "methodology-platform",
-    "mode": "Full",
-    "code_run": true,
-    "review_run": true
+    "mode": "Lite",
+    "code_run": true
   },
   "last_deploy": {
     "date": "2026-05-17",
