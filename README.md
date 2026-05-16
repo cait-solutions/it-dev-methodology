@@ -2,6 +2,12 @@
 
 Version: see [VERSION](VERSION) (currently **v3.0.0** — first major bump, breaking change in CLAUDE.md split convention)
 
+> ⚠️ **For consumers:** This repo is the _methodology canon_ (commands, templates, scripts). Do NOT clone directly. Instead, run:
+> ```bash
+> bash /path/to/methodology/scripts/new-project-init.sh my-project ~/my-project
+> ```
+> Files like DEVLOG.md, PRODUCT.md, VISION.md are _our project context_, not methodology templates.
+
 Общая методология для AI-assisted разработки на проектах cait.solutions. Slash-команды, скелеты sub-agents, шаблоны артефактов, защитные хуки, bootstrap/sync скрипты — единый источник правды.
 
 Методология развивалась из опыта как single-developer, так и multi-service проектов. Patterns из обоих подходов (хуки, IDEAS таксономия, ROADMAP структура, level-4 framework) влиты как универсальные дополнения.

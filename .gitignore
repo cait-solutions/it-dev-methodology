@@ -9,3 +9,26 @@ Thumbs.db
 
 # Test outputs
 /tmp/
+
+# Project artifacts (NOT for methodology-platform consumers)
+DEVLOG.md
+PRODUCT.md
+PRODUCT_LONG.md
+VISION.md
+VISION_LONG.md
+USER-MAP.md
+IDEAS.md
+ROADMAP.md
+HYPOTHESES.md
+RISKS.md
+OPEN-QUESTIONS.md
+BEHAVIOR.md
+
+# Project state (local only)
+.claude/state/
+.claude/.version
+.claude/settings.json
+.claude/agents/
+
+# Documentation build outputs
+docs/
