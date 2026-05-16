@@ -1,10 +1,10 @@
 {
   "global": {
-    "last_sync_vision":      { "date": null, "plans_since": 2 },
-    "last_retro":            { "date": null, "plans_since": 2 },
-    "last_product_review":   { "date": null, "plans_since": 2 },
-    "last_product_check":    { "date": null, "plans_since": 2 },
-    "last_product_vision":   { "date": "2026-05-16", "plans_since": 2 }
+    "last_sync_vision":      { "date": null, "plans_since": 3 },
+    "last_retro":            { "date": null, "plans_since": 3 },
+    "last_product_review":   { "date": null, "plans_since": 3 },
+    "last_product_check":    { "date": null, "plans_since": 3 },
+    "last_product_vision":   { "date": "2026-05-16", "plans_since": 3 }
   },
   "per_service": {},
   "queues": {
@@ -23,11 +23,11 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-05-16T22:50:00Z",
-    "task_id": "phase-g2-claude-split-and-tldr-convention",
+    "completed_at": "2026-05-16T23:35:00Z",
+    "task_id": "phase-i1-audit-gaps-fixes",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": true
+    "code_run": false
   },
   "last_deploy": {
     "date": null,

@@ -75,6 +75,18 @@
 
 ---
 
+## Шаг 1.5 — Branch tracing (F5: AI-automated deploy clarity)
+
+**Принцип:** Deploy через команду `/deploy` выполняется на ветке `ai-dev` (или `agent-*`) чтобы было явно видно что это agent-automated, не manual human work.
+
+- [ ] Текущая ветка: `ai-dev` (или другая designated для agent deploys)?
+- [ ] Если нет → checkout: `git checkout ai-dev` или `git checkout -b ai-dev origin/main`
+- [ ] Если ветка имеет diverged commits → rebase: `git rebase origin/main`
+
+**Почему:** Team collaboration — люди видят разницу между agent-automated (ai-dev ветка) и manual human work (feature/*, main ветка). Audit trail в git: "commit by Claude on ai-dev" vs "commit by John on feature/auth".
+
+---
+
 ## Шаг 2 — DEVLOG.md
 
 Формат записи:
@@ -144,10 +156,37 @@ YYYY-MM-DD — [тип: deploy|milestone|risk-change] — [компонент]
 
 ---
 
+## Шаг 5 — Async operations healthcheck (D3: fire-and-forget visibility)
+
+**Принцип:** Любая async операция (git push, CI/CD trigger, webhook) должна иметь observable outcome или retry сигнал.
+
+### Подшаг 1 — Git push verification
+
+```bash
+git log -1 --oneline origin/main
+```
+
+- Последний коммит совпадает с вашим последним коммитом на ai-dev?
+- Если ДА → ✅ git push succeeded
+- Если НЕТ → ⚠️ push failed или не произошёл:
+  - Retry: `git push origin ai-dev:main`
+  - Если fails → сохранить error message в DEVLOG `[async-failure:git-push]`
+  - ⛔ НЕ продолжать если git push failed
+
+### Подшаг 2 — CI/CD trigger (если применимо)
+
+Если проект имеет CI/CD:
+- GitHub Actions / GitLab CI trigger начался? (проверить статус в UI)
+- Если нет → trigger явно (webhook, API call)
+- Записать status в DEVLOG: `[deploy:ci-triggered]` или `[async-failure:ci-trigger]`
+
+---
+
 ## После деплоя
 
 Обновить triggers.json:
 - `last_deploy.date = <today>`
+- Если были async failures → `last_deploy.status = "partial"` (git push OK но CI не started)
 
 ---
 

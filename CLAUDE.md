@@ -77,6 +77,8 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
 
+**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
+
 **Deploy rule:** "деплой" = `git push origin main`. Перед каждым push:
 1. `/review` если не запускался
 2. DEVLOG запись `[deploy]` / `[feat:X]` / `[fix:X]` / `[methodology]`
@@ -125,6 +127,15 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 Phase-теги: `[phase-a]` … `[phase-g2]` — milestone history.
 
 Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`
+
+**Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name. 
+
+Одна проблема — один semantic indicator, даже если люди называют по-разному:
+- `[git-failure]` — не `[git_push-failed]` ИЛИ `[github-error]` ИЛИ `[branch-push-issue]` (все sync failures)
+- `[async-failure:operation]` — не `[vault-sync-error]` И `[queue-dropped]` (оба fire-and-forget failures)
+- `[state-pollution]` — не `[history-leak]` И `[cache-contamination]` (оба внутренние состояния)
+
+**Reason:** Regex-based detection fails когда люди называют одно разными именами. Semantic category stays stable.
 
 ---
 
