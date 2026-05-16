@@ -187,6 +187,12 @@ source: https://github.com/cait-solutions/it-dev-methodology
 EOF
 echo "  ✓ .version"
 
+# Model tiers registry — canonical methodology reference, copied with banner.
+if [[ -f "$METHODOLOGY_DIR/templates/model-tiers.md" ]]; then
+  inject_md_banner "$METHODOLOGY_DIR/templates/model-tiers.md" "$TARGET_DIR/.claude/model-tiers.md"
+  echo "  ✓ model-tiers.md"
+fi
+
 # Settings — project-owned after bootstrap. Only created if absent.
 if [[ -f "$TARGET_DIR/.claude/settings.json" ]]; then
   echo "  - settings.json (exists — preserved)"

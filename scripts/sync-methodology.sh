@@ -161,6 +161,15 @@ if [[ -d "$METHODOLOGY_DIR/hooks" ]] && compgen -G "$METHODOLOGY_DIR/hooks/*" >/
 fi
 
 # ---------------------------------------------------------------------------
+# Model tiers registry — canonical reference, always overwrite.
+# ---------------------------------------------------------------------------
+if [[ -f "$METHODOLOGY_DIR/templates/model-tiers.md" ]]; then
+  echo "→ model-tiers/"
+  inject_md_banner "$METHODOLOGY_DIR/templates/model-tiers.md" "$TARGET_DIR/.claude/model-tiers.md"
+  echo "  ✓ model-tiers.md"
+fi
+
+# ---------------------------------------------------------------------------
 # .version pointer.
 # ---------------------------------------------------------------------------
 cat > "$TARGET_DIR/.claude/.version" <<EOF
