@@ -44,7 +44,7 @@ echo "Target:      $TARGET_DIR"
 echo "Structure:   Full (one methodology, all artifacts created)"
 echo ""
 
-mkdir -p "$TARGET_DIR"/{.claude/{commands,agents,rules,state,hooks},docs/architecture}
+mkdir -p "$TARGET_DIR"/{.claude/{commands,agents,rules,state,hooks},docs/{architecture,product,vision}}
 
 # ---------------------------------------------------------------------------
 # Banner injection — picks comment syntax by file extension.
@@ -190,6 +190,7 @@ copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGE
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LONG.template.md"     "$TARGET_DIR/CLAUDE_LONG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"         "$TARGET_DIR/PRODUCT.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/SYSTEM-MAP.template.md"      "$TARGET_DIR/docs/architecture/SYSTEM-MAP.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/USER-MAP.template.md"        "$TARGET_DIR/docs/product/USER-MAP.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/DEVLOG.template.md"          "$TARGET_DIR/DEVLOG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/IDEAS.template.md"           "$TARGET_DIR/IDEAS.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/ROADMAP.template.md"         "$TARGET_DIR/ROADMAP.md"
