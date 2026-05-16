@@ -6,10 +6,22 @@
 
 ## Рекомендуемая модель
 
-**Default tier:** наследуется из `/plan` (см. `.claude/model-tiers.md`)
-**Upgrade to Capable tier if:** new class bug обнаружен mid-task; 50+ файлов в scope после верификации; задачи появились вне scope плана
-**Downgrade to Fast tier if:** scope сократился < 30 строк после уточнения
-**Mid-task escalation:** **да — Шаг 1.5 Complexity reassessment** (обязательная остановка с рекомендацией переключения)
+**Strategy:** наследуется из `/plan`. Default (Sonnet) — основной выбор.
+
+**Default tier (Sonnet):** Наследуется из `/plan`. Используется для большинства /code работ.
+
+**Upgrade to Capable tier (Opus) if:**
+- new class bug обнаружен mid-task (требует grep по всему проекту)
+- 50+ файлов в scope после верификации гипотезы
+- задачи появились вне scope плана (требуется переплан)
+- Шаг 1.5 reassessment найдёт триггер escalation
+
+**❌ Downgrade to Fast tier:** НЕ рекомендуется даже если scope < 30 строк
+- Риск: неправильный синтез, пропущены побочные эффекты
+- Лучше переплатить на Default чем потерять качество
+
+**Mid-task escalation:** **да — Шаг 1.5 Complexity reassessment** (обязательная остановка, может рекомендовать upgrade)
+
 **Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с tier из `/plan` рекомендации. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом реализации.
 
 ---

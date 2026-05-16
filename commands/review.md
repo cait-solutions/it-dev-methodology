@@ -8,10 +8,25 @@
 
 ## Рекомендуемая модель
 
-**Default tier:** one tier below `/code` (если `/code` шёл на Default → review на Fast; если `/code` шёл на Capable → review на Default; см. `.claude/model-tiers.md`)
-**Upgrade to Capable tier if:** `[security]` + новый endpoint; обнаружен class-bug при review который требует grep по всему проекту
-**Downgrade to Fast tier if:** Lite mode (review на простом багфиксе < 20 строк)
+**Strategy:** Default (Sonnet) — основной выбор. Upgrade to Capable (Opus) при триггерах.
+
+**Default tier (Sonnet):** Используется для большинства review. Достаточна для архитектурной проверки, консистентности, контрактов.
+
+**Upgrade to Capable tier (Opus) if:**
+- `[security]` новый endpoint с threat-моделем
+- Обнаружен class-bug при review (требует grep по всему проекту)
+- Шаг 3.5 reassessment найдёт системную проблему
+- Нужен deeper analysis для контрактов
+
+**❌ Downgrade to Fast tier:** ЗАПРЕЩЕНО
+- Review требует reasoning для проверки консистентности
+- Даже на простом bagfix < 20 строк нужна Default
+- Риск: пропустить архитектурное нарушение (как в Phase H1 Extended)
+
+**Rule:** `review_tier ≥ Default`, никогда не ниже
+
 **Mid-task escalation:** **да — Шаг 3.5 Complexity reassessment** (если найден class-bug или security gap)
+
 **Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier для review. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом review.
 
 ---

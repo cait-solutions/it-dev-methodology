@@ -8,11 +8,25 @@
 
 ## Рекомендуемая модель
 
-**Default tier:** Default tier (см. `.claude/model-tiers.md`)
-**Upgrade to Capable tier if:** `[contract]` + threat model; multi-service refactor; 50+ файлов в scope
-**Downgrade to Fast tier if:** Lite mode + < 20 строк изменений
-**Mid-task escalation:** нет (анализ; `/code` переоценивает сложность)
-**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier. Если mismatch ≥ 2 ступени (over- или under-powered) — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
+**Strategy:** Default (Sonnet) — основной выбор. Upgrade to Capable (Opus) только при триггерах.
+
+**Default tier (Sonnet):** Основной выбор для всех планов. Достаточна для архитектурного анализа, диагностики, синтеза решений.
+
+**Upgrade to Capable tier (Opus) if:**
+- `[contract]` + threat model сложнее стандартного
+- `[security]` новый endpoint с нетривиальным threat-моделем
+- Multi-service refactor (50+ файлов, много зависимостей)
+- Обнаружена системная проблема в диагностике (class-bug в 3+ файлах)
+- User explicitly asks for deeper analysis
+
+**❌ Fast tier (Haiku):** НЕ рекомендуется для регулярных планов
+- Риск: неправильный синтез, упущение консистентности
+- Допускается только для grep/validation если у тебя явно нет reasoning-based шагов
+- Лучше переплатить на Default чем пропустить архитектурное нарушение
+
+**Mid-task escalation:** нет (анализ в /plan не требует mid-task переоценки как /code)
+
+**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
 
 ---
 
@@ -400,6 +414,27 @@
 
 ---
 
+## Шаг 99.5 — Модель для /code и /review (ПЕРЕД финализацией)
+
+**Когда план готов к утверждению:**
+
+✅ **Для /code (следующий шаг):**
+- Модель: **Default (Sonnet)** (unless upgrade триггер выше в блоке "Рекомендуемая модель")
+- Pre-flight check: спроси пользователя какая модель сейчас активна, сравни с рекомендованной
+- Если mismatch — рекомендуй переключиться перед /code
+
+✅ **Для /review (после /code):**
+- Модель: **Default (Sonnet)** (никогда не ниже Default, даже если /code был на Default)
+- Правило: `review_tier = min(/code_tier, Default)` но ≥ Default
+- ❌ НЕ использовать Fast (Haiku) для review — риск пропустить консистентность
+
+**Примеры:**
+- /code на Default → /review на Default
+- /code на Capable → /review на Default
+- ❌ /code на Default, /review на Fast — НЕПРАВИЛЬНО
+
+---
+
 ## Шаг 100 — Финализация state
 
 После подтверждения плана пользователем:
@@ -415,7 +450,7 @@
 }
 ```
 2. Сохранить triggers.json
-3. Сообщить: "✅ План готов. Следующий шаг: /code"
+3. Сообщить: "✅ План готов. Следующий шаг: /code на [модель из рекомендации]"
 
 ---
 
