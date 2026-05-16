@@ -1,6 +1,6 @@
 # IT Dev Methodology Platform
 
-Version: see [VERSION](VERSION) (currently **v2.4.0**)
+Version: see [VERSION](VERSION) (currently **v3.0.0** — first major bump, breaking change in CLAUDE.md split convention)
 
 Общая методология для AI-assisted разработки на проектах cait.solutions. Slash-команды, скелеты sub-agents, шаблоны артефактов, защитные хуки, bootstrap/sync скрипты — единый источник правды.
 
@@ -86,5 +86,14 @@ Initial build (Phases A-F) — **completed 2026-05-16, v2.4.0**:
 - ✅ **Phase D:** Tier-2 templates — two-tier vision (AGENT_VISION + LONG_VISION), ADR, data-map, glossary, BEHAVIOR, threat-model, SKILL, services-registry, inbox.
 - ✅ **Phase E:** agent skeletons (architect/qa/security), hooks (`bash_protect.py`, `protect.py`, `docs_reminder.template.py`), rules guide.
 - ✅ **Phase F:** apply methodology to this repo itself — real CLAUDE.md, PRODUCT.md, VISION.md, SYSTEM-MAP.md, DEVLOG.md with phase history. Future changes go through the methodology's own `/plan` → `/code` → `/review` → `/deploy` flow.
+- ✅ **Phase G1 (v2.5.0):** navigation maps in `/review`, `/deploy`, `/onboard`; model recommendation tier system (`templates/model-tiers.md`) with Pre-flight check and mid-task complexity reassessment.
+- ✅ **Phase G2 (v3.0.0, breaking):** CLAUDE.md split into short `CLAUDE.md` (WHAT — rules) + new `CLAUDE_LONG.md` (WHY — rationale, edge cases); Agent TL;DR convention in PRODUCT and SYSTEM-MAP templates; migration helper `scripts/migrate-claude-md.sh` for existing consumers; Pre-flight check now asks user (was auto-detect from system prompt — unreliable mid-session).
+
+**Breaking change migration for existing consumers (PAI, ERP):**
+```bash
+# Run on each existing consumer project once:
+/path/to/methodology-platform/scripts/migrate-claude-md.sh /path/to/consumer
+# Then follow the 5-step manual extraction instructions printed by the helper.
+```
 
 Next planned work — see [ROADMAP.md](ROADMAP.md) for current priorities.

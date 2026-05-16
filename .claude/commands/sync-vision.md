@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
+<!-- AUTO-GENERATED from methodology-platform v3.0.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -23,7 +23,7 @@
 **Upgrade to Capable tier if:** 10+ inbox файлов И 5+ открытых OQ одновременно; обнаружен Type C конфликт между vision и кодом (требует глубокого анализа)
 **Downgrade to Fast tier if:** (не downgrade — конфликтный анализ требует reasoning)
 **Mid-task escalation:** нет (single-pass classification A-E + report)
-**Pre-flight model check:** **да** — определи текущую модель. Если mismatch ≥ 2 ступени — пауза + рекомендация.
+**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии). Если mismatch ≥ 2 ступени — пауза + рекомендация.
 
 ---
 

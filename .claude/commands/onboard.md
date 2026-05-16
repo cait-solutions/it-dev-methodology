@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
+<!-- AUTO-GENERATED from methodology-platform v3.0.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -16,7 +16,7 @@
 **Upgrade to Capable tier if:** legacy domain handover с risk map для AI-агента (требует глубокого анализа существующего кода чтобы определить Forbidden / Approval-required операции)
 **Downgrade to Fast tier if:** new developer mode — pure reading walkthrough, без анализа
 **Mid-task escalation:** нет (single-pass — либо подготовка onboarding документации, либо создание SKILL.md из кода)
-**Pre-flight model check:** **да** — определи текущую модель. Если mismatch ≥ 2 ступени — пауза + рекомендация.
+**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии). Если mismatch ≥ 2 ступени — пауза + рекомендация.
 
 ---
 

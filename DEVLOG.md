@@ -86,6 +86,32 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-16 — Phase G2: CLAUDE.md split + Agent TL;DR convention + Pre-flight fix [phase-g2][feat:template][methodology][milestone] [BREAKING] v3.0.0
+
+**Что:** 7+1 атомарных коммитов (1 неплановый fix добавлен mid-execution):
+1. Создан `templates/CLAUDE_LONG.template.md` (348 строк) — полное содержание с rationale, historical motivation, trade-offs, edge cases.
+2. `templates/CLAUDE.template.md` переписан в short version (161 строка, was 234) — WHAT only, cross-refs to CLAUDE_LONG via section anchors.
+3. Agent TL;DR convention добавлена в `PRODUCT.template.md` и `SYSTEM-MAP.template.md` — обязательная секция 5-15 строк сразу после метаданных.
+4. `scripts/migrate-claude-md.sh` (новый) — helper для существующих consumers; copy CLAUDE.md → CLAUDE_LONG.md + 5-step manual instruction; idempotent guard. `new-project-init.sh` обновлён — bootstrap создаёт оба файла.
+5. **(unplanned)** Pre-flight model check fix: спрашивает пользователя, не auto-detects — system prompt unreliable при UI-переключении модели mid-session. Обновлены model-tiers.md + все 12 commands via sed.
+6. Self-migration: запущен migrate-claude-md.sh на этом репо → CLAUDE_LONG.md создан (209 строк) + CLAUDE.md переписан (161 строка). 37% token saving на default load.
+7. Self-application TL;DR: PRODUCT.md и docs/architecture/SYSTEM-MAP.md получили Agent TL;DR секции.
+8. VERSION 2.5.0 → **3.0.0** (major, breaking). README с migration инструкцией для consumers. VISION v2.1 поправка терминологии (AGENT_CLAUDE → Option D rename).
+
+**Почему:** (1) CLAUDE.md разрастался — agent читал 200+ строк при каждом /plan, многое было rationale а не правила; (2) Critical bug в G1 design — Pre-flight check auto-detected модель из system prompt, что **unreliable** при UI-переключении (пользователь работает на Sonnet, system prompt говорит Opus). Без фикса G1 model tier infrastructure частично сломана.
+
+**Решение:** Split convention: CLAUDE.md = WHAT (rules, MUST/MUST NOT, scan-friendly, auto-loaded), CLAUDE_LONG.md = WHY (rationale, edge cases, examples, on-demand). Option D — переписать CLAUDE.md как short, перенести full content в CLAUDE_LONG.md (не "AGENT_CLAUDE" как VISION v2 формулировал — Claude Code конвенционно auto-loadit CLAUDE.md). Pre-flight протокол: спрашиваем пользователя при старте сессии, переиспользуем confirmed value для последующих команд.
+
+**Карта данных:** новый шаблон CLAUDE_LONG.template.md (348 строк) — производное в консьюмере при bootstrap → CLAUDE_LONG.md. Старый CLAUDE.template.md уменьшился до 161 строки. Schema `triggers.json` не менялась — non-breaking для state.
+
+**Breaking change для consumers:** существующие PAI/ERP имеют один CLAUDE.md без CLAUDE_LONG.md. Migration: запустить `scripts/migrate-claude-md.sh <consumer>` → создаст CLAUDE_LONG.md с full content + 5-step manual инструкция для сокращения CLAUDE.md. Без migration старые consumers продолжат работать (graceful degradation), но не получат cost-saving преимущества от split.
+
+**Scope extension acknowledged:** commit 4.5 (Pre-flight protocol fix) был добавлен mid-execution beyond original /plan G2 scope. Зафиксировано в commit message commit 4.5. Без этого fix G1 infrastructure частично сломана — необходим перед deploy v3.0.0.
+
+**Связано:** [VISION v2.1 — поправка терминологии], [README migration section], [scripts/migrate-claude-md.sh], [Phase G1 — Pre-flight design which had auto-detect bug]
+
+---
+
 ## 2026-05-16 — Phase G1: navigation maps + model recommendation tiers [phase-g1][feat:command][methodology]
 
 **Что:** Реализован Phase G1 через формальный `/plan` → `/code` → `/review` → `/deploy` процесс. 7 атомарных коммитов:

@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
+<!-- AUTO-GENERATED from methodology-platform v3.0.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -50,32 +50,65 @@ Centralized model recommendation registry. Команды читают этот 
 
 При старте **любой** команды агент обязан выполнить:
 
-1. **Определить текущую модель** из system prompt (Anthropic identifier: `claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5`, etc.).
-2. **Сравнить с Default tier** для запускаемой команды (см. матрицу выше).
-3. **Если mismatch — пауза + краткая рекомендация:**
+### Шаг 1: спросить пользователя о текущей модели
+
+⛔ **Не полагаться на self-identification** через system prompt — он может быть stale (например, если пользователь переключил модель в UI mid-session, system prompt не обновится).
+
+Агент задаёт **один короткий вопрос** в начале команды:
+
+```
+Pre-flight check: на какой модели сейчас работаешь?
+  (нужно для рекомендации tier для /<command>; см. .claude/model-tiers.md)
+
+  a) Haiku 4.5 (Fast tier)
+  b) Sonnet 4.6 — Default или 1M context (Default или Extended tier)
+  c) Opus 4.7 — 1M context (Capable tier)
+  d) другая — укажи
+```
+
+**Если пользователь явно подтвердил модель в этой сессии ранее** — можно использовать его ответ; повторно не спрашивать.
+
+### Шаг 2: сравнить с Default tier команды
+
+См. per-command матрицу выше.
+
+### Шаг 3: пауза + рекомендация если mismatch
 
 ```
 ⚠️ Mismatch текущей модели и рекомендации для этой команды.
-   Текущая: <current model name> (<current tier>)
+   Текущая: <user-confirmed model> (<current tier>)
    Рекомендуется: <recommended tier> для /<command>
-   Причина mismatch: over-powered (дорого) | under-powered (риск низкого качества)
+   Причина mismatch: over-powered (cost waste) | under-powered (quality risk)
 
 Варианты:
-  a) Продолжить на текущей модели (особенно если разница маленькая)
-  b) Переключиться: закрыть сессию → выбрать <recommended model> → открыть новую сессию
+  a) Продолжить на текущей модели (зафиксируется как accepted risk в DEVLOG)
+  b) Переключиться: смени модель в UI Claude Code → новая сессия для чистого контекста
   c) Прервать выполнение
 ```
 
-4. **Не блокирует** — пользователь решает; auto-switch невозможен (требует UI action).
+### Не блокирует
 
-**Когда mismatch fires:**
-- Текущий tier > recommended tier на 2 ступени (over-powered): например, Capable когда нужен Fast. Cost waste.
-- Текущий tier < recommended tier (under-powered): например, Fast когда нужен Capable. Risk low quality.
-- Разница в 1 ступень — ⚪ neutral, не fires (это normal headroom).
+Pre-flight check — advisory. Пользователь решает. Auto-switch невозможен (требует UI action).
 
-**Пример:**
-- Запущен `/product-check` (Fast tier) на Opus 4.7 (Capable) → 🟡 over-powered by 2 tiers → recommend Sonnet (Default) or Haiku (Fast).
-- Запущен `/product-vision` (Capable tier) на Haiku 4.5 (Fast) → 🔴 under-powered by 2 tiers → strongly recommend Opus.
+### Когда mismatch fires
+
+- Текущий tier > recommended на ≥2 ступени (over-powered): например Capable на /product-check. Cost waste.
+- Текущий tier < recommended на ≥2 ступени (under-powered): например Fast на /diagnose. Quality risk.
+- Разница в 1 ступень — ⚪ neutral, не fires.
+
+### Почему "спрашивать", а не "детектировать"
+
+Агент **не может надёжно идентифицировать свою модель**:
+- system prompt описывает модель при старте сессии, но не обновляется при UI-переключении
+- API routing может расходиться с UI-выбором в некоторых конфигурациях
+- Между разными surfaces (CLI / IDE extension / web) поведение может отличаться
+
+Единственный надёжный источник — пользователь. Поэтому спрашиваем явно. Это **раз за сессию** (не на каждую команду — если пользователь уже подтвердил модель ранее в той же сессии, агент использует confirmed value).
+
+### Пример
+
+- Пользователь подтверждает "Opus 4.7", запускает `/product-check` → match: Capable vs Fast = 2 tiers over → 🟡 пауза, рекомендация Sonnet/Haiku.
+- Пользователь подтверждает "Haiku 4.5", запускает `/product-vision` → match: Fast vs Capable = 2 tiers under → 🔴 strong recommendation Opus.
 
 ---
 

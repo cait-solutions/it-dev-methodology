@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
+<!-- AUTO-GENERATED from methodology-platform v3.0.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -16,7 +16,7 @@
 **Upgrade to Capable tier if:** new class bug обнаружен mid-task; 50+ файлов в scope после верификации; задачи появились вне scope плана
 **Downgrade to Fast tier if:** scope сократился < 30 строк после уточнения
 **Mid-task escalation:** **да — Шаг 1.5 Complexity reassessment** (обязательная остановка с рекомендацией переключения)
-**Pre-flight model check:** **да — при старте команды** определи текущую модель и сравни с tier из `/plan` рекомендации. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом реализации.
+**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с tier из `/plan` рекомендации. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом реализации.
 
 ---
 

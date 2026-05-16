@@ -1,4 +1,4 @@
-<!-- AUTO-GENERATED from methodology-platform v2.5.0 -->
+<!-- AUTO-GENERATED from methodology-platform v3.0.0 -->
 <!-- Synced: 2026-05-16 -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
 <!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
@@ -18,7 +18,7 @@
 **Upgrade:** (всегда Capable — это верх)
 **Downgrade:** (никогда — стратегическая работа на слабой модели → плохое качество осей)
 **Mid-task escalation:** нет (single deep pass)
-**Pre-flight model check:** **да** — определи текущую модель. Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade перед началом. Слабая модель → axes теряют strategic depth.
+**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии). Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade перед началом. Слабая модель → axes теряют strategic depth.
 
 ---
 
