@@ -6,6 +6,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — структурное сравнение текста с кодом, deterministic checklist
+**Upgrade:** (всегда Fast — обычно достаточно)
+**Downgrade:** (всегда Fast — это минимум)
+**Mid-task escalation:** нет (single pass comparison)
+**Pre-flight model check:** **да** — определи текущую модель. Если используется Capable (Opus) tier — это 🟡 over-powered (2 ступени) → пауза + рекомендация Fast/Default для cost-savings.
+
+---
+
 Прочитай PRODUCT.md. Сравни с текущим кодом и картой данных в CLAUDE.md:
 
 1. **Команды в таблице vs код:** каждая команда из таблицы реально зарегистрирована?

@@ -10,6 +10,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** multi-service + 10+ сервисов; обнаружен drift > 30% (нужен глубокий анализ корректности графа)
+**Downgrade to Fast tier if:** (не downgrade — even single-service audit требует понимания)
+**Mid-task escalation:** нет (single-pass анализ inventory → comparison → report)
+**Pre-flight model check:** **да** — определи текущую модель. Если mismatch ≥ 2 ступени — пауза + рекомендация.
+
+---
+
 ## Шаг 1 — Inventory
 
 1. Загрузить текущий граф из SYSTEM-MAP.md

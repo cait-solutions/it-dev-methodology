@@ -6,6 +6,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** **Capable tier** (см. `.claude/model-tiers.md`) — стратегическая работа требует deep reasoning: anti-anchoring, 5-вопросный фильтр, ranking осей
+**Upgrade:** (всегда Capable — это верх)
+**Downgrade:** (никогда — стратегическая работа на слабой модели → плохое качество осей)
+**Mid-task escalation:** нет (single deep pass)
+**Pre-flight model check:** **да** — определи текущую модель. Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade перед началом. Слабая модель → axes теряют strategic depth.
+
+---
+
 ## Шаг -1 — Калибровка уровня оси
 
 Прежде чем называть что-то "осью" — фильтр:

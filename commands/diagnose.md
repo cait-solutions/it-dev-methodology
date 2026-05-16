@@ -4,6 +4,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** **Capable tier** (см. `.claude/model-tiers.md`) — диагностика всегда требует complex reasoning по гипотезам
+**Upgrade:** (всегда Capable — это уже верх)
+**Downgrade to Default tier if:** (никогда — диагностика сложна по определению)
+**Mid-task escalation:** **да — Шаг 2.5 Complexity reassessment** (если 3+ начальных гипотез опровергнуты — нужно reset и переподумать; продолжать на Capable)
+**Pre-flight model check:** **да** — определи текущую модель. Если запущена не на Capable tier (Opus 4.7) — 🔴 strongly recommend upgrade. Под-powered диагностика часто пропускает root cause.
+
+---
+
 ## Шаг 1 — Захват полного контекста
 
 - Какой компонент?

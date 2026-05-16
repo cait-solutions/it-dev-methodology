@@ -4,6 +4,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — деплой это чек-листы, structured smoke test, обновление DEVLOG
+**Upgrade to Default tier if:** smoke test failed → нужен диагностический анализ; regression detected at after-effects check
+**Downgrade:** (всегда Fast — это минимально допустимый)
+**Mid-task escalation:** нет (если failed → обычно прерывается и идёт в `/diagnose`)
+**Pre-flight model check:** **да — при старте команды** определи текущую модель. Если используется Capable (Opus) tier — это over-powered для deploy → пауза + рекомендация Fast/Default для cost-savings.
+
+---
+
 ## Шаг 0 — Review обязателен
 
 Запусти `/review` если не запускался в этой сессии. Деплой без review запрещён.

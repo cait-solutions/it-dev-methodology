@@ -11,6 +11,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** 10+ inbox файлов И 5+ открытых OQ одновременно; обнаружен Type C конфликт между vision и кодом (требует глубокого анализа)
+**Downgrade to Fast tier if:** (не downgrade — конфликтный анализ требует reasoning)
+**Mid-task escalation:** нет (single-pass classification A-E + report)
+**Pre-flight model check:** **да** — определи текущую модель. Если mismatch ≥ 2 ступени — пауза + рекомендация.
+
+---
+
 ## Шаг 1 — Inventory источников
 
 - Прочитать VISION.md

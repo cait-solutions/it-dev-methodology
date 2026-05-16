@@ -6,6 +6,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** Default tier (см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** `[contract]` + threat model; multi-service refactor; 50+ файлов в scope
+**Downgrade to Fast tier if:** Lite mode + < 20 строк изменений
+**Mid-task escalation:** нет (анализ; `/code` переоценивает сложность)
+**Pre-flight model check:** **да — при старте команды** определи текущую модель из system prompt и сравни с Default tier. Если mismatch ≥ 2 ступени (over- или under-powered) — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
+
+---
+
 ## Навигационная карта шагов
 
 | Шаг | Lite | [code] | [product] | [data] | [security/infra] | [contract] |

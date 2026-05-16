@@ -40,6 +40,39 @@ Centralized model recommendation registry. Команды читают этот 
 
 ---
 
+## Pre-flight model check (обязательно для каждой команды)
+
+При старте **любой** команды агент обязан выполнить:
+
+1. **Определить текущую модель** из system prompt (Anthropic identifier: `claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5`, etc.).
+2. **Сравнить с Default tier** для запускаемой команды (см. матрицу выше).
+3. **Если mismatch — пауза + краткая рекомендация:**
+
+```
+⚠️ Mismatch текущей модели и рекомендации для этой команды.
+   Текущая: <current model name> (<current tier>)
+   Рекомендуется: <recommended tier> для /<command>
+   Причина mismatch: over-powered (дорого) | under-powered (риск низкого качества)
+
+Варианты:
+  a) Продолжить на текущей модели (особенно если разница маленькая)
+  b) Переключиться: закрыть сессию → выбрать <recommended model> → открыть новую сессию
+  c) Прервать выполнение
+```
+
+4. **Не блокирует** — пользователь решает; auto-switch невозможен (требует UI action).
+
+**Когда mismatch fires:**
+- Текущий tier > recommended tier на 2 ступени (over-powered): например, Capable когда нужен Fast. Cost waste.
+- Текущий tier < recommended tier (under-powered): например, Fast когда нужен Capable. Risk low quality.
+- Разница в 1 ступень — ⚪ neutral, не fires (это normal headroom).
+
+**Пример:**
+- Запущен `/product-check` (Fast tier) на Opus 4.7 (Capable) → 🟡 over-powered by 2 tiers → recommend Sonnet (Default) or Haiku (Fast).
+- Запущен `/product-vision` (Capable tier) на Haiku 4.5 (Fast) → 🔴 under-powered by 2 tiers → strongly recommend Opus.
+
+---
+
 ## Mid-task complexity escalation
 
 Команды `/code`, `/review`, `/diagnose` имеют **обязательный шаг Complexity reassessment** после первой верификации. Если обнаружено условие из колонки "Upgrade to Capable if" соответствующей команды → команда **обязана** остановиться и спросить:

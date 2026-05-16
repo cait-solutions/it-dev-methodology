@@ -6,6 +6,16 @@
 
 ---
 
+## Рекомендуемая модель
+
+**Default tier:** one tier below `/code` (если `/code` шёл на Default → review на Fast; если `/code` шёл на Capable → review на Default; см. `.claude/model-tiers.md`)
+**Upgrade to Capable tier if:** `[security]` + новый endpoint; обнаружен class-bug при review который требует grep по всему проекту
+**Downgrade to Fast tier if:** Lite mode (review на простом багфиксе < 20 строк)
+**Mid-task escalation:** **да — Шаг 3.5 Complexity reassessment** (если найден class-bug или security gap)
+**Pre-flight model check:** **да — при старте команды** определи текущую модель и сравни с Default tier для review. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом review.
+
+---
+
 ## Шаг 0 — Проверка на повторный фикс
 
 - Открой DEVLOG.md
