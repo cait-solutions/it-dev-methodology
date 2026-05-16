@@ -86,6 +86,20 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase L1: Clarify /review suggestions handling policy [methodology][process:review]
+
+**Что:** команда `/review` теперь имеет явное правило обработки 🔵 Suggestions: quick wins (< 2 мин) → apply в /code Шаг 2; strategic → IDEAS.md `[reviewed:suggestion]`; low-priority → skip в DEVLOG `[suggestion-deferred:reason]`.
+
+**Почему:** раньше suggestions выводились но не обрабатывались системно — казалось что они игнорируются напрасно. Пользователь спросил "они применяются или нет?". Ответ: ДА, но способ зависит от класса. Трёхуровневая модель (quick/strategic/low-priority) минимизирует scope creep и максимизирует actionability.
+
+**Решение:** уровень-1 (методология в review.md) + уровень-2 (PRODUCT.md документация workflow) + уровень-3 (DEVLOG примеры тегов). Level-4 (schema constraint для suggestions) не применимо — это часть output структуры, не input validation.
+
+**Карта данных:** не изменилась.
+
+**Связано:** [audit review output clarity], [user feedback на session end]
+
+---
+
 ## 2026-05-17 — Phase K1: Rules and .gitignore templates for bootstrap [methodology][feat:templates] v3.1.0+
 
 **Что:** 3 commits добавляют недостающие templates для новых проектов: (1) `.claude/rules/README.template.md` с примерами tech stack rules (Python, Go, SQL, API contracts, security); (2) `.gitignore.template` с safe defaults (Claude settings, OS ignores, editor ignores, language-specific); (3) интеграция в `new-project-init.sh` для автоматического копирования.
