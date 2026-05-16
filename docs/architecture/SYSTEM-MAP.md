@@ -12,7 +12,7 @@
 
 ## Agent TL;DR
 
-- **Основные подсистемы:** Methodology Platform (canon — commands/templates/hooks/agents/scripts) → Self-application (.claude/ в этом репо) → Consumers (PAI, ERP).
+- **Основные подсистемы:** Methodology Platform (canon — commands/templates/hooks/agents/scripts) → Self-application (.claude/ в этом репо) → Consumers (single-dev и multi-service проекты).
 - **Источники правды:** `commands/`, `templates/`, `hooks/`, `agents/`, `VERSION` — единственный canon. `.claude/` в любом проекте — производное.
 - **Критичные edges:** scripts (`new-project-init.sh`, `sync-methodology.sh`) → консьюмеры (copy + banner). Нарушение banner-механизма ломает версионную трассируемость.
 - **Известные gap-ы:** branch protection не настроен (R-01); CI для idempotent тестирования скриптов отсутствует; нет auto version-drift check у консьюмеров; sync затирает per-project fills в `docs_reminder.py` LIBS.
@@ -42,12 +42,12 @@ graph TB
         SELF_SETTINGS[.claude/settings.json<br/>local config]
     end
 
-    subgraph "Consumer A — PAI (single-developer)"
+    subgraph "Consumer A — Single-developer project"
         PAI_CLAUDE[.claude/<br/>commands, hooks, agents, state, settings]
         PAI_ARTIFACTS[CLAUDE.md, PRODUCT.md, VISION.md,<br/>DEVLOG, IDEAS, ROADMAP, ...<br/>заполнены per-project]
     end
 
-    subgraph "Consumer B — ERP (multi-service)"
+    subgraph "Consumer B — Multi-service platform"
         ERP_CLAUDE[.claude/<br/>commands, hooks, agents, state, settings]
         ERP_ARTIFACTS[CLAUDE.md, PRODUCT.md,<br/>docs/vision/AGENT_VISION + LONG_VISION,<br/>docs/adr/, services-registry.yaml,<br/>inbox/, ...]
     end

@@ -4,7 +4,7 @@ Version: see [VERSION](VERSION) (currently **v3.0.0** — first major bump, brea
 
 Общая методология для AI-assisted разработки на проектах cait.solutions. Slash-команды, скелеты sub-agents, шаблоны артефактов, защитные хуки, bootstrap/sync скрипты — единый источник правды.
 
-База — ERP-методология (multi-service, scalable). Patterns из PAI (хуки, IDEAS таксономия, ROADMAP структура, level-4 framework) влиты как универсальные дополнения.
+Методология развивалась из опыта как single-developer, так и multi-service проектов. Patterns из обоих подходов (хуки, IDEAS таксономия, ROADMAP структура, level-4 framework) влиты как универсальные дополнения.
 
 С версии v2.4.0 методология применяется к самой себе (eats own dog food) — изменения идут через её собственный `/plan` → `/code` → `/review` → `/deploy` процесс. См. [CLAUDE.md](CLAUDE.md), [PRODUCT.md](PRODUCT.md), [VISION.md](VISION.md).
 
@@ -89,7 +89,7 @@ Initial build (Phases A-F) — **completed 2026-05-16, v2.4.0**:
 - ✅ **Phase G1 (v2.5.0):** navigation maps in `/review`, `/deploy`, `/onboard`; model recommendation tier system (`templates/model-tiers.md`) with Pre-flight check and mid-task complexity reassessment.
 - ✅ **Phase G2 (v3.0.0, breaking):** CLAUDE.md split into short `CLAUDE.md` (WHAT — rules) + new `CLAUDE_LONG.md` (WHY — rationale, edge cases); Agent TL;DR convention in PRODUCT and SYSTEM-MAP templates; migration helper `scripts/migrate-claude-md.sh` for existing consumers; Pre-flight check now asks user (was auto-detect from system prompt — unreliable mid-session).
 
-**Breaking change migration for existing consumers (PAI, ERP):**
+**Breaking change migration for existing consumers:**
 ```bash
 # Run on each existing consumer project once:
 /path/to/methodology-platform/scripts/migrate-claude-md.sh /path/to/consumer
