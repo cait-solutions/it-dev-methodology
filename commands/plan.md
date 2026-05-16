@@ -127,6 +127,12 @@
    Рекомендуемая модель: **Fast tier** (Haiku) — структурное сравнение.
    (y/n/skip)"
 
+**Триггер: USER-MAP sync** (если есть USER-MAP.md):
+- `last_user_map_sync.plans_since` ≥ 10 И (добавлена новая команда ИЛИ изменился основной workflow)
+- → "USER-MAP может требовать обновления (новая capability или workflow). Проверить и обновить?
+   Рекомендуемая модель: **Fast tier** (Haiku) — review existing diagram.
+   (y/n/skip)"
+
 **Триггер: /product-vision:**
 - `last_product_vision.plans_since` ≥ 30
 - → "Стратегическая работа может быть устаревшей. Запустить /product-vision?
