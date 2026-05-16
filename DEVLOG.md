@@ -86,6 +86,24 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-16 — Phase H1: Sanitize project-specific names to generic abstractions [methodology][feat:template][process:discipline] v3.0.1
+
+**Что:** 4 атомарных коммита:
+1. CLAUDE.md + PRODUCT.md: заменены PAI/ERP на generic abstractions (single-developer, multi-service платформы); добавлено Don't rule "no project-specific names in templates".
+2. VISION.md + SYSTEM-MAP.md + README.md: все mentions PAI/ERP/nexchance заменены на abstract consumer types; diagram labels обновлены.
+3. Templates: templates/CLAUDE_LONG.template.md (3 PAI→real-world mentions) и templates/vision/AGENT_VISION.template.md (B2B ERP→B2B platform).
+4. VERSION 3.0.0 → 3.0.1 (patch, not breaking) + DEVLOG entry.
+
+**Почему:** методология должна быть абстрактна от specific consumers. Все technical patterns универсальны; project names относятся только в DEVLOG (история) и CLAUDE_LONG.md (исторический контекст). Discipline rule предотвращает будущие добавления специфичных имён в templates и канон.
+
+**Решение:** generic abstractions everywhere: "single-developer project" / "multi-service platform" вместо PAI/ERP. Историческая мотивация в CLAUDE_LONG.template.md остаётся (rationale) но project names заменены.
+
+**Карта данных:** не изменилась (структурная правка, не логика).
+
+**Связано:** [CLAUDE.md Don'ts section], [VISION.md Ось 3 Cross-project standardization], [plan 2026-05-16 Phase H1]
+
+---
+
 ## 2026-05-16 — Phase G2: CLAUDE.md split + Agent TL;DR convention + Pre-flight fix [phase-g2][feat:template][methodology][milestone] [BREAKING] v3.0.0
 
 **Что:** 7+1 атомарных коммитов (1 неплановый fix добавлен mid-execution):
