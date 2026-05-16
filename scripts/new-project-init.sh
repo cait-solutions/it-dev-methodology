@@ -3,76 +3,36 @@
 # new-project-init.sh — bootstrap a project with the methodology platform.
 #
 # Usage:
-#   /path/to/methodology-platform/scripts/new-project-init.sh <project-name> [target-dir] [flags]
+#   /path/to/methodology-platform/scripts/new-project-init.sh <project-name> [target-dir]
 #
-# Flags (all optional):
-#   --multi-service       Use two-tier vision (docs/vision/AGENT_VISION + LONG_VISION)
-#                         + services-registry.yaml. Replaces single VISION.md.
-#   --with-adr            Initialize docs/adr/ with _TEMPLATE.md and README.md
-#   --with-inbox          Initialize inbox/ with README + _processed/ + _processed/rejected/
-#   --with-data-map       Create docs/data-map.md
-#   --with-glossary       Create docs/glossary.md
-#   --with-behavior       Create docs/BEHAVIOR.md
-#   --with-threat-model   Create docs/threat-model.template.md (kept as template)
-#   --all-optional        Enable everything above
-#   -h, --help            Show this help
+# Arguments:
+#   <project-name>    Name of the project (used for {{Project Name}} substitution)
+#   [target-dir]      Target directory (default: ./<project-name>)
 #
 # The SKILL template (templates/SKILL.template.md) is for per-domain use during
 # /onboard, not auto-copied. Copy it manually into the relevant service folder.
 #
-# Always created:
+# Always created (v3.1.0+):
 #   .claude/{commands,agents,rules,state,hooks}/, .claude/.version
-#   triggers.json, CLAUDE.md, PRODUCT.md, docs/architecture/SYSTEM-MAP.md
+#   CLAUDE.md, CLAUDE_LONG.md, PRODUCT.md, VISION.md
+#   docs/architecture/SYSTEM-MAP.md, docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
+#   docs/adr/{_TEMPLATE,README}.md, docs/data-map.md
+#   inbox/{README,_processed/,_processed/rejected/}, services-registry.yaml
 #   DEVLOG.md, IDEAS.md, ROADMAP.md, OPEN-QUESTIONS.md, HYPOTHESES.md, RISKS.md
-#   VISION.md (single-tier — unless --multi-service)
+#   triggers.json (local state)
+#
+# One methodology, one bootstrap. For solo-dev: ignore docs that don't apply (docs/adr/, services-registry.yaml, etc.).
+# For multi-service: fill in the multi-tier vision and services registry.
 #
 # Idempotent: existing files preserved (only .claude/commands/ overwritten by sync).
 
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Flag parsing.
+# Argument parsing (no flags — simple positional arguments).
 # ---------------------------------------------------------------------------
-WITH_MULTI_SERVICE=false
-WITH_ADR=false
-WITH_INBOX=false
-WITH_DATA_MAP=false
-WITH_GLOSSARY=false
-WITH_BEHAVIOR=false
-WITH_THREAT_MODEL=false
-
-POSITIONAL=()
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --multi-service)      WITH_MULTI_SERVICE=true; shift ;;
-    --with-adr)           WITH_ADR=true; shift ;;
-    --with-inbox)         WITH_INBOX=true; shift ;;
-    --with-data-map)      WITH_DATA_MAP=true; shift ;;
-    --with-glossary)      WITH_GLOSSARY=true; shift ;;
-    --with-behavior)      WITH_BEHAVIOR=true; shift ;;
-    --with-threat-model)  WITH_THREAT_MODEL=true; shift ;;
-    --all-optional)
-      WITH_MULTI_SERVICE=true
-      WITH_ADR=true
-      WITH_INBOX=true
-      WITH_DATA_MAP=true
-      WITH_GLOSSARY=true
-      WITH_BEHAVIOR=true
-      WITH_THREAT_MODEL=true
-      shift ;;
-    -h|--help)
-      sed -n '/^#$/,/^$/p' "$0" | head -40 | sed 's/^#//'
-      exit 0 ;;
-    -*)
-      echo "Unknown flag: $1" >&2
-      exit 1 ;;
-    *)
-      POSITIONAL+=("$1"); shift ;;
-  esac
-done
-
-PROJECT_NAME="${POSITIONAL[0]:?Usage: $0 <project-name> [target-dir] [flags]   (try --help)}"
-TARGET_DIR="${POSITIONAL[1]:-./$PROJECT_NAME}"
+PROJECT_NAME="${1:?Usage: $0 <project-name> [target-dir]}"
+TARGET_DIR="${2:-./$PROJECT_NAME}"
 
 METHODOLOGY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
@@ -81,7 +41,7 @@ SYNCED_AT="$(date -u +%Y-%m-%d)"
 echo "Methodology: $VERSION"
 echo "Project:     $PROJECT_NAME"
 echo "Target:      $TARGET_DIR"
-[[ "$WITH_MULTI_SERVICE" == "true" ]] && echo "Mode:        multi-service (two-tier vision + services-registry)"
+echo "Structure:   Full (one methodology, all artifacts created)"
 echo ""
 
 mkdir -p "$TARGET_DIR"/{.claude/{commands,agents,rules,state,hooks},docs/architecture}
@@ -238,72 +198,48 @@ copy_with_subst "$METHODOLOGY_DIR/templates/HYPOTHESES.template.md"      "$TARGE
 copy_with_subst "$METHODOLOGY_DIR/templates/RISKS.template.md"           "$TARGET_DIR/RISKS.md"
 
 # ---------------------------------------------------------------------------
-# Vision — single-tier (default) vs two-tier (--multi-service).
+# Vision — both single-tier and multi-tier structures created.
+# Solo-dev projects use VISION.md; multi-service projects use docs/vision/
 # ---------------------------------------------------------------------------
-if [[ "$WITH_MULTI_SERVICE" == "true" ]]; then
-  echo "→ vision/ (two-tier)"
-  copy_with_subst "$METHODOLOGY_DIR/templates/vision/AGENT_VISION.template.md"  "$TARGET_DIR/docs/vision/AGENT_VISION.md"
-  copy_with_subst "$METHODOLOGY_DIR/templates/vision/LONG_VISION.template.md"   "$TARGET_DIR/docs/vision/LONG_VISION_v1.md"
+echo "→ vision/"
 
-  # Tiny VISION.md at root pointing to docs/vision/
-  if [[ ! -f "$TARGET_DIR/VISION.md" ]]; then
-    cat > "$TARGET_DIR/VISION.md" <<EOF
-# VISION — $PROJECT_NAME
+# Single-tier VISION.md (for solo-dev projects)
+copy_with_subst "$METHODOLOGY_DIR/templates/VISION.template.md"  "$TARGET_DIR/VISION.md"
 
-Стратегические vision-документы:
-- [docs/vision/AGENT_VISION.md](docs/vision/AGENT_VISION.md) — operational vision (English, MUST/MUST NOT)
-- [docs/vision/LONG_VISION_v1.md](docs/vision/LONG_VISION_v1.md) — strategic manifest (full content)
+# Multi-tier vision (for multi-service projects)
+copy_with_subst "$METHODOLOGY_DIR/templates/vision/AGENT_VISION.template.md"  "$TARGET_DIR/docs/vision/AGENT_VISION.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/vision/LONG_VISION.template.md"   "$TARGET_DIR/docs/vision/LONG_VISION_v1.md"
 
-Обновляется через \`/product-vision\` раз в 1-2 квартала.
-EOF
-    echo "  ✓ VISION.md (index pointing to docs/vision/)"
-  else
-    echo "  - VISION.md (exists — preserved)"
-  fi
-
-  echo "→ services-registry/"
-  copy_with_subst "$METHODOLOGY_DIR/templates/services-registry.template.yaml"  "$TARGET_DIR/services-registry.yaml"
-else
-  echo "→ vision/ (single-tier)"
-  copy_with_subst "$METHODOLOGY_DIR/templates/VISION.template.md"  "$TARGET_DIR/VISION.md"
-fi
+# Services registry (for multi-service projects)
+echo "→ services-registry/"
+copy_with_subst "$METHODOLOGY_DIR/templates/services-registry.template.yaml"  "$TARGET_DIR/services-registry.yaml"
 
 # ---------------------------------------------------------------------------
-# Optional artifacts (flag-gated).
+# Standard artifacts — all created (v3.1.0+).
+# For solo-dev projects: simply don't fill these in (or delete if not needed).
+# For multi-service: fill these in as needed.
 # ---------------------------------------------------------------------------
-if [[ "$WITH_ADR" == "true" ]]; then
-  echo "→ adr/"
-  copy_with_subst "$METHODOLOGY_DIR/templates/adr/_TEMPLATE.md"          "$TARGET_DIR/docs/adr/_TEMPLATE.md"
-  copy_with_subst "$METHODOLOGY_DIR/templates/adr/README.template.md"    "$TARGET_DIR/docs/adr/README.md"
-fi
+echo "→ adr/"
+copy_with_subst "$METHODOLOGY_DIR/templates/adr/_TEMPLATE.md"          "$TARGET_DIR/docs/adr/_TEMPLATE.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/adr/README.template.md"    "$TARGET_DIR/docs/adr/README.md"
 
-if [[ "$WITH_INBOX" == "true" ]]; then
-  echo "→ inbox/"
-  mkdir -p "$TARGET_DIR/inbox/_processed/rejected"
-  touch "$TARGET_DIR/inbox/_processed/.gitkeep"
-  touch "$TARGET_DIR/inbox/_processed/rejected/.gitkeep"
-  copy_with_subst "$METHODOLOGY_DIR/templates/inbox/README.template.md"  "$TARGET_DIR/inbox/README.md"
-fi
+echo "→ inbox/"
+mkdir -p "$TARGET_DIR/inbox/_processed/rejected"
+touch "$TARGET_DIR/inbox/_processed/.gitkeep"
+touch "$TARGET_DIR/inbox/_processed/rejected/.gitkeep"
+copy_with_subst "$METHODOLOGY_DIR/templates/inbox/README.template.md"  "$TARGET_DIR/inbox/README.md"
 
-if [[ "$WITH_DATA_MAP" == "true" ]]; then
-  echo "→ data-map/"
-  copy_with_subst "$METHODOLOGY_DIR/templates/data-map.template.md"  "$TARGET_DIR/docs/data-map.md"
-fi
+echo "→ data-map/"
+copy_with_subst "$METHODOLOGY_DIR/templates/data-map.template.md"  "$TARGET_DIR/docs/data-map.md"
 
-if [[ "$WITH_GLOSSARY" == "true" ]]; then
-  echo "→ glossary/"
-  copy_with_subst "$METHODOLOGY_DIR/templates/glossary.template.md"  "$TARGET_DIR/docs/glossary.md"
-fi
+echo "→ glossary/"
+copy_with_subst "$METHODOLOGY_DIR/templates/glossary.template.md"  "$TARGET_DIR/docs/glossary.md"
 
-if [[ "$WITH_BEHAVIOR" == "true" ]]; then
-  echo "→ behavior/"
-  copy_with_subst "$METHODOLOGY_DIR/templates/BEHAVIOR.template.md"  "$TARGET_DIR/docs/BEHAVIOR.md"
-fi
+echo "→ behavior/"
+copy_with_subst "$METHODOLOGY_DIR/templates/BEHAVIOR.template.md"  "$TARGET_DIR/docs/BEHAVIOR.md"
 
-if [[ "$WITH_THREAT_MODEL" == "true" ]]; then
-  echo "→ threat-model/"
-  copy_with_subst "$METHODOLOGY_DIR/templates/threat-model.template.md"  "$TARGET_DIR/docs/threat-model.template.md"
-fi
+echo "→ threat-model/"
+copy_with_subst "$METHODOLOGY_DIR/templates/threat-model.template.md"  "$TARGET_DIR/docs/threat-model.template.md"
 
 # ---------------------------------------------------------------------------
 # Git init.
@@ -319,13 +255,17 @@ echo ""
 echo "Next steps:"
 echo "  1. Fill in CLAUDE.md   — operational rules for AI agents"
 echo "  2. Fill in PRODUCT.md  — product behavior from user POV"
-if [[ "$WITH_MULTI_SERVICE" == "true" ]]; then
-  echo "  3. Fill in docs/vision/AGENT_VISION.md and LONG_VISION_v1.md"
-  echo "  4. Add services to services-registry.yaml"
-else
-  echo "  3. Fill in VISION.md   — strategic axes"
-fi
-echo "  N. Open in Claude Code, then run /plan to start the first feature"
+echo ""
+echo "  For single-developer projects:"
+echo "    - Fill in VISION.md (single-tier strategic axes)"
+echo "    - Delete dirs you don't need (docs/adr/, services-registry.yaml, etc.)"
+echo ""
+echo "  For multi-service platforms:"
+echo "    - Fill in docs/vision/AGENT_VISION.md and LONG_VISION_v1.md"
+echo "    - Add services to services-registry.yaml"
+echo "    - Set up per-service CLAUDE.md files"
+echo ""
+echo "  Then: Open in Claude Code, run /plan for the first feature"
 echo ""
 echo "Sync methodology updates later via:"
 echo "  $METHODOLOGY_DIR/scripts/sync-methodology.sh $TARGET_DIR"
