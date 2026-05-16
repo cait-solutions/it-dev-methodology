@@ -23,11 +23,12 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-05-16T23:35:00Z",
-    "task_id": "phase-i1-audit-gaps-fixes",
+    "completed_at": "2026-05-17T00:15:00Z",
+    "task_id": "phase-j1-user-map-template",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": false
+    "code_run": true,
+    "review_run": true
   },
   "last_deploy": {
     "date": null,
