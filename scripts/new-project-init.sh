@@ -227,6 +227,7 @@ copy_with_subst() {
 # ---------------------------------------------------------------------------
 echo "→ core artifacts/"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGET_DIR/CLAUDE.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LONG.template.md"     "$TARGET_DIR/CLAUDE_LONG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"         "$TARGET_DIR/PRODUCT.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/SYSTEM-MAP.template.md"      "$TARGET_DIR/docs/architecture/SYSTEM-MAP.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/DEVLOG.template.md"          "$TARGET_DIR/DEVLOG.md"
