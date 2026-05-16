@@ -90,6 +90,13 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 - Симптом или причина? Симптом → найди причину
 - Локальный или системный? Локальный без обоснования = красный флаг
 
+**Completeness rule:**
+Каждое решение (в /plan, /code, /review, /deploy) ДОЛЖНО явно указать:
+- Что закрывается (main path, happy cases)
+- Что НЕ закрывается (gaps, edge cases, параллельные пути)
+- Почему эти gaps OK или требуют дополнительных шагов
+Без этого анализа → план не утверждён, код не merged, деплой не выполнен.
+
 Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
 
 ---

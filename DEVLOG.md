@@ -86,6 +86,18 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase M1: Critical evaluation framework — осознанная полнота решений [methodology][process:plan-review]
+
+**Что:** добавлены 3 уровня критической оценки решений: (1) Шаг -1.2 в `/plan` — явный анализ "что закрывается / что НЕ закрывается / приемлемо ли"; (2) completeness check в `/review` Шаг 3 — проверка что gaps названы и обоснованы; (3) completeness rule в CLAUDE.md — дисциплина что каждое решение ДОЛЖНО этот анализ сделать.
+
+**Почему:** пользователь указал на gap в методологии: есть решения которые покрывают 85% проблемы но проходят как полные. Методология не имела систематической проверки "это правда полное решение или только основные пути?". Новый процесс систематизирует осознанность о том, что NOT делаешь (и почему это OK).
+
+**Карта данных:** не изменилась.
+
+**Связано:** Phase L1 (completeness работает с Suggestion handling), user feedback на session end
+
+---
+
 ## 2026-05-17 — Phase L1: Clarify /review suggestions handling policy [methodology][process:review]
 
 **Что:** команда `/review` теперь имеет явное правило обработки 🔵 Suggestions: quick wins (< 2 мин) → apply в /code Шаг 2; strategic → IDEAS.md `[reviewed:suggestion]`; low-priority → skip в DEVLOG `[suggestion-deferred:reason]`.
