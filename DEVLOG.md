@@ -86,6 +86,20 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase J1: USER-MAP template + trigger-based sync [methodology][feat:templates][milestone] v3.1.0+
+
+**Что:** 6 commits добавляют USER-MAP (user-facing capability artifact). Создан templates/USER-MAP.template.md с Variant A/B/C (простая/средняя/сложная), интегрирована в bootstrap (new-project-init.sh копирует в docs/product/USER-MAP.md), добавлена в triggers.json.template и /plan Шаг -3.2 триггер для периодического обновления.
+
+**Почему:** методология требует артефакта для описания "что может делать пользователь с этим продуктом" (аналогично SYSTEM-MAP для архитектуры). Заполняет gap между PRODUCT.md (технические детали) и VISION.md (стратегия). Каждый проект имеет свой USER-MAP, синхронизируется через trigger-based refresh механизм.
+
+**Решение:** архитектурный — USER-MAP это не диаграмма команд методологии, а диаграмма возможностей самого проекта (ERP: CRUD товаров + выгрузка на sales; бот: создание задач + напоминания; методология: инициализация + workflow + синхронизация). Variant A по умолчанию, scaling к B/C по мере роста.
+
+**Карта данных:** добавлено поле `last_user_map_sync` в triggers.json.template (счётчик, как остальные). USER-MAP.md себя не синхронизирует (consumer-owned), refresh вручную или по триггеру.
+
+**Связано:** [Phase И1 audit](/DEVLOG.md#2026-05-17) затронул artifact completeness; [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md) для архитектуры; [PRODUCT.md](PRODUCT.md) для поведения.
+
+---
+
 ## 2026-05-16 — Model strategy: Default (Sonnet) as primary, Fast only for validation [methodology][process] v3.1.0+
 
 **Что:** 2 коммита обновляют стратегию выбора моделей:
