@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase R1: USER-MAP — три репо, /onboard, код проекта [methodology][feat:template] v3.7.0
+
+**Что:** `docs/product/USER-MAP.md` — Mermaid полностью переработан: (1) ASCII-диаграмма удалена, Mermaid единственный формат. (2) Добавлен subgraph `project-docs (git, workspace)` с двумя node-ами: .claude/commands/ и артефакты. (3) Добавлен node `💻 Код проекта (git) — монолит или N микросервисов` со стрелкой `пишет / деплоит`. (4) Добавлен путь `/onboard` для нового разработчика. (5) Оба репо помечены `(git, ...)` — платформо-нейтрально. Все названия универсальные (без привязки к ERP).
+**Почему:** Диаграмма не показывала полную картину: не было разделения `project-docs` (артефакты) и code-репо (монолит/микросервисы), /onboard отсутствовал, ASCII дублировал Mermaid.
+**Решение:** Три уровня в одной Mermaid: it-dev-methodology → project-docs → Код проекта.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase R1]
+
 ## 2026-05-17 — Phase Q1: USER-MAP Mermaid обновлён + правила для карт в методологии [methodology][feat:template][process:documentation] v3.6.0
 
 **Что:** (1) `docs/product/USER-MAP.md` — Mermaid обновлён: добавлены subgraph-и `it-dev-methodology` и `Consumer Repo`, нода `/retro`, цикл `Feedback → Workflow`, гибридные EN/RU метки. (2) `templates/USER-MAP.template.md` — добавлено требование: Mermaid обязателен, гибридный язык, repo-контекст. (3) `CLAUDE.md` — новая секция "Documentation map rule": SYSTEM-MAP и USER-MAP MUST содержать Mermaid, правило гибридного языка, требование repo-контекста. (4) `commands/review.md` — добавлена проверка: Mermaid сохранён при изменении карт.

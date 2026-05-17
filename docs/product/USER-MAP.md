@@ -4,21 +4,7 @@
 
 ---
 
-## Initial Setup — два репозитория
-
-Перед началом работы с методологией в любом проекте:
-
-```
-┌─────────────────────────────────┐     ┌───────────────────────────────────────┐
-│   it-dev-methodology/           │     │   your-project/   (этот репо)         │
-│                                 │     │                                        │
-│   commands/*.md  ←── канон      │     │   .claude/commands/  ←── gitignored   │
-│   hooks/*.py     ←── канон      │─────►   .claude/hooks/     ←── gitignored   │
-│   templates/     ←── канон      │sync │   CLAUDE.md          ←── project-own  │
-│   scripts/       ←── канон      │     │   PRODUCT.md, DEVLOG.md, VISION.md... │
-│                                 │     │   docs/architecture/SYSTEM-MAP.md     │
-└─────────────────────────────────┘     └───────────────────────────────────────┘
-```
+## Initial Setup
 
 **Шаги инициализации (один раз на машину / после каждого clone):**
 
@@ -39,22 +25,29 @@
 graph TD
     Dev["👤 Dev / Team Lead"]
 
-    subgraph Methodology["it-dev-methodology (канон)"]
+    subgraph Methodology["it-dev-methodology (git, канон)"]
         Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
     end
 
-    subgraph Project["Consumer Repo (проект)"]
-        Storage["💾 Project State<br/>CLAUDE.md, DEVLOG.md, triggers.json"]
+    subgraph DocRepo["project-docs (git, workspace)"]
+        LocalCmds[".claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
+        Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>DEVLOG.md, triggers.json"]
     end
 
-    Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>bootstrap артефактов + .claude/"]
-    Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
-    Dev -->|"Получить обновления"| Sync["🔄 Sync Methodology<br/>sync-methodology.sh"]
+    Services["💻 Код проекта (git)<br/>монолит или N микросервисов"]
 
-    Sync -.->|"pulls"| Canon
-    Canon -->|"copy + banner"| Storage
+    Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>new-project-init.sh"]
+    Dev -->|"Присоединиться к проекту"| Onboard["🧭 /onboard<br/>git clone + sync + читает контекст"]
+    Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
+    Dev -->|"Обновить методологию"| Sync["🔄 Sync Methodology<br/>sync-methodology.sh"]
+
+    Sync -.->|"pulls from"| Canon
+    Canon -->|"copy + banner"| LocalCmds
+    Init --> LocalCmds
     Init --> Storage
+    Onboard -.->|"читает контекст"| Storage
     Workflow --> Storage
+    Workflow -->|"пишет / деплоит"| Services
 
     Workflow -->|"каждые ~5 циклов"| Audit["🏗️ Architecture Audit<br/>drift vs SYSTEM-MAP"]
     Workflow -->|"при контракт-изменениях"| Vision["👁️ Sync Vision<br/>реальность vs стратегия"]
@@ -67,10 +60,13 @@ graph TD
 
     style Dev fill:#e1f5ff
     style Init fill:#fff3e0
+    style Onboard fill:#fff3e0
     style Workflow fill:#f3e5f5
     style Sync fill:#fff3e0
     style Canon fill:#fff8e1
+    style LocalCmds fill:#fce4ec
     style Storage fill:#fce4ec
+    style Services fill:#e3f2fd
     style Audit fill:#e8f5e9
     style Vision fill:#e8f5e9
     style Retro fill:#e8f5e9
@@ -84,6 +80,7 @@ graph TD
 | Capability | User Action | What Happens | Where Data Lives |
 |---|---|---|---|
 | **Initialize Project** | `new-project-init.sh <name>` | Creates full .claude structure, copies templates with banner, substitutes {{Project Name}}, initializes git | `.claude/{commands,agents,hooks,state}/` + root artifacts |
+| **Onboard** | `/onboard` — после `git clone` + sync | Ориентирует нового разработчика: читает CLAUDE.md, PRODUCT.md, VISION.md, проверяет что workspace настроен | Читает из `project-docs/` — не создаёт новых данных |
 | **Execute Workflow** | Runs `/plan` → `/code` → `/review` → `/deploy` in Claude Code | Manages plan approval, code review gates, self-lint checks, smoke tests, DEVLOG updates | `triggers.json` (state), DEVLOG.md (history) |
 | **Sync Methodology** | `sync-methodology.sh <target>` | Updates commands/hooks with fresh banner, detects local edits, preserves project-owned content. **Also works as post-clone install** — if `commands/` absent (gitignored), creates it and restores from methodology | `.claude/commands/`, `.claude/hooks/`, `.claude/.version` |
 | **Architecture Audit** | `/architecture-audit` (triggered ~every 5 plans) | Compares real code against SYSTEM-MAP (edges, components, layers) | Reports in DEVLOG, findings in HYPOTHESES.md |
