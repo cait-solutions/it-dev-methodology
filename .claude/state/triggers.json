@@ -1,10 +1,10 @@
 {
   "global": {
-    "last_sync_vision":      { "date": null, "plans_since": 18 },
-    "last_retro":            { "date": null, "plans_since": 18 },
-    "last_product_review":   { "date": null, "plans_since": 18 },
-    "last_product_check":    { "date": null, "plans_since": 18 },
-    "last_product_vision":   { "date": "2026-05-16", "plans_since": 18 },
+    "last_sync_vision":      { "date": null, "plans_since": 19 },
+    "last_retro":            { "date": null, "plans_since": 19 },
+    "last_product_review":   { "date": null, "plans_since": 19 },
+    "last_product_check":    { "date": null, "plans_since": 19 },
+    "last_product_vision":   { "date": "2026-05-16", "plans_since": 19 },
     "last_user_map_sync":    { "date": "2026-05-17", "plans_since": 2 }
   },
   "per_service": {},
@@ -24,14 +24,14 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-05-17T18:00:00Z",
-    "task_id": "phase-cc1-inbox-artifact-map-adr-001",
+    "completed_at": "2026-05-17T19:00:00Z",
+    "task_id": "phase-dd1-artifact-map-reads-rudiments",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
   },
   "last_deploy": {
     "date": "2026-05-17",
-    "time": "phase-bb1-deployed"
+    "time": "phase-cc1-deployed"
   }
 }

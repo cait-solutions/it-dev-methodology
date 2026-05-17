@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase DD1: ARTIFACT-MAP — read-flow, Читает колонка, рудименты [methodology][feat:template] v3.14.0
+
+**Что:** Добавлен полный read-flow в `ARTIFACT-MAP.template.md` и `docs/product/ARTIFACT-MAP.md`: (1) `/review` добавлен в CoreWF subgraph; (2) 9 dashed read-стрелок (артефакт → потребитель); (3) колонка `Читает` в таблицах Artifact Reference (7 колонок); (4) legend note + rudiment-signal в Refresh Policy; (5) TJ/CLM node labels аннотированы "⬅ все команды".
+**Зачем:** Artifact Map показывал кто пишет, но не кто читает. ROADMAP.md планируется /product-vision — но кем выполняется/читается было неочевидно. Read-flow закрывает этот gap и делает рудименты обнаруживаемыми (артефакт без incoming -.-> = кандидат).
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase DD1]
+
+---
+
 ## 2026-05-17 — Phase CC1: inbox/ в ARTIFACT-MAP + ADR-001 [methodology][feat:template] v3.13.1
 
 **Что:** (1) Добавлен `inbox/` в `ARTIFACT-MAP.template.md` и `docs/product/ARTIFACT-MAP.md`: node `INB` в Mermaid, строка в Artifact Reference, строка в Ручные триггеры. (2) Создан `docs/adr/ADR-001-product-review-rename.md` — зафиксировано решение о rename `/product-review` → `/ideas-review`; статус Принят, реализация deferred до major bump ≥ v4.0.0.

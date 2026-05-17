@@ -7,9 +7,10 @@
 
 ---
 
-## Диаграмма: команды → артефакты
+## Диаграмма: команды ↔ артефакты
 
-Группировка команд по частоте. Цвета: синий/фиолетовый/пурпурный = частота · оранжевый = state · зелёный = артефакт с триггером · красный = gap.
+Цвета: синий = ядро · фиолетовый = периодические · пурпурный = стратегические · оранжевый = state · зелёный = артефакт · серый = актор.
+Стрелки: `→` обновляет/создаёт · `-.->` читает/использует как input.
 
 ```mermaid
 graph LR
@@ -25,6 +26,7 @@ graph LR
     subgraph CoreWF["🔁 Ядро (каждый цикл)"]
         Plan["/plan"]:::core
         Deploy["/deploy"]:::core
+        Rev["/review"]:::core
     end
 
     subgraph Periodic["📊 Периодические (по счётчику)"]
@@ -54,7 +56,7 @@ graph LR
     %% end
 
     subgraph Live["📄 Артефакты"]
-        TJ["triggers.json<br/>счётчики планов"]:::state
+        TJ["triggers.json<br/>⬅ все команды"]:::state
         DL["DEVLOG.md<br/>история деплоев"]:::ok
         PROD["PRODUCT.md<br/>поведение продукта"]:::ok
         UM["USER-MAP.md<br/>карта возможностей"]:::ok
@@ -66,7 +68,7 @@ graph LR
         VI["VISION.md<br/>стратегия"]:::ok
         AM["ARTIFACT-MAP.md<br/>lifecycle карта"]:::ok
         RISKS["RISKS.md<br/>реестр рисков"]:::ok
-        CLM["CLAUDE.md<br/>правила AI"]:::ok
+        CLM["CLAUDE.md<br/>правила AI · ⬅ все команды"]:::ok
         ADR["docs/adr/<br/>архитектурные решения"]:::ok
         INB["inbox/<br/>входящие артефакты"]:::ok
         %% Добавь проектные артефакты:
@@ -131,7 +133,21 @@ graph LR
     %% Бизнес-события → артефакты (CRUD):
     %% EV1 -->|"lifecycle изменился"| Custom1
     %% EV2 -->|"статус изменился"| Custom2
+
+    %% --- Read flow: артефакт → потребитель ---
+    VI  -.->|"стратег. контекст"| Plan
+    RM  -.->|"горизонт планирования"| Plan
+    HY  -.->|"верификация гипотез"| Plan
+    OQ  -.->|"блокирует / check"| Plan
+    ID  -.->|"сигналы"| Plan
+    DL  -.->|"паттерны"| Retro
+    DL  -.->|"повторный фикс"| Rev
+    SM  -.->|"верификация"| Rev
+    ADR -.->|"контракты"| Rev
+    %% [TODO: добавь проектные read-стрелки: Custom1 -.->|"контекст"| Plan]
 ```
+
+> **Легенда:** `→` обновляет · `-.->` читает/использует · Артефакт без входящих `-.->` = кандидат на рудимент
 
 ---
 
@@ -143,6 +159,7 @@ graph LR
 |---|---|---|---|
 | `/plan` | Анализ задачи: риски, архитектура, план до первой строки кода | 🔁 каждый цикл | `triggers.json` |
 | `/deploy` | Публикация изменений + обязательная запись истории | 🔁 каждый цикл | `DEVLOG.md`, `triggers.json` |
+| `/review` | Архитектурное ревью изменений до деплоя | 🔁 каждый цикл | — (только анализ) |
 | `/product-check` | Соответствие PRODUCT.md реальному поведению | 📊 ≥5 планов | `PRODUCT.md`, `USER-MAP.md` |
 | `/architecture-audit` | Drift SYSTEM-MAP vs реальный код — ищет расхождения | 📊 ≥5 планов | `SYSTEM-MAP.md`, `HYPOTHESES.md`, `DEVLOG.md` |
 | `/product-review` | Обработка накопленных IDEAS.md сигналов → решения | 📊 ≥10 планов | `IDEAS.md`, `PRODUCT.md` |
@@ -165,23 +182,23 @@ graph LR
 
 ### Стандартные артефакты методологии
 
-| Артефакт | Назначение | Условие обновления | Пишет / Актор | Закрывает | Частота |
-|---|---|---|---|---|---|
-| `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | — | 🔁 каждый цикл |
-| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy` | — | 🔁 каждый деплой |
-| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review` | — | 📊 ~5 планов |
-| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check` | — | 📊 ~10 планов |
-| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit` | — | 📊 ~5 планов |
-| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / sync-vision | `/architecture-audit`, `/retro`, `/sync-vision` | — | 📊 ~5–15 планов |
-| `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | PM / Owner | ⚡ по событию |
-| `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы, дампы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/sync-vision`, `/plan` Шаг 0.7 → `_processed/` | ⚡ по событию |
-| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | Developer, `/plan` | `/product-review` | 📊 ~10 планов |
-| `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | — | 🔭 ~30 планов |
-| `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | — | 🔭 ~30 планов |
-| `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | — | ручное |
-| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при `/retro` или новом риске | `/retro`, PM / Owner | PM / Owner | 📊 ~15 планов |
-| `CLAUDE.md` | Правила работы AI-агентов в проекте | при sync pull или изменении правил | Developer, sync-script | — | ⚡ по событию |
-| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | Developer | Developer (deprecated) | ⚡ по решению |
+| Артефакт | Назначение | Условие обновления | Пишет / Актор | Читает | Закрывает | Частота |
+|---|---|---|---|---|---|---|
+| `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | все команды (state check) | — | 🔁 каждый цикл |
+| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy` | `/retro`, `/review`, `/product-vision` | — | 🔁 каждый деплой |
+| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review` | `/plan`, `/product-check` | — | 📊 ~5 планов |
+| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check` | Developer, PM/Owner | — | 📊 ~10 планов |
+| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit` | `/review`, `/architecture-audit`, Developer | — | 📊 ~5 планов |
+| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / sync-vision | `/architecture-audit`, `/retro`, `/sync-vision` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
+| `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
+| `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
+| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | Developer, `/plan` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |
+| `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | `/plan` (Шаг 1.5), Developer, PM/Owner | — | 🔭 ~30 планов |
+| `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | `/plan`, `/product-review`, `/sync-vision` | — | 🔭 ~30 планов |
+| `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | Developer, `/review` | — | ручное |
+| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при `/retro` или новом риске | `/retro`, PM / Owner | `/plan`, PM/Owner, Developer | PM / Owner | 📊 ~15 планов |
+| `CLAUDE.md` | Правила работы AI-агентов в проекте | при sync pull или изменении правил | Developer, sync-script | все команды (rules) | — | ⚡ по событию |
+| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | Developer | `/review` (Шаг 2), `/architecture-audit`, `/sync-vision` | Developer (deprecated) | ⚡ по решению |
 
 ### Проектные артефакты (заполнить)
 
@@ -197,17 +214,17 @@ graph LR
 
 **Примеры по типу проекта:**
 
-| Тип проекта | Возможные doc-артефакты | Пишет / Актор | Закрывает |
-|---|---|---|---|
-| Маркетплейс | `docs/product/orders.md`, `docs/product/invoices.md`, `docs/product/catalog.md` | `/product-check`, `order.created` (CRUD) | PM (статус deprecated) |
-| CRM / продажи | `docs/product/customers.md`, `docs/product/pipelines.md` | `/product-review`, Owner | — |
-| ИИ-бот / агент | `docs/product/prompts.md`, `docs/product/conversation-flows.md` | `/product-check`, Developer | — |
-| API-сервис | `docs/api-contracts.md`, `docs/rate-limits.md` | `/sync-vision`, Developer | Developer (v-deprecated) |
-| Внутренний инструмент | `docs/product/user-roles.md`, `docs/product/permissions.md` | `/product-check`, PM | PM (роль удалена) |
+| Тип проекта | Возможные doc-артефакты | Пишет / Актор | Читает | Закрывает |
+|---|---|---|---|---|
+| Маркетплейс | `docs/product/orders.md`, `docs/product/invoices.md`, `docs/product/catalog.md` | `/product-check`, `order.created` (CRUD) | Developer, PM | PM (статус deprecated) |
+| CRM / продажи | `docs/product/customers.md`, `docs/product/pipelines.md` | `/product-review`, Owner | Developer, Owner | — |
+| ИИ-бот / агент | `docs/product/prompts.md`, `docs/product/conversation-flows.md` | `/product-check`, Developer | Developer, `/review` | — |
+| API-сервис | `docs/api-contracts.md`, `docs/rate-limits.md` | `/sync-vision`, Developer | Developer, `/review` | Developer (v-deprecated) |
+| Внутренний инструмент | `docs/product/user-roles.md`, `docs/product/permissions.md` | `/product-check`, PM | Developer, PM | PM (роль удалена) |
 
-| Артефакт | Назначение | Условие обновления | Пишет / Актор | Закрывает | Частота |
-|---|---|---|---|---|---|
-| `[TODO: артефакт]` | `[TODO: что описывает из PRODUCT.md]` | `[TODO: когда обновлять]` | `[TODO: актор / команда]` | `[TODO: кто закрывает или —]` | `[TODO: частота]` |
+| Артефакт | Назначение | Условие обновления | Пишет / Актор | Читает | Закрывает | Частота |
+|---|---|---|---|---|---|---|
+| `[TODO: артефакт]` | `[TODO: что описывает из PRODUCT.md]` | `[TODO: когда обновлять]` | `[TODO: актор / команда]` | `[TODO: кто читает]` | `[TODO: кто закрывает или —]` | `[TODO: частота]` |
 
 ---
 
@@ -235,5 +252,6 @@ graph LR
 - Появился новый актор (Developer, PM, скрипт, CRUD-событие) → добавить в Actors / Events subgraph
 - Изменился порог триггера → обновить колонку "Частота" и стрелку Plan→команда в диаграмме
 - Ручной триггер автоматизирован → убрать из "Ручные триггеры", обновить Актор в таблице
+- Артефакт без входящих `-.->` в диаграмме И с `Читает = —` → кандидат на рудимент: проверить при `/retro`
 
 `/review` проверяет: новая команда или артефакт → ARTIFACT-MAP обновлён?
