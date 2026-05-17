@@ -24,6 +24,7 @@
 ```mermaid
 graph TD
     Dev["👤 Dev / Team Lead"]
+    PM["👤 Project Manager"]
 
     subgraph Remote["☁️ Remote Git (GitHub / GitLab)"]
         RemoteNode["it-dev-methodology ·<br/>«project»-documentation · Код проекта"]
@@ -47,9 +48,12 @@ graph TD
     Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
     Dev -->|"Обновить методологию"| Sync["🔄 Sync Methodology<br/>$ bash sync-methodology.sh<br/>из терминала"]
 
-    Remote -.->|"git pull (обновления)"| Canon
+    PM -.->|"анализирует сигналы"| Storage
+    PM -->|"улучшает инструменты"| Canon
+
+    Remote -.->|"git pull"| Canon
     Sync -.->|"читает"| Canon
-    Canon -->|"copy + banner"| LocalCmds
+    Canon -->|"копирует + баннер"| LocalCmds
     Init -->|"копирует команды"| LocalCmds
     Init -->|"создаёт артефакты"| Storage
     Onboard -.->|"читает контекст"| Storage
@@ -69,6 +73,7 @@ graph TD
     Storage -.->|"triggers.json → /plan"| Workflow
 
     style Dev fill:#e1f5ff
+    style PM fill:#e1f5ff
     style Init fill:#fff3e0
     style Onboard fill:#fff3e0
     style Workflow fill:#f3e5f5
