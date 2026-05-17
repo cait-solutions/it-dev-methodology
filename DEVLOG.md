@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase U1: USER-MAP template — убран Part 1 Dev Setup, исправлена концепция [methodology][fix:template] v3.9.0
+
+**Что:** `templates/USER-MAP.template.md` — удалён Part 1 "Dev / Methodology Setup" (three-repo skeleton, workflow, PM актор). Оставлены только Variant A/B/C (product capabilities) + Legend + Node Vocabulary (сделан generic). Добавлено примечание: methodology-platform — исключение, где USER-MAP правомерно показывает dev workflow. VERSION v3.8.0 → v3.9.0.
+**Почему:** Ошибка проектирования — три-репо структура и dev workflow специфичны для methodology-platform (её пользователи = разработчики). Для бота, маркетплейса, ERP USER-MAP показывает возможности конечных пользователей продукта, не dev setup. Dev setup уже есть в README.template.md.
+**Решение:** Чёткое разделение: README = infrastructure setup; USER-MAP = product capabilities. Methodology-platform — задокументированное исключение.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase U1]
+
 ## 2026-05-17 — Phase T1: USER-MAP template — Part 1 Dev Setup skeleton, Legend, Node Vocabulary [methodology][feat:template] v3.8.0
 
 **Что:** `templates/USER-MAP.template.md` полностью переработан: (1) Добавлен **Part 1: Dev / Methodology Setup** — near-complete Mermaid skeleton с three-repo топологией (`it-dev-methodology` + `{{Project Name}}-documentation` + Код проекта), двумя акторами (Dev, PM), всеми labeled стрелками EN/RU, periodic commands, `[TODO: тип кода]` для единственной точки кастомизации. (2) **Легенда** под диаграммой — расшифровка emoji по типу узла + правило типов стрелок. (3) **Node Vocabulary** — таблица канонических имён с запретом синонимов (совпадает с SYSTEM-MAP, PRODUCT.md, DEVLOG). (4) Variant A Part 2 — labeled arrows RU/EN. (5) Notes — исправлено противоречие про /code command: допустим в Part 1 Dev Setup. (6) VERSION v3.7.0 → v3.8.0.
