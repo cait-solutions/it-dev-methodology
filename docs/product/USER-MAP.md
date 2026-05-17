@@ -29,14 +29,14 @@ graph TD
         Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
     end
 
-    subgraph DocRepo["&lt;project&gt;-documentation (git, workspace)"]
-        LocalCmds[".claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
-        Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>triggers.json"]
-        Feedback["📊 История проекта<br/>DEVLOG.md · HYPOTHESES.md"]
-    end
-
-    subgraph CodeRepos["Код проекта (git)"]
-        Services["💻 монолит или N микросервисов"]
+    subgraph Local["💻 Локальная машина разработчика"]
+        subgraph DocRepo["«project»-documentation (git, workspace)"]
+            LocalCmds[".claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
+            Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>SYSTEM-MAP.md, DEVLOG.md,<br/>HYPOTHESES.md, triggers.json"]
+        end
+        subgraph CodeRepos["Код проекта (git)"]
+            Services["💻 монолит или N микросервисов"]
+        end
     end
 
     Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>new-project-init.sh"]
@@ -49,7 +49,6 @@ graph TD
     Init --> LocalCmds
     Init --> Storage
     Onboard -.->|"читает контекст"| Storage
-    Onboard -.->|"читает историю"| Feedback
     Workflow --> Storage
     Workflow -->|"пишет / деплоит"| Services
 
@@ -57,10 +56,10 @@ graph TD
     Workflow -->|"при контракт-изменениях"| Vision["👁️ Sync Vision<br/>реальность vs стратегия"]
     Workflow -->|"каждые ~15 циклов"| Retro["🔁 /retro<br/>анализ накопленного"]
 
-    Audit -->|"пишет в"| Feedback
-    Vision -->|"пишет в"| Feedback
-    Retro -->|"пишет в"| Feedback
-    Feedback -->|"следующий цикл"| Workflow
+    Audit -->|"пишет в"| Storage
+    Vision -->|"пишет в"| Storage
+    Retro -->|"пишет в"| Storage
+    Storage -.->|"следующий цикл"| Workflow
 
     style Dev fill:#e1f5ff
     style Init fill:#fff3e0
@@ -70,7 +69,6 @@ graph TD
     style Canon fill:#fff8e1
     style LocalCmds fill:#fce4ec
     style Storage fill:#fce4ec
-    style Feedback fill:#fce4ec
     style Services fill:#e3f2fd
     style Audit fill:#e8f5e9
     style Vision fill:#e8f5e9
