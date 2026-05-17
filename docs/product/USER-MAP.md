@@ -25,13 +25,16 @@
 graph TD
     Dev["👤 Dev / Team Lead"]
 
-    subgraph Methodology["it-dev-methodology (git, канон)"]
-        Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
+    subgraph Remote["☁️ Remote Git (GitHub / GitLab)"]
+        RemoteNode["it-dev-methodology ·<br/>«project»-documentation · Код проекта"]
     end
 
     subgraph Local["💻 Локальная машина разработчика"]
+        subgraph Methodology["it-dev-methodology (git, канон)"]
+            Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
+        end
         subgraph DocRepo["«project»-documentation (git, workspace)"]
-            LocalCmds[".claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
+            LocalCmds["⚙️ Инструменты методологии<br/>.claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
             Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>SYSTEM-MAP.md, DEVLOG.md,<br/>HYPOTHESES.md, triggers.json"]
         end
         subgraph CodeRepos["Код проекта (git)"]
@@ -42,24 +45,28 @@ graph TD
     Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>$ bash new-project-init.sh<br/>однократно, из терминала"]
     Dev -->|"Присоединиться к проекту"| Onboard["🧭 /onboard<br/>ориентация нового разработчика<br/>(после git clone + sync)"]
     Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
-    Dev -->|"Обновить методологию"| Sync["🔄 Sync Methodology<br/>sync-methodology.sh"]
+    Dev -->|"Обновить методологию"| Sync["🔄 Sync Methodology<br/>$ bash sync-methodology.sh<br/>из терминала"]
 
-    Sync -.->|"pulls from"| Canon
+    Remote -.->|"git pull (обновления)"| Canon
+    Sync -.->|"читает"| Canon
     Canon -->|"copy + banner"| LocalCmds
     Init -->|"копирует команды"| LocalCmds
     Init -->|"создаёт артефакты"| Storage
     Onboard -.->|"читает контекст"| Storage
     Workflow -->|"читает / обновляет"| Storage
-    Workflow -->|"пишет / деплоит"| Services
+    Workflow -->|"пишет"| Services
+    Workflow -->|"/deploy → git push"| RemoteNode
 
-    Workflow -->|"каждые ~5 циклов"| Audit["🏗️ Architecture Audit<br/>drift vs SYSTEM-MAP"]
-    Workflow -->|"при контракт-изменениях"| Vision["👁️ Sync Vision<br/>реальность vs стратегия"]
+    Workflow -->|"каждые ~5 циклов"| Audit["🏗️ /architecture-audit<br/>drift vs SYSTEM-MAP"]
+    Workflow -->|"при контракт-изменениях"| Vision["👁️ /sync-vision<br/>реальность vs стратегия"]
     Workflow -->|"каждые ~15 циклов"| Retro["🔁 /retro<br/>анализ накопленного"]
+    Workflow -->|"каждые ~10 циклов"| ProductHealth["📋 /product-review<br/>/product-check · /product-vision"]
 
     Audit -->|"пишет в"| Storage
     Vision -->|"пишет в"| Storage
     Retro -->|"пишет в"| Storage
-    Storage -.->|"следующий цикл"| Workflow
+    ProductHealth -->|"пишет в"| Storage
+    Storage -.->|"triggers.json → /plan"| Workflow
 
     style Dev fill:#e1f5ff
     style Init fill:#fff3e0
@@ -70,9 +77,11 @@ graph TD
     style LocalCmds fill:#fce4ec
     style Storage fill:#fce4ec
     style Services fill:#e3f2fd
+    style RemoteNode fill:#f5f5f5
     style Audit fill:#e8f5e9
     style Vision fill:#e8f5e9
     style Retro fill:#e8f5e9
+    style ProductHealth fill:#e8f5e9
 ```
 
 ---
@@ -82,12 +91,13 @@ graph TD
 | Capability | User Action | What Happens | Where Data Lives |
 |---|---|---|---|
 | **Initialize Project** | `new-project-init.sh <name>` | Creates full .claude structure, copies templates with banner, substitutes {{Project Name}}, initializes git | `.claude/{commands,agents,hooks,state}/` + root artifacts |
-| **Onboard** | `/onboard` — после `git clone` + sync | Ориентирует нового разработчика: читает CLAUDE.md, PRODUCT.md, VISION.md, проверяет что workspace настроен | Читает из `project-docs/` — не создаёт новых данных |
+| **Onboard** | `/onboard` — после `git clone` + sync | Ориентирует нового разработчика: читает CLAUDE.md, PRODUCT.md, VISION.md, проверяет что workspace настроен | Читает из `«project»-documentation/` — не создаёт новых данных |
 | **Execute Workflow** | Runs `/plan` → `/code` → `/review` → `/deploy` in Claude Code | Manages plan approval, code review gates, self-lint checks, smoke tests, DEVLOG updates | `triggers.json` (state), DEVLOG.md (history) |
 | **Sync Methodology** | `sync-methodology.sh <target>` | Updates commands/hooks with fresh banner, detects local edits, preserves project-owned content. **Also works as post-clone install** — if `commands/` absent (gitignored), creates it and restores from methodology | `.claude/commands/`, `.claude/hooks/`, `.claude/.version` |
 | **Architecture Audit** | `/architecture-audit` (triggered ~every 5 plans) | Compares real code against SYSTEM-MAP (edges, components, layers) | Reports in DEVLOG, findings in HYPOTHESES.md |
 | **Sync Vision** | `/sync-vision` (triggered when plan changes contracts) | Validates vision matches reality, classifies conflicts (A/B/C/D/E) | Reports in `docs/sync-vision-reports/`, updates OPEN-QUESTIONS.md |
-| **Feedback Loop** | `/retro` (triggered every 15 plans), plus `/product-check`, `/product-review`, `/product-vision` | Analyzes skip-rates, detects repeated problems, validates product behavior, reviews backlog | DEVLOG.md (tagged entries), HYPOTHESES.md |
+| **Feedback Loop** | `/retro` (triggered every 15 plans) | Analyzes skip-rates, detects repeated problems across the cycle | DEVLOG.md (tagged entries), HYPOTHESES.md |
+| **Product Health** | `/product-review` · `/product-check` · `/product-vision` (triggered ~every 10 plans) | Reviews raw product signals (IDEAS.md), validates PRODUCT.md vs real behavior, audits strategic vision | IDEAS.md, PRODUCT.md, ROADMAP.md, VISION.md |
 
 ---
 

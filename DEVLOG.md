@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase S1: USER-MAP — Remote git, Локальная машина, все стрелки, таблица [methodology][feat:template] v3.7.0
+
+**Что:** `docs/product/USER-MAP.md` — (1) `it-dev-methodology` перенесён внутрь subgraph `Локальная машина разработчика` (реальная топология). (2) Добавлен subgraph `Remote ["☁️ Remote Git (GitHub / GitLab)"]` вне Local — показывает все три репо в remote. (3) Все стрелки подписаны (Init→LocalCmds "копирует команды", Init→Storage "создаёт артефакты", Workflow→Storage "читает / обновляет", Workflow→RemoteNode "/deploy → git push", Remote→Canon "git pull (обновления)", Storage→Workflow "triggers.json → /plan"). (4) `⚙️ Инструменты методологии` — уточнённое имя для LocalCmds. (5) `📋 /product-review · /product-check · /product-vision` добавлены как `ProductHealth` node. (6) Таблица: Onboard row исправлен `project-docs/` → `«project»-documentation/`; добавлена строка Product Health.
+**Почему:** Диаграмма не показывала Remote git как destination /deploy, не было ясно что it-dev-methodology клонируется локально, стрелки без подписей были неоднозначны, /product-check и /product-vision отсутствовали.
+**Решение:** Полная топология: Remote ↔ Local с явными subgraph-ами и подписанными связями.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase S1]
+
 ## 2026-05-17 — Phase R1: USER-MAP — три репо, /onboard, код проекта [methodology][feat:template] v3.7.0
 
 **Что:** `docs/product/USER-MAP.md` — Mermaid полностью переработан: (1) ASCII-диаграмма удалена, Mermaid единственный формат. (2) Добавлен subgraph `project-docs (git, workspace)` с двумя node-ами: .claude/commands/ и артефакты. (3) Добавлен node `💻 Код проекта (git) — монолит или N микросервисов` со стрелкой `пишет / деплоит`. (4) Добавлен путь `/onboard` для нового разработчика. (5) Оба репо помечены `(git, ...)` — платформо-нейтрально. Все названия универсальные (без привязки к ERP).
