@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase T1: USER-MAP template — Part 1 Dev Setup skeleton, Legend, Node Vocabulary [methodology][feat:template] v3.8.0
+
+**Что:** `templates/USER-MAP.template.md` полностью переработан: (1) Добавлен **Part 1: Dev / Methodology Setup** — near-complete Mermaid skeleton с three-repo топологией (`it-dev-methodology` + `{{Project Name}}-documentation` + Код проекта), двумя акторами (Dev, PM), всеми labeled стрелками EN/RU, periodic commands, `[TODO: тип кода]` для единственной точки кастомизации. (2) **Легенда** под диаграммой — расшифровка emoji по типу узла + правило типов стрелок. (3) **Node Vocabulary** — таблица канонических имён с запретом синонимов (совпадает с SYSTEM-MAP, PRODUCT.md, DEVLOG). (4) Variant A Part 2 — labeled arrows RU/EN. (5) Notes — исправлено противоречие про /code command: допустим в Part 1 Dev Setup. (6) VERSION v3.7.0 → v3.8.0.
+**Почему:** Шаблон не отражал уроки сессии USER-MAP: не было dev-workflow скелетона, legend отсутствовала, имена узлов не были закреплены → каждый проект придумывал синонимы.
+**Решение:** Двухчастная структура: Part 1 (dev setup, near-complete) + Part 2 (product capabilities, customizable). Единственная `{{Project Name}}` автоподстановка, остальное — `[TODO: ...]` явные метки.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase T1]
+
 ## 2026-05-17 — Phase S1: USER-MAP — Remote git, Локальная машина, все стрелки, таблица [methodology][feat:template] v3.7.0
 
 **Что:** `docs/product/USER-MAP.md` — (1) `it-dev-methodology` перенесён внутрь subgraph `Локальная машина разработчика` (реальная топология). (2) Добавлен subgraph `Remote ["☁️ Remote Git (GitHub / GitLab)"]` вне Local — показывает все три репо в remote. (3) Все стрелки подписаны (Init→LocalCmds "копирует команды", Init→Storage "создаёт артефакты", Workflow→Storage "читает / обновляет", Workflow→RemoteNode "/deploy → git push", Remote→Canon "git pull (обновления)", Storage→Workflow "triggers.json → /plan"). (4) `⚙️ Инструменты методологии` — уточнённое имя для LocalCmds. (5) `📋 /product-review · /product-check · /product-vision` добавлены как `ProductHealth` node. (6) Таблица: Onboard row исправлен `project-docs/` → `«project»-documentation/`; добавлена строка Product Health.

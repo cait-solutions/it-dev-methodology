@@ -1,10 +1,10 @@
 {
   "global": {
-    "last_sync_vision":      { "date": null, "plans_since": 8 },
-    "last_retro":            { "date": null, "plans_since": 8 },
-    "last_product_review":   { "date": null, "plans_since": 8 },
-    "last_product_check":    { "date": null, "plans_since": 8 },
-    "last_product_vision":   { "date": "2026-05-16", "plans_since": 8 }
+    "last_sync_vision":      { "date": null, "plans_since": 9 },
+    "last_retro":            { "date": null, "plans_since": 9 },
+    "last_product_review":   { "date": null, "plans_since": 9 },
+    "last_product_check":    { "date": null, "plans_since": 9 },
+    "last_product_vision":   { "date": "2026-05-16", "plans_since": 9 }
   },
   "per_service": {},
   "queues": {
