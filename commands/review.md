@@ -149,6 +149,8 @@
 - Архитектурные изменения — SYSTEM-MAP.md / data-map.md / ADR обновлены?
 - SYSTEM-MAP или USER-MAP изменены → Mermaid-диаграмма сохранена? (замена на ASCII = 🔴 CRITICAL)
 - USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
+- Новая команда или тип артефакта добавлены → `docs/architecture/ARTIFACT-MAP.md` обновлён?
+- Изменился порог триггера → ARTIFACT-MAP.md колонка "Частота" актуальна?
 
 **Bootstrap-command contract** (только для methodology-platform tasks):
 - [ ] Изменена команда: ссылается на новые файлы? → `new-project-init.sh` создаёт их?

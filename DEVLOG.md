@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase W1: ARTIFACT-MAP — карта жизненного цикла артефактов [methodology][feat:template] v3.11.0
+
+**Что:** (1) `docs/architecture/ARTIFACT-MAP.md` — новый артефакт: Mermaid `graph LR` (команды → артефакты) + lifecycle table (Артефакт | Команда-триггер | Условие | Частота | Gap) + Known gaps секция. Показывает 11 артефактов с триггерами (✅) и 3 явных gap (RISKS.md, CLAUDE.md, docs/adr/ — ❌ без периодического ревью). (2) `templates/ARTIFACT-MAP.template.md` — generic шаблон: стандартные артефакты методологии предзаполнены, `[TODO:]` секция для проектных артефактов. (3) `scripts/new-project-init.sh` — `ARTIFACT-MAP.template.md` добавлен в bootstrap (создаётся как `docs/architecture/ARTIFACT-MAP.md`). (4) `commands/review.md` — добавлены два check в секцию Документация: новая команда/артефакт → ARTIFACT-MAP обновлён?; изменился порог → Частота актуальна? VERSION v3.10.0 → v3.11.0.
+**Почему:** Не было единого места где видно какой артефакт обновляется каким триггером и как часто. Gap (RISKS.md, CLAUDE.md, ADR) обнаруживался случайно — после долгого устаревания. Lifecycle карта делает gaps видимыми структурно, не из опыта.
+**Решение:** Отдельный артефакт `docs/architecture/` (не в SYSTEM-MAP — тот про компоненты, не про актуальность). Lifecycle table + Mermaid = два уровня детали для разных читателей.
+**Карта данных:** не изменилась (ARTIFACT-MAP.md — documentation, не state).
+**Связано:** [план 2026-05-17 Phase W1]
+
 ## 2026-05-17 — Phase V1: USER-MAP активные триггеры, subgraph emoji, правила формата [methodology][feat:command][feat:template] v3.10.0
 
 **Что:** (1) `commands/plan.md` — добавлен инкремент `last_user_map_sync.plans_since` в Подшаг 1 (триггер уже был, инкремент отсутствовал). (2) `commands/product-check.md` — добавлен шаг 7: USER-MAP freshness check через `last_user_map_sync`, grep на `[TODO: ...]`, graceful default если поле отсутствует. (3) `commands/onboard.md` — добавлен USER-MAP check (файл отсутствует / `[TODO: ...]` остались), исправлено "два репо" → "три репо", уточнён workspace check (`<project>-documentation/`, не `it-dev-methodology`). (4) `docs/product/USER-MAP.md` — emoji на subgraph labels (📦 it-dev-methodology, 📂 «project»-documentation, 💻 Код проекта), расширена gitignored note (committed vs not-committed явно). (5) `templates/USER-MAP.template.md` — правила формата subgraph labels в Требованиях, Bootstrap + Refresh Policy ссылаются на активные триггеры. VERSION v3.9.0 → v3.10.0.
