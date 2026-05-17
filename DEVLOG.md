@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase Z1: /review — disposition теги для 🟡/🔵 findings [methodology][process:review] v3.12.1
+
+**Что:** `commands/review.md` Шаг 4 — каждый 🟡/🔵 finding теперь требует явного inline disposition-тега. Добавлена таблица классификации перед шаблоном вывода (deploy action / fix now / deferred для 🟡; quick win / backlog / deferred для 🔵). Секция "Итог" получила `Plan:` строку с подсчётом findings по категориям вместо вопроса "Что делаем с предупреждениями?". Убран громоздкий блок "Обработка suggestions — явное правило" из шаблона. VERSION v3.12.0 → v3.12.1.
+**Зачем:** пользователь после каждого review спрашивал что будет с предупреждениями и suggestions — план не был виден из вывода.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase Z1]
+
+---
+
 ## 2026-05-17 — Phase Y1: ARTIFACT-MAP v2 — частота команд, описания, переезд в docs/product/ [methodology][feat:template] v3.12.0
 
 **Что:** (1) `docs/product/ARTIFACT-MAP.md` — создан заново (перемещён из `docs/architecture/`): Mermaid переработан — команды сгруппированы по частоте в 3 subgraph (🔁 Ядро / 📊 Периодические / 🔭 Стратегические), artifact nodes получили краткие описания через `<br/>`. Добавлены таблицы Command Reference (назначение + частота + что обновляет) и Artifact Reference (назначение + условие + частота). (2) `templates/ARTIFACT-MAP.template.md` — аналогичная структура + секция "Проектные артефакты" с примерами для marketplace, CRM, bot, API. (3) `docs/architecture/ARTIFACT-MAP.md` — удалён (устаревшее местоположение). (4) `scripts/new-project-init.sh` — path изменён на `docs/product/ARTIFACT-MAP.md`. (5) `commands/review.md` — ссылка обновлена. VERSION v3.11.1 → v3.12.0.
