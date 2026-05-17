@@ -17,8 +17,10 @@ graph LR
     classDef periodic fill:#e8eaf6,stroke:#3949ab,color:#000
     classDef strategic fill:#f3e5f5,stroke:#7b1fa2,color:#000
     classDef ok fill:#e8f5e9,stroke:#388e3c,color:#000
-    classDef gap fill:#ffebee,stroke:#c62828,color:#c62828
     classDef state fill:#fff3e0,stroke:#f57c00,color:#000
+    classDef actor fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    %% Бизнес-события CRUD (раскомментируй для marketplace/ERP):
+    %% classDef event fill:#fce4ec,stroke:#e91e63,color:#000
 
     subgraph CoreWF["🔁 Ядро (каждый цикл)"]
         Plan["/plan"]:::core
@@ -37,10 +39,24 @@ graph LR
         SyncV["/sync-vision<br/>⚡ по событию"]:::strategic
     end
 
-    subgraph Live["📄 Артефакты (есть триггер)"]
+    subgraph Actors["👤 Акторы (ручной / внешний триггер)"]
+        Dev["👨‍💻 Developer"]:::actor
+        Owner["👤 PM / Owner"]:::actor
+        Sync["⚙️ sync-script"]:::actor
+        %% Добавь акторов проекта:
+        %% Role1["👤 [TODO: роль]"]:::actor
+    end
+
+    %% Бизнес-события CRUD (marketplace, ERP — раскомментируй если нужно):
+    %% subgraph Events["⚡ Бизнес-события (CRUD)"]
+    %%     EV1["⚡ [TODO: событие]<br/>напр. order.created"]:::event
+    %%     EV2["⚡ [TODO: событие]<br/>напр. invoice.approved"]:::event
+    %% end
+
+    subgraph Live["📄 Артефакты"]
         TJ["triggers.json<br/>счётчики планов"]:::state
         DL["DEVLOG.md<br/>история деплоев"]:::ok
-        PM["PRODUCT.md<br/>поведение продукта"]:::ok
+        PROD["PRODUCT.md<br/>поведение продукта"]:::ok
         UM["USER-MAP.md<br/>карта возможностей"]:::ok
         SM["SYSTEM-MAP.md<br/>архитектура"]:::ok
         HY["HYPOTHESES.md<br/>гипотезы и аномалии"]:::ok
@@ -49,15 +65,11 @@ graph LR
         RM["ROADMAP.md<br/>план развития"]:::ok
         VI["VISION.md<br/>стратегия"]:::ok
         AM["ARTIFACT-MAP.md<br/>lifecycle карта"]:::ok
+        RISKS["RISKS.md<br/>реестр рисков"]:::ok
+        CLM["CLAUDE.md<br/>правила AI"]:::ok
+        ADR["docs/adr/<br/>архитектурные решения"]:::ok
         %% Добавь проектные артефакты:
         %% Custom1["[TODO: артефакт]<br/>[TODO: назначение]"]:::ok
-    end
-
-    subgraph Stale["❌ Артефакты без триггера"]
-        RISKS["RISKS.md<br/>реестр рисков"]:::gap
-        CLM["CLAUDE.md<br/>правила AI"]:::gap
-        ADR["docs/adr/<br/>архитектурные решения"]:::gap
-        %% CustomGap["[TODO: артефакт без триггера]"]:::gap
     end
 
     Plan -->|"≥5 планов"| PCheck
@@ -83,21 +95,36 @@ graph LR
     Arch -->|"[architecture-audit]"| DL
     Retro -->|"[retro]"| DL
 
-    PCheck -->|"проверка / сравнение"| PM
-    PReview -->|"может обновить"| PM
+    PCheck -->|"проверка / сравнение"| PROD
+    PReview -->|"может обновить"| PROD
     PCheck -->|"freshness ≥ 10"| UM
     Arch -->|"верификация"| SM
     Arch -->|"гипотезы"| HY
     Retro -->|"паттерны"| HY
     SyncV -->|"риски стратегии"| HY
-    SyncV -->|"конфликты"| OQ
+    SyncV -->|"создаёт"| OQ
     PReview -->|"обрабатывает"| ID
     PVision -->|"планирование"| RM
     PVision -->|"стратегия"| VI
     SyncV -->|"может обновить"| VI
 
-    %% Добавь стрелки для проектных артефактов:
-    %% Plan -->|"[TODO: действие]"| Custom1
+    Retro -->|"паттерны рисков"| RISKS
+    Owner -->|"новый риск"| RISKS
+    Owner -->|"риск закрыт"| RISKS
+    Dev -->|"при изменении правил"| CLM
+    Sync -->|"sync pull"| CLM
+    Dev -->|"архитект. решение"| ADR
+    Arch -->|"ревью статусов"| ADR
+
+    Owner -->|"закрывает"| OQ
+    PReview -->|"закрывает [reviewed]"| ID
+
+    %% Акторы → проектные артефакты (добавь если есть):
+    %% Dev -->|"[TODO: условие]"| Custom1
+    %% Owner -->|"[TODO: условие]"| Custom1
+    %% Бизнес-события → артефакты (CRUD):
+    %% EV1 -->|"lifecycle изменился"| Custom1
+    %% EV2 -->|"статус изменился"| Custom2
 ```
 
 ---
@@ -132,22 +159,22 @@ graph LR
 
 ### Стандартные артефакты методологии
 
-| Артефакт | Назначение | Условие обновления | Частота | Gap |
-|---|---|---|---|---|
-| `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | 🔁 каждый цикл | ✅ |
-| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | 🔁 каждый деплой | ✅ |
-| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | 📊 ~5 планов | ✅ |
-| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | 📊 ~10 планов | ✅ |
-| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | 📊 ~5 планов | ✅ |
-| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / sync-vision | 📊 ~5–15 планов | ✅ |
-| `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | ⚡ по событию | ✅ |
-| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | 📊 ~10 планов | ✅ |
-| `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | 🔭 ~30 планов | ✅ |
-| `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | 🔭 ~30 планов | ✅ |
-| `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта | ручное | ✅ |
-| **`RISKS.md`** | Реестр рисков: угрозы, вероятность, mitigation | **нет триггера** | — | ❌ |
-| **`CLAUDE.md`** | Правила работы AI-агентов в проекте | **нет триггера** | — | ❌ |
-| **`docs/adr/`** | Архитектурные решения и их обоснование | при новом решении; нет ревью старых | — | ❌ частично |
+| Артефакт | Назначение | Условие обновления | Пишет / Актор | Закрывает | Частота |
+|---|---|---|---|---|---|
+| `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | — | 🔁 каждый цикл |
+| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy` | — | 🔁 каждый деплой |
+| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review` | — | 📊 ~5 планов |
+| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check` | — | 📊 ~10 планов |
+| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit` | — | 📊 ~5 планов |
+| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / sync-vision | `/architecture-audit`, `/retro`, `/sync-vision` | — | 📊 ~5–15 планов |
+| `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | PM / Owner | ⚡ по событию |
+| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | Developer, `/plan` | `/product-review` | 📊 ~10 планов |
+| `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | — | 🔭 ~30 планов |
+| `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | — | 🔭 ~30 планов |
+| `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | — | ручное |
+| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при `/retro` или новом риске | `/retro`, PM / Owner | PM / Owner | 📊 ~15 планов |
+| `CLAUDE.md` | Правила работы AI-агентов в проекте | при sync pull или изменении правил | Developer, sync-script | — | ⚡ по событию |
+| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | Developer | Developer (deprecated) | ⚡ по решению |
 
 ### Проектные артефакты (заполнить)
 
@@ -156,35 +183,39 @@ graph LR
 **Откуда брать список артефактов:**
 1. Открой `PRODUCT.md` — каждая ключевая сущность (orders, invoices, users, flows) может иметь свой doc-артефакт
 2. Пройди по всем файлам в `docs/` и корне проекта
-3. Если документ важен но не упомянут ни в одной команде — это gap (❌)
+3. **Для каждого артефакта обязательно указать триггер.** Если кажется что его нет — ищи внимательнее. Ручное / CRUD / событийное — тоже триггер.
 
 > ⚠️ Артефакт в этой карте = **документ** который описывает сущность или процесс, не сама сущность.
 > Для маркетплейса: `orders.md` = спецификация флоу заказов (lifecycle, статусы, правила); сама таблица `orders` — это данные, не артефакт.
 
 **Примеры по типу проекта:**
 
-| Тип проекта | Возможные doc-артефакты | Кто обновляет |
-|---|---|---|
-| Маркетплейс | `docs/product/orders.md` (lifecycle, статусы), `docs/product/invoices.md` (генерация, хранение), `docs/product/catalog.md` | `/product-check`, `/product-review` |
-| CRM / продажи | `docs/product/customers.md`, `docs/product/pipelines.md`, `docs/product/deals.md` | `/product-review` |
-| ИИ-бот / агент | `docs/product/prompts.md`, `docs/product/conversation-flows.md`, `docs/product/tool-specs.md` | `/product-check` при изменении поведения |
-| API-сервис | `docs/api-contracts.md`, `docs/rate-limits.md` | `/sync-vision` при изменении контрактов |
-| Внутренний инструмент | `docs/product/user-roles.md`, `docs/product/permissions.md` | `/product-check` |
+| Тип проекта | Возможные doc-артефакты | Пишет / Актор | Закрывает |
+|---|---|---|---|
+| Маркетплейс | `docs/product/orders.md`, `docs/product/invoices.md`, `docs/product/catalog.md` | `/product-check`, `order.created` (CRUD) | PM (статус deprecated) |
+| CRM / продажи | `docs/product/customers.md`, `docs/product/pipelines.md` | `/product-review`, Owner | — |
+| ИИ-бот / агент | `docs/product/prompts.md`, `docs/product/conversation-flows.md` | `/product-check`, Developer | — |
+| API-сервис | `docs/api-contracts.md`, `docs/rate-limits.md` | `/sync-vision`, Developer | Developer (v-deprecated) |
+| Внутренний инструмент | `docs/product/user-roles.md`, `docs/product/permissions.md` | `/product-check`, PM | PM (роль удалена) |
 
-| Артефакт | Назначение | Условие обновления | Частота | Gap |
-|---|---|---|---|---|
-| `[TODO: артефакт]` | `[TODO: что описывает из PRODUCT.md]` | `[TODO: когда обновлять]` | `[TODO: частота]` | ✅/❌ |
+| Артефакт | Назначение | Условие обновления | Пишет / Актор | Закрывает | Частота |
+|---|---|---|---|---|---|
+| `[TODO: артефакт]` | `[TODO: что описывает из PRODUCT.md]` | `[TODO: когда обновлять]` | `[TODO: актор / команда]` | `[TODO: кто закрывает или —]` | `[TODO: частота]` |
 
 ---
 
-## Known gaps
+## Ручные триггеры (риск пропуска)
 
-| Gap | Риск | Возможное решение |
-|---|---|---|
-| `RISKS.md` без триггера | Риски устаревают незаметно | Добавить в `/retro` или `/product-review` |
-| `CLAUDE.md` без триггера | Правила расходятся с практикой | Добавить в `/architecture-audit` или `/retro` |
-| `docs/adr/` без ревью устаревших | ADR противоречат текущей архитектуре | Добавить в `/architecture-audit` |
-| `[TODO: артефакт]` | `[TODO: риск]` | `[TODO: решение]` |
+> **Правило: у каждого артефакта есть триггер.** Если кажется что его нет — ищи внимательнее. Ручное обновление тоже триггер: укажи кто (Developer / PM / Owner) и при каком событии. Артефакт без триггера = документ который никто не поддерживает = устаревший.
+
+Артефакты с ручным триггером требуют дисциплины — добавь их сюда:
+
+| Артефакт | Триггер | Актор | Риск если не обновлять |
+|---|---|---|---|
+| `RISKS.md` | `/retro` (паттерны) или новый риск | PM / Owner | Устаревший threat landscape |
+| `CLAUDE.md` | sync pull или изменение правил | Developer | Правила расходятся с практикой |
+| `docs/adr/` | архитектурное решение или `/architecture-audit` | Developer | ADR противоречат текущей архитектуре |
+| `[TODO: артефакт]` | `[TODO: триггер]` | `[TODO: актор]` | `[TODO: риск]` |
 
 ---
 
@@ -192,8 +223,9 @@ graph LR
 
 Обновлять этот файл когда:
 - Добавлена новая команда (`/X`) → добавить строку в Command Reference + node в диаграмму
-- Добавлен новый тип артефакта → добавить строку в Artifact Reference
-- Изменился порог триггера → обновить колонку "Частота" и subgraph label в диаграмме
-- Gap закрыт → переместить из Stale в Live subgraph, обновить до ✅
+- Добавлен новый тип артефакта → добавить строку в Artifact Reference + node в диаграмму
+- Появился новый актор (Developer, PM, скрипт, CRUD-событие) → добавить в Actors / Events subgraph
+- Изменился порог триггера → обновить колонку "Частота" и стрелку Plan→команда в диаграмме
+- Ручной триггер автоматизирован → убрать из "Ручные триггеры", обновить Актор в таблице
 
 `/review` проверяет: новая команда или артефакт → ARTIFACT-MAP обновлён?
