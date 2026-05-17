@@ -24,6 +24,7 @@
 | 0.5 Hard blocker на повторный деплой | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 0.7 Pre-flight warnings (triggers.json) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 1 Pre-flight check (ветка, коммиты, tests) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 1.5 Branch tracing (F5: agent vs human) | ✓ | ✓ | ✓ | ✓ | — | — |
 | 2 DEVLOG.md запись | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 3 Деплой (procedure-specific) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (git push) |
 | 3.1 Selftest (если есть в проекте) | ✓ | ✓ | ✓ | ✓ | — | — |

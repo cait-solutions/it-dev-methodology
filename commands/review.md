@@ -151,6 +151,7 @@
 - USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
 - Новая команда или тип артефакта добавлены → `docs/product/ARTIFACT-MAP.md` обновлён?
 - Изменился порог триггера → ARTIFACT-MAP.md колонка "Частота" актуальна?
+- ARTIFACT-MAP изменён → table↔Mermaid консистентность: каждая **команда** в "Читает" имеет `-.->` стрелку (human actors не требуют); нода без единой стрелки → 🟡 WARNING "ARTIFACT-MAP node island"
 
 **Bootstrap-command contract** (только для methodology-platform tasks):
 - [ ] Изменена команда: ссылается на новые файлы? → `new-project-init.sh` создаёт их?

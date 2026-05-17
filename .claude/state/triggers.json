@@ -1,11 +1,12 @@
 {
   "global": {
-    "last_sync_vision":      { "date": null, "plans_since": 19 },
-    "last_retro":            { "date": null, "plans_since": 19 },
-    "last_product_review":   { "date": null, "plans_since": 19 },
-    "last_product_check":    { "date": null, "plans_since": 19 },
-    "last_product_vision":   { "date": "2026-05-16", "plans_since": 19 },
-    "last_user_map_sync":    { "date": "2026-05-17", "plans_since": 2 }
+    "last_sync_vision":         { "date": null, "plans_since": 20 },
+    "last_retro":               { "date": "2026-05-17", "plans_since": 0 },
+    "last_product_review":      { "date": "2026-05-17", "plans_since": 0 },
+    "last_product_check":       { "date": "2026-05-17", "plans_since": 0 },
+    "last_product_vision":      { "date": "2026-05-16", "plans_since": 20 },
+    "last_user_map_sync":       { "date": "2026-05-17", "plans_since": 2 },
+    "last_architecture_audit":  { "date": null, "plans_since": 20 }
   },
   "per_service": {},
   "queues": {
@@ -17,15 +18,15 @@
     "architecture_audit": 0,
     "sync_vision": 0,
     "retro": 0,
-    "review_skipped": 3,
+    "review_skipped": 0,
     "code_skipped": 0,
-    "product_review_skipped": 2,
-    "product_check_skipped": 2,
+    "product_review_skipped": 0,
+    "product_check_skipped": 0,
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-05-17T19:00:00Z",
-    "task_id": "phase-dd1-artifact-map-reads-rudiments",
+    "completed_at": "2026-05-17T21:00:00Z",
+    "task_id": "phase-ee1-template-audit-5-structural-fixes",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true

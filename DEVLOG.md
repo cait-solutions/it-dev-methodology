@@ -86,6 +86,25 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase EE1: аудит шаблонов — 5 структурных фиксов [methodology][process:audit] v3.15.0
+
+**Что:** (1) `last_architecture_audit` добавлен в `triggers.json.template` и instance — counter работал на несуществующем поле 20+ планов; (2) AM нода в ARTIFACT-MAP получила 2 стрелки (`Dev-->AM`, `AM-.->Rev`) — island fix; (3) Gate 1 (checklist в Refresh Policy) + Gate 2 (check в review.md) для table↔Mermaid консистентности; (4) `templates/.ownership.template` создан — onboard.md ссылался на несуществующий шаблон; (5) Шаг 1.5 Branch tracing добавлен в nav-table deploy.md — строка отсутствовала, methodology=— (solo-dev, no team audit trail).
+**Зачем:** Аудит всех шаблонов по 4 категориям: пассивные правила, рудименты, конфликты, неочевидные gaps. EE1 закрывает подтверждённые issues; retro threshold и architecture-audit — отдельные планы.
+**Карта данных:** triggers.json schema расширена (minor) — новые проекты получат last_architecture_audit при bootstrap.
+**Связано:** [retro 2026-05-17], [HYPOTHESES.md missed-signal 2026-05-17]
+
+---
+
+## 2026-05-17 — [retro] первый retro: 20 планов, 3 структурных находки [methodology][retro]
+
+**Период:** 20 планов, 28+ деплоев (2026-05-17, bootstrap фаза)
+**Skip rates:** review:15% (3/20), product-review:skipped-2, product-check:skipped-2, остальные:0%
+**Stale OQ:** 0 · **Inbox:** 0
+**Рекомендации:** (1) добавить `last_architecture_audit` в triggers.json schema — поле отсутствует, counter не работал; (2) исправить island AM ноду в ARTIFACT-MAP Mermaid — нет стрелок несмотря на "Читает: Developer, /review"; (3) рассмотреть снижение порога /retro с 15 → 10 для bootstrap проектов
+**VISION alignment:** 95% работы на Ось 3 + Ось 4, Ось 2 не тронута (соответствует плану)
+
+---
+
 ## 2026-05-17 — Phase DD1: ARTIFACT-MAP — read-flow, Читает колонка, рудименты [methodology][feat:template] v3.14.0
 
 **Что:** Добавлен полный read-flow в `ARTIFACT-MAP.template.md` и `docs/product/ARTIFACT-MAP.md`: (1) `/review` добавлен в CoreWF subgraph; (2) 9 dashed read-стрелок (артефакт → потребитель); (3) колонка `Читает` в таблицах Artifact Reference (7 колонок); (4) legend note + rudiment-signal в Refresh Policy; (5) TJ/CLM node labels аннотированы "⬅ все команды".

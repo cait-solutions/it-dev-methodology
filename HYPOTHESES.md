@@ -92,3 +92,13 @@
 ---
 
 <!-- Debug-записи ниже, новые — сверху -->
+
+## 2026-05-17 [missed-signal]
+Сигнал: ARTIFACT-MAP.md нода в собственной диаграмме — island без входящих/исходящих стрелок (несмотря на "Читает: Developer, /review" в таблице)
+Почему пропустил: при добавлении read-flow стрелок в Phase DD1 проверялись write-пути и 9 read-стрелок, но AM нода не была проверена на arrow-completeness
+Как поймать в следующий раз: /review rudiment-check должен сравнивать "Читает ≠ —" в таблице с наличием -.-> стрелки в Mermaid; и "Пишет: Developer" с наличием Dev --> arrow
+
+## 2026-05-17 [missed-signal]
+Сигнал: last_architecture_audit поле отсутствует в triggers.json.template и instance, но /plan Шаг -3 пытается его инкрементировать и использовать как threshold
+Почему пропустил: при добавлении новых fields в template (last_user_map_sync в Phase J1) не провели полный consistency check всех полей упомянутых в commands/ против schema template
+Как поймать в следующий раз: при каждом изменении команды касающемся triggers.json — grep по всем commands/*.md на "plans_since" и сравнить с ключами в triggers.json.template
