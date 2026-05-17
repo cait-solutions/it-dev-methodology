@@ -31,7 +31,8 @@ graph TD
 
     subgraph DocRepo["&lt;project&gt;-documentation (git, workspace)"]
         LocalCmds[".claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
-        Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>DEVLOG.md, triggers.json"]
+        Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>triggers.json"]
+        Feedback["📊 История проекта<br/>DEVLOG.md · HYPOTHESES.md"]
     end
 
     subgraph CodeRepos["Код проекта (git)"]
@@ -48,6 +49,7 @@ graph TD
     Init --> LocalCmds
     Init --> Storage
     Onboard -.->|"читает контекст"| Storage
+    Onboard -.->|"читает историю"| Feedback
     Workflow --> Storage
     Workflow -->|"пишет / деплоит"| Services
 
@@ -55,10 +57,9 @@ graph TD
     Workflow -->|"при контракт-изменениях"| Vision["👁️ Sync Vision<br/>реальность vs стратегия"]
     Workflow -->|"каждые ~15 циклов"| Retro["🔁 /retro<br/>анализ накопленного"]
 
-    Audit --> Feedback["📊 Feedback Loop<br/>DEVLOG + HYPOTHESES"]
-    Vision --> Feedback
-    Retro --> Feedback
-    Feedback -.->|"обновляет"| Storage
+    Audit -->|"пишет в"| Feedback
+    Vision -->|"пишет в"| Feedback
+    Retro -->|"пишет в"| Feedback
     Feedback -->|"следующий цикл"| Workflow
 
     style Dev fill:#e1f5ff
@@ -69,11 +70,11 @@ graph TD
     style Canon fill:#fff8e1
     style LocalCmds fill:#fce4ec
     style Storage fill:#fce4ec
+    style Feedback fill:#fce4ec
     style Services fill:#e3f2fd
     style Audit fill:#e8f5e9
     style Vision fill:#e8f5e9
     style Retro fill:#e8f5e9
-    style Feedback fill:#fce4ec
 ```
 
 ---
