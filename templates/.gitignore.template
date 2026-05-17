@@ -1,6 +1,16 @@
 # Claude Code — local user settings (per CLAUDE.md, not shared with team)
 .claude/settings.local.json
 
+# Methodology runtime — synced from it-dev-methodology, not project-owned.
+# Run scripts/sync-methodology.sh after each git clone to restore these locally.
+.claude/commands/
+.claude/hooks/
+.claude/model-tiers.md
+.claude/.version
+
+# Methodology local state — per-developer counters, not shared
+.claude/state/
+
 # Operating system
 .DS_Store
 Thumbs.db

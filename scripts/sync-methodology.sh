@@ -21,10 +21,17 @@ METHODOLOGY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
 SYNCED_AT="$(date -u +%Y-%m-%d)"
 
-if [[ ! -d "$TARGET_DIR/.claude/commands" ]]; then
-  echo "ERROR: $TARGET_DIR/.claude/commands not found."
-  echo "       Run new-project-init.sh first, or check the path."
+if [[ ! -d "$TARGET_DIR/.claude" ]]; then
+  echo "ERROR: $TARGET_DIR/.claude not found."
+  echo "       Run new-project-init.sh first to bootstrap the project."
   exit 1
+fi
+# commands/ may be absent after fresh clone (gitignored) — create it
+if [[ ! -d "$TARGET_DIR/.claude/commands" ]]; then
+  mkdir -p "$TARGET_DIR/.claude/commands"
+  echo "  (created .claude/commands/ — absent after clone, restoring via sync)"
+else
+  mkdir -p "$TARGET_DIR/.claude/commands"
 fi
 
 echo "Methodology: $VERSION"
