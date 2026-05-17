@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase GG: ARTIFACT-MAP — /diagnose + полные read-flow стрелки [methodology][feat:template] v3.18.0
+
+**Что:** (GG1) Добавлен `/diagnose` в ARTIFACT-MAP: нода в Strategic subgraph, стрелка `Diag→HY`, строка в Command Reference, обновлена строка HYPOTHESES.md (3 источника вместо 2); подграф переименован в "Стратегические + Ad-hoc". (GG2) Добавлены 13 отсутствующих read-flow стрелок (`-.->`) — теперь каждая команда методологии имеет явные входящие стрелки от артефактов которые она читает как input; секция Read flow реорганизована с комментариями по командам.
+**Зачем:** (GG1) `/diagnose` существовал и работал, но был невидим в lifecycle-карте — HYPOTHESES.md получал записи "вживую" из диагностики, а диаграмма это не отражала. (GG2) Конвенция: `→` = команда пишет артефакт, `-.->` = артефакт читается командой как input. До этого read-flow показывался только для /plan и /review; 9 остальных команд выглядели как "ничего не читают", хотя /product-review читает IDEAS.md как primary input.
+**Карта данных:** не изменилась.
+**Связано:** [plan 2026-05-17 Phase GG1], [plan 2026-05-17 Phase GG2]
+
+---
+
 ## 2026-05-17 — Phase FF1: ARTIFACT-MAP — философия "команда как актор" + capture сигналов [methodology][feat:template] v3.16.0
 
 **Что:** (1) Добавлен `/code` в CoreWF subgraph ARTIFACT-MAP (нода отсутствовала, несмотря на core-workflow роль); (2) Убраны Dev→CLM, Dev→ADR, Dev→AM — заменены на Code→CLM/ADR и PCheck→AM; (3) Убрана ложная Retro→RISKS стрелка (/retro не пишет в RISKS — верифицировано по коду команды); (4) Исправлена Arch-->ADR на Arch-.->ADR (read, не write); (5) Добавлены: RISKS-.->Plan, Plan→ID (capture), Rev→ID (out-of-scope); (6) Enforcement capture: /plan Шаг 100 п.0, /review out-of-scope секция, /code Шаг 5 CLAUDE.md, /retro п.3 RISKS; (7) SYSTEM-MAP fix: scripts description + templates count v1.1→v1.2.

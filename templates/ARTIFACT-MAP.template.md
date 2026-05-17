@@ -37,9 +37,10 @@ graph LR
         Retro["/retro"]:::periodic
     end
 
-    subgraph Strategic["🔭 Стратегические (редко / по событию)"]
+    subgraph Strategic["🔭 Стратегические + Ad-hoc (редко / по событию)"]
         PVision["/product-vision"]:::strategic
         SyncV["/sync-vision<br/>⚡ по событию"]:::strategic
+        Diag["/diagnose<br/>⚡ по событию"]:::strategic
     end
 
     subgraph Actors["👤 Акторы (ручной / внешний триггер)"]
@@ -106,6 +107,7 @@ graph LR
     Arch -->|"гипотезы"| HY
     Retro -->|"паттерны"| HY
     SyncV -->|"риски стратегии"| HY
+    Diag -->|"гипотезы [fix:X]"| HY
     SyncV -->|"создаёт"| OQ
     PReview -->|"обрабатывает"| ID
     PVision -->|"планирование"| RM
@@ -138,17 +140,40 @@ graph LR
     %% EV2 -->|"статус изменился"| Custom2
 
     %% --- Read flow: артефакт → потребитель ---
-    VI  -.->|"стратег. контекст"| Plan
-    RM  -.->|"горизонт планирования"| Plan
-    HY  -.->|"верификация гипотез"| Plan
-    OQ  -.->|"блокирует / check"| Plan
-    ID  -.->|"сигналы"| Plan
-    DL  -.->|"паттерны"| Retro
+    %% /plan
+    VI    -.->|"стратег. контекст"| Plan
+    RM    -.->|"горизонт планирования"| Plan
+    HY    -.->|"верификация гипотез"| Plan
+    OQ    -.->|"блокирует / check"| Plan
+    ID    -.->|"сигналы"| Plan
+    RISKS -.->|"контекст рисков"| Plan
+    %% /review
     DL  -.->|"повторный фикс"| Rev
     SM  -.->|"верификация"| Rev
     ADR -.->|"контракты"| Rev
     AM  -.->|"lifecycle check"| Rev
-    RISKS -.->|"контекст рисков"| Plan
+    %% /product-check
+    PROD -.->|"primary input"| PCheck
+    %% /architecture-audit
+    SM -.->|"drift check"| Arch
+    %% /product-review
+    ID -.->|"primary input"| PReview
+    DL -.->|"за 14 дней"| PReview
+    VI -.->|"оси стратегии"| PReview
+    %% /retro
+    DL -.->|"паттерны"| Retro
+    OQ -.->|"stale check"| Retro
+    HY -.->|"паттерны"| Retro
+    VI -.->|"alignment"| Retro
+    %% /sync-vision
+    VI -.->|"vs реальность"| SyncV
+    %% /product-vision
+    VI -.->|"текущая стратегия"| PVision
+    RM -.->|"текущий план"| PVision
+    %% /diagnose
+    DL -.->|"паттерн [fix:X]"| Diag
+    HY -.->|"контекст"| Diag
+    %% Capture: план и ревью пишут в IDEAS.md
     Plan -->|"Шаг 0.2 / Шаг 100 capture"| ID
     Rev  -->|"out-of-scope findings"| ID
     %% [TODO: добавь проектные read-стрелки: Custom1 -.->|"контекст"| Plan]
@@ -172,6 +197,7 @@ graph LR
 | `/architecture-audit` | Drift SYSTEM-MAP vs реальный код — ищет расхождения | 📊 ≥5 планов | `SYSTEM-MAP.md`, `HYPOTHESES.md`, `DEVLOG.md` |
 | `/product-review` | Обработка накопленных IDEAS.md сигналов → решения | 📊 ≥10 планов | `IDEAS.md`, `PRODUCT.md` |
 | `/retro` | Паттерны проблем за N планов — системные причины | 📊 ≥15 планов | `HYPOTHESES.md`, `DEVLOG.md` |
+| `/diagnose` | Глубокий root-cause анализ при повторном `[fix:X]` — 3+ гипотезы, Capable tier | ⚡ при `[fix:X]` ≥2 за 7 дней | `HYPOTHESES.md` |
 | `/sync-vision` | Стратегия vs реальность при изменении контрактов | ⚡ по событию | `VISION.md`, `OPEN-QUESTIONS.md`, `HYPOTHESES.md` |
 | `/product-vision` | Стратегический обзор: VISION + ROADMAP обновление | 🔭 ≥30 планов | `VISION.md`, `ROADMAP.md` |
 
@@ -197,7 +223,7 @@ graph LR
 | `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review`, `/code` | `/plan`, `/product-check` | — | 📊 ~5 планов |
 | `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check` | Developer, PM/Owner | — | 📊 ~10 планов |
 | `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit`, `/code` | `/review`, `/architecture-audit`, Developer | — | 📊 ~5 планов |
-| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / sync-vision | `/architecture-audit`, `/retro`, `/sync-vision` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
+| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / диагностике / sync-vision | `/architecture-audit`, `/retro`, `/diagnose`, `/sync-vision` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
 | `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
 | `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | Developer, `/plan`, `/review` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |

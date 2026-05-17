@@ -1,12 +1,12 @@
 {
   "global": {
-    "last_sync_vision":         { "date": null, "plans_since": 21 },
-    "last_retro":               { "date": "2026-05-17", "plans_since": 1 },
-    "last_product_review":      { "date": "2026-05-17", "plans_since": 1 },
-    "last_product_check":       { "date": "2026-05-17", "plans_since": 1 },
-    "last_product_vision":      { "date": "2026-05-16", "plans_since": 21 },
-    "last_user_map_sync":       { "date": "2026-05-17", "plans_since": 3 },
-    "last_architecture_audit":  { "date": "2026-05-17", "plans_since": 0 }
+    "last_sync_vision":         { "date": null, "plans_since": 23 },
+    "last_retro":               { "date": "2026-05-17", "plans_since": 3 },
+    "last_product_review":      { "date": "2026-05-17", "plans_since": 3 },
+    "last_product_check":       { "date": "2026-05-17", "plans_since": 3 },
+    "last_product_vision":      { "date": "2026-05-16", "plans_since": 23 },
+    "last_user_map_sync":       { "date": "2026-05-17", "plans_since": 5 },
+    "last_architecture_audit":  { "date": "2026-05-17", "plans_since": 2 }
   },
   "per_service": {},
   "queues": {
@@ -25,14 +25,14 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-05-17T22:00:00Z",
-    "task_id": "phase-ff1-artifact-map-command-as-actor",
+    "completed_at": "2026-05-17T23:45:00Z",
+    "task_id": "phase-gg2-artifact-map-full-read-flow",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
   },
   "last_deploy": {
     "date": "2026-05-17",
-    "time": "phase-ee1-deployed"
+    "time": "phase-ff1-deployed"
   }
 }
