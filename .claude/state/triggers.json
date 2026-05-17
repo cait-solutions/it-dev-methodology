@@ -1,10 +1,10 @@
 {
   "global": {
-    "last_sync_vision":      { "date": null, "plans_since": 15 },
-    "last_retro":            { "date": null, "plans_since": 15 },
-    "last_product_review":   { "date": null, "plans_since": 15 },
-    "last_product_check":    { "date": null, "plans_since": 15 },
-    "last_product_vision":   { "date": "2026-05-16", "plans_since": 15 },
+    "last_sync_vision":      { "date": null, "plans_since": 16 },
+    "last_retro":            { "date": null, "plans_since": 16 },
+    "last_product_review":   { "date": null, "plans_since": 16 },
+    "last_product_check":    { "date": null, "plans_since": 16 },
+    "last_product_vision":   { "date": "2026-05-16", "plans_since": 16 },
     "last_user_map_sync":    { "date": "2026-05-17", "plans_since": 2 }
   },
   "per_service": {},
@@ -25,13 +25,13 @@
   },
   "last_plan_session": {
     "completed_at": "2026-05-17T17:30:00Z",
-    "task_id": "phase-z1-review-disposition-tags",
+    "task_id": "phase-aa1-artifact-map-plan-arrows",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": false
   },
   "last_deploy": {
     "date": "2026-05-17",
-    "time": "phase-y1-deployed"
+    "time": "phase-z1-deployed"
   }
 }

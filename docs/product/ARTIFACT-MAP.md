@@ -26,14 +26,14 @@ graph LR
     end
 
     subgraph Periodic["📊 Периодические (по счётчику)"]
-        PCheck["/product-check<br/>≥5 планов"]:::periodic
-        Arch["/architecture-audit<br/>≥5 планов"]:::periodic
-        PReview["/product-review<br/>≥10 планов"]:::periodic
-        Retro["/retro<br/>≥15 планов"]:::periodic
+        PCheck["/product-check"]:::periodic
+        Arch["/architecture-audit"]:::periodic
+        PReview["/product-review"]:::periodic
+        Retro["/retro"]:::periodic
     end
 
     subgraph Strategic["🔭 Стратегические (редко / по событию)"]
-        PVision["/product-vision<br/>≥30 планов"]:::strategic
+        PVision["/product-vision"]:::strategic
         SyncV["/sync-vision<br/>⚡ по событию"]:::strategic
     end
 
@@ -56,6 +56,13 @@ graph LR
         CLM["CLAUDE.md<br/>правила AI"]:::gap
         ADR["docs/adr/<br/>архитектурные решения"]:::gap
     end
+
+    Plan -->|"≥5 планов"| PCheck
+    Plan -->|"≥5 планов"| Arch
+    Plan -->|"≥10 планов"| PReview
+    Plan -->|"≥15 планов"| Retro
+    Plan -->|"≥30 планов"| PVision
+    Plan -.->|"≥5 + событие"| SyncV
 
     Plan -->|"инкремент счётчиков"| TJ
     Deploy -->|"last_deploy"| TJ
