@@ -29,12 +29,14 @@ graph TD
         Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
     end
 
-    subgraph DocRepo["project-docs (git, workspace)"]
+    subgraph DocRepo["&lt;project&gt;-documentation (git, workspace)"]
         LocalCmds[".claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
         Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>DEVLOG.md, triggers.json"]
     end
 
-    Services["💻 Код проекта (git)<br/>монолит или N микросервисов"]
+    subgraph CodeRepos["Код проекта (git)"]
+        Services["💻 монолит или N микросервисов"]
+    end
 
     Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>new-project-init.sh"]
     Dev -->|"Присоединиться к проекту"| Onboard["🧭 /onboard<br/>git clone + sync + читает контекст"]
@@ -56,6 +58,7 @@ graph TD
     Audit --> Feedback["📊 Feedback Loop<br/>DEVLOG + HYPOTHESES"]
     Vision --> Feedback
     Retro --> Feedback
+    Feedback -.->|"обновляет"| Storage
     Feedback -->|"следующий цикл"| Workflow
 
     style Dev fill:#e1f5ff
