@@ -14,8 +14,9 @@
 4. Открой `<your-project>/` в Claude Code как workspace root
 5. Запусти `/onboard` (новый разработчик) или `/plan` (начало задачи)
 
-> Команды синхронизируются в `.claude/commands/` но **не коммитятся** (gitignored).
-> После каждого `git clone` нужно повторить шаг 3.
+> **Не коммитятся** (gitignored, восстанавливаются sync): `.claude/commands/`, `.claude/hooks/`
+> **Коммитятся** (git-tracked): `CLAUDE.md`, `PRODUCT.md`, `DEVLOG.md`, `VISION.md`, `docs/`, `triggers.json`
+> После каждого `git clone` нужно повторить шаг 3 чтобы восстановить команды локально.
 
 ---
 
@@ -31,14 +32,14 @@ graph TD
     end
 
     subgraph Local["💻 Локальная машина разработчика"]
-        subgraph Methodology["it-dev-methodology (git, канон)"]
+        subgraph Methodology["📦 it-dev-methodology (git, канон)"]
             Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
         end
-        subgraph DocRepo["«project»-documentation (git, workspace)"]
+        subgraph DocRepo["📂 «project»-documentation (git, workspace)"]
             LocalCmds["⚙️ Инструменты методологии<br/>.claude/commands/ + .claude/hooks/<br/>gitignored — восстанавливается sync"]
             Storage["💾 Артефакты проекта<br/>CLAUDE.md, PRODUCT.md, VISION.md,<br/>SYSTEM-MAP.md, DEVLOG.md,<br/>HYPOTHESES.md, triggers.json"]
         end
-        subgraph CodeRepos["Код проекта (git)"]
+        subgraph CodeRepos["💻 Код проекта (git)"]
             Services["💻 монолит или N микросервисов"]
         end
     end

@@ -91,6 +91,7 @@
    - `last_product_review.plans_since += 1`
    - `last_product_check.plans_since += 1`
    - `last_product_vision.plans_since += 1`
+   - `last_user_map_sync.plans_since += 1` (если есть USER-MAP.md)
 4. Сохранить triggers.json
 
 ### Подшаг 2 — Триггеры (порядок, по одному вопросу за раз)

@@ -19,6 +19,11 @@
 
 **Типы стрелок:** `-->` сплошная — активное действие; `-.->` пунктирная — чтение / пассивная связь.
 
+**Формат subgraph labels:** `<emoji> <name> (<type>, <role>)`
+- 📦 канон / source-of-truth · 📂 docs/workspace · 💻 code repos · ☁️ remote · 💻 local machine
+- Платформа `(GitHub / GitLab)` — только на Remote subgraph, один раз для всех repo
+- Локальные клоны: `(git, role)` — без указания платформы
+
 ---
 
 ## Легенда
@@ -159,7 +164,10 @@ graph TD
 
 **Не обновлять при:** рефакторинге, багфиксах, улучшении производительности.
 
-**Sync trigger:** `.claude/state/triggers.json` — поле `last_user_map_sync`.
+**Активные триггеры:**
+- `/product-check` (шаг 7) — проверяет `last_user_map_sync.plans_since ≥ 10` и наличие `[TODO: ...]`
+- `/onboard` — проверяет `[TODO: ...]` при каждом запуске
+- `/plan` шаг -3 — инкрементирует `last_user_map_sync.plans_since`
 
 ---
 
@@ -169,8 +177,11 @@ graph TD
 1. Файл копируется в `docs/product/USER-MAP.md`, `{{Project Name}}` подставляется автоматически
 2. Выбери вариант (начни с A)
 3. Замени все `[TODO: ...]` на реальный контент
-4. Удали инструкционные комментарии и `[TODO: ...]` метки после заполнения
+4. Удали `[TODO: ...]` метки после заполнения
 5. PRODUCT.md — детальное поведение; USER-MAP — верхний уровень
+
+> `/onboard` проверяет наличие `[TODO: ...]` в USER-MAP и предупреждает если они остались.
+> `/product-check` проверяет свежесть USER-MAP через `triggers.json → last_user_map_sync`.
 
 ---
 

@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase V1: USER-MAP активные триггеры, subgraph emoji, правила формата [methodology][feat:command][feat:template] v3.10.0
+
+**Что:** (1) `commands/plan.md` — добавлен инкремент `last_user_map_sync.plans_since` в Подшаг 1 (триггер уже был, инкремент отсутствовал). (2) `commands/product-check.md` — добавлен шаг 7: USER-MAP freshness check через `last_user_map_sync`, grep на `[TODO: ...]`, graceful default если поле отсутствует. (3) `commands/onboard.md` — добавлен USER-MAP check (файл отсутствует / `[TODO: ...]` остались), исправлено "два репо" → "три репо", уточнён workspace check (`<project>-documentation/`, не `it-dev-methodology`). (4) `docs/product/USER-MAP.md` — emoji на subgraph labels (📦 it-dev-methodology, 📂 «project»-documentation, 💻 Код проекта), расширена gitignored note (committed vs not-committed явно). (5) `templates/USER-MAP.template.md` — правила формата subgraph labels в Требованиях, Bootstrap + Refresh Policy ссылаются на активные триггеры. VERSION v3.9.0 → v3.10.0.
+**Почему:** Refresh Policy и Bootstrap были пассивными инструкциями — разработчик не получал напоминания. USER-MAP мог устареть незаметно. Subgraph labels были без emoji — несогласованность с Remote subgraph.
+**Решение:** Level-4 активные проверки в /onboard и /product-check вместо пассивного текста.
+**Карта данных:** `triggers.json` (схема): `last_user_map_sync` уже был в template, теперь подключён к инкременту и product-check.
+**Связано:** [план 2026-05-17 Phase V1]
+
 ## 2026-05-17 — Phase U1: USER-MAP template — убран Part 1 Dev Setup, исправлена концепция [methodology][fix:template] v3.9.0
 
 **Что:** `templates/USER-MAP.template.md` — удалён Part 1 "Dev / Methodology Setup" (three-repo skeleton, workflow, PM актор). Оставлены только Variant A/B/C (product capabilities) + Legend + Node Vocabulary (сделан generic). Добавлено примечание: methodology-platform — исключение, где USER-MAP правомерно показывает dev workflow. VERSION v3.8.0 → v3.9.0.

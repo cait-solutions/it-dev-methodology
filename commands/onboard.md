@@ -25,9 +25,14 @@
 
 **Workspace check (для new-developer):**
 Прежде чем читать README — убедись в правильной настройке:
-- [ ] Открыт `<project>/` как workspace root в Claude Code (не родительская папка)?
+- [ ] Открыт `<project>-documentation/` как workspace root в Claude Code (не родительская папка, не `it-dev-methodology`)?
 - [ ] Команды доступны? (в Claude Code должно работать `/plan`)
 - [ ] Если команд нет → запусти `sync-methodology.sh` из `it-dev-methodology` (см. README.md раздел "После git clone")
+
+**USER-MAP check:**
+- [ ] Открыть `docs/product/USER-MAP.md`
+  - Файл отсутствует → ⚠️ USER-MAP не создан. Запусти `new-project-init.sh` или создай вручную из шаблона.
+  - Найдены `[TODO: ...]` маркеры → ⚠️ USER-MAP не заполнен. Заполни перед началом работы (шаблон: `templates/USER-MAP.template.md`).
 
 ---
 
@@ -60,7 +65,7 @@
 ## Для нового разработчика (первый день, ~2 часа)
 
 0. **Workspace setup** (если ещё не сделано — см. Шаг 0 выше) — 5 мин
-1. Прочитай README.md (структура, два репозитория, workflow) — 15 мин
+1. Прочитай README.md (структура, три репозитория, workflow) — 15 мин
 2. Прочитай CLAUDE.md (операционные правила) — 15 мин
 3. Прочитай docs/glossary.md (термины) — 10 мин
 4. Прочитай docs/VISION.md (куда идём) — 10 мин
