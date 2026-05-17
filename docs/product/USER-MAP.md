@@ -42,7 +42,7 @@ graph TD
 |---|---|---|---|
 | **Initialize Project** | `new-project-init.sh <name>` | Creates full .claude structure, copies templates with banner, substitutes {{Project Name}}, initializes git | `.claude/{commands,agents,hooks,state}/` + root artifacts |
 | **Execute Workflow** | Runs `/plan` → `/code` → `/review` → `/deploy` in Claude Code | Manages plan approval, code review gates, self-lint checks, smoke tests, DEVLOG updates | `triggers.json` (state), DEVLOG.md (history) |
-| **Sync Methodology** | `sync-methodology.sh <target>` | Updates commands/hooks with fresh banner, detects local edits, preserves project-owned content | `.claude/commands/`, `.claude/hooks/`, `.claude/.version` |
+| **Sync Methodology** | `sync-methodology.sh <target>` | Updates commands/hooks with fresh banner, detects local edits, preserves project-owned content. **Also works as post-clone install** — if `commands/` absent (gitignored), creates it and restores from methodology | `.claude/commands/`, `.claude/hooks/`, `.claude/.version` |
 | **Architecture Audit** | `/architecture-audit` (triggered ~every 5 plans) | Compares real code against SYSTEM-MAP (edges, components, layers) | Reports in DEVLOG, findings in HYPOTHESES.md |
 | **Sync Vision** | `/sync-vision` (triggered when plan changes contracts) | Validates vision matches reality, classifies conflicts (A/B/C/D/E) | Reports in `docs/sync-vision-reports/`, updates OPEN-QUESTIONS.md |
 | **Feedback Loop** | `/retro` (triggered every 15 plans), plus `/product-check`, `/product-review`, `/product-vision` | Analyzes skip-rates, detects repeated problems, validates product behavior, reviews backlog | DEVLOG.md (tagged entries), HYPOTHESES.md |
@@ -54,7 +54,7 @@ graph TD
 1. **Bootstrap** → creates initial structure + artifacts template
 2. **Workflow cycle** (plan/code/review/deploy) → increments `triggers.json` counters
 3. **Periodic checks** (architecture-audit, sync-vision, retro) → triggered by counter thresholds
-4. **Sync** → gets new commands/hooks from upstream, preserves local content
+4. **Sync** → gets new commands/hooks from upstream, preserves local content. After `git clone` of consumer repo: commands gitignored → run sync to restore locally
 5. **Feedback** → stored in DEVLOG + HYPOTHESES, informs next cycle
 
 ---

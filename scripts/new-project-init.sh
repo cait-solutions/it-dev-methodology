@@ -12,12 +12,15 @@
 # The SKILL template (templates/SKILL.template.md) is for per-domain use during
 # /onboard, not auto-copied. Copy it manually into the relevant service folder.
 #
-# Always created (v3.1.0+):
+# Always created (v3.4.0+):
 #   .claude/{commands,agents,rules,state,hooks}/, .claude/.version
 #   .claude/rules/README.md (template for tech stack rules)
+#   README.md (workspace setup + links to SYSTEM-MAP/USER-MAP)
 #   CLAUDE.md, CLAUDE_LONG.md, PRODUCT.md, VISION.md
-#   docs/architecture/SYSTEM-MAP.md, docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
+#   docs/architecture/SYSTEM-MAP.md, docs/product/USER-MAP.md
+#   docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
 #   docs/adr/{_TEMPLATE,README}.md, docs/data-map.md
+#   docs/sync-vision-reports/ (placeholder for /sync-vision output)
 #   inbox/{README,_processed/,_processed/rejected/}, services-registry.yaml
 #   DEVLOG.md, IDEAS.md, ROADMAP.md, OPEN-QUESTIONS.md, HYPOTHESES.md, RISKS.md
 #   .gitignore (standard ignores)
@@ -46,7 +49,7 @@ echo "Target:      $TARGET_DIR"
 echo "Structure:   Full (one methodology, all artifacts created)"
 echo ""
 
-mkdir -p "$TARGET_DIR"/{.claude/{commands,agents,rules,state,hooks},docs/{architecture,product,vision}}
+mkdir -p "$TARGET_DIR"/{.claude/{commands,agents,rules,state,hooks},docs/{architecture,product,vision,sync-vision-reports}}
 
 # ---------------------------------------------------------------------------
 # Banner injection — picks comment syntax by file extension.
@@ -188,6 +191,7 @@ copy_with_subst() {
 # Core artifacts (always).
 # ---------------------------------------------------------------------------
 echo "→ core artifacts/"
+copy_with_subst "$METHODOLOGY_DIR/templates/README.template.md"          "$TARGET_DIR/README.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGET_DIR/CLAUDE.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LONG.template.md"     "$TARGET_DIR/CLAUDE_LONG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"         "$TARGET_DIR/PRODUCT.md"
@@ -231,6 +235,10 @@ mkdir -p "$TARGET_DIR/inbox/_processed/rejected"
 touch "$TARGET_DIR/inbox/_processed/.gitkeep"
 touch "$TARGET_DIR/inbox/_processed/rejected/.gitkeep"
 copy_with_subst "$METHODOLOGY_DIR/templates/inbox/README.template.md"  "$TARGET_DIR/inbox/README.md"
+
+echo "→ sync-vision-reports/"
+touch "$TARGET_DIR/docs/sync-vision-reports/.gitkeep"
+echo "  ✓ docs/sync-vision-reports/ (placeholder)"
 
 echo "→ data-map/"
 copy_with_subst "$METHODOLOGY_DIR/templates/data-map.template.md"  "$TARGET_DIR/docs/data-map.md"
