@@ -4,6 +4,35 @@
 
 ---
 
+## Initial Setup — два репозитория
+
+Перед началом работы с методологией в любом проекте:
+
+```
+┌─────────────────────────────────┐     ┌───────────────────────────────────────┐
+│   it-dev-methodology/           │     │   your-project/   (этот репо)         │
+│                                 │     │                                        │
+│   commands/*.md  ←── канон      │     │   .claude/commands/  ←── gitignored   │
+│   hooks/*.py     ←── канон      │─────►   .claude/hooks/     ←── gitignored   │
+│   templates/     ←── канон      │sync │   CLAUDE.md          ←── project-own  │
+│   scripts/       ←── канон      │     │   PRODUCT.md, DEVLOG.md, VISION.md... │
+│                                 │     │   docs/architecture/SYSTEM-MAP.md     │
+└─────────────────────────────────┘     └───────────────────────────────────────┘
+```
+
+**Шаги инициализации (один раз на машину / после каждого clone):**
+
+1. `git clone https://github.com/cait-solutions/it-dev-methodology` — склонируй методологию
+2. `git clone <your-project-repo>` — склонируй проект
+3. `bash it-dev-methodology/scripts/sync-methodology.sh <your-project>/` — восстанови команды локально
+4. Открой `<your-project>/` в Claude Code как workspace root
+5. Запусти `/onboard` (новый разработчик) или `/plan` (начало задачи)
+
+> Команды синхронизируются в `.claude/commands/` но **не коммитятся** (gitignored).
+> После каждого `git clone` нужно повторить шаг 3.
+
+---
+
 ## Product Capabilities
 
 ```mermaid

@@ -1,20 +1,46 @@
 # {{Project Name}}
 
-> Open this folder as your Claude Code workspace, then run `/plan` for the first feature.
+> Открой эту папку как workspace в Claude Code, затем запусти `/plan` для первой фичи.
 
 ---
 
-## After `git clone`
+## Два репозитория
 
-Slash commands are gitignored (synced, not project-owned). Restore them locally after cloning:
+Проект использует два репо:
+
+```
+it-dev-methodology/          ← slash-команды, хуки, шаблоны (читай-только для консьюмеров)
+  └── scripts/sync-methodology.sh
+              │
+              ▼ sync (после каждого git clone)
+              │
+{{Project Name}}/            ← этот репо (workspace в Claude Code)
+  ├── .claude/commands/      ← локальные копии команд (gitignored, не коммитить)
+  ├── .claude/hooks/         ← хуки (gitignored)
+  ├── CLAUDE.md              ← правила AI-агента (project-owned, коммитить)
+  ├── PRODUCT.md, DEVLOG.md, VISION.md...
+  └── docs/
+```
+
+Команды не хранятся в этом репо — они синхронизируются из `it-dev-methodology`.
+
+---
+
+## После `git clone`
+
+Slash-команды gitignored — восстанови их локально:
 
 ```bash
+# 1. Склонируй методологию (один раз, куда удобно)
+git clone https://github.com/cait-solutions/it-dev-methodology /path/to/it-dev-methodology
+
+# 2. Синхронизируй команды в этот проект
 bash /path/to/it-dev-methodology/scripts/sync-methodology.sh .
 ```
 
-Takes < 30 seconds. After that, open this folder in Claude Code — `/plan`, `/code`, `/review`, `/deploy` are all available.
+Занимает < 30 секунд. После этого открой `{{Project Name}}/` в Claude Code — все `/plan`, `/code`, `/review`, `/deploy` доступны.
 
-**Workspace root:** open `{{Project Name}}/` directly in Claude Code (not the parent directory). Commands are resolved from workspace root.
+**Workspace root:** открывай именно папку `{{Project Name}}/`, не родительскую директорию. Команды резолвятся от workspace root.
 
 ---
 
@@ -24,43 +50,41 @@ Takes < 30 seconds. After that, open this folder in Claude Code — `/plan`, `/c
 /plan  →  /code  →  /review  →  /deploy
 ```
 
-| Command | What it does |
+| Команда | Что делает |
 |---|---|
-| `/plan` | Architectural analysis + implementation plan |
-| `/code` | Implementation per approved plan |
-| `/review` | Pre-deploy review with architecture checks |
-| `/deploy` | Deploy with safety checks + DEVLOG entry |
+| `/plan` | Архитектурный анализ + план реализации |
+| `/code` | Реализация по согласованному плану |
+| `/review` | Ревью перед деплоем с архитектурными проверками |
+| `/deploy` | Деплой с safety checks + запись в DEVLOG |
 
 ---
 
-## Architecture
+## Архитектура проекта
 
-- [SYSTEM-MAP](docs/architecture/SYSTEM-MAP.md) — components, edges, layers
-- [USER-MAP](docs/product/USER-MAP.md) — what users/teams can do with this system
-- [PRODUCT.md](PRODUCT.md) — system behavior from user's point of view
-- [VISION.md](VISION.md) — strategic axes
+- [SYSTEM-MAP](docs/architecture/SYSTEM-MAP.md) — компоненты, связи, слои
+- [USER-MAP](docs/product/USER-MAP.md) — что могут делать пользователи/команда
+- [PRODUCT.md](PRODUCT.md) — поведение системы с точки зрения пользователя
+- [VISION.md](VISION.md) — стратегические оси
 
 ---
 
-## Dev artifacts
+## Артефакты разработки
 
-| File | Purpose |
+| Файл | Назначение |
 |---|---|
-| [CLAUDE.md](CLAUDE.md) | Operational rules for AI agents |
-| [DEVLOG.md](DEVLOG.md) | Decision and deploy history |
-| [IDEAS.md](IDEAS.md) | Raw product signals |
-| [ROADMAP.md](ROADMAP.md) | Product backlog |
-| [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) | Unresolved decisions |
-| [HYPOTHESES.md](HYPOTHESES.md) | Hypotheses under review |
-| [RISKS.md](RISKS.md) | Risk registry |
+| [CLAUDE.md](CLAUDE.md) | Операционные правила для AI-агента |
+| [DEVLOG.md](DEVLOG.md) | История решений и деплоев |
+| [IDEAS.md](IDEAS.md) | Сырые продуктовые сигналы |
+| [ROADMAP.md](ROADMAP.md) | Продуктовый бэклог |
+| [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) | Нерешённые вопросы |
+| [HYPOTHESES.md](HYPOTHESES.md) | Гипотезы под проверку |
+| [RISKS.md](RISKS.md) | Реестр рисков |
 
 ---
 
-## Keeping methodology up to date
+## Обновление методологии
 
-This project uses [it-dev-methodology](https://github.com/cait-solutions/it-dev-methodology).
-
-To pull the latest commands and hooks:
+Для подтягивания новых команд и хуков из upstream:
 
 ```bash
 bash /path/to/it-dev-methodology/scripts/sync-methodology.sh .
