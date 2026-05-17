@@ -86,6 +86,14 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase Y1: ARTIFACT-MAP v2 — частота команд, описания, переезд в docs/product/ [methodology][feat:template] v3.12.0
+
+**Что:** (1) `docs/product/ARTIFACT-MAP.md` — создан заново (перемещён из `docs/architecture/`): Mermaid переработан — команды сгруппированы по частоте в 3 subgraph (🔁 Ядро / 📊 Периодические / 🔭 Стратегические), artifact nodes получили краткие описания через `<br/>`. Добавлены таблицы Command Reference (назначение + частота + что обновляет) и Artifact Reference (назначение + условие + частота). (2) `templates/ARTIFACT-MAP.template.md` — аналогичная структура + секция "Проектные артефакты" с примерами для marketplace, CRM, bot, API. (3) `docs/architecture/ARTIFACT-MAP.md` — удалён (устаревшее местоположение). (4) `scripts/new-project-init.sh` — path изменён на `docs/product/ARTIFACT-MAP.md`. (5) `commands/review.md` — ссылка обновлена. VERSION v3.11.1 → v3.12.0.
+**Почему:** Плоский список команд без частоты и описаний — читатель не понимал ни "зачем эта команда", ни "как часто". Местоположение `docs/architecture/` неверно для consumer-проектов где артефакты — это product-level объекты (invoices, orders).
+**Решение:** Frequency subgraphs в Mermaid — визуальная группировка без текстового шума. docs/product/ — правильный home для lifecycle-карты product артефактов.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase Y1]
+
 ## 2026-05-17 — Phase X1: До/После — расширен формат с ценностью и scope [methodology][process:plan-review] v3.11.1
 
 **Что:** `commands/plan.md` Шаг 3 — блок `## До / После` расширен с 2 полей (`Сейчас/После`) до 4 (`Было/Стало/Ценность/Не меняется`). Добавлена guidance секция с требованиями к конкретности Ценности и явности scope boundary. Позиция блока (перед Recommended models) сохранена. VERSION v3.11.0 → v3.11.1.

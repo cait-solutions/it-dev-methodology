@@ -17,7 +17,7 @@
 #   .claude/rules/README.md (template for tech stack rules)
 #   README.md (workspace setup + links to SYSTEM-MAP/USER-MAP)
 #   CLAUDE.md, CLAUDE_LONG.md, PRODUCT.md, VISION.md
-#   docs/architecture/{SYSTEM-MAP,ARTIFACT-MAP}.md, docs/product/USER-MAP.md
+#   docs/architecture/SYSTEM-MAP.md, docs/product/{USER-MAP,ARTIFACT-MAP}.md
 #   docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
 #   docs/adr/{_TEMPLATE,README}.md, docs/data-map.md
 #   docs/sync-vision-reports/ (placeholder for /sync-vision output)
@@ -196,8 +196,8 @@ copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGE
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LONG.template.md"     "$TARGET_DIR/CLAUDE_LONG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"         "$TARGET_DIR/PRODUCT.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/SYSTEM-MAP.template.md"      "$TARGET_DIR/docs/architecture/SYSTEM-MAP.md"
-copy_with_subst "$METHODOLOGY_DIR/templates/ARTIFACT-MAP.template.md"    "$TARGET_DIR/docs/architecture/ARTIFACT-MAP.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/USER-MAP.template.md"        "$TARGET_DIR/docs/product/USER-MAP.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/ARTIFACT-MAP.template.md"    "$TARGET_DIR/docs/product/ARTIFACT-MAP.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/DEVLOG.template.md"          "$TARGET_DIR/DEVLOG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/IDEAS.template.md"           "$TARGET_DIR/IDEAS.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/ROADMAP.template.md"         "$TARGET_DIR/ROADMAP.md"
