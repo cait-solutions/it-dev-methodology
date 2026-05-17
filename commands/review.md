@@ -147,6 +147,8 @@
 - Поведение изменилось — PRODUCT.md обновлён?
 - PRODUCT.md изменён — USER-MAP.md всё ещё консистентен? (capabilities, data flow)
 - Архитектурные изменения — SYSTEM-MAP.md / data-map.md / ADR обновлены?
+- SYSTEM-MAP или USER-MAP изменены → Mermaid-диаграмма сохранена? (замена на ASCII = 🔴 CRITICAL)
+- USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
 
 **Bootstrap-command contract** (только для methodology-platform tasks):
 - [ ] Изменена команда: ссылается на новые файлы? → `new-project-init.sh` создаёт их?

@@ -1,0 +1,36 @@
+{
+  "global": {
+    "last_sync_vision":      { "date": null, "plans_since": 8 },
+    "last_retro":            { "date": null, "plans_since": 8 },
+    "last_product_review":   { "date": null, "plans_since": 8 },
+    "last_product_check":    { "date": null, "plans_since": 8 },
+    "last_product_vision":   { "date": "2026-05-16", "plans_since": 8 }
+  },
+  "per_service": {},
+  "queues": {
+    "inbox_unprocessed_count": 0,
+    "open_questions_open_count": 0,
+    "open_questions_stale_count": 0
+  },
+  "skipped_warnings": {
+    "architecture_audit": 0,
+    "sync_vision": 0,
+    "retro": 0,
+    "review_skipped": 2,
+    "code_skipped": 0,
+    "product_review_skipped": 0,
+    "product_check_skipped": 0,
+    "product_vision_skipped": 0
+  },
+  "last_plan_session": {
+    "completed_at": "2026-05-17T15:00:00Z",
+    "task_id": "phase-q1-user-map-mermaid-methodology-rules",
+    "service": "methodology-platform",
+    "mode": "Full",
+    "code_run": true
+  },
+  "last_deploy": {
+    "date": "2026-05-17",
+    "time": "phase-p1-deployed"
+  }
+}

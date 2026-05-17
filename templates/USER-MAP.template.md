@@ -11,6 +11,16 @@ It complements [SYSTEM-MAP](../docs/architecture/SYSTEM-MAP.md) (internal struct
 
 ---
 
+## Требования к диаграммам
+
+**Mermaid обязателен.** USER-MAP (как и SYSTEM-MAP) всегда содержит Mermaid-диаграмму — в больших проектах только так возможен нормальный обзор. Замена на ASCII/текст запрещена.
+
+**Гибридный язык.** Технические термины EN (node names, command names, file paths), описания и метки RU. Пример: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]` — название EN, аннотации RU.
+
+**Repo / setup контекст.** USER-MAP должен отражать, с какими репозиториями и окружениями работает пользователь. Если проект использует внешнюю методологию / infrastructure repo — добавь `subgraph` или аннотацию, объясняющую связь. Без этого новый разработчик не поймёт откуда берутся команды.
+
+---
+
 ## How to use this template
 
 **Pick a variant based on your project size:**

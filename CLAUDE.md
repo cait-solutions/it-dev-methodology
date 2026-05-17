@@ -127,6 +127,21 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 
 ---
 
+## Documentation map rule
+
+**SYSTEM-MAP и USER-MAP MUST содержать Mermaid-диаграмму.** Замена на ASCII art или plain text запрещена — в больших проектах только Mermaid обеспечивает читаемый обзор.
+
+**Гибридный язык (EN + RU):**
+- Технические термины, имена файлов/команд — EN: `commands/`, `triggers.json`, `/plan → /code`
+- Описания поведения, аннотации, метки на русском: `"анализ накопленного"`, `"единственный источник правды"`
+- Пример корректного node: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
+
+**Repo / setup контекст обязателен в USER-MAP.** Если проект использует внешний methodology-repo или infrastructure-repo — добавить `subgraph` или аннотацию, показывающую откуда берутся команды/шаблоны. Без этого новый разработчик не поймёт структуру.
+
+`/review` блокирует merge если: (1) SYSTEM-MAP или USER-MAP изменены и Mermaid удалён; (2) новый разработчик не сможет понять repo-структуру из диаграммы.
+
+---
+
 ## DEVLOG теги
 
 `[fix:component]` `[feat:command]` `[feat:template]` `[feat:hook]` `[feat:script]` `[methodology]` `[process:X]` `[milestone]`

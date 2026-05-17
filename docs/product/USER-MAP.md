@@ -37,29 +37,43 @@
 
 ```mermaid
 graph TD
-    Dev["👤 Developer/Team Lead<br/>(uses methodology)"]
-    
-    Dev -->|New project| Init["🚀 Initialize Project<br/>(bootstrap all artifacts<br/>+ .claude structure)"]
-    Dev -->|Start coding cycle| Workflow["🔄 Execute Workflow<br/>(/plan → /code →<br/>/review → /deploy)"]
-    Dev -->|Update to latest| Sync["🔄 Sync Methodology<br/>(get new commands,<br/>hooks, templates)"]
-    
-    Init --> Storage["💾 Project State<br/>(CLAUDE.md, PRODUCT.md,<br/>triggers.json, etc.)"]
+    Dev["👤 Dev / Team Lead"]
+
+    subgraph Methodology["it-dev-methodology (канон)"]
+        Canon["📦 commands/ + hooks/ + templates/<br/>единственный источник правды"]
+    end
+
+    subgraph Project["Consumer Repo (проект)"]
+        Storage["💾 Project State<br/>CLAUDE.md, DEVLOG.md, triggers.json"]
+    end
+
+    Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>bootstrap артефактов + .claude/"]
+    Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
+    Dev -->|"Получить обновления"| Sync["🔄 Sync Methodology<br/>sync-methodology.sh"]
+
+    Sync -.->|"pulls"| Canon
+    Canon -->|"copy + banner"| Storage
+    Init --> Storage
     Workflow --> Storage
-    Sync --> Storage
-    
-    Workflow -->|Track decisions| Audit["🏗️ Architecture Audit<br/>(detect drift vs<br/>SYSTEM-MAP)"]
-    Workflow -->|Validate approach| Vision["👁️ Sync Vision<br/>(align reality<br/>with strategy)"]
-    
-    Audit --> Feedback["📊 Feedback Loop<br/>(DEVLOG, /retro,<br/>next cycle)"]
+
+    Workflow -->|"каждые ~5 циклов"| Audit["🏗️ Architecture Audit<br/>drift vs SYSTEM-MAP"]
+    Workflow -->|"при контракт-изменениях"| Vision["👁️ Sync Vision<br/>реальность vs стратегия"]
+    Workflow -->|"каждые ~15 циклов"| Retro["🔁 /retro<br/>анализ накопленного"]
+
+    Audit --> Feedback["📊 Feedback Loop<br/>DEVLOG + HYPOTHESES"]
     Vision --> Feedback
-    
+    Retro --> Feedback
+    Feedback -->|"следующий цикл"| Workflow
+
     style Dev fill:#e1f5ff
     style Init fill:#fff3e0
     style Workflow fill:#f3e5f5
     style Sync fill:#fff3e0
+    style Canon fill:#fff8e1
     style Storage fill:#fce4ec
     style Audit fill:#e8f5e9
     style Vision fill:#e8f5e9
+    style Retro fill:#e8f5e9
     style Feedback fill:#fce4ec
 ```
 
