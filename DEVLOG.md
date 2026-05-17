@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase CC1: inbox/ в ARTIFACT-MAP + ADR-001 [methodology][feat:template] v3.13.1
+
+**Что:** (1) Добавлен `inbox/` в `ARTIFACT-MAP.template.md` и `docs/product/ARTIFACT-MAP.md`: node `INB` в Mermaid, строка в Artifact Reference, строка в Ручные триггеры. (2) Создан `docs/adr/ADR-001-product-review-rename.md` — зафиксировано решение о rename `/product-review` → `/ideas-review`; статус Принят, реализация deferred до major bump ≥ v4.0.0.
+**Зачем:** inbox существовал в commands/plan, commands/sync-vision, triggers.json и templates/ — но отсутствовал в ARTIFACT-MAP. ADR-001 фиксирует naming decision чтобы не потерять обоснование.
+**Карта данных:** не изменилась.
+**Связано:** [план 2026-05-17 Phase CC1], [ADR-001](docs/adr/ADR-001-product-review-rename.md)
+
+---
+
 ## 2026-05-17 — Phase BB1: ARTIFACT-MAP — полный lifecycle, Акторы, CRUD-события, нет "без триггера" [methodology][feat:template] v3.13.0
 
 **Что:** Концептуальная переработка ARTIFACT-MAP. (1) Убран `subgraph Stale ["❌ Без триггера"]` — заменён `subgraph Actors` с Developer / PM / sync-script. (2) RISKS/CLAUDE/ADR перемещены в Live с явными акторными стрелками. (3) Таблица: колонка `Gap` → `Пишет / Актор`, добавлена `Закрывает` — показывает полный lifecycle (кто создаёт, кто закрывает). (4) В шаблоне: закомментированный `subgraph Events` для CRUD-событий (marketplace, ERP). (5) Новое правило: "нет артефакта без триггера". (6) Known gaps → "Ручные триггеры (риск пропуска)". VERSION v3.12.2 → v3.13.0.

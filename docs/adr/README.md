@@ -37,7 +37,7 @@ ADR — записи фиксирующие **почему** принято ар
 
 | ID | Название | Статус | Дата | Связано |
 |---|---|---|---|---|
-| ADR-001 | <slug> | Принят / Реализован / Частично | YYYY-MM-DD | VISION §N |
+| ADR-001 | [Rename /product-review → /ideas-review](./ADR-001-product-review-rename.md) | Принят | 2026-05-17 | [ARTIFACT-MAP](../product/ARTIFACT-MAP.md) |
 
 ---
 

@@ -68,6 +68,7 @@ graph LR
         RISKS["RISKS.md<br/>реестр рисков"]:::ok
         CLM["CLAUDE.md<br/>правила AI"]:::ok
         ADR["docs/adr/<br/>архитектурные решения"]:::ok
+        INB["inbox/<br/>входящие артефакты"]:::ok
         %% Добавь проектные артефакты:
         %% Custom1["[TODO: артефакт]<br/>[TODO: назначение]"]:::ok
     end
@@ -119,6 +120,11 @@ graph LR
     Owner -->|"закрывает"| OQ
     PReview -->|"закрывает [reviewed]"| ID
 
+    Plan -.->|"Шаг 0.7 check"| INB
+    SyncV -->|"обрабатывает / _processed"| INB
+    Owner -->|"кладёт файлы"| INB
+    Dev -->|"кладёт файлы"| INB
+
     %% Акторы → проектные артефакты (добавь если есть):
     %% Dev -->|"[TODO: условие]"| Custom1
     %% Owner -->|"[TODO: условие]"| Custom1
@@ -168,6 +174,7 @@ graph LR
 | `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit` | — | 📊 ~5 планов |
 | `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / sync-vision | `/architecture-audit`, `/retro`, `/sync-vision` | — | 📊 ~5–15 планов |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | PM / Owner | ⚡ по событию |
+| `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы, дампы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/sync-vision`, `/plan` Шаг 0.7 → `_processed/` | ⚡ по событию |
 | `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | Developer, `/plan` | `/product-review` | 📊 ~10 планов |
 | `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | — | 🔭 ~30 планов |
 | `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | — | 🔭 ~30 планов |
@@ -215,6 +222,7 @@ graph LR
 | `RISKS.md` | `/retro` (паттерны) или новый риск | PM / Owner | Устаревший threat landscape |
 | `CLAUDE.md` | sync pull или изменение правил | Developer | Правила расходятся с практикой |
 | `docs/adr/` | архитектурное решение или `/architecture-audit` | Developer | ADR противоречат текущей архитектуре |
+| `inbox/` | Получен новый внешний документ | PM / Owner / Developer | Документ не обработан → план и sync-vision работают с устаревшими данными |
 | `[TODO: артефакт]` | `[TODO: триггер]` | `[TODO: актор]` | `[TODO: риск]` |
 
 ---
