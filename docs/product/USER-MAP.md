@@ -40,16 +40,16 @@ graph TD
     end
 
     Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>new-project-init.sh"]
-    Dev -->|"Присоединиться к проекту"| Onboard["🧭 /onboard<br/>git clone + sync + читает контекст"]
+    Dev -->|"Присоединиться к проекту"| Onboard["🧭 /onboard<br/>ориентация нового разработчика<br/>(после git clone + sync)"]
     Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
     Dev -->|"Обновить методологию"| Sync["🔄 Sync Methodology<br/>sync-methodology.sh"]
 
     Sync -.->|"pulls from"| Canon
     Canon -->|"copy + banner"| LocalCmds
-    Init --> LocalCmds
-    Init --> Storage
+    Init -->|"копирует команды"| LocalCmds
+    Init -->|"создаёт артефакты"| Storage
     Onboard -.->|"читает контекст"| Storage
-    Workflow --> Storage
+    Workflow -->|"читает / обновляет"| Storage
     Workflow -->|"пишет / деплоит"| Services
 
     Workflow -->|"каждые ~5 циклов"| Audit["🏗️ Architecture Audit<br/>drift vs SYSTEM-MAP"]
