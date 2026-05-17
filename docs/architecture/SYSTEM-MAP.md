@@ -1,8 +1,8 @@
 # SYSTEM-MAP — methodology-platform
 
-**Версия:** v1.1
-**Обновлён:** 2026-05-16
-**Граф проверен против кода:** 2026-05-16 (Phase G2)
+**Версия:** v1.2
+**Обновлён:** 2026-05-17
+**Граф проверен против кода:** 2026-05-17 (Phase FF1 architecture-audit)
 
 > Обновлять этот файл в том же PR что и изменения в `scripts/`, `commands/`, `templates/`, или добавления компонентов.
 >
@@ -26,7 +26,7 @@
 graph TB
     subgraph "Methodology Platform (this repo)"
         CMDS[commands/<br/>12 slash-команд<br/>канон]
-        TMPL[templates/<br/>~20 шаблонов артефактов<br/>канон]
+        TMPL[templates/<br/>~30 шаблонов артефактов<br/>канон]
         HOOKS[hooks/<br/>3 защитных хука<br/>канон]
         AGENTS[agents/<br/>3 скелета суб-агентов<br/>канон]
         SCRIPTS[scripts/<br/>bootstrap + sync<br/>исполнители]
@@ -145,7 +145,7 @@ graph TB
 - **Владелец:** владелец методологии
 - **Стек:** Bash 3.2+ (Git Bash на Windows совместим)
 - **Точки входа:**
-  - `new-project-init.sh <name> [target] [flags]` — bootstrap
+  - `new-project-init.sh <name> [target-dir]` — bootstrap
   - `sync-methodology.sh <target>` — sync
 - **Зависимости:** читают `commands/`, `templates/`, `hooks/`, `agents/`, `VERSION`
 

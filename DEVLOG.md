@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-17 — Phase FF1: ARTIFACT-MAP — философия "команда как актор" + capture сигналов [methodology][feat:template] v3.16.0
+
+**Что:** (1) Добавлен `/code` в CoreWF subgraph ARTIFACT-MAP (нода отсутствовала, несмотря на core-workflow роль); (2) Убраны Dev→CLM, Dev→ADR, Dev→AM — заменены на Code→CLM/ADR и PCheck→AM; (3) Убрана ложная Retro→RISKS стрелка (/retro не пишет в RISKS — верифицировано по коду команды); (4) Исправлена Arch-->ADR на Arch-.->ADR (read, не write); (5) Добавлены: RISKS-.->Plan, Plan→ID (capture), Rev→ID (out-of-scope); (6) Enforcement capture: /plan Шаг 100 п.0, /review out-of-scope секция, /code Шаг 5 CLAUDE.md, /retro п.3 RISKS; (7) SYSTEM-MAP fix: scripts description + templates count v1.1→v1.2.
+**Зачем:** Философия ARTIFACT-MAP: PM/Developer write-стрелка = сигнал "нет команды или рудимент". Цель — все артефакты имеют командный update-путь. IDEAS capture enforcement предотвращает потерю идей при закрытии сессии.
+**Карта данных:** не изменилась.
+**Связано:** [plan 2026-05-17 Phase FF1], [architecture-audit 2026-05-17]
+
+---
+
 ## 2026-05-17 — Phase EE1: аудит шаблонов — 5 структурных фиксов [methodology][process:audit] v3.15.0
 
 **Что:** (1) `last_architecture_audit` добавлен в `triggers.json.template` и instance — counter работал на несуществующем поле 20+ планов; (2) AM нода в ARTIFACT-MAP получила 2 стрелки (`Dev-->AM`, `AM-.->Rev`) — island fix; (3) Gate 1 (checklist в Refresh Policy) + Gate 2 (check в review.md) для table↔Mermaid консистентности; (4) `templates/.ownership.template` создан — onboard.md ссылался на несуществующий шаблон; (5) Шаг 1.5 Branch tracing добавлен в nav-table deploy.md — строка отсутствовала, methodology=— (solo-dev, no team audit trail).

@@ -24,7 +24,11 @@
 4. **Режимы и состояния:** описаны корректно?
 5. **Хранилища:** таблица хранилищ в PRODUCT.md совпадает с data-map?
 6. **Дата обновления:** есть и актуальна?
-7. **USER-MAP freshness** (если есть `docs/product/USER-MAP.md`):
+7. **ARTIFACT-MAP freshness** (если есть `docs/product/ARTIFACT-MAP.md`):
+   - Новые команды в `commands/` не отражены в Command Reference → 🟡 WARNING
+   - Нода без единой стрелки (island) → 🟡 WARNING "node island — проверь Gate 2"
+   - `[TODO:]` маркеры в Artifact Reference → 🟡 WARNING "таблица не заполнена"
+8. **USER-MAP freshness** (если есть `docs/product/USER-MAP.md`):
    - Прочитать `triggers.json` → `last_user_map_sync.plans_since` (если поле отсутствует — считать 0, не ошибка)
    - Если ≥ 10 → ⚠️ "USER-MAP давно не проверялся — соответствует ли текущим возможностям продукта?"
    - Grep на `[TODO: ...]` маркеры → если найдены → 🔴 CRITICAL: USER-MAP не заполнен
