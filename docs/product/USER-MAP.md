@@ -39,7 +39,7 @@ graph TD
         end
     end
 
-    Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>new-project-init.sh"]
+    Dev -->|"Новый проект"| Init["🚀 Initialize Project<br/>$ bash new-project-init.sh<br/>однократно, из терминала"]
     Dev -->|"Присоединиться к проекту"| Onboard["🧭 /onboard<br/>ориентация нового разработчика<br/>(после git clone + sync)"]
     Dev -->|"Начало цикла"| Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]
     Dev -->|"Обновить методологию"| Sync["🔄 Sync Methodology<br/>sync-methodology.sh"]
