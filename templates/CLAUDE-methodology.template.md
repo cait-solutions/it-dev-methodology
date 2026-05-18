@@ -1,4 +1,4 @@
-# CLAUDE.md — methodology-platform
+# CLAUDE.md — {{Project Name}}
 
 Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md](CLAUDE_LONG.md).
 
@@ -21,7 +21,7 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 Методология = 5 слоёв (см. [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md)): команды / шаблоны / хуки / агенты-скелеты / скрипты.
 
 **MUST:**
-- `commands/`, `templates/`, `hooks/`, `agents/` — единственный источник правды
+- `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/` — единственный источник правды
 - Любая правка синхронизируемого артефакта → bump VERSION
 - При изменении схемы `triggers.json.template` → мажор bump
 
@@ -51,10 +51,10 @@ Rationale: [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md).
 |---|---|---|---|
 | `commands/*.md` | да | владелец | при правке + push |
 | `templates/*.md` | да | владелец | при правке + push |
-| `hooks/*.py` | да | владелец | при правке + push |
-| `agents/*.template.md` | да | владелец (структура); консьюмер (тело) | при правке + push |
+| `templates/.claude/hooks/*.py` | да | владелец | при правке + push |
+| `templates/.claude/agents/*.template.md` | да | владелец (структура); консьюмер (тело) | при правке + push |
 | `VERSION` | да | владелец | при ручном bump |
-| `.claude/` (этот репо) | нет (производное) | `new-project-init.sh .` | при self-sync |
+| `.claude/` (этот репо) | нет (производное) | `sync-methodology.sh .` | при self-sync |
 | Консьюмер `.claude/commands/*.md` | нет (производное) | `sync-methodology.sh` | при sync |
 
 Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данных-полная).
@@ -146,11 +146,11 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 
 `[fix:component]` `[feat:command]` `[feat:template]` `[feat:hook]` `[feat:script]` `[methodology]` `[process:X]` `[milestone]`
 
-Phase-теги: `[phase-a]` … `[phase-g2]` — milestone history.
+Phase-теги: `[phase-a]` … — milestone history.
 
 Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`
 
-**Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name. 
+**Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name.
 
 Одна проблема — один semantic indicator, даже если люди называют по-разному:
 - `[git-failure]` — не `[git_push-failed]` ИЛИ `[github-error]` ИЛИ `[branch-push-issue]` (все sync failures)
@@ -189,7 +189,7 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 
 ## External links
 
-- GitHub: https://github.com/cait-solutions/it-dev-methodology
+- GitHub: {{github-url}}
 - Примеры консьюмер-проектов:
   - **Single-developer project** (e.g., solo-dev consumer) — single-tier vision
   - **Multi-service platform** (e.g., team-based consumer) — multi-tier vision, per-service триггеры, inbox, ADR

@@ -7,12 +7,17 @@
 # Usage:
 #   /path/to/methodology-platform/scripts/sync-methodology.sh <target-project-dir>
 #
+# Self-apply (methodology-platform itself):
+#   bash scripts/sync-methodology.sh .
+#   Restores .claude/ + checks all artifacts after a fresh clone.
+#
 # What it does:
 #   1. Detects local modifications (commands without AUTO-GENERATED banner) and prompts.
 #   2. Overwrites .claude/commands/*.md with banner-prefixed copies from methodology.
 #   3. Copies new agent skeletons (existing per-project content is preserved).
 #   4. Copies hooks (overwrites — they are universal infrastructure).
 #   5. Updates .claude/.version.
+#   6. Artifact coverage check — adds missing artifacts, never overwrites existing.
 
 set -euo pipefail
 
@@ -21,10 +26,23 @@ METHODOLOGY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
 SYNCED_AT="$(date -u +%Y-%m-%d)"
 
+# Detect self-apply (methodology-platform syncing itself after fresh clone).
+IS_SELF_APPLY=false
+_target_abs="$(cd "$TARGET_DIR" && pwd)"
+_method_abs="$(cd "$METHODOLOGY_DIR" && pwd)"
+if [[ "$_target_abs" == "$_method_abs" ]]; then
+  IS_SELF_APPLY=true
+fi
+
 if [[ ! -d "$TARGET_DIR/.claude" ]]; then
-  echo "ERROR: $TARGET_DIR/.claude not found."
-  echo "       Run new-project-init.sh first to bootstrap the project."
-  exit 1
+  if [[ "$IS_SELF_APPLY" == "true" ]]; then
+    mkdir -p "$TARGET_DIR/.claude/"{commands,agents,rules,state,hooks}
+    echo "  (created .claude/ — self-apply on fresh clone)"
+  else
+    echo "ERROR: $TARGET_DIR/.claude not found."
+    echo "       Run new-project-init.sh first to bootstrap the project."
+    exit 1
+  fi
 fi
 # commands/ may be absent after fresh clone (gitignored) — create it
 if [[ ! -d "$TARGET_DIR/.claude/commands" ]]; then
@@ -101,6 +119,41 @@ inject_py_banner() {
 EOF
     cat "$src"
   } > "$dest"
+}
+
+# check_artifact: add file from template if missing; never overwrite.
+check_artifact() {
+  local dest_rel="$1"
+  local src_rel="$2"
+  local dest="$TARGET_DIR/$dest_rel"
+  local src="$METHODOLOGY_DIR/$src_rel"
+  if [[ -f "$dest" ]]; then
+    echo "  - $dest_rel (exists — preserved)"
+  elif [[ -f "$src" ]]; then
+    mkdir -p "$(dirname "$dest")"
+    cp "$src" "$dest"
+    echo "  ✓ $dest_rel (added from template)"
+  else
+    echo "  ! $dest_rel (template missing — skipped)"
+  fi
+}
+
+# check_artifact_subst: same as check_artifact but substitutes {{Project Name}}.
+check_artifact_subst() {
+  local dest_rel="$1"
+  local src_rel="$2"
+  local project_name="$3"
+  local dest="$TARGET_DIR/$dest_rel"
+  local src="$METHODOLOGY_DIR/$src_rel"
+  if [[ -f "$dest" ]]; then
+    echo "  - $dest_rel (exists — preserved)"
+  elif [[ -f "$src" ]]; then
+    mkdir -p "$(dirname "$dest")"
+    sed "s/{{Project Name}}/$project_name/g" "$src" > "$dest"
+    echo "  ✓ $dest_rel (added from template)"
+  else
+    echo "  ! $dest_rel (template missing — skipped)"
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -184,6 +237,50 @@ methodology: $VERSION
 synced_at: $SYNCED_AT
 source: https://github.com/cait-solutions/it-dev-methodology
 EOF
+
+# ---------------------------------------------------------------------------
+# Artifact coverage — add-only, never overwrite project content.
+# Self-apply: restore methodology artifacts (gitignored, absent after clone).
+# Consumer: fill any artifact gaps introduced in newer methodology versions.
+# ---------------------------------------------------------------------------
+echo "→ artifact coverage/"
+if [[ "$IS_SELF_APPLY" == "true" ]]; then
+  # Restore methodology-platform-specific artifacts after fresh clone.
+  if [[ -f "$TARGET_DIR/CLAUDE.md" ]]; then
+    echo "  - CLAUDE.md (exists — preserved)"
+  elif [[ -f "$METHODOLOGY_DIR/templates/CLAUDE-methodology.template.md" ]]; then
+    sed -e "s/{{Project Name}}/methodology-platform/g" \
+        -e "s|{{github-url}}|https://github.com/cait-solutions/it-dev-methodology|g" \
+        "$METHODOLOGY_DIR/templates/CLAUDE-methodology.template.md" > "$TARGET_DIR/CLAUDE.md"
+    echo "  ✓ CLAUDE.md (restored from methodology template)"
+  fi
+  if [[ -f "$TARGET_DIR/CLAUDE_LONG.md" ]]; then
+    echo "  - CLAUDE_LONG.md (exists — preserved)"
+  elif [[ -f "$METHODOLOGY_DIR/templates/CLAUDE_LONG-methodology.template.md" ]]; then
+    sed -e "s/{{Project Name}}/methodology-platform/g" \
+        -e "s|{{github-url}}|https://github.com/cait-solutions/it-dev-methodology|g" \
+        "$METHODOLOGY_DIR/templates/CLAUDE_LONG-methodology.template.md" > "$TARGET_DIR/CLAUDE_LONG.md"
+    echo "  ✓ CLAUDE_LONG.md (restored from methodology template)"
+  fi
+else
+  # Consumer project: add any artifacts that may be missing (new in methodology).
+  _pname="$(basename "$TARGET_DIR")"
+  check_artifact_subst "CLAUDE.md"                        "templates/CLAUDE.template.md"              "$_pname"
+  check_artifact_subst "CLAUDE_LONG.md"                   "templates/CLAUDE_LONG.template.md"         "$_pname"
+  check_artifact_subst "VISION.md"                        "templates/VISION.template.md"              "$_pname"
+  check_artifact_subst "PRODUCT.md"                       "templates/PRODUCT.template.md"             "$_pname"
+  check_artifact_subst "DEVLOG.md"                        "templates/DEVLOG.template.md"              "$_pname"
+  check_artifact_subst "IDEAS.md"                         "templates/IDEAS.template.md"               "$_pname"
+  check_artifact_subst "ROADMAP.md"                       "templates/ROADMAP.template.md"             "$_pname"
+  check_artifact_subst "RISKS.md"                         "templates/RISKS.template.md"               "$_pname"
+  check_artifact_subst "HYPOTHESES.md"                    "templates/HYPOTHESES.template.md"          "$_pname"
+  check_artifact_subst "OPEN-QUESTIONS.md"                "templates/OPEN-QUESTIONS.template.md"      "$_pname"
+  check_artifact_subst "docs/architecture/SYSTEM-MAP.md"  "templates/SYSTEM-MAP.template.md"          "$_pname"
+  check_artifact_subst "docs/product/USER-MAP.md"         "templates/USER-MAP.template.md"            "$_pname"
+  check_artifact_subst "docs/product/ARTIFACT-MAP.md"     "templates/ARTIFACT-MAP.template.md"        "$_pname"
+  check_artifact       "docs/adr/README.md"               "templates/adr/README.template.md"
+  check_artifact       "inbox/README.md"                  "templates/inbox/README.template.md"
+fi
 
 echo ""
 echo "✅ Sync complete. Methodology version: $VERSION"

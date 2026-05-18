@@ -12,7 +12,10 @@ Thumbs.db
 
 # Project artifacts (NOT for methodology-platform consumers)
 # Canonical templates for consumers are in templates/
+# Restored by: bash scripts/sync-methodology.sh .
 rules/
+CLAUDE.md
+CLAUDE_LONG.md
 DEVLOG.md
 PRODUCT.md
 PRODUCT_LONG.md
