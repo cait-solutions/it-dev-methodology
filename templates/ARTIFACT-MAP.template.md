@@ -219,7 +219,7 @@ graph LR
 | `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / диагностике / sync-vision | `/architecture-audit`, `/retro`, `/diagnose`, `/sync-vision` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
 | `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
-| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | Developer, `/plan`, `/review` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |
+| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |
 | `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | `/plan` (Шаг 1.5), Developer, PM/Owner | — | 🔭 ~30 планов |
 | `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | `/plan`, `/product-review`, `/sync-vision` | — | 🔭 ~30 планов |
 | `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | Developer, `/review` | — | ручное |
@@ -264,8 +264,8 @@ graph LR
 | Артефакт | Триггер | Актор | Риск если не обновлять |
 |---|---|---|---|
 | `RISKS.md` | `/retro` (паттерны) или новый риск | PM / Owner | Устаревший threat landscape |
-| `CLAUDE.md` | sync pull или изменение правил | Developer | Правила расходятся с практикой |
-| `docs/adr/` | архитектурное решение или `/architecture-audit` | Developer | ADR противоречат текущей архитектуре |
+| `CLAUDE.md` | sync pull или изменение правил | Developer (запускает sync-script) | Правила расходятся с практикой |
+| `docs/adr/` | архитектурное решение или `/architecture-audit` | Developer (запускает `/code`) | ADR противоречат текущей архитектуре |
 | `inbox/` | Получен новый внешний документ | PM / Owner / Developer | Документ не обработан → план и sync-vision работают с устаревшими данными |
 | `[TODO: артефакт]` | `[TODO: триггер]` | `[TODO: актор]` | `[TODO: риск]` |
 
