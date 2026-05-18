@@ -43,6 +43,11 @@
 2. Если применимо для проекта — проверить триггеры (architecture_audit, etc)
 3. Установить `last_plan_session.code_run = true`
 4. Сохранить triggers.json
+5. **Branch check:** `git branch --show-current`
+   - Ветка `main`, `master`, `develop`, `staging` → ⛔ СТОП
+   - Сообщить: "AI-агенты коммитят только в `ai-dev`. Переключись: `git checkout ai-dev` или `git checkout -b ai-dev`"
+   - Явное разрешение разработчика → продолжить, записать `[branch-override]` в DEVLOG
+   - Git не инициализирован → пропустить проверку
 
 ---
 

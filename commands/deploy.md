@@ -72,7 +72,7 @@
 
 ## Шаг 1 — Pre-flight check
 
-- [ ] Текущая ветка корректна
+- [ ] Текущая ветка = `ai-dev` (или designated AI branch) — не `main`/`master`/`develop` (см. Шаг 1.5)
 - [ ] Все изменения закоммичены
 - [ ] Self-review пройден
 - [ ] Tests зелёные

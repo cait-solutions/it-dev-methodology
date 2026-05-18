@@ -74,6 +74,15 @@ Full details in [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данн�
 
 **Don't advise already-done:** check last 3-5 messages before suggesting an action that may already be running.
 
+**AI branch rule:** All AI agent commits go to `ai-dev` branch (or other designated AI branch named in this file). Never commit to `main`, `master`, `develop`, or `staging` without explicit developer approval.
+Before first commit in session: `git branch --show-current`. Wrong branch → switch BEFORE any changes, not after.
+
+**Retroactivity rule:** Methodology updates apply to NEW plans only. Existing plans are revised only if: (a) not yet in `/code` stage, or (b) a critical blocking error found that new rules would catch. Don't revise completed plans for every update — it's an infinite loop.
+
+**Risk scope rule:** Systemic risks (affect multiple tasks, live months/years) → `RISKS.md` only. Task-specific risks → stay in the plan. Don't copy task risks to `RISKS.md` — it pollutes the systemic registry with single-use noise.
+
+**Onboard update rule:** When adding a new slash command, agent, or rules file → update `/onboard` in the same commit/PR. Onboarding that doesn't reflect the current toolset misleads contributors.
+
 For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md#реализация-через-code-расширенно).
 
 ---
@@ -135,6 +144,20 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 >   (y/n)"
 
 Если `AGENT-GAPS.md` не существует в проекте → пропустить предложение тихо (не создавать файл автоматически).
+
+---
+
+## Hybrid dev
+
+For projects combining AI agent workflow with manual human development:
+
+- **Project root `CLAUDE.md`** — workflow rules (this file): `/plan`, `/code`, AI branch rule, architecture invariants
+- **Service / directory `CLAUDE.md`** — technical stack rules (developer's own file: linting, naming conventions, test patterns, framework idioms)
+- **`.claude/commands/`** — methodology slash commands
+
+Claude Code loads both levels. Service-level takes priority over root on conflict. Workflow rules and technical rules are orthogonal — they don't conflict.
+
+Escape hatch for solo-dev or single-branch setups: override the AI branch rule explicitly in this file with justification.
 
 ---
 
