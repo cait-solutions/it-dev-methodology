@@ -95,9 +95,8 @@ graph LR
     Arch -->|"[architecture-audit]"| DL
 
     PReview -->|"может обновить"| PROD
-    PCheck -->|"freshness ≥ 10"| UM
-    Arch -->|"гипотезы"| HY
-    SyncV -->|"риски стратегии"| HY
+    PCheck -.->|"freshness check"| UM
+    SyncV -->|"Type B → риски"| RISKS
     SyncV -->|"создаёт"| OQ
     Sync -->|"sync pull"| CLM
     Arch -.->|"ревью статусов"| ADR
@@ -111,8 +110,10 @@ graph LR
     Code -->|"если изм. правила"| CLM
     Code -->|"если реализовано ADR"| ADR
     Code -->|"если изм. возможности"| UM
-    PCheck -->|"freshness check"| AM
+    PCheck -.->|"freshness check"| AM
     Rev  -->|"out-of-scope findings"| ID
+    SyncV -->|"[sync-vision] запись"| DL
+    Retro -->|"missed-signal"| ID
 
     %% --- C: закрывает / архивирует записи (--x) ---
     %% (PM/Owner --x RISKS/OQ — ручная операция, не систематический поток; не показывается в диаграмме)
@@ -127,7 +128,7 @@ graph LR
     %% EV2 -->|"статус изменился"| Custom2
 
     %% --- RW: команда читает И пишет артефакт (===, оранжевый) ---
-    Arch    ===|"drift check"| SM
+    Arch    -.->|"drift check"| SM
     PCheck  ===|"актуальность"| PROD
     PReview ===|"обработка / [reviewed]"| ID
     Plan    ===|"capture / сигналы"| ID
@@ -168,8 +169,8 @@ graph LR
         C1(( )):::legend --x|"C · закрывает"| C2(( )):::legend
     end
 
-    %% RW (===) edge indices: 26-35 в основной схеме, 52 в легенде
-    linkStyle 26,27,28,29,30,31,32,33,34,35,52 stroke:#ff8c00,stroke-width:3px
+    %% RW (===) edge indices: 28-36 в основной схеме, 53 в легенде
+    linkStyle 28,29,30,31,32,33,34,35,36,53 stroke:#ff8c00,stroke-width:3px
 ```
 
 > **Легенда:** `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW, оранжевый) · `--x` закрывает (C) · Артефакт без входящих стрелок = кандидат на рудимент
@@ -186,12 +187,12 @@ graph LR
 | `/code` | Реализация плана: обновляет документацию по результату изменений | 🔁 каждый цикл | `SYSTEM-MAP.md`, `docs/adr/`, `PRODUCT.md`, `CLAUDE.md` (по условию Шаг 5) |
 | `/deploy` | Публикация изменений + обязательная запись истории | 🔁 каждый цикл | `DEVLOG.md`, `triggers.json` |
 | `/review` | Архитектурное ревью изменений до деплоя | 🔁 каждый цикл | `IDEAS.md` (out-of-scope findings) |
-| `/product-check` | Соответствие PRODUCT.md реальному поведению | 📊 ≥5 планов | `PRODUCT.md`, `USER-MAP.md` |
-| `/architecture-audit` | Drift SYSTEM-MAP vs реальный код — ищет расхождения | 📊 ≥5 планов | `SYSTEM-MAP.md`, `HYPOTHESES.md`, `DEVLOG.md` |
+| `/product-check` | Соответствие PRODUCT.md реальному поведению | 📊 ≥5 планов | `PRODUCT.md`, `triggers.json` (user-map-sync) |
+| `/architecture-audit` | Drift SYSTEM-MAP vs реальный код — ищет расхождения | 📊 ≥5 планов | `DEVLOG.md`, `triggers.json` |
 | `/product-review` | Обработка накопленных IDEAS.md сигналов → решения | 📊 ≥10 планов | `IDEAS.md`, `PRODUCT.md` |
-| `/retro` | Паттерны проблем за N планов — системные причины | 📊 ≥15 планов | `HYPOTHESES.md`, `DEVLOG.md` |
+| `/retro` | Паттерны проблем за N планов — системные причины | 📊 ≥15 планов | `HYPOTHESES.md`, `DEVLOG.md`, `IDEAS.md` (Шаг 8 missed-signal) |
 | `/diagnose` | Глубокий root-cause анализ при повторном `[fix:X]` — 3+ гипотезы, Capable tier | ⚡ при `[fix:X]` ≥2 за 7 дней | `HYPOTHESES.md` |
-| `/sync-vision` | Стратегия vs реальность при изменении контрактов | ⚡ по событию | `VISION.md`, `OPEN-QUESTIONS.md`, `HYPOTHESES.md` |
+| `/sync-vision` | Стратегия vs реальность при изменении контрактов | ⚡ по событию | `VISION.md`, `OPEN-QUESTIONS.md`, `RISKS.md` (Type B), `DEVLOG.md` |
 | `/product-vision` | Стратегический обзор: VISION + ROADMAP обновление | 🔭 ≥30 планов | `VISION.md`, `ROADMAP.md` |
 
 ### Проектные команды (если есть)
@@ -212,18 +213,18 @@ graph LR
 | Артефакт | Назначение | Условие обновления | Пишет / Актор | Читает | Закрывает | Частота |
 |---|---|---|---|---|---|---|
 | `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | все команды (state check) | — | 🔁 каждый цикл |
-| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy` | `/retro`, `/review`, `/product-vision` | — | 🔁 каждый деплой |
+| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy`, `/architecture-audit`, `/sync-vision` | `/retro`, `/review`, `/product-vision` | — | 🔁 каждый деплой |
 | `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review`, `/code` | `/plan`, `/product-check` | — | 📊 ~5 планов |
-| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check`, `/code` | Developer, PM/Owner | — | 📊 ~10 планов |
-| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit`, `/code` | `/review`, `/architecture-audit`, Developer | — | 📊 ~5 планов |
-| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / диагностике / sync-vision | `/architecture-audit`, `/retro`, `/diagnose`, `/sync-vision` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
+| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/code` | `/product-check`, Developer, PM/Owner | — | 📊 ~10 планов |
+| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/code` | `/review`, `/architecture-audit`, Developer | — | 📊 ~5 планов |
+| `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при ретро / диагностике | `/retro`, `/diagnose` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
 | `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
-| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |
+| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review`, `/retro` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |
 | `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | `/plan` (Шаг 1.5), Developer, PM/Owner | — | 🔭 ~30 планов |
 | `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | `/plan`, `/product-review`, `/sync-vision` | — | 🔭 ~30 планов |
 | `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | Developer, `/review` | — | ручное |
-| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при новом риске или по рекомендации `/retro` | PM / Owner | `/plan`, PM/Owner, Developer | PM / Owner | 📊 ~15 планов |
+| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при новом риске или по рекомендации `/retro` | `/sync-vision` (Type B), PM / Owner | `/plan`, PM/Owner, Developer | PM / Owner | 📊 ~15 планов |
 | `CLAUDE.md` | Правила работы AI-агентов в проекте | при sync pull или изменении правил | `/code`, sync-script | все команды (rules) | — | ⚡ по событию |
 | `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | `/code` | `/review` (Шаг 2), `/architecture-audit`, `/sync-vision` | Developer (deprecated) | ⚡ по решению |
 
