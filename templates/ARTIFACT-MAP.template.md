@@ -102,18 +102,18 @@ graph LR
     Arch -.->|"ревью статусов"| ADR
 
     Plan -.->|"Шаг 0.7 check"| INB
-    SyncV -->|"обрабатывает / _processed"| INB
+    SyncV -.->|"читает"| INB
     Owner -->|"кладёт файлы"| INB
     Dev -->|"кладёт файлы"| INB
-    Code -->|"если изм. архитектуру"| SM
-    Code -->|"если изм. поведение"| PROD
-    Code -->|"если изм. правила"| CLM
-    Code -->|"если реализовано ADR"| ADR
-    Code -->|"если изм. возможности"| UM
+    Code ===|"если изм. архитектуру"| SM
+    Code ===|"если изм. поведение"| PROD
+    Code ===|"если изм. правила"| CLM
+    Code ===|"если реализовано ADR"| ADR
+    Code ===|"если изм. возможности"| UM
     PCheck -.->|"freshness check"| AM
     Rev  -->|"out-of-scope findings"| ID
     SyncV -->|"[sync-vision] запись"| DL
-    Retro -->|"missed-signal"| ID
+    Retro ===|"missed-signal"| ID
 
     %% --- C: закрывает / архивирует записи (--x) ---
     %% (PM/Owner --x RISKS/OQ — ручная операция, не систематический поток; не показывается в диаграмме)
@@ -161,6 +161,8 @@ graph LR
     DL -.->|"паттерн [fix:X]"| Diag
     %% [TODO: добавь проектные read-стрелки: Custom1 -.->|"контекст"| Plan]
 
+    SyncV --x|"→ _processed"| INB
+
     subgraph Legend["📖 Легенда типов связей"]
         direction LR
         W1(( )):::legend -->|"W · пишет"| W2(( )):::legend
@@ -169,8 +171,8 @@ graph LR
         C1(( )):::legend --x|"C · закрывает"| C2(( )):::legend
     end
 
-    %% RW (===) edge indices: 28-36 в основной схеме, 53 в легенде
-    linkStyle 28,29,30,31,32,33,34,35,36,53 stroke:#ff8c00,stroke-width:3px
+    %% RW (===) edge indices: 18-22 (Code), 26 (Retro), 28-36 в основной схеме, 54 в легенде
+    linkStyle 18,19,20,21,22,26,28,29,30,31,32,33,34,35,36,54 stroke:#ff8c00,stroke-width:3px
 ```
 
 > **Легенда:** `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW, оранжевый) · `--x` закрывает (C) · Артефакт без входящих стрелок = кандидат на рудимент
@@ -214,19 +216,19 @@ graph LR
 |---|---|---|---|---|---|---|
 | `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | все команды (state check) | — | 🔁 каждый цикл |
 | `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy`, `/architecture-audit`, `/sync-vision` | `/retro`, `/review`, `/product-vision` | — | 🔁 каждый деплой |
-| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review`, `/code` | `/plan`, `/product-check` | — | 📊 ~5 планов |
-| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/code` | `/product-check`, Developer, PM/Owner | — | 📊 ~10 планов |
-| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/code` | `/review`, `/architecture-audit`, Developer | — | 📊 ~5 планов |
+| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review`, `/code` | `/plan`, `/product-check`, `/code` | — | 📊 ~5 планов |
+| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/code` | `/product-check`, `/code`, Developer, PM/Owner | — | 📊 ~10 планов |
+| `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/code` | `/review`, `/architecture-audit`, `/code`, Developer | — | 📊 ~5 планов |
 | `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при ретро / диагностике | `/retro`, `/diagnose` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
 | `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
-| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review`, `/retro` | `/product-review`, `/plan` (Шаг 1.6) | `/product-review` | 📊 ~10 планов |
+| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review`, `/retro` | `/product-review`, `/plan` (Шаг 1.6), `/retro` (Шаг 6) | `/product-review` | 📊 ~10 планов |
 | `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | `/plan` (Шаг 1.5), Developer, PM/Owner | — | 🔭 ~30 планов |
 | `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | `/plan`, `/product-review`, `/sync-vision` | — | 🔭 ~30 планов |
 | `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | Developer, `/review` | — | ручное |
 | `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при новом риске или по рекомендации `/retro` | `/sync-vision` (Type B), PM / Owner | `/plan`, PM/Owner, Developer | PM / Owner | 📊 ~15 планов |
 | `CLAUDE.md` | Правила работы AI-агентов в проекте | при sync pull или изменении правил | `/code`, sync-script | все команды (rules) | — | ⚡ по событию |
-| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | `/code` | `/review` (Шаг 2), `/architecture-audit`, `/sync-vision` | Developer (deprecated) | ⚡ по решению |
+| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | `/code` | `/review` (Шаг 2), `/architecture-audit`, `/sync-vision`, `/code` | Developer (deprecated) | ⚡ по решению |
 
 ### Проектные артефакты (заполнить)
 
