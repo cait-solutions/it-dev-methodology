@@ -100,9 +100,9 @@ done
 # ---------------------------------------------------------------------------
 # Agent skeletons (appear once Phase E lands).
 # ---------------------------------------------------------------------------
-if compgen -G "$METHODOLOGY_DIR/agents/*.template.md" >/dev/null; then
+if compgen -G "$METHODOLOGY_DIR/templates/.claude/agents/*.template.md" >/dev/null; then
   echo "→ agents/"
-  for agent in "$METHODOLOGY_DIR"/agents/*.template.md; do
+  for agent in "$METHODOLOGY_DIR"/templates/.claude/agents/*.template.md; do
     name="$(basename "$agent" .template.md).md"
     dest="$TARGET_DIR/.claude/agents/$name"
     if [[ -f "$dest" ]]; then
@@ -118,9 +118,9 @@ fi
 # Hooks — universal protection. Strips .template from filename so wiring in
 # settings.json resolves (e.g. docs_reminder.template.py → docs_reminder.py).
 # ---------------------------------------------------------------------------
-if [[ -d "$METHODOLOGY_DIR/hooks" ]] && compgen -G "$METHODOLOGY_DIR/hooks/*" >/dev/null; then
+if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLOGY_DIR/templates/.claude/hooks/*" >/dev/null; then
   echo "→ hooks/"
-  for hook in "$METHODOLOGY_DIR"/hooks/*; do
+  for hook in "$METHODOLOGY_DIR"/templates/.claude/hooks/*; do
     [[ -f "$hook" ]] || continue
     name="$(basename "$hook")"
     dest_name="${name/.template/}"

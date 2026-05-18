@@ -127,10 +127,10 @@ done
 # ---------------------------------------------------------------------------
 # Agent skeletons — only copy if missing in target. Per-project bodies are preserved.
 # ---------------------------------------------------------------------------
-if compgen -G "$METHODOLOGY_DIR/agents/*.template.md" >/dev/null; then
+if compgen -G "$METHODOLOGY_DIR/templates/.claude/agents/*.template.md" >/dev/null; then
   echo "→ agents/"
   mkdir -p "$TARGET_DIR/.claude/agents"
-  for agent in "$METHODOLOGY_DIR"/agents/*.template.md; do
+  for agent in "$METHODOLOGY_DIR"/templates/.claude/agents/*.template.md; do
     name="$(basename "$agent" .template.md).md"
     dest="$TARGET_DIR/.claude/agents/$name"
     if [[ -f "$dest" ]]; then
@@ -150,10 +150,10 @@ fi
 # project has filled LIBS, mirror that change in methodology/hooks/docs_reminder.template.py
 # before syncing, or keep a project-local docs_reminder_libs.py and import from it.
 # ---------------------------------------------------------------------------
-if [[ -d "$METHODOLOGY_DIR/hooks" ]] && compgen -G "$METHODOLOGY_DIR/hooks/*" >/dev/null; then
+if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLOGY_DIR/templates/.claude/hooks/*" >/dev/null; then
   echo "→ hooks/"
   mkdir -p "$TARGET_DIR/.claude/hooks"
-  for hook in "$METHODOLOGY_DIR"/hooks/*; do
+  for hook in "$METHODOLOGY_DIR"/templates/.claude/hooks/*; do
     [[ -f "$hook" ]] || continue
     name="$(basename "$hook")"
     dest_name="${name/.template/}"
