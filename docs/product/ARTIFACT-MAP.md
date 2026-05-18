@@ -10,7 +10,7 @@
 ## Диаграмма: команды ↔ артефакты
 
 Цвета: синий = ядро · фиолетовый = периодические · пурпурный = стратегические · оранжевый = state · зелёный = артефакт · серый = актор.
-Стрелки: `-->` пишет (W) · `-.->` читает (R) · `<-->` читает+пишет (RW) · `--x` закрывает (C)
+Стрелки: `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW) · `--x` закрывает (C)
 
 ```mermaid
 graph LR
@@ -20,6 +20,7 @@ graph LR
     classDef ok fill:#e8f5e9,stroke:#388e3c,color:#000
     classDef state fill:#fff3e0,stroke:#f57c00,color:#000
     classDef actor fill:#f5f5f5,stroke:#9e9e9e,color:#000
+    classDef legend fill:#ffffff,stroke:#cccccc,color:#666666
 
     subgraph CoreWF["🔁 Ядро (каждый цикл)"]
         Plan["/plan"]:::core
@@ -48,7 +49,7 @@ graph LR
     end
 
     subgraph Live["📄 Артефакты"]
-        TJ["triggers.json<br/>⬅ все команды"]:::state
+        TJ["triggers.json<br/>план · деплой · периодические"]:::state
         DL["DEVLOG.md<br/>история деплоев"]:::ok
         PROD["PRODUCT.md<br/>поведение продукта"]:::ok
         UM["USER-MAP.md<br/>карта возможностей"]:::ok
@@ -73,14 +74,6 @@ graph LR
     Plan -.->|"≥5 + событие"| SyncV
 
     %% --- W: команда пишет артефакт (-->) ---
-    Plan -->|"инкремент счётчиков"| TJ
-    Deploy -->|"last_deploy"| TJ
-    PCheck -->|"last_product_check"| TJ
-    PReview -->|"last_product_review"| TJ
-    PVision -->|"last_product_vision"| TJ
-    SyncV -->|"last_sync_vision"| TJ
-    Retro -->|"last_retro"| TJ
-
     Deploy -->|"[deploy] запись"| DL
     Arch -->|"[architecture-audit]"| DL
 
@@ -101,6 +94,7 @@ graph LR
     Code -->|"если изм. поведение"| PROD
     Code -->|"если изм. правила"| CLM
     Code -->|"если реализовано ADR"| ADR
+    Code -->|"если изм. возможности"| UM
     PCheck -->|"freshness check"| AM
     Rev  -->|"out-of-scope findings"| ID
 
@@ -108,17 +102,17 @@ graph LR
     Owner --x|"закрывает"| RISKS
     Owner --x|"закрывает"| OQ
 
-    %% --- RW: команда читает И пишет артефакт (<-->) ---
-    Arch    <-->|"drift check"| SM
-    PCheck  <-->|"актуальность"| PROD
-    PReview <-->|"обработка / [reviewed]"| ID
-    Plan    <-->|"capture / сигналы"| ID
-    Retro   <-->|"паттерны"| HY
-    Retro   <-->|"история"| DL
-    Diag    <-->|"гипотезы"| HY
-    PVision <-->|"стратегия"| VI
-    PVision <-->|"план"| RM
-    SyncV   <-->|"sync vs реальность"| VI
+    %% --- RW: команда читает И пишет артефакт (===, оранжевый) ---
+    Arch    ===|"drift check"| SM
+    PCheck  ===|"актуальность"| PROD
+    PReview ===|"обработка / [reviewed]"| ID
+    Plan    ===|"capture / сигналы"| ID
+    Retro   ===|"паттерны"| HY
+    Retro   ===|"история"| DL
+    Diag    ===|"гипотезы"| HY
+    PVision ===|"стратегия"| VI
+    PVision ===|"план"| RM
+    SyncV   ===|"sync vs реальность"| VI
 
     %% --- R: читает как input (-.->), только те что не покрыты RW выше ---
     %% /plan
@@ -140,9 +134,20 @@ graph LR
     VI -.->|"alignment"| Retro
     %% /diagnose
     DL -.->|"паттерн [fix:X]"| Diag
+
+    subgraph Legend["📖 Легенда типов связей"]
+        direction LR
+        W1(( )):::legend -->|"W · пишет"| W2(( )):::legend
+        R1(( )):::legend -.->|"R · читает"| R2(( )):::legend
+        RW1(( )):::legend ===|"RW · читает+пишет"| RW2(( )):::legend
+        C1(( )):::legend --x|"C · закрывает"| C2(( )):::legend
+    end
+
+    %% RW (===) edge indices: 29-38 в основной схеме, 55 в легенде
+    linkStyle 29,30,31,32,33,34,35,36,37,38,55 stroke:#ff8c00,stroke-width:3px
 ```
 
-> **Легенда:** `-->` пишет (W) · `-.->` читает (R) · `<-->` читает+пишет (RW) · `--x` закрывает (C) · Артефакт без входящих стрелок = кандидат на рудимент
+> **Легенда:** `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW, оранжевый) · `--x` закрывает (C) · Артефакт без входящих стрелок = кандидат на рудимент
 
 ---
 
@@ -171,7 +176,7 @@ graph LR
 | `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | все команды (state check) | — | 🔁 каждый цикл |
 | `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy` | `/retro`, `/review`, `/product-vision` | — | 🔁 каждый деплой |
 | `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review`, `/code` | `/plan`, `/product-check` | — | 📊 ~5 планов |
-| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check` | Developer, PM/Owner | — | 📊 ~10 планов |
+| `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/product-check`, `/code` | Developer, PM/Owner | — | 📊 ~10 планов |
 | `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/architecture-audit`, `/code` | `/review`, `/architecture-audit`, Developer | — | 📊 ~5 планов |
 | `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при аудите / ретро / диагностике / sync-vision | `/architecture-audit`, `/retro`, `/diagnose`, `/sync-vision` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
@@ -210,12 +215,12 @@ graph LR
 - Изменился порог триггера → обновить колонку "Частота" и стрелку Plan→команда в диаграмме
 - Ручной триггер автоматизирован → убрать из "Ручные триггеры", обновить Актор в таблице
 - Артефакт без входящих стрелок (`-->`, `<-->`, `-.->`) И с `Читает = —` → кандидат на рудимент: проверить при `/retro`
-- Изменён тип связи (W→RW) → заменить `-->` + `-.->` на `<-->`
+- Изменён тип связи (W→RW) → заменить `-->` + `-.->` на `===`
 
 **Checklist перед коммитом этого файла:**
-- [ ] Каждая **команда** в "Читает" → есть `-.->` или `<-->` стрелка в диаграмме (human actors — Developer/PM — не требуют стрелки)
-- [ ] Каждый "Пишет / Актор" в таблице → есть `-->` или `<-->` стрелка в диаграмме
-- [ ] Если команда одновременно в "Пишет" И "Читает" для одного артефакта → используется `<-->`, не две отдельные стрелки
+- [ ] Каждая **команда** в "Читает" → есть `-.->` или `===` стрелка в диаграмме (human actors — Developer/PM — не требуют стрелки)
+- [ ] Каждый "Пишет / Актор" в таблице → есть `-->` или `===` стрелка в диаграмме
+- [ ] Если команда одновременно в "Пишет" И "Читает" для одного артефакта → используется `===`, не две отдельные стрелки
 - [ ] Нет нод без единой стрелки (входящей или исходящей)
 - [ ] Каждая стрелка в диаграмме → соответствующая строка в таблице
 

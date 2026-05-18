@@ -25,14 +25,14 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-05-18T00:30:00Z",
-    "task_id": "phase-hh1-artifact-map-rw-notation",
+    "completed_at": "2026-05-18T01:00:00Z",
+    "task_id": "phase-ii1-artifact-map-visual-maps-enforcement",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
   },
   "last_deploy": {
     "date": "2026-05-17",
-    "time": "phase-gg-deployed"
+    "time": "phase-hh1-deployed"
   }
 }
