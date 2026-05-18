@@ -193,6 +193,12 @@ git log -1 --oneline origin/main
 - `last_deploy.date = <today>`
 - Если были async failures → `last_deploy.status = "partial"` (git push OK но CI не started)
 
+**Только для `methodology-platform`:** после каждого `git push origin main` → обязательно запустить self-apply:
+```
+bash scripts/sync-methodology.sh .
+```
+Это обновляет `.claude/commands/` и `.claude/hooks/` в текущем проекте до только что задеплоенной версии. Без этого шага методология работает на устаревших командах до следующего ручного sync.
+
 ---
 
 ⛔ Если в review были 🔴 CRITICAL — не деплоить.
