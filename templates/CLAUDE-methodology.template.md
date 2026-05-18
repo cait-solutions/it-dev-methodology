@@ -183,6 +183,8 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 - [commands/plan.md](commands/plan.md) — workflow entry point
 - [templates/triggers.json.template](templates/triggers.json.template) — canonical state schema
 - [templates/model-tiers.md](templates/model-tiers.md) — model recommendation registry
+- [templates/AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) — AI gap capture (consumer artifact)
+- [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
 - [VERSION](VERSION) — semver
 
 ---

@@ -29,6 +29,13 @@
           { "type": "command", "command": "python3 .claude/hooks/docs_reminder.py" }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python3 .claude/hooks/agent-gaps-watchdog.py" }
+        ]
+      }
     ]
   }
 }

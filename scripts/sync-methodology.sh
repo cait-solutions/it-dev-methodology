@@ -280,6 +280,7 @@ else
   check_artifact_subst "docs/product/ARTIFACT-MAP.md"     "templates/ARTIFACT-MAP.template.md"        "$_pname"
   check_artifact       "docs/adr/README.md"               "templates/adr/README.template.md"
   check_artifact       "inbox/README.md"                  "templates/inbox/README.template.md"
+  check_artifact_subst "AGENT-GAPS.md"                   "templates/AGENT-GAPS.md.template"          "$_pname"
 fi
 
 echo ""

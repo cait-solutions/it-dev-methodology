@@ -106,6 +106,38 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 
 ---
 
+## Agent self-reporting rule (AGENT-GAPS.md)
+
+Когда я явно признаю ошибку, пропуск или неточность — я ОБЯЗАН предложить запись в `AGENT-GAPS.md`.
+
+**Триггерные фразы:** "ты прав", "я пропустил", "я не предусмотрел", "я упустил", "я был неточен", "я ошибся", "не учёл", "you're right", "I missed", "I overlooked".
+
+**Обязательное действие после признания:**
+```
+📝 Зафиксировать в AGENT-GAPS.md?
+   Категория: [prompt-gap | context-gap | logic-gap | assumption-gap | completeness-gap | scope-gap]
+   Гипотеза: [одна строка — почему я это пропустил]
+   (y/n)
+```
+
+При `y` → записать немедленно, инкрементировать `agent_gaps_open_count` в `triggers.json`.
+При `n` → не настаивать.
+
+**Правило НЕ срабатывает на:** уточнения, дополнения, переформулировки, вопросы.
+**Срабатывает только на:** явное признание конкретного упущенного факта или логики.
+
+**Пример (few-shot):**
+
+> Разработчик: "Ты не проверил что файл уже существует перед записью."
+> Claude: "Ты прав — я пропустил эту проверку. 📝 Зафиксировать в AGENT-GAPS.md?
+>   Категория: completeness-gap
+>   Гипотеза: /code Шаг 4 не содержит проверки side-effects записи
+>   (y/n)"
+
+Если `AGENT-GAPS.md` не существует в проекте → пропустить предложение тихо (не создавать файл автоматически).
+
+---
+
 ## Capture product signals (silent)
 
 In any dialog — silently add to `IDEAS.md` when user says "would be nice if...", "didn't know...", "have to do X manually every time...", expresses surprise / confusion / repeats an action ≥3 times.
