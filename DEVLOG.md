@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-18 — Phase JJ1: gitignore — убраны derivative .claude/ файлы из git tracking [process:audit] v3.20.1
+
+**Что:** Добавлены в .gitignore: `.claude/commands/`, `.claude/hooks/`, `.claude/model-tiers.md`, `.claude/projects/`. Удалена ошибочная строка `docs/` (docs/ — canonical, не build outputs). Убраны из git index через `git rm --cached`: 11 commands, 3 hooks, model-tiers.md, 3 agents, triggers.json, settings.json (21 файл).
+**Зачем:** Разработчики клонирующие it-dev-methodology получали `.claude/commands/` — derivative копии с banner `AUTO-GENERATED`, что вводило в заблуждение (canonical в `commands/`). После fix clone содержит только canonical артефакты; `.claude/` восстанавливается через `bash scripts/new-project-init.sh .`.
+**Карта данных:** не изменилась.
+**Связано:** [plan 2026-05-18 Phase JJ1]
+
+---
+
 ## 2026-05-18 — Phase II1: ARTIFACT-MAP визуал + maps enforcement [methodology][feat:template] v3.20.0
 
 **Что:** (A) RW-связи переведены с `<-->` на `===` (толстая линия) + `linkStyle` оранжевый — 10 связей выделяются цветом без чтения обоих концов стрелки. Удалены 7 избыточных TJ write-стрелок (Plan/Deploy/PCheck/PReview/PVision/SyncV/Retro→TJ) — достаточно подписи в ноде. Добавлена встроенная легенда типов связей внутри Mermaid-диаграммы (subgraph Legend). (B) `/code` Шаг 5 + `/review` Документация: добавлена обязательная проверка USER-MAP.md при изменении пользовательских возможностей. Добавлена `Code→UM` стрелка в ARTIFACT-MAP; USER-MAP row обновлён: Пишет = `/product-check`, `/code`.

@@ -30,5 +30,10 @@ BEHAVIOR.md
 .claude/settings.json
 .claude/agents/
 
-# Documentation build outputs
-docs/
+# Claude Code derivative files (restored by: bash scripts/new-project-init.sh .)
+.claude/commands/
+.claude/hooks/
+.claude/model-tiers.md
+
+# Personal Claude Code memory (never share)
+.claude/projects/
