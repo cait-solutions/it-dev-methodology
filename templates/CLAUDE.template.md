@@ -78,6 +78,8 @@ Full details in [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данн�
 - Why gaps are OK or require action
 Without this analysis → plan not approved, code not merged, deploy blocked.
 
+**Adjacent Impact rule:** Before planning, enumerate adjacent zones (what reads this component / what depends on it). Explicitly mark each as in-scope or out-of-scope with reason. Classify solution as Point fix / Structural / Level 4+. Without this classification → plan incomplete. See `/plan` Step -1.3 for protocol.
+
 **Don't advise already-done:** check last 3-5 messages before suggesting an action that may already be running.
 
 **AI branch rule:** All AI agent commits go to `ai-dev` branch (or other designated AI branch named in this file). Never commit to `main`, `master`, `develop`, or `staging` without explicit developer approval.

@@ -77,6 +77,7 @@
 - [ ] Self-review пройден
 - [ ] Tests зелёные
 - [ ] SYSTEM-MAP / data-map / ADR обновлены если применимо
+- [ ] Если коммит затрагивает ARTIFACT-MAP → `bash scripts/validate-artifact-map.sh` прошёл (или кандидаты рассмотрены вручную)
 
 ---
 
