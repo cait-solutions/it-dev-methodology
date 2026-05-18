@@ -72,6 +72,12 @@ Full details in [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данн�
 - Symptom or cause? Symptom → find cause. Cause → class-level fix preferred.
 - Local or systemic? Local needs justification why won't repeat. Default to systemic (decorator / middleware / schema constraint).
 
+**Completeness rule:** Each plan / code / review / deploy decision MUST explicitly state:
+- What is covered (main path, happy cases)
+- What is NOT covered (gaps, edge cases, parallel paths)
+- Why gaps are OK or require action
+Without this analysis → plan not approved, code not merged, deploy blocked.
+
 **Don't advise already-done:** check last 3-5 messages before suggesting an action that may already be running.
 
 **AI branch rule:** All AI agent commits go to `ai-dev` branch (or other designated AI branch named in this file). Never commit to `main`, `master`, `develop`, or `staging` without explicit developer approval.
@@ -188,6 +194,12 @@ Symptom of violation: IDEAS.md empty after 10+ dialogues.
 Base: `[fix:X]` `[feat:X]` `[process:X]` `[infra:X]` `[security:X]` `[ops:X]` `[milestone]` `[regression:X]` `[missed-signal]` `[methodology]`
 
 Methodology commands: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`
+
+**Semantic tagging rule:** Categorize problems semantically, not by surface name. One problem = one semantic indicator:
+- `[git-failure]` — not `[git_push-failed]` OR `[github-error]` (same class)
+- `[async-failure:X]` — not different names per operation type
+- `[state-pollution]` — not `[history-leak]` AND `[cache-contamination]`
+Reason: pattern detection in `/retro` breaks when the same problem is named differently.
 
 Strategic axes from VISION.md: `[feat:<axis-tag>]`
 
