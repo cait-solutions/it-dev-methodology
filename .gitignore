@@ -28,7 +28,16 @@ HYPOTHESES.md
 RISKS.md
 OPEN-QUESTIONS.md
 BEHAVIOR.md
-docs/
+# Consumer project docs (not canonical for methodology-platform):
+docs/product/
+docs/adr/
+docs/vision/
+docs/sync-vision-reports/
+docs/data-map.md
+docs/glossary.md
+docs/BEHAVIOR.md
+docs/threat-model.template.md
+# docs/architecture/ is NOT excluded — SYSTEM-MAP.md is canonical for this repo
 
 # Project state (local only)
 .claude/state/
