@@ -1,7 +1,7 @@
 """
-Stop hook — scans the last Claude response for admission phrases.
-When found and AGENT-GAPS.md was not recently written, outputs a reminder
-so Claude proposes logging the gap.
+Stop hook — scans the last Claude response AND last user message for
+admission/correction phrases. When found and AGENT-GAPS.md was not recently
+written, outputs a reminder so Claude proposes logging the gap.
 
 Wired in .claude/settings.json under "hooks.Stop".
 
@@ -31,34 +31,58 @@ ADMISSION_PATTERNS = [
     r"\bi failed to\b",
 ]
 
+USER_CORRECTION_PATTERNS = [
+    r"ты (добавил|сделал|написал).{0,40}(но|а) не",
+    r"я (также|ещё|тоже) просил",
+    r"ты (не сделал|пропустил|не учёл)",
+    r"(почему|а) ты не\b",
+    r"не сделал аналогичное",
+    r"а (что|как) с\b",
+    r"(плохо|неправильно) (отработал|сделал)",
+    r"агент пропустил",
+    r"you (added|did).{0,40}(but|yet) (not|didn.?t)",
+    r"you (missed|skipped)\b",
+    r"you didn.?t.{0,20}(also|as well|similarly)",
+]
+
 GAPS_FILE = "AGENT-GAPS.md"
 RECENT_WRITE_SECONDS = 60
 
 
-def get_last_assistant_message(transcript_path: str) -> str:
+def _extract_text(content) -> str:
+    if isinstance(content, list):
+        return " ".join(
+            block.get("text", "")
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return str(content)
+
+
+def get_last_messages(transcript_path: str) -> tuple[str, str]:
+    """Return (last_assistant_text, last_user_text)."""
     if not transcript_path or not os.path.exists(transcript_path):
-        return ""
+        return "", ""
+    last_assistant = ""
+    last_user = ""
     try:
         with open(transcript_path, encoding="utf-8") as f:
             lines = f.readlines()
         for line in reversed(lines):
             try:
                 entry = json.loads(line)
-                if entry.get("role") != "assistant":
-                    continue
-                content = entry.get("content", "")
-                if isinstance(content, list):
-                    return " ".join(
-                        block.get("text", "")
-                        for block in content
-                        if isinstance(block, dict) and block.get("type") == "text"
-                    )
-                return str(content)
+                role = entry.get("role", "")
+                if role == "assistant" and not last_assistant:
+                    last_assistant = _extract_text(entry.get("content", ""))
+                elif role == "user" and not last_user:
+                    last_user = _extract_text(entry.get("content", ""))
+                if last_assistant and last_user:
+                    break
             except (json.JSONDecodeError, AttributeError):
                 continue
     except OSError:
         pass
-    return ""
+    return last_assistant, last_user
 
 
 def gaps_recently_written() -> bool:
@@ -76,19 +100,24 @@ def main() -> None:
     if data.get("stop_hook_active"):
         sys.exit(0)
 
-    last_msg = get_last_assistant_message(data.get("transcript_path", ""))
-    if not last_msg:
-        sys.exit(0)
+    last_assistant, last_user = get_last_messages(data.get("transcript_path", ""))
 
-    found = any(re.search(p, last_msg, re.IGNORECASE) for p in ADMISSION_PATTERNS)
-    if not found:
+    ai_admission = last_assistant and any(
+        re.search(p, last_assistant, re.IGNORECASE) for p in ADMISSION_PATTERNS
+    )
+    user_correction = last_user and any(
+        re.search(p, last_user, re.IGNORECASE) for p in USER_CORRECTION_PATTERNS
+    )
+
+    if not ai_admission and not user_correction:
         sys.exit(0)
 
     if gaps_recently_written():
         sys.exit(0)
 
+    source = "в ответе агента" if ai_admission else "в сообщении разработчика"
     print(
-        "📋 AGENT-GAPS WATCHDOG: в ответе выше обнаружено признание ошибки/пропуска.\n"
+        f"📋 AGENT-GAPS WATCHDOG: обнаружен признак ошибки/пропуска ({source}).\n"
         "Если ещё не предложено — предложи запись в AGENT-GAPS.md:\n"
         "  Категория: [prompt-gap | context-gap | logic-gap | assumption-gap | completeness-gap | scope-gap]\n"
         "  Гипотеза: одна строка почему\n"
