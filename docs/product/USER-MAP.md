@@ -6,17 +6,28 @@
 
 ## Initial Setup
 
-**Шаги инициализации (один раз на машину / после каждого clone):**
+### Новый проект (первый раз)
 
-1. `git clone https://github.com/cait-solutions/it-dev-methodology` — склонируй методологию
-2. `git clone <your-project-repo>` — склонируй проект
-3. `bash it-dev-methodology/scripts/sync-methodology.sh <your-project>/` — восстанови команды локально
-4. Открой `<your-project>/` в Claude Code как workspace root
+1. `git clone https://github.com/cait-solutions/it-dev-methodology` — склонируй методологию (один раз на машину)
+2. Создай пустой git-репо на GitHub/GitLab — это будет `<project>-documentation`
+3. `git clone <project-documentation-repo>` — склонируй его локально
+4. `bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-documentation>/` — bootstrap: создаст все артефакты и команды
+5. Открой `<project-documentation>/` в Claude Code как workspace
+6. Запусти `/onboard` → затем `/plan` для первой задачи
+
+### Присоединиться к существующему проекту
+
+1. `git clone https://github.com/cait-solutions/it-dev-methodology` — склонируй методологию (один раз на машину)
+2. `git clone <project-documentation-repo>` — склонируй документацию проекта
+3. `bash it-dev-methodology/scripts/sync-methodology.sh <project-documentation>/` — восстанови команды локально (gitignored)
+4. Открой `<project-documentation>/` в Claude Code как workspace
 5. Запусти `/onboard` (новый разработчик) или `/plan` (начало задачи)
 
+> **Workspace = `<project>-documentation`** — отдельный git-репо от кода. Код-репо открывай отдельно когда нужно писать код.
+>
 > **Не коммитятся** (gitignored, восстанавливаются sync): `.claude/commands/`, `.claude/hooks/`
 > **Коммитятся** (git-tracked): `CLAUDE.md`, `PRODUCT.md`, `DEVLOG.md`, `VISION.md`, `docs/`, `triggers.json`
-> После каждого `git clone` нужно повторить шаг 3 чтобы восстановить команды локально.
+> После каждого `git clone` нужно повторить шаг sync чтобы восстановить команды локально.
 
 ---
 
