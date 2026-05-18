@@ -86,6 +86,15 @@
 
 <!-- Записи ниже, новые — сверху -->
 
+## 2026-05-18 — Phase JJ2: gitignore — убран docs/ (проектная документация, не canonical) [process:audit] v3.20.2
+
+**Что:** Добавлена `docs/` в `.gitignore`, 6 файлов убраны через `git rm --cached`: SYSTEM-MAP, ARTIFACT-MAP, USER-MAP, ADR-001, adr/README, adr/_TEMPLATE.
+**Зачем:** `docs/` — проектные артефакты методологии-платформы (не canonical шаблоны для потребителей). Canonical для потребителей в `templates/`. Логически последователен с PRODUCT.md, VISION.md которые тоже gitignored.
+**Карта данных:** не изменилась.
+**Связано:** [plan 2026-05-18 Phase JJ1]
+
+---
+
 ## 2026-05-18 — Phase JJ1: gitignore — убраны derivative .claude/ файлы из git tracking [process:audit] v3.20.1
 
 **Что:** Добавлены в .gitignore: `.claude/commands/`, `.claude/hooks/`, `.claude/model-tiers.md`, `.claude/projects/`. Удалена ошибочная строка `docs/` (docs/ — canonical, не build outputs). Убраны из git index через `git rm --cached`: 11 commands, 3 hooks, model-tiers.md, 3 agents, triggers.json, settings.json (21 файл).

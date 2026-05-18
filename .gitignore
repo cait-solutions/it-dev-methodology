@@ -11,6 +11,7 @@ Thumbs.db
 /tmp/
 
 # Project artifacts (NOT for methodology-platform consumers)
+# Canonical templates for consumers are in templates/
 DEVLOG.md
 PRODUCT.md
 PRODUCT_LONG.md
@@ -23,6 +24,7 @@ HYPOTHESES.md
 RISKS.md
 OPEN-QUESTIONS.md
 BEHAVIOR.md
+docs/
 
 # Project state (local only)
 .claude/state/
