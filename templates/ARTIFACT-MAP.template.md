@@ -50,6 +50,7 @@ graph LR
         Sync["⚙️ sync-script"]:::actor
         %% Добавь акторов проекта:
         %% Role1["👤 [TODO: роль]"]:::actor
+        %% AgentAI["🤖 AI Agent<br/>(если пишет напрямую)"]:::actor
     end
 
     %% Бизнес-события CRUD (marketplace, ERP — раскомментируй если нужно):
