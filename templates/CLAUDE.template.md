@@ -1,13 +1,11 @@
-# CLAUDE.md — {{Project Name}}
+# CLAUDE.md
 
 Operational rules for AI agents. Short form, scan-friendly. For rationale, edge cases, and historical context — see [CLAUDE_LONG.md](CLAUDE_LONG.md).
 
 > **Convention:**
-> - This file (CLAUDE.md) = **WHAT** — rules, MUST / MUST NOT, conventions. Auto-loaded by Claude Code.
+> - This file (CLAUDE.md) = **WHAT** — methodology rules. Auto-updated by `sync-methodology.sh`. **Do NOT edit.**
 > - [CLAUDE_LONG.md](CLAUDE_LONG.md) = **WHY** — rationale, edge cases, examples. Read on demand.
-> - Local `CLAUDE.local.md` (if exists) overrides these rules.
-
-**Project type:** `<choose: ai-agent | web-app | api-service | cli-tool | library | multi-service-platform>` — used by `/review` and `/deploy` for additional checks.
+> - [CLAUDE.local.md](CLAUDE.local.md) = project-specific config (stack, architecture invariants, security threats, key files, external links). **Edit freely.**
 
 ---
 
@@ -16,47 +14,7 @@ Operational rules for AI agents. Short form, scan-friendly. For rationale, edge 
 1. `VISION.md` (or `docs/vision/*_GLOBAL_AGENT_VISION.md`) before every `/plan`.
 2. Relevant ADRs / SYSTEM-MAP for the task domain.
 3. `docs/data-map.md` (if exists) before storage-touching changes.
-
----
-
-## Architecture invariants (MUST / MUST NOT)
-
-See [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md).
-
-**MUST:**
-- `<invariant 1 — e.g. all external API calls via single adapter>`
-- `<invariant 2>`
-
-**MUST NOT:**
-- `<anti-pattern 1 — e.g. business logic in controllers>`
-- `<anti-pattern 2>`
-
-For rationale of each invariant — see [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md#архитектура-расширенно).
-
----
-
-## Stack
-
-- **Language / framework / DB / queues / testing / CI / deploy:** `<one-line each>`
-
----
-
-## Data ownership (short)
-
-| Storage | Source of truth | Writers | Invalidation |
-|---|---|---|---|
-| | yes/no (cache) | | |
-
-Full details in [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данных-полная) or [`docs/data-map.md`](docs/data-map.md).
-
----
-
-## Don'ts
-
-- ❌ Don't edit `.env`, secrets, deploy files (`_deploy.*`, `_update.*`).
-- ❌ Don't add packages without updating `requirements.txt` / `package.json`.
-- ❌ Don't call external APIs directly — only via single adapter.
-- ❌ `<project-specific don't>`
+4. [CLAUDE.local.md](CLAUDE.local.md) — project stack, architecture invariants, security threats, key entry points.
 
 ---
 
@@ -228,34 +186,3 @@ Full DEVLOG entry format: [DEVLOG.md](DEVLOG.md).
 
 ---
 
-## Security: real threats only
-
-Before proposing security measure — check it closes a concrete threat from project threat-list:
-
-- **Secret leak (High):** `<project-specific tokens / where they may leak>`
-- **Data loss (High):** `<storages without backup>`
-- **Access compromise (High):** `<auth attack vectors>`
-- **Financial (Med):** `<billing-affecting>`
-- **Operational (Med):** `<monitoring gaps>`
-
-**Rule:** if proposed measure closes ZERO threats from this list → it's security theater. Justify or skip.
-
-Details: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md#реальные-угрозы-безопасности-расширенно).
-
----
-
-## Key entry points
-
-- `<main / index>`
-- `<router / dispatcher>`
-- `<config loader>`
-- `<data layer entry>`
-
----
-
-## External links
-
-- Runbooks: `<link>`
-- Wiki: `<link>`
-- Monitoring: `<link>`
-- Incident response: `<link>`

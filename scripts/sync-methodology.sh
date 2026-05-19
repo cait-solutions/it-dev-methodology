@@ -17,7 +17,14 @@
 #   3. Copies new agent skeletons (existing per-project content is preserved).
 #   4. Copies hooks (overwrites — they are universal infrastructure).
 #   5. Updates .claude/.version.
-#   6. Artifact coverage check — adds missing artifacts, never overwrites existing.
+#   6. OVERWRITE canonical: CLAUDE.md (with migration to CLAUDE.local.md), docs/adr/_TEMPLATE.md.
+#   7. MERGE: triggers.json (new template fields added; existing values preserved).
+#   8. PRESERVE (add-only): all project-owned artifacts (PRODUCT.md, VISION.md, etc.).
+#
+# Artifact taxonomy:
+#   OVERWRITE (methodology-owned): commands/, hooks/, model-tiers.md, CLAUDE.md, adr/_TEMPLATE.md
+#   MERGE (special):               triggers.json (add new keys), settings.json (add if missing)
+#   PRESERVE (project-owned):      everything else — CLAUDE.local.md, PRODUCT.md, VISION.md, etc.
 
 set -euo pipefail
 
@@ -119,6 +126,91 @@ inject_py_banner() {
 EOF
     cat "$src"
   } > "$dest"
+}
+
+# sync_claude_canonical: overwrite CLAUDE.md with canonical methodology rules.
+# On first run: if CLAUDE.md exists without banner, migrate project content to CLAUDE.local.md.
+sync_claude_canonical() {
+  local dest="$TARGET_DIR/CLAUDE.md"
+  local local_dest="$TARGET_DIR/CLAUDE.local.md"
+  local src="$METHODOLOGY_DIR/templates/CLAUDE.template.md"
+  local src_local="$METHODOLOGY_DIR/templates/CLAUDE_LOCAL.template.md"
+  local pname="$(basename "$TARGET_DIR")"
+
+  if [[ ! -f "$src" ]]; then
+    echo "  ! CLAUDE.md (template missing — skipped)"
+    return
+  fi
+
+  if [[ -f "$dest" ]]; then
+    if head -1 "$dest" 2>/dev/null | grep -q "AUTO-GENERATED from methodology-platform"; then
+      # Already canonical format — update in place
+      inject_md_banner "$src" "$dest"
+      echo "  ↻ CLAUDE.md (canonical rules updated)"
+    else
+      # Old-style project: migrate project content to CLAUDE.local.md first
+      if [[ ! -f "$local_dest" ]]; then
+        cp "$dest" "$local_dest"
+        echo "  ✓ CLAUDE.local.md (migrated project content from CLAUDE.md)"
+        echo "    ⚠️  Review CLAUDE.local.md: keep only project-specific sections"
+        echo "        (Stack, Architecture invariants, Security threats, Key files, External links)"
+      else
+        echo "  - CLAUDE.local.md (exists — preserved)"
+      fi
+      inject_md_banner "$src" "$dest"
+      echo "  ↻ CLAUDE.md (canonical rules updated — project content in CLAUDE.local.md)"
+    fi
+  else
+    inject_md_banner "$src" "$dest"
+    echo "  ✓ CLAUDE.md (created canonical)"
+    if [[ -f "$src_local" ]]; then
+      sed "s/{{Project Name}}/$pname/g" "$src_local" > "$local_dest"
+      echo "  ✓ CLAUDE.local.md (created from template)"
+    fi
+  fi
+}
+
+# merge_triggers_json: add new fields from template to existing triggers.json.
+# Existing values are preserved; only new keys from template are added.
+# Requires python3 (available on all platforms that have hooks enabled).
+merge_triggers_json() {
+  local existing="$TARGET_DIR/.claude/state/triggers.json"
+  local template="$METHODOLOGY_DIR/templates/triggers.json.template"
+
+  mkdir -p "$TARGET_DIR/.claude/state"
+
+  if [[ ! -f "$existing" ]]; then
+    cp "$template" "$existing"
+    echo "  ✓ triggers.json (initialized)"
+    return
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    TJ_EXISTING="$existing" TJ_TEMPLATE="$template" python3 - <<'PYEOF' || true
+import json, os, sys
+try:
+    with open(os.environ['TJ_EXISTING']) as f:
+        existing = json.load(f)
+    with open(os.environ['TJ_TEMPLATE']) as f:
+        template = json.load(f)
+    def deep_merge(t, e):
+        if isinstance(t, dict) and isinstance(e, dict):
+            result = dict(t)
+            for k, v in e.items():
+                result[k] = deep_merge(t.get(k, v), v)
+            return result
+        return e
+    merged = deep_merge(template, existing)
+    with open(os.environ['TJ_EXISTING'], 'w') as f:
+        json.dump(merged, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+    print("  ↻ triggers.json (merged new fields from template)")
+except Exception as ex:
+    print("  ! triggers.json (merge failed: {} — preserved)".format(ex))
+PYEOF
+  else
+    echo "  - triggers.json (python3 not available — preserved; merge new fields manually)"
+  fi
 }
 
 # check_artifact: add file from template if missing; never overwrite.
@@ -263,9 +355,27 @@ if [[ "$IS_SELF_APPLY" == "true" ]]; then
     echo "  ✓ CLAUDE_LONG.md (restored from methodology template)"
   fi
 else
-  # Consumer project: add any artifacts that may be missing (new in methodology).
+  # Consumer project: overwrite canonical artifacts, add missing project-owned artifacts.
   _pname="$(basename "$TARGET_DIR")"
-  check_artifact_subst "CLAUDE.md"                        "templates/CLAUDE.template.md"              "$_pname"
+
+  # --- OVERWRITE: methodology-canonical (always synced with banner) ---
+  echo "  [canonical — overwrite]"
+  sync_claude_canonical
+  # ADR template format evolves with methodology
+  if [[ -f "$METHODOLOGY_DIR/templates/adr/_TEMPLATE.md" ]]; then
+    mkdir -p "$TARGET_DIR/docs/adr"
+    inject_md_banner "$METHODOLOGY_DIR/templates/adr/_TEMPLATE.md" "$TARGET_DIR/docs/adr/_TEMPLATE.md"
+    echo "  ↻ docs/adr/_TEMPLATE.md (updated)"
+  fi
+
+  # --- MERGE: special handling ---
+  echo "  [special — merge]"
+  merge_triggers_json
+  check_artifact       ".claude/settings.json"            "templates/settings.template.json"
+
+  # --- PRESERVE: project-owned (add-only, never overwrite) ---
+  echo "  [project-owned — add if missing]"
+  check_artifact_subst "CLAUDE.local.md"                  "templates/CLAUDE_LOCAL.template.md"        "$_pname"
   check_artifact_subst "CLAUDE_LONG.md"                   "templates/CLAUDE_LONG.template.md"         "$_pname"
   check_artifact_subst "VISION.md"                        "templates/VISION.template.md"              "$_pname"
   check_artifact_subst "PRODUCT.md"                       "templates/PRODUCT.template.md"             "$_pname"
@@ -275,12 +385,20 @@ else
   check_artifact_subst "RISKS.md"                         "templates/RISKS.template.md"               "$_pname"
   check_artifact_subst "HYPOTHESES.md"                    "templates/HYPOTHESES.template.md"          "$_pname"
   check_artifact_subst "OPEN-QUESTIONS.md"                "templates/OPEN-QUESTIONS.template.md"      "$_pname"
+  check_artifact_subst "README.md"                        "templates/README.template.md"              "$_pname"
+  check_artifact_subst "AGENT-GAPS.md"                    "templates/AGENT-GAPS.md.template"          "$_pname"
   check_artifact_subst "docs/architecture/SYSTEM-MAP.md"  "templates/SYSTEM-MAP.template.md"          "$_pname"
   check_artifact_subst "docs/product/USER-MAP.md"         "templates/USER-MAP.template.md"            "$_pname"
   check_artifact_subst "docs/product/ARTIFACT-MAP.md"     "templates/ARTIFACT-MAP.template.md"        "$_pname"
-  check_artifact       "docs/adr/README.md"               "templates/adr/README.template.md"
+  check_artifact_subst "docs/vision/AGENT_VISION.md"      "templates/vision/AGENT_VISION.template.md" "$_pname"
+  check_artifact_subst "docs/vision/LONG_VISION_v1.md"    "templates/vision/LONG_VISION.template.md"  "$_pname"
+  check_artifact_subst "services-registry.yaml"           "templates/services-registry.template.yaml" "$_pname"
+  check_artifact_subst "docs/data-map.md"                 "templates/data-map.template.md"            "$_pname"
+  check_artifact_subst "docs/glossary.md"                 "templates/glossary.template.md"            "$_pname"
+  check_artifact_subst "docs/BEHAVIOR.md"                 "templates/BEHAVIOR.template.md"            "$_pname"
+  check_artifact_subst "docs/adr/README.md"               "templates/adr/README.template.md"              "$_pname"
   check_artifact       "inbox/README.md"                  "templates/inbox/README.template.md"
-  check_artifact_subst "AGENT-GAPS.md"                   "templates/AGENT-GAPS.md.template"          "$_pname"
+  check_artifact_subst ".claude/rules/README.md"          "templates/.claude/rules/README.template.md" "$_pname"
 fi
 
 echo ""
