@@ -53,3 +53,7 @@ docs/threat-model.template.md
 
 # Personal Claude Code memory (never share)
 .claude/projects/
+
+# Consumer project clones (local only — cloned manually, never committed)
+consumers/repos/
+consumers/*.token
