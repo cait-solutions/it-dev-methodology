@@ -7,13 +7,40 @@
 
 ---
 
-## Диаграмма: команды ↔ артефакты
+## Обзор: командные группы → артефакты
+
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/ARTIFACT-MAP.md` — извлекает первый mermaid-блок)_
+
+```mermaid
+graph LR
+    subgraph Cmd["Команды"]
+        CORE["🔁 Ядро<br/>/plan · /code · /review · /deploy"]
+        PER["📅 Периодические<br/>/retro · /arch-audit · /product-check"]
+        STR["🎯 Стратегические<br/>/product-vision · /product-review"]
+    end
+    subgraph Art["Артефакты"]
+        PROD["📄 [TODO: spec doc]<br/>что обещано"]
+        STATE["⚙️ DEVLOG.md · triggers.json<br/>история · счётчики"]
+    end
+    CORE -.->|"читают"| PROD
+    CORE -->|"пишут"| STATE
+    PER -.->|"читают"| STATE
+    PER -->|"обновляют"| STATE
+    STR -.->|"читают"| PROD
+    STR -->|"обновляют"| PROD
+```
+
+> **Паттерн для больших диаграмм:** если URL полной диаграммы > 2000 символов (предупреждение от `mermaid-link.py`), добавь section "Обзор" (compact, первый блок = кликабельный) + section "Полная карта" (детали, copy-paste).
+
+---
+
+## Полная карта: команды ↔ артефакты
 
 Цвета: синий = ядро · фиолетовый = периодические · пурпурный = стратегические · оранжевый = state · зелёный = артефакт · серый = актор.
 Стрелки: `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW) · `--x` закрывает (C)
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/ARTIFACT-MAP.md`)_
+> Для редактирования полной карты: `py scripts/mermaid-link.py --all docs/product/ARTIFACT-MAP.md` → **второй** URL → вставить в браузер
 
 ```mermaid
 graph LR

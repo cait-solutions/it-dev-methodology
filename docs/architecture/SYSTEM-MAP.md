@@ -1,8 +1,8 @@
 # SYSTEM-MAP — methodology-platform
 
-**Версия:** v1.3
-**Обновлён:** 2026-05-18
-**Граф проверен против кода:** 2026-05-18 (architecture-audit: 2 phantom dirs resolved)
+**Версия:** v1.6
+**Обновлён:** 2026-05-20
+**Граф проверен против кода:** 2026-05-20 (architecture-audit: 2 undocumented scripts added — mermaid-link.py, validate-artifact-map.sh; stack note: mixed Bash + Python); v1.5: added validate-mermaid-links.sh (S-2/R-003); v1.6: extended validate-artifact-map.sh checks (S-1/R-002)
 
 > Обновлять этот файл в том же PR что и изменения в `scripts/`, `commands/`, `templates/`, или добавления компонентов.
 >
@@ -146,14 +146,17 @@ graph TB
 
 ### `scripts/` — Исполнители
 
-- **Назначение:** bootstrap нового проекта, sync существующего, миграция split CLAUDE.md
+- **Назначение:** bootstrap нового проекта, sync существующего, миграция split CLAUDE.md, структурная валидация артефактов, генерация mermaid.live ссылок
 - **Владелец:** владелец методологии
-- **Стек:** Bash 3.2+ (Git Bash на Windows совместим)
+- **Стек:** Bash 3.2+ (Git Bash на Windows совместим) **+ Python 3.10+** (для `mermaid-link.py`) — смешанный стек
 - **Точки входа:**
-  - `new-project-init.sh <name> [target-dir]` — bootstrap
-  - `sync-methodology.sh <target>` — sync (поддерживает self-apply: `bash scripts/sync-methodology.sh .`)
-  - `migrate-claude-md.sh` — одноразовый хелпер для Phase G2 split CLAUDE.md → CLAUDE.md + CLAUDE_LONG.md
-- **Зависимости:** читают `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/`, `VERSION`
+  - `new-project-init.sh <name> [target-dir]` — bootstrap (Bash)
+  - `sync-methodology.sh <target>` — sync (Bash; поддерживает self-apply: `bash scripts/sync-methodology.sh .`)
+  - `migrate-claude-md.sh` — одноразовый хелпер для Phase G2 split CLAUDE.md → CLAUDE.md + CLAUDE_LONG.md (Bash)
+  - `validate-artifact-map.sh` — Level-4 структурный валидатор ARTIFACT-MAP: (1) W→RW arrow type mismatches; (2) LANG — Cyrillic node ID = ERROR; (3) COVERAGE — команда в таблице без node-label в Mermaid = ERROR; (4) ISLAND — node без единой стрелки = WARNING; вызывается из `commands/architecture-audit.md`, `commands/deploy.md`, `commands/product-check.md` (Bash + встроенный Python)
+  - `validate-mermaid-links.sh` — Level-4 валидатор mermaid.live ссылок: покрывает все .md файлы включая gitignored; проверяет наличие ссылки над каждым `\`\`\`mermaid` блоком + соответствие URL текущему коду; вызывается из `commands/code.md` Шаг 4 и `commands/review.md` Шаг 3; пропускает *.template.md и consumers/ (Bash + встроенный Python)
+  - `mermaid-link.py` — генератор mermaid.live URL (pako-encoding: zlib level 9 + base64url) для любого Mermaid-блока в markdown; используется для обновления `🔗 [Открыть в Mermaid Live](<url>)` ссылок в SYSTEM-MAP / USER-MAP / ARTIFACT-MAP и т.п. (Python)
+- **Зависимости:** читают `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/`, `VERSION`. `validate-artifact-map.sh` и `validate-mermaid-links.sh` парсят markdown с Mermaid-блоками. `mermaid-link.py` — stateless, только stdin/файл вход
 
 ### `rules/` — Документация (не копируется)
 

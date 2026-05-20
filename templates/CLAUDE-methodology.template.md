@@ -136,6 +136,8 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 ```
 Сгенерировать URL: `py scripts/mermaid-link.py <file>` (скрипт в `scripts/`). Ссылка — дополнение к коду диаграммы, не замена. Self-hosted: изменить `BASE_URL` в `scripts/mermaid-link.py`.
 
+**Валидация:** `bash scripts/validate-mermaid-links.sh` проверяет все `.md` файлы (включая gitignored) — наличие ссылки + соответствие URL текущему коду. Exit 1 = MISSING_LINK или STALE_LINK; предупреждение (не блок) = URL_TOO_LONG (> 2000 символов → copy-paste паттерн).
+
 ---
 
 ## Documentation map rule

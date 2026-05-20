@@ -97,7 +97,15 @@ def main() -> None:
         codes = blocks if all_blocks else [blocks[0]]
 
     for code in codes:
-        print(encode_mermaid(code))
+        url = encode_mermaid(code)
+        if len(url) > 2000:
+            print(
+                f"⚠️  URL length {len(url)} > 2000 — Windows ShellExecute limit (~2048).\n"
+                "   Clicking this link in Windows apps may open a search engine instead of the browser.\n"
+                "   Workaround: pipe to clip and paste manually:  py scripts/mermaid-link.py <file> | clip",
+                file=sys.stderr,
+            )
+        print(url)
 
 
 if __name__ == '__main__':
