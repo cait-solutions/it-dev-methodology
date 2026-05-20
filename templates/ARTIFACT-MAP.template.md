@@ -33,9 +33,9 @@ graph LR
 
     subgraph Periodic["📊 Периодические (по счётчику)"]
         PCheck["/product-check<br/>freshness PRODUCT.md"]:::periodic
-        Arch["/architecture-audit<br/>drift SYSTEM-MAP"]:::periodic
+        Arch["/architecture-audit<br/>структурный аудит · SYSTEM-MAP + AGENT-GAPS + Level 4+ ladder"]:::periodic
         PReview["/product-review<br/>обработка IDEAS"]:::periodic
-        Retro["/retro<br/>паттерны проблем"]:::periodic
+        Retro["/retro<br/>тактическая гигиена · сигналы → /architecture-audit"]:::periodic
     end
 
     subgraph Strategic["🔭 Стратегические + Ad-hoc (редко / по событию)"]
@@ -66,6 +66,7 @@ graph LR
         UM["USER-MAP.md<br/>карта возможностей"]:::ok
         SM["SYSTEM-MAP.md<br/>архитектура"]:::ok
         HY["HYPOTHESES.md<br/>гипотезы и аномалии"]:::ok
+        AG["AGENT-GAPS.md<br/>пропуски AI · сигнал методологии"]:::ok
         OQ["OPEN-QUESTIONS.md<br/>открытые вопросы"]:::ok
         ID["IDEAS.md<br/>сигналы и идеи"]:::ok
         RM["ROADMAP.md<br/>план развития"]:::ok
@@ -163,6 +164,12 @@ graph LR
 
     SyncV --x|"→ _processed"| INB
 
+    %% --- /architecture-audit reads AGENT-GAPS (Способность B) ---
+    AG -.->|"паттерны gaps"| Arch
+
+    %% --- /retro эскалирует структурные сигналы → /architecture-audit ---
+    Retro -.->|"структурный сигнал"| Arch
+
     subgraph Legend["📖 Легенда типов связей"]
         direction LR
         W1(( )):::legend -->|"W · пишет"| W2(( )):::legend
@@ -171,8 +178,9 @@ graph LR
         C1(( )):::legend --x|"C · закрывает"| C2(( )):::legend
     end
 
-    %% RW (===) edge indices: 18-22 (Code), 26 (Retro), 28-36 в основной схеме, 54 в легенде
-    linkStyle 18,19,20,21,22,26,28,29,30,31,32,33,34,35,36,54 stroke:#ff8c00,stroke-width:3px
+    %% RW (===) edge indices: 18-22 (Code), 26 (Retro), 28-36 в основной схеме, 56 в легенде
+    %% (legend сдвинулся с 54 на 56 после добавления AG-.->Arch и Retro-.->Arch в v4.3.0)
+    linkStyle 18,19,20,21,22,26,28,29,30,31,32,33,34,35,36,56 stroke:#ff8c00,stroke-width:3px
 ```
 
 > **Легенда:** `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW, оранжевый) · `--x` закрывает (C) · Артефакт без входящих стрелок = кандидат на рудимент
@@ -190,9 +198,9 @@ graph LR
 | `/deploy` | Публикация изменений + обязательная запись истории | 🔁 каждый цикл | `DEVLOG.md`, `triggers.json` |
 | `/review` | Архитектурное ревью изменений до деплоя | 🔁 каждый цикл | `IDEAS.md` (out-of-scope findings) |
 | `/product-check` | Соответствие PRODUCT.md реальному поведению | 📊 ≥5 планов | `PRODUCT.md`, `triggers.json` (user-map-sync) |
-| `/architecture-audit` | Drift SYSTEM-MAP vs реальный код — ищет расхождения | 📊 ≥5 планов | `DEVLOG.md`, `triggers.json` |
+| `/architecture-audit` | Структурный аудит: SYSTEM-MAP↔code drift + gap pattern analysis (AGENT-GAPS) + Level 4+ ladder + decommission. Способности активируются по наличию артефактов | 📊 ≥5 планов или `agent_gaps_open_count ≥ 10` | `DEVLOG.md`, `triggers.json` (recommendations[]) |
 | `/product-review` | Обработка накопленных IDEAS.md сигналов → решения | 📊 ≥10 планов | `IDEAS.md`, `PRODUCT.md` |
-| `/retro` | Паттерны проблем за N планов — системные причины | 📊 ≥15 планов | `HYPOTHESES.md`, `DEVLOG.md`, `IDEAS.md` (Шаг 8 missed-signal) |
+| `/retro` | Тактическая гигиена проекта: skip rates, stale OQ, reminder health, паттерны DEVLOG. Эскалирует структурные сигналы в `/architecture-audit` | 📊 ≥15 планов | `HYPOTHESES.md`, `DEVLOG.md`, `IDEAS.md` (Шаг 8 missed-signal) |
 | `/diagnose` | Глубокий root-cause анализ при повторном `[fix:X]` — 3+ гипотезы, Capable tier | ⚡ при `[fix:X]` ≥2 за 7 дней | `HYPOTHESES.md` |
 | `/sync-vision` | Стратегия vs реальность при изменении контрактов | ⚡ по событию | `VISION.md`, `OPEN-QUESTIONS.md`, `RISKS.md` (Type B), `DEVLOG.md` |
 | `/product-vision` | Стратегический обзор: VISION + ROADMAP обновление | 🔭 ≥30 планов | `VISION.md`, `ROADMAP.md` |
@@ -220,6 +228,7 @@ graph LR
 | `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/code` | `/product-check`, `/code`, Developer, PM/Owner | — | 📊 ~10 планов |
 | `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/code` | `/review`, `/architecture-audit`, `/code`, Developer | — | 📊 ~5 планов |
 | `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при ретро / диагностике | `/retro`, `/diagnose` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
+| `AGENT-GAPS.md` | Лог признанных пропусков / ошибок AI — сигнал к улучшению методологии | при явном признании ошибки AI (триггер -4 в `/plan`) | `/plan` (Шаг -4), `/code`, `/review`, AI Agent | `/architecture-audit` (Способность B: pattern analysis + Level 4+ ladder), `/retro` (lightweight signal) | — | ⚡ по событию |
 | `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
 | `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы — ждут обработки | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
 | `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review`, `/retro` | `/product-review`, `/plan` (Шаг 1.6), `/retro` (Шаг 6) | `/product-review` | 📊 ~10 планов |

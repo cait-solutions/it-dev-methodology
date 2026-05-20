@@ -6,7 +6,7 @@ Centralized model recommendation registry. Команды читают этот 
 >
 > **При выходе новой модели:** обновить таблицу маппинга в этом файле. Команды не трогать.
 >
-> **Updated:** 2026-05-16
+> **Updated:** 2026-05-19
 
 ---
 
@@ -29,8 +29,8 @@ Centralized model recommendation registry. Команды читают этот 
 | `/code` | **Default** (inherits from `/plan`) | new class bug discovered mid-task; 50+ файлов в scope обнаружено после верификации | ❌ Не downgrade to Fast — даже на < 20 строк |
 | `/review` | **Default** (никогда не ниже) | `[security]` + новый endpoint; обнаружен class-bug при review | ✅ Rule: review_tier ≥ Default всегда. Требуется reasoning для консистентности |
 | `/deploy` | Fast | smoke test failed; regression detected at after-effects | (always Fast — это чек-листы) |
-| `/retro` | Default | 60+ DEVLOG entries за период; multiple skip-rate alerts | < 10 entries за период |
-| `/architecture-audit` | Default | multi-service + 10+ сервисов; 30%+ drift detected | (always Default) |
+| `/retro` | Default | 60+ DEVLOG entries за период; multiple skip-rate alerts | < 10 entries — тактическая ретроспектива проекта; pattern analysis делегируется /architecture-audit |
+| `/architecture-audit` | **Default** (только Способность A) или **Capable** (если Способность B активна) | gap pattern analysis (≥ 3 AGENT-GAPS) активирует Capable обязательно; cross-project aggregation (Способность C) — Capable; multi-service + 10+ сервисов; 30%+ drift detected | Capability matrix в самой команде. Только drift detection (A) — Default. Любая работа с AGENT-GAPS / Level 4+ ladder — Capable hard-block |
 | `/sync-vision` | Default | 10+ inbox файлов И 5+ открытых OQ; Type C конфликт обнаружен | (always Default) |
 | `/product-vision` | **Capable** | (always Capable — стратегическая работа требует deep reasoning) | (никогда не downgrade) |
 | `/product-review` | Default | 20+ unreviewed IDEAS за период | < 5 IDEAS |

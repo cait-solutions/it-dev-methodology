@@ -6,7 +6,7 @@
     "last_product_check":    { "date": null, "plans_since": 0 },
     "last_product_vision":   { "date": null, "plans_since": 0 },
     "last_user_map_sync":       { "date": null, "plans_since": 0 },
-    "last_architecture_audit":  { "date": null, "plans_since": 0 }
+    "last_architecture_audit":  { "date": null, "plans_since": 0, "recommendations": [] }
   },
   "per_service": {},
   "queues": {
