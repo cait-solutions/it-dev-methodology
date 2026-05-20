@@ -36,14 +36,18 @@ BASE_URL = "https://mermaid.live"
 def encode_mermaid(code: str) -> str:
     """Encode Mermaid diagram code into a mermaid.live edit URL (pako format)."""
     state = json.dumps(
-        {"code": code, "mermaid": {"theme": "default"}},
+        {
+            "code": code,
+            "mermaid": json.dumps({"theme": "default"}, separators=(',', ':')),
+            "autoSync": True,
+            "updateDiagram": True,
+        },
         separators=(',', ':'),
         ensure_ascii=False,
     )
-    # pako.deflate uses raw deflate (RFC 1951), equivalent to zlib wbits=-15
-    compressor = zlib.compressobj(level=6, wbits=-15)
-    deflated = compressor.compress(state.encode('utf-8')) + compressor.flush()
-    encoded = base64.urlsafe_b64encode(deflated).decode('ascii').rstrip('=')
+    # pako.deflate (JS) = zlib format (RFC 1950), level 9 — Python: zlib.compress(..., 9)
+    compressed = zlib.compress(state.encode('utf-8'), 9)
+    encoded = base64.urlsafe_b64encode(compressed).decode('ascii').rstrip('=')
     return f"{BASE_URL}/edit#pako:{encoded}"
 
 

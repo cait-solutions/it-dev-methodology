@@ -24,8 +24,8 @@
 
 ## Граф системы
 
-> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/architecture/SYSTEM-MAP.md -->) — обновить при изменении диаграммы
-> _(команда: `py scripts/mermaid-link.py docs/architecture/SYSTEM-MAP.md`)_
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py docs/architecture/SYSTEM-MAP.md`)_
 
 ```mermaid
 graph TB

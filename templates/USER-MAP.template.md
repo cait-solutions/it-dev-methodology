@@ -53,7 +53,8 @@
 
 ## Variant A — Simple
 
-> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/product/USER-MAP.md -->) — обновить при изменении диаграммы
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/USER-MAP.md`)_
 
 ```mermaid
 graph TD
@@ -89,7 +90,8 @@ graph TD
 
 ## Variant B — Medium (несколько ролей)
 
-> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/product/USER-MAP.md -->) — обновить при изменении диаграммы
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/USER-MAP.md`)_
 
 ```mermaid
 graph TD
@@ -123,7 +125,8 @@ graph TD
 
 ## Variant C — Complex (multi-domain)
 
-> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/product/USER-MAP.md -->) — обновить при изменении диаграммы
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/USER-MAP.md`)_
 
 ```mermaid
 graph TD
