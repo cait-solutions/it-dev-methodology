@@ -53,6 +53,8 @@
 
 ## Variant A — Simple
 
+> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/product/USER-MAP.md -->) — обновить при изменении диаграммы
+
 ```mermaid
 graph TD
     User["👤 Пользователь"]
@@ -87,6 +89,8 @@ graph TD
 
 ## Variant B — Medium (несколько ролей)
 
+> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/product/USER-MAP.md -->) — обновить при изменении диаграммы
+
 ```mermaid
 graph TD
     subgraph WorkflowA["Workflow A: [TODO: Роль 1]"]
@@ -118,6 +122,8 @@ graph TD
 ---
 
 ## Variant C — Complex (multi-domain)
+
+> 🔗 [Открыть в Mermaid Live](<!-- сгенерировать: py scripts/mermaid-link.py docs/product/USER-MAP.md -->) — обновить при изменении диаграммы
 
 ```mermaid
 graph TD
@@ -179,6 +185,57 @@ graph TD
 3. Замени все `[TODO: ...]` на реальный контент
 4. Удали `[TODO: ...]` метки после заполнения
 5. PRODUCT.md — детальное поведение; USER-MAP — верхний уровень
+
+---
+
+## Workspace Setup (Initial Setup)
+
+Стандартная workspace-структура для консьюмера методологии:
+
+```
+[project-name]/                              ← папка-контейнер (не git, не workspace)
+└── [project-name]-documentation/            ← git repo + Claude Code workspace (открываешь это)
+    ├── .gitignore                            ← it-dev-methodology/, *-backend/, *-frontend/
+    ├── .claude/commands/                     ← слеш-команды (gitignored, восстанавливаются sync)
+    ├── CLAUDE.md, DEVLOG.md, PRODUCT.md...  ← артефакты методологии (git-tracked)
+    ├── docs/                                 ← архитектура, ADRs, product maps
+    ├── it-dev-methodology/                   ← gitignored (клонирован сюда для sync)
+    ├── [project-name]-backend/               ← gitignored (клонирован сюда, виден Claude)
+    └── [project-name]-frontend/              ← gitignored (клонирован сюда, виден Claude)
+```
+
+**Что открывать в Claude Code:** `[project-name]-documentation/` — единственный workspace.
+**Код-репо** клонированы внутри, gitignored — Claude их видит, git их не трекает.
+**`.code-workspace` file не нужен** — всё в одной папке.
+
+### Новый проект (первый раз)
+
+```bash
+mkdir [project-name] && cd [project-name]
+git clone <methodology-repo-url> it-dev-methodology   # URL твоей копии it-dev-methodology
+# Создай пустой git-репо [project-name]-documentation на GitHub, затем:
+git clone <documentation-repo-url> [project-name]-documentation
+bash it-dev-methodology/scripts/new-project-init.sh [project-name] [project-name]-documentation/
+cd [project-name]-documentation
+git clone <methodology-repo-url> it-dev-methodology   # клонируй внутрь для sync
+# Клонируй код-репо рядом:
+git clone <backend-url> [project-name]-backend
+```
+
+Открой `[project-name]-documentation/` в Claude Code. Запусти `/onboard` → `/plan`.
+
+### Присоединиться к существующему проекту
+
+```bash
+mkdir [project-name] && cd [project-name]
+git clone <documentation-repo-url> [project-name]-documentation
+cd [project-name]-documentation
+git clone <methodology-repo-url> it-dev-methodology   # URL твоей копии it-dev-methodology
+bash it-dev-methodology/scripts/sync-methodology.sh .   # восстановит .claude/commands/
+git clone <backend-url> [project-name]-backend
+```
+
+Открой `[project-name]-documentation/` в Claude Code.
 
 > `/onboard` проверяет наличие `[TODO: ...]` в USER-MAP и предупреждает если они остались.
 > `/product-check` проверяет свежесть USER-MAP через `triggers.json → last_user_map_sync`.

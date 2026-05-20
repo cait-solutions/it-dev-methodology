@@ -127,6 +127,17 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 
 ---
 
+## Mermaid link rule
+
+При каждой записи или обновлении ` ```mermaid ` блока в артефакте — обновить ссылку над блоком:
+```
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py <file>`)_
+```
+Сгенерировать URL: `py scripts/mermaid-link.py <file>` (скрипт в `scripts/`). Ссылка — дополнение к коду диаграммы, не замена. Self-hosted: изменить `BASE_URL` в `scripts/mermaid-link.py`.
+
+---
+
 ## Documentation map rule
 
 **SYSTEM-MAP и USER-MAP MUST содержать Mermaid-диаграмму.** Замена на ASCII art или plain text запрещена — в больших проектах только Mermaid обеспечивает читаемый обзор.

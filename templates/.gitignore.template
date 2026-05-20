@@ -1,3 +1,11 @@
+# Workspace siblings — repos cloned inside this workspace, not project-owned.
+# These live physically inside [project-name]-documentation/ but are gitignored
+# so only methodology artifacts are committed to this repo.
+it-dev-methodology/
+# Add your code repos below, e.g.:
+# [project-name]-backend/
+# [project-name]-frontend/
+
 # Claude Code — local user settings (per CLAUDE.md, not shared with team)
 .claude/settings.local.json
 
