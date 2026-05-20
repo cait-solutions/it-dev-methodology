@@ -12,6 +12,9 @@
 Цвета: синий = ядро · фиолетовый = периодические · пурпурный = стратегические · оранжевый = state · зелёный = артефакт · серый = актор.
 Стрелки: `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW) · `--x` закрывает (C)
 
+> 🔗 [Открыть в Mermaid Live](<url>)
+> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/ARTIFACT-MAP.md`)_
+
 ```mermaid
 graph LR
     classDef core fill:#e1f5ff,stroke:#0288d1,color:#000
