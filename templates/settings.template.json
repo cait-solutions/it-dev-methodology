@@ -13,27 +13,27 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/protect.py" }
+          { "type": "command", "command": "py .claude/hooks/protect.py" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/bash_protect.py" }
+          { "type": "command", "command": "py .claude/hooks/bash_protect.py" }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/docs_reminder.py" }
+          { "type": "command", "command": "py .claude/hooks/docs_reminder.py" }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 .claude/hooks/agent-gaps-watchdog.py" }
+          { "type": "command", "command": "py .claude/hooks/agent-gaps-watchdog.py" }
         ]
       }
     ]
