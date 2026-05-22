@@ -214,10 +214,17 @@ PR title: взять последнюю строку DEVLOG (что: ...). Human
 - `last_deploy.date = <today>`
 - Если были async failures → `last_deploy.status = "partial"` (git push OK но CI не started)
 
-**Только для `methodology-platform`:** после каждого `git push origin main` → обязательно запустить self-apply:
-```
-bash scripts/sync-methodology.sh .
-```
+**Только для `methodology-platform`:**
+- **solo:** сразу после push → self-apply:
+  ```
+  bash scripts/sync-methodology.sh .
+  ```
+- **team:** self-apply выполняется **ПОСЛЕ merge PR** в `production_branch`, не при deploy:
+  ```
+  # Запустить после того как PR был merged:
+  bash scripts/sync-methodology.sh .
+  ```
+
 Это обновляет `.claude/commands/` и `.claude/hooks/` в текущем проекте до только что задеплоенной версии. Без этого шага методология работает на устаревших командах до следующего ручного sync.
 
 ---
