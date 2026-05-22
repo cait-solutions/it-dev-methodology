@@ -38,7 +38,7 @@
 - [ ] Открыть `CLAUDE.local.md` → секция `## Branching`
   - Секция отсутствует → ⚠️ branching mode не задан, используются defaults (`mode: solo`, `agent_branch: ai-dev`). OK для solo-проектов.
   - `mode: team` — убедись что `integration_branch` заполнен И branch protection настроен в GitHub/GitLab на `production_branch`
-  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `ai-dev` / `ai-documentation`; PR review — его задача
+  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `agent_branch` (default `ai-dev`); PR review — его задача
 
 ---
 

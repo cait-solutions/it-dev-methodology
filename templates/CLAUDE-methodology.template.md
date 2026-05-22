@@ -77,7 +77,7 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
 
-**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `agent_branch` из [CLAUDE.local.md](CLAUDE.local.md) → `## Branching` (default: `ai-dev` для code-репо, `ai-documentation` для doc-репо). Это позволяет различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on {agent_branch}" vs "commit by John on feature/auth". Важно для audit trail и regression tracking.
+**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `agent_branch` из [CLAUDE.local.md](CLAUDE.local.md) → `## Branching` (default: `ai-dev`). Это позволяет различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on {agent_branch}" vs "commit by John on feature/auth". Важно для audit trail и regression tracking. Различение doc-репо vs code-репо обеспечивается изоляцией репозитория, не именем ветки.
 
 **Deploy rule:** "деплой" = `git push origin main`. Перед каждым push:
 1. `/review` если не запускался

@@ -82,13 +82,9 @@ Details: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md#реальные-у
 ```yaml
 mode: solo                          # solo | team
 production_branch: main             # protected — agent never commits here directly
-agent_branch: ai-dev                # SINGLE source of truth for AI branch. enforced by /code, /deploy.
-                                    # Default ai-dev (code repos). new-project-init.sh sets ai-documentation
-                                    # automatically if the directory name ends with -documentation.
-                                    # If you migrated an existing repo into a *-documentation workspace,
-                                    # change this value manually to ai-documentation.
-agent_doc_branch: ai-documentation  # info-only — name of agent branch in sister documentation repo.
-                                    # NOT enforced by /code; for cross-repo coordination only.
+agent_branch: ai-dev                # AI branch (single source of truth, enforced by /code and /deploy).
+                                    # Applies to all repo types — doc-repos and code-repos use the same name.
+                                    # Differentiation comes from repo isolation, not branch naming.
 # team-mode only (uncomment and fill):
 # integration_branch: dev           # PR target — where agent_branch merges (dev | main | etc.)
 # pr_tool: manual                   # manual (default) | gh
