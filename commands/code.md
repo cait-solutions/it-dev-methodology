@@ -45,13 +45,16 @@
 4. Сохранить triggers.json
 5. **Branch check:** `git branch --show-current`
    - Прочитать `CLAUDE.local.md` → секция `## Branching` (или defaults если секции нет):
-     - `agent_branch` (default: `ai-dev`)
-     - `agent_doc_branch` (default: `ai-documentation`)
+     - `agent_branch` — **единственный enforced source of truth** для AI-ветки в этом репо.
+       Default: `ai-dev`. Для doc-репо (имя оканчивается на `-documentation`) — `ai-documentation` (выставляется `new-project-init.sh` автоматически).
+     - `agent_doc_branch` — **info-only** поле для cross-repo координации (имя ветки в sister doc-репо). НЕ enforced /code.
      - `production_branch` (default: `main`)
      - `integration_branch` (solo: = `production_branch`; team: из конфига)
-   - Текущая ветка = `agent_branch` или `agent_doc_branch` → ✅ продолжить
+   - Текущая ветка = `agent_branch` → ✅ продолжить
    - Текущая ветка = `production_branch`, `master`, `develop`, `staging`, `integration_branch` → ⛔ СТОП
    - Сообщить: "AI-агенты коммитят только в `{agent_branch}`. Переключись: `git checkout {agent_branch}` или `git checkout -b {agent_branch}`"
+   - `CLAUDE.local.md` отсутствует → ⛔ "CLAUDE.local.md not found — run new-project-init.sh first"
+   - `agent_branch` отсутствует в `## Branching` → fallback на `ai-dev` + 🟡 warning "agent_branch missing in CLAUDE.local.md — add it (see CLAUDE_LOCAL.template.md). For doc repos use `ai-documentation`."
    - Явное разрешение разработчика → продолжить, записать `[branch-override]` в DEVLOG
    - Git не инициализирован → пропустить проверку
 

@@ -43,9 +43,17 @@ METHODOLOGY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
 SYNCED_AT="$(date -u +%Y-%m-%d)"
 
+# Detect repo type by directory-name suffix. Doc-repos use ai-documentation as agent branch.
+_basename="$(basename "$TARGET_DIR")"
+case "$_basename" in
+  *-documentation|*-docs) REPO_TYPE="doc"; AGENT_BRANCH="ai-documentation" ;;
+  *)                      REPO_TYPE="code"; AGENT_BRANCH="ai-dev" ;;
+esac
+
 echo "Methodology: $VERSION"
 echo "Project:     $PROJECT_NAME"
 echo "Target:      $TARGET_DIR"
+echo "Repo type:   $REPO_TYPE (agent_branch=$AGENT_BRANCH)"
 echo "Structure:   Full (one methodology, all artifacts created)"
 echo ""
 
@@ -194,6 +202,17 @@ echo "→ core artifacts/"
 copy_with_subst "$METHODOLOGY_DIR/templates/README.template.md"          "$TARGET_DIR/README.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGET_DIR/CLAUDE.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LOCAL.template.md"    "$TARGET_DIR/CLAUDE.local.md"
+
+# For doc-repos: auto-fix stale agent_branch=ai-dev default (idempotent — only rewrites if value still matches default).
+if [[ "$REPO_TYPE" == "doc" && -f "$TARGET_DIR/CLAUDE.local.md" ]]; then
+  if grep -q "^agent_branch: ai-dev" "$TARGET_DIR/CLAUDE.local.md"; then
+    # Portable sed in-place (BSD/Linux/Windows Git Bash): write to temp, move back.
+    sed 's/^agent_branch: ai-dev/agent_branch: ai-documentation/' \
+        "$TARGET_DIR/CLAUDE.local.md" > "$TARGET_DIR/CLAUDE.local.md.tmp"
+    mv "$TARGET_DIR/CLAUDE.local.md.tmp" "$TARGET_DIR/CLAUDE.local.md"
+    echo "  ↻ CLAUDE.local.md (doc-repo: agent_branch → ai-documentation)"
+  fi
+fi
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LONG.template.md"     "$TARGET_DIR/CLAUDE_LONG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT.template.md"         "$TARGET_DIR/PRODUCT.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/SYSTEM-MAP.template.md"      "$TARGET_DIR/docs/architecture/SYSTEM-MAP.md"

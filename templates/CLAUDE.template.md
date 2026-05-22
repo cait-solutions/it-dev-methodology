@@ -40,8 +40,8 @@ Without this analysis → plan not approved, code not merged, deploy blocked.
 
 **Don't advise already-done:** check last 3-5 messages before suggesting an action that may already be running.
 
-**AI branch rule:** All AI agent commits go to `ai-dev` branch (or other designated AI branch named in this file). Never commit to `main`, `master`, `develop`, or `staging` without explicit developer approval.
-Before first commit in session: `git branch --show-current`. Wrong branch → switch BEFORE any changes, not after.
+**AI branch rule:** All AI agent commits go to the branch defined in [CLAUDE.local.md](CLAUDE.local.md) → `## Branching` → `agent_branch`. Defaults: `ai-dev` for code repos, `ai-documentation` for documentation repos (set by `new-project-init.sh` based on repo name suffix `-documentation`). Never commit to `main`, `master`, `develop`, `staging`, or `integration_branch` without explicit developer approval.
+Before first commit in session: read `agent_branch` from `CLAUDE.local.md`, then `git branch --show-current`. Wrong branch → switch BEFORE any changes, not after.
 
 **Retroactivity rule:** Methodology updates apply to NEW plans only. Existing plans are revised only if: (a) not yet in `/code` stage, or (b) a critical blocking error found that new rules would catch. Don't revise completed plans for every update — it's an infinite loop.
 
