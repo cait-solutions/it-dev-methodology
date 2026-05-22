@@ -38,7 +38,7 @@ docs/data-map.md
 docs/glossary.md
 docs/BEHAVIOR.md
 docs/threat-model.template.md
-# docs/architecture/ is NOT excluded — SYSTEM-MAP.md is canonical for this repo
+docs/architecture/
 
 # Project state (local only)
 .claude/state/
