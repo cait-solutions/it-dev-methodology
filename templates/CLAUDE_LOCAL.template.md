@@ -77,6 +77,26 @@ Details: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md#реальные-у
 
 ---
 
+## Branching
+
+```yaml
+mode: solo                          # solo | team
+production_branch: main             # protected — agent never commits here directly
+agent_branch: ai-dev                # where /code commits go (code repos)
+agent_doc_branch: ai-documentation  # where /code commits go (documentation repos)
+# team-mode only (uncomment and fill):
+# integration_branch: dev           # PR target — where ai-dev merges (dev | main | etc.)
+# pr_tool: manual                   # manual (default) | gh
+```
+
+- **solo** (default): agent pushes `ai-dev → production_branch` directly. For single-owner projects.
+- **team**: agent pushes `ai-dev` to remote, `/deploy` outputs PR creation URL. Human reviews and merges.
+
+Switch to `team` when the project has >1 developer or requires a review gate.
+See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) for rationale.
+
+---
+
 ## External links
 
 - Runbooks: `<link>`

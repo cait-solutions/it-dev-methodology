@@ -44,8 +44,14 @@
 3. Установить `last_plan_session.code_run = true`
 4. Сохранить triggers.json
 5. **Branch check:** `git branch --show-current`
-   - Ветка `main`, `master`, `develop`, `staging` → ⛔ СТОП
-   - Сообщить: "AI-агенты коммитят только в `ai-dev`. Переключись: `git checkout ai-dev` или `git checkout -b ai-dev`"
+   - Прочитать `CLAUDE.local.md` → секция `## Branching` (или defaults если секции нет):
+     - `agent_branch` (default: `ai-dev`)
+     - `agent_doc_branch` (default: `ai-documentation`)
+     - `production_branch` (default: `main`)
+     - `integration_branch` (solo: = `production_branch`; team: из конфига)
+   - Текущая ветка = `agent_branch` или `agent_doc_branch` → ✅ продолжить
+   - Текущая ветка = `production_branch`, `master`, `develop`, `staging`, `integration_branch` → ⛔ СТОП
+   - Сообщить: "AI-агенты коммитят только в `{agent_branch}`. Переключись: `git checkout {agent_branch}` или `git checkout -b {agent_branch}`"
    - Явное разрешение разработчика → продолжить, записать `[branch-override]` в DEVLOG
    - Git не инициализирован → пропустить проверку
 

@@ -34,6 +34,12 @@
   - Файл отсутствует → ⚠️ USER-MAP не создан. Запусти `new-project-init.sh` или создай вручную из шаблона.
   - Найдены `[TODO: ...]` маркеры → ⚠️ USER-MAP не заполнен. Заполни перед началом работы (шаблон: `templates/USER-MAP.template.md`).
 
+**Branching check:**
+- [ ] Открыть `CLAUDE.local.md` → секция `## Branching`
+  - Секция отсутствует → ⚠️ branching mode не задан, используются defaults (`mode: solo`, `agent_branch: ai-dev`). OK для solo-проектов.
+  - `mode: team` — убедись что `integration_branch` заполнен И branch protection настроен в GitHub/GitLab на `production_branch`
+  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `ai-dev` / `ai-documentation`; PR review — его задача
+
 ---
 
 ## Навигационная карта шагов

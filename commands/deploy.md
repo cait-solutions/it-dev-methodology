@@ -72,7 +72,7 @@
 
 ## Шаг 1 — Pre-flight check
 
-- [ ] Текущая ветка = designated AI branch (`ai-dev` по умолчанию) — см. Шаг 1.5 для деталей и исключений
+- [ ] Текущая ветка = `agent_branch` из `CLAUDE.local.md ## Branching` (default: `ai-dev`) — см. Шаг 1.5 для деталей и исключений
 - [ ] Все изменения закоммичены
 - [ ] Self-review пройден
 - [ ] Tests зелёные
@@ -83,13 +83,16 @@
 
 ## Шаг 1.5 — Branch tracing (F5: AI-automated deploy clarity)
 
-**Принцип:** Deploy через команду `/deploy` выполняется на ветке `ai-dev` (или `agent-*`) чтобы было явно видно что это agent-automated, не manual human work.
+**Принцип:** Deploy через команду `/deploy` выполняется на ветке `agent_branch` (default `ai-dev`) чтобы было явно видно что это agent-automated, не manual human work.
 
-- [ ] Текущая ветка: `ai-dev` (или другая designated для agent deploys)?
-- [ ] Если нет → checkout: `git checkout ai-dev` или `git checkout -b ai-dev origin/main`
-- [ ] Если ветка имеет diverged commits → rebase: `git rebase origin/main`
+- [ ] Прочитать `branching.mode` из `CLAUDE.local.md` (default: `solo`)
+- [ ] Текущая ветка = `agent_branch` (из конфига или default `ai-dev`)?
+- [ ] Если нет → checkout: `git checkout {agent_branch}` или `git checkout -b {agent_branch} origin/{production_branch}`
+- [ ] Если ветка diverged → rebase:
+  - **solo:** `git rebase origin/{production_branch}`
+  - **team:** `git rebase origin/{integration_branch}`
 
-**Почему:** Team collaboration — люди видят разницу между agent-automated (ai-dev ветка) и manual human work (feature/*, main ветка). Audit trail в git: "commit by Claude on ai-dev" vs "commit by John on feature/auth".
+**Почему:** Team collaboration — люди видят разницу между agent-automated (`ai-dev` ветка) и manual human work (`feature/*`, `main`). Audit trail в git: "commit by Claude on ai-dev" vs "commit by John on feature/auth".
 
 ---
 
@@ -113,7 +116,25 @@ YYYY-MM-DD — [тип: deploy|milestone|risk-change] — [компонент]
 
 Покажи что улетит: `git diff HEAD --stat`
 
-Выполни деплой согласно процедуре проекта (CI/CD pipeline или ручной).
+**Выполни деплой согласно `branching.mode` из `CLAUDE.local.md`:**
+
+**solo (default):** прямой push в `production_branch`:
+```bash
+git push origin {agent_branch}:{production_branch}
+# пример: git push origin ai-dev:main
+```
+
+**team:** опубликовать `agent_branch` и вывести URL для создания PR:
+```bash
+git push origin {agent_branch}:{agent_branch}
+# пример: git push origin ai-dev:ai-dev
+```
+Затем создай PR вручную — скопируй подходящий URL (подставь значения из `git remote get-url origin`):
+- **GitHub:** `https://github.com/<owner>/<repo>/compare/{integration_branch}...{agent_branch}?expand=1`
+- **GitLab:** `https://<host>/<namespace>/<repo>/-/merge_requests/new?merge_request[source_branch]={agent_branch}&merge_request[target_branch]={integration_branch}`
+- Или через CLI: `gh pr create --base {integration_branch} --head {agent_branch} --title "[ai-dev] <DEVLOG summary>"`
+
+PR title: взять последнюю строку DEVLOG (что: ...). Human reviews → merge в `integration_branch`.
 
 ---
 
@@ -168,14 +189,13 @@ YYYY-MM-DD — [тип: deploy|milestone|risk-change] — [компонент]
 
 ### Подшаг 1 — Git push verification
 
-```bash
-git log -1 --oneline origin/main
-```
+- **solo:** `git log -1 --oneline origin/{production_branch}` — последний коммит совпадает с вашим?
+- **team:** `git log -1 --oneline origin/{agent_branch}` — `agent_branch` опубликован?
 
-- Последний коммит совпадает с вашим последним коммитом на ai-dev?
-- Если ДА → ✅ git push succeeded
-- Если НЕТ → ⚠️ push failed или не произошёл:
-  - Retry: `git push origin ai-dev:main`
+Если ДА → ✅ push succeeded
+Если НЕТ → ⚠️ push failed или не произошёл:
+  - solo retry: `git push origin {agent_branch}:{production_branch}`
+  - team retry: `git push origin {agent_branch}:{agent_branch}`
   - Если fails → сохранить error message в DEVLOG `[async-failure:git-push]`
   - ⛔ НЕ продолжать если git push failed
 
