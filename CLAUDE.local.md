@@ -15,7 +15,6 @@ This file supplements [CLAUDE.md](CLAUDE.md) (methodology canonical rules).
 mode: team
 production_branch: main
 agent_branch: ai-dev
-agent_doc_branch: ai-documentation
 integration_branch: main
 pr_tool: manual
 ```
