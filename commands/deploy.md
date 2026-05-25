@@ -117,20 +117,34 @@ YYYY-MM-DD — [тип: deploy|milestone|risk-change] — [компонент]
 
 Покажи что улетит: `git diff HEAD --stat`
 
-**Выполни деплой согласно `branching.mode` из `CLAUDE.local.md`:**
+### Шаг 3.0 — Прочитай mode (обязательно перед push)
 
-**solo (default):** прямой push в `production_branch`:
+```bash
+grep -A10 '## Branching' CLAUDE.local.md | grep 'mode:'
+```
+
+Выведи значение явно — `solo` или `team` — прежде чем продолжить. Это обязательный шаг, не опциональный.
+
+### Шаг 3.1 — Push
+
+**Рекомендуется (если есть `scripts/deploy-push.sh`):**
+```bash
+bash scripts/deploy-push.sh
+```
+Скрипт читает mode из CLAUDE.local.md и запускает правильную команду. Вывод покажет mode, ветку и target.
+
+**Вручную (если скрипта нет) — используй значение mode из Шага 3.0:**
+
+`solo` → push напрямую в production:
 ```bash
 git push origin {agent_branch}:{production_branch}
-# пример: git push origin ai-dev:main
 ```
 
-**team:** опубликовать `agent_branch` и вывести URL для создания PR:
+`team` → опубликовать ветку и создать PR:
 ```bash
 git push origin {agent_branch}:{agent_branch}
-# пример: git push origin ai-dev:ai-dev
 ```
-Затем создай PR вручную — скопируй подходящий URL (подставь значения из `git remote get-url origin`):
+Затем создай PR (подставь значения из `git remote get-url origin`):
 - **GitHub:** `https://github.com/<owner>/<repo>/compare/{integration_branch}...{agent_branch}?expand=1`
 - **GitLab:** `https://<host>/<namespace>/<repo>/-/merge_requests/new?merge_request[source_branch]={agent_branch}&merge_request[target_branch]={integration_branch}`
 - Или через CLI: `gh pr create --base {integration_branch} --head {agent_branch} --title "[ai-dev] <DEVLOG summary>"`

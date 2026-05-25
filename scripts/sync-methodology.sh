@@ -374,6 +374,26 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
 fi
 
 # ---------------------------------------------------------------------------
+# Scripts — universal infrastructure, always overwrite (consumer only).
+# Copies templates/scripts/* to target/scripts/. Skipped for self-apply because
+# scripts/ in the methodology repo is the canonical source, not a copy.
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/scripts" ]]; then
+  if compgen -G "$METHODOLOGY_DIR/templates/scripts/*" > /dev/null 2>&1; then
+    echo "→ scripts/"
+    mkdir -p "$TARGET_DIR/scripts"
+    for script in "$METHODOLOGY_DIR"/templates/scripts/*; do
+      [[ -f "$script" ]] || continue
+      name="$(basename "$script")"
+      dest="$TARGET_DIR/scripts/$name"
+      cp "$script" "$dest"
+      chmod +x "$dest" 2>/dev/null || true
+      echo "  ✓ $name"
+    done
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Model tiers registry — canonical reference, always overwrite.
 # ---------------------------------------------------------------------------
 if [[ -f "$METHODOLOGY_DIR/templates/model-tiers.md" ]]; then
