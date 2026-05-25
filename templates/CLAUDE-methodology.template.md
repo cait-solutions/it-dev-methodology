@@ -192,6 +192,7 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 
 - [scripts/new-project-init.sh](scripts/new-project-init.sh) — bootstrap
 - [scripts/sync-methodology.sh](scripts/sync-methodology.sh) — sync
+- [scripts/deploy-push.sh](scripts/deploy-push.sh) — deploy push (reads mode from CLAUDE.local.md, enforces solo/team pattern)
 - [scripts/migrate-claude-md.sh](scripts/migrate-claude-md.sh) — Phase G2 split migration helper
 - [commands/plan.md](commands/plan.md) — workflow entry point
 - [templates/triggers.json.template](templates/triggers.json.template) — canonical state schema
