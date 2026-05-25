@@ -120,7 +120,7 @@
 ### Источники конфликта
 
 - **Vision/ADR говорит:** ADR-008 — billing fields принадлежат customers, не parties
-- **Реальность кода говорит:** erp/Models/Party.php:42 — колонки ещё в schema
+- **Реальность кода говорит:** &lt;project&gt;/Models/&lt;Entity&gt;.php:42 — колонки ещё в schema
 - **Inbox говорит:** plan-Phase-D-2026-05-14 — D10 fallback compat, D11 drop через 30 дней
 
 ### Варианты решения
@@ -141,7 +141,7 @@
 
 - ADR: ADR-008
 - Sync-vision report: 2026-05-14
-- DEVLOG: 2026-05-14 [erp-party] Phase D
+- DEVLOG: YYYY-MM-DD [&lt;project-tag&gt;] Phase D
 
 ### Решение PM
 
