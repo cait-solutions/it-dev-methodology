@@ -85,9 +85,6 @@ production_branch: main             # protected — agent never commits here dir
 agent_branch: ai-dev                # AI branch (single source of truth, enforced by /code and /deploy).
                                     # Applies to all repo types — doc-repos and code-repos use the same name.
                                     # Differentiation comes from repo isolation, not branch naming.
-# team-mode only (uncomment and fill):
-# integration_branch: dev           # PR target — where agent_branch merges (dev | main | etc.)
-# pr_tool: manual                   # manual (default) | gh
 ```
 
 - **solo** (default): agent pushes `{agent_branch} → production_branch` directly. For single-owner projects.
