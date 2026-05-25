@@ -43,6 +43,8 @@ Without this analysis → plan not approved, code not merged, deploy blocked.
 **AI branch rule:** All AI agent commits go to the branch defined in [CLAUDE.local.md](CLAUDE.local.md) → `## Branching` → `agent_branch` (default: `ai-dev`). Never commit to `main`, `master`, `develop`, `staging`, or `integration_branch` without explicit developer approval.
 Before first commit in session: read `agent_branch` from `CLAUDE.local.md`, then `git branch --show-current`. Wrong branch → switch BEFORE any changes, not after.
 
+**Methodology sync rule:** When slash commands or hooks seem outdated — run `sync-methodology.sh` (path: see `README.md` → "Обновление методологии"). Script auto-pulls latest from GitHub; CLAUDE.md is auto-overwritten after sync.
+
 **Retroactivity rule:** Methodology updates apply to NEW plans only. Existing plans are revised only if: (a) not yet in `/code` stage, or (b) a critical blocking error found that new rules would catch. Don't revise completed plans for every update — it's an infinite loop.
 
 **Risk scope rule:** Systemic risks (affect multiple tasks, live months/years) → `RISKS.md` only. Task-specific risks → stay in the plan. Don't copy task risks to `RISKS.md` — it pollutes the systemic registry with single-use noise.
