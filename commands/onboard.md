@@ -27,7 +27,7 @@
 Прежде чем читать README — убедись в правильной настройке:
 - [ ] Открыт `<project>-documentation/` как workspace root в Claude Code (не родительская папка, не `it-dev-methodology`)?
 - [ ] Команды доступны? (в Claude Code должно работать `/plan`)
-- [ ] Если команд нет → запусти `sync-methodology.sh` из `it-dev-methodology` (см. README.md раздел "После git clone")
+- [ ] Если команд нет → запусти `sync-methodology.sh` из `it-dev-methodology` (см. README.md раздел "После git clone"). Скрипт автоматически обновляет методологию из origin/main перед синком.
 
 **USER-MAP check:**
 - [ ] Открыть `docs/product/USER-MAP.md`

@@ -41,6 +41,29 @@ if [[ "$_target_abs" == "$_method_abs" ]]; then
   IS_SELF_APPLY=true
 fi
 
+# ---------------------------------------------------------------------------
+# Auto-pull: keep methodology up to date before syncing.
+# Skipped for self-apply (methodology IS the source).
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]]; then
+  if git -C "$METHODOLOGY_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+    if git -C "$METHODOLOGY_DIR" remote get-url origin > /dev/null 2>&1; then
+      if [[ -z "$(git -C "$METHODOLOGY_DIR" status --porcelain 2>/dev/null)" ]]; then
+        echo "→ Pulling latest methodology from origin/main..."
+        if git -C "$METHODOLOGY_DIR" pull --ff-only --quiet origin main 2>/dev/null; then
+          VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
+          echo "  ✓ Updated to v$VERSION"
+        else
+          echo "  ⚠️  Auto-pull failed — syncing from local v$VERSION"
+        fi
+      else
+        echo "  ⚠️  Methodology repo has local changes — using local v$VERSION"
+      fi
+      echo ""
+    fi
+  fi
+fi
+
 if [[ ! -d "$TARGET_DIR/.claude" ]]; then
   if [[ "$IS_SELF_APPLY" == "true" ]]; then
     mkdir -p "$TARGET_DIR/.claude/"{commands,agents,rules,state,hooks}
@@ -252,12 +275,31 @@ check_artifact_subst() {
 # Commands — always overwrite (canonical source is methodology).
 # ---------------------------------------------------------------------------
 echo "→ commands/"
+CHANGED_CMDS=()
 for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
   [[ -f "$cmd" ]] || continue
   name="$(basename "$cmd")"
-  inject_md_banner "$cmd" "$TARGET_DIR/.claude/commands/$name"
-  echo "  ✓ $name"
+  dest="$TARGET_DIR/.claude/commands/$name"
+  old_body=""
+  [[ -f "$dest" ]] && old_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
+  inject_md_banner "$cmd" "$dest"
+  new_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
+  if [[ "$old_body" != "$new_body" ]]; then
+    old_lines=$(echo "$old_body" | wc -l)
+    new_lines=$(echo "$new_body" | wc -l)
+    delta=$((new_lines - old_lines))
+    [[ $delta -gt 0 ]] && delta_str="+${delta}" || delta_str="${delta}"
+    echo "  ✓ $name  [${delta_str} строк — изменено содержимое]"
+    CHANGED_CMDS+=("$name")
+  else
+    echo "  ✓ $name"
+  fi
 done
+if [[ ${#CHANGED_CMDS[@]} -gt 0 ]]; then
+  echo ""
+  echo "  Реальные изменения в содержимом (${#CHANGED_CMDS[@]}):"
+  for c in "${CHANGED_CMDS[@]}"; do echo "    • $c"; done
+fi
 
 # Delete commands that no longer exist in methodology (renamed/removed upstream).
 for existing in "$TARGET_DIR"/.claude/commands/*.md; do
