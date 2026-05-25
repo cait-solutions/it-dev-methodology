@@ -98,6 +98,17 @@ See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) for rationale.
 
 ---
 
+## Remotes
+
+```yaml
+origin_url: https://github.com/<owner>/<repo>.git   # canonical remote URL for this repo
+```
+
+Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mismatch) and `/deploy` (validates before push).
+**Tokens:** store in OS credential manager (`gh auth login` / `git credential manager`). Never put tokens in this file.
+
+---
+
 ## External links
 
 - Runbooks: `<link>`

@@ -64,6 +64,25 @@ if [[ "$IS_SELF_APPLY" == "false" ]]; then
   fi
 fi
 
+# ---------------------------------------------------------------------------
+# Remote URL check: auto-correct origin if CLAUDE.local.md ## Remotes specifies origin_url.
+# Helps agents that used a wrong URL after cloning or manual setup.
+# ---------------------------------------------------------------------------
+if [[ -f "$TARGET_DIR/CLAUDE.local.md" ]]; then
+  _config_url="$(grep "^origin_url:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null | head -1 | sed 's/^origin_url:[[:space:]]*//' | tr -d '\r')"
+  if [[ -n "$_config_url" ]] && git -C "$TARGET_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+    _current_url="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null || true)"
+    if [[ -n "$_current_url" && "$_current_url" != "$_config_url" ]]; then
+      echo "→ Remote URL mismatch detected:"
+      echo "  CLAUDE.local.md: $_config_url"
+      echo "  Current origin:  $_current_url"
+      git -C "$TARGET_DIR" remote set-url origin "$_config_url"
+      echo "  ✓ Remote corrected"
+      echo ""
+    fi
+  fi
+fi
+
 if [[ ! -d "$TARGET_DIR/.claude" ]]; then
   if [[ "$IS_SELF_APPLY" == "true" ]]; then
     mkdir -p "$TARGET_DIR/.claude/"{commands,agents,rules,state,hooks}

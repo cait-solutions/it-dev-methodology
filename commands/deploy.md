@@ -78,6 +78,7 @@
 - [ ] Tests зелёные
 - [ ] SYSTEM-MAP / data-map / ADR обновлены если применимо
 - [ ] Если коммит затрагивает ARTIFACT-MAP → `bash scripts/validate-artifact-map.sh` прошёл (или кандидаты рассмотрены вручную)
+- [ ] Remote URL: прочитать `origin_url` из `CLAUDE.local.md ## Remotes` (если секция есть) → сравнить с `git remote get-url origin` → если расходятся: `git remote set-url origin <origin_url>` до push
 
 ---
 
