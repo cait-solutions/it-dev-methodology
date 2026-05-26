@@ -604,6 +604,37 @@
 - Обязательно: в финальной таблице укажи МИНИМУМ одну строку с реальным gap, ограничением, или non-trivial риском — даже если confidence высокий. Если таковых нет — напиши одну строку "Чего мы не знаем: [конкретно]".
 - Цель не "показать уверенность" — цель "найти что может пойти не так". Формальный 85% без self-challenge = сигнал недостаточной критичности.
 
+**Примеры что означает каждое свойство** *(из реальной практики methodology-platform):*
+
+1. **Архитектурно правильное** — правильный regulator level выбран
+   - ✅ `validate-mermaid-links.sh` — Bash + Python скрипт проверки (L4) вместо «проверь mermaid» промпт-правила (L1)
+   - ❌ Добавили L1-checklist пункт в /code когда можно было закрыть через schema constraint (L6)
+
+2. **Структурное** — закрывает класс, не точку
+   - ✅ G-030 fix: Lint-7 в self-lint срабатывает в каждом /code (закрывает класс «summary inconsistency для табличных артефактов»)
+   - ❌ Поправили G-029 только в USER-MAP — точечный фикс, не gen-rule для всех Mermaid файлов
+
+3. **Масштабируемое** — выдержит 10× нагрузку или N/A
+   - ✅ `sync-methodology.sh` обрабатывает каждый файл независимо — выдержит 10× размер templates/
+   - ❌ Load all 1000+ файлов в память — fails при росте методологии
+   - 📝 N/A — для documentation change / methodology rule update / promt-правила (нет runtime-нагрузки)
+
+4. **Без регрессий** — adjacent paths не сломаются
+   - ✅ Перед G-030 fix grep "this repo" / "Methodology Platform" по commands/ + templates/ — подтвердил отсутствие stale references
+   - ❌ Изменили handler, не проверили параллельные branches в других commands
+
+5. **Forward-thinking** — 3 шага вперёд по ROADMAP и нагрузке
+   - ✅ SYSTEM-MAP v1.9 — /architecture-audit Round 3 (через ~5 plans) не потратит цикл на re-discovery two-repo drift; Lint-7 = preventive в каждом следующем /code
+   - ❌ Локальный фикс одного gap, через 2 retro-цикла придётся переписывать когда накопится статистика паттернов
+
+6. **All aspects covered** — смежные зоны, нет дублирования существующих команд
+   - ✅ G-030 fix: добавлено правило + Lint-7 + DEVLOG + AGENT-GAPS статус — все слои покрыты в одном PR
+   - ❌ Изменили поведение команды, забыли обновить PRODUCT.md или ARTIFACT-MAP стрелки
+
+7. **Maximum-altitude view** — архитектура с высоты, что система делает в целом
+   - ✅ R-008 SYSTEM-MAP fix: consistent с two-repo pattern (canon в code repo, runtime artifacts в documentation repo) — решение в одной плоскости с общей архитектурой
+   - ❌ Создали новый artifact-тип когда существующий ARTIFACT-MAP / USER-MAP уже его покрывает — дублирование с высоты
+
 **Итог:** "Готов" или "Не готов: [какой gap закрыть до /code]" — одна строка.
 
 ---
