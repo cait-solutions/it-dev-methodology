@@ -396,6 +396,7 @@
       - Fallback (shallow clone): сравнить по file metadata
       Findings → feed в Подшаг 2 классификацию ниже
 - [ ] **ADR cross-consistency check** (если задача касается конкретного сервиса упомянутого в ADR): grep по имени сервиса в `docs/adr/` — проверить что другие ADR описывают его роль консистентно. Игнорировать ADR со статусом `Superseded`. Несоответствие ("сервис X делает Y" в ADR-NNN vs "сервис X не делает Y" в ADR-MMM) → Type C → OPEN-QUESTIONS.md. (closes G-005)
+- [ ] **Doc freshness check** (если задача касается сервиса с `docs/services/*/OVERVIEW.md` в doc-repo): `bash scripts/validate-doc-freshness.sh --root <doc-repo-path>` — STALE означает что OVERVIEW отстал от последних документационных изменений → обновить `Обновлён:` перед планированием. (closes G-006)
 
 Если нет — **Type D**, отвергнуть.
 
