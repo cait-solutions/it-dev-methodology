@@ -209,6 +209,7 @@ PR title: взять последнюю строку DEVLOG (что: ...). Human
 
 Если ДА → ✅ push succeeded
 Если НЕТ → ⚠️ push failed или не произошёл:
+  - Если код ошибки **403/404** → **сначала** проверить `memory/*.md` + DEVLOG последние 7 дней на known issues с этим remote URL — задокументированный known issue исключает полный diagnostic chain (G-026)
   - solo retry: `git push origin {agent_branch}:{production_branch}`
   - team retry: `git push origin {agent_branch}:{agent_branch}`
   - Если fails → сохранить error message в DEVLOG `[async-failure:git-push]`
