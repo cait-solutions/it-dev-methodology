@@ -55,6 +55,7 @@
    - `agent_branch` отсутствует в `## Branching` → fallback на `ai-dev` + 🟡 warning "agent_branch missing in CLAUDE.local.md — add it (see CLAUDE_LOCAL.template.md)."
    - Явное разрешение разработчика → продолжить, записать `[branch-override]` в DEVLOG
    - Git не инициализирован → пропустить проверку
+6. **Repo ownership check:** перед каждым коммитом убедиться что текущий repo = target repo из задания (обычно it-dev-methodology). Консьюмер-репо (erp-*, ai-assistant-*, etc.) = **read-only** для анализа; их артефакты (AGENT-GAPS.md, DEVLOG.md) обновляет владелец проекта вручную — агент методологии туда не коммитит. (closes G-032)
 
 ---
 
