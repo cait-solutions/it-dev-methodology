@@ -13,6 +13,8 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 1. [VISION.md](VISION.md) перед каждым `/plan`
 2. [PRODUCT.md](PRODUCT.md) — что методология обещает консьюмерам
 3. [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md) — связи компонентов
+4. [USER-MAP.md](docs/product/USER-MAP.md) — пользовательские потоки и capabilities
+5. [ARTIFACT-MAP.md](docs/product/ARTIFACT-MAP.md) — артефакты и их владельцы
 
 ---
 
