@@ -27,7 +27,7 @@
 Прежде чем читать README — убедись в правильной настройке:
 - [ ] Открыт `<project>-documentation/` как workspace root в Claude Code (не родительская папка, не `it-dev-methodology`)?
 - [ ] Команды доступны? (в Claude Code должно работать `/plan`)
-- [ ] Если команд нет → запусти `sync-methodology.sh` из `it-dev-methodology` (см. README.md раздел "После git clone")
+- [ ] Если команд нет → запусти `sync-methodology.sh` из `it-dev-methodology` (см. README.md раздел "После git clone"). Скрипт автоматически обновляет методологию из origin/main перед синком.
 
 **USER-MAP check:**
 - [ ] Открыть `docs/product/USER-MAP.md`
@@ -38,7 +38,7 @@
 - [ ] Открыть `CLAUDE.local.md` → секция `## Branching`
   - Секция отсутствует → ⚠️ branching mode не задан, используются defaults (`mode: solo`, `agent_branch: ai-dev`). OK для solo-проектов.
   - `mode: team` — убедись что `integration_branch` заполнен И branch protection настроен в GitHub/GitLab на `production_branch`
-  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `ai-dev` / `ai-documentation`; PR review — его задача
+  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `agent_branch` (default `ai-dev`); PR review — его задача
 
 ---
 

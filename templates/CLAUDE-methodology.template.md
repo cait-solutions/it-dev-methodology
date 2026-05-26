@@ -77,7 +77,7 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
 
-**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
+**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `agent_branch` из [CLAUDE.local.md](CLAUDE.local.md) → `## Branching` (default: `ai-dev`). Это позволяет различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on {agent_branch}" vs "commit by John on feature/auth". Важно для audit trail и regression tracking. Различение doc-репо vs code-репо обеспечивается изоляцией репозитория, не именем ветки.
 
 **Deploy rule:** "деплой" = `git push origin main`. Перед каждым push:
 1. `/review` если не запускался
@@ -192,6 +192,7 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 
 - [scripts/new-project-init.sh](scripts/new-project-init.sh) — bootstrap
 - [scripts/sync-methodology.sh](scripts/sync-methodology.sh) — sync
+- [scripts/deploy-push.sh](scripts/deploy-push.sh) — deploy push (reads mode from CLAUDE.local.md, enforces solo/team pattern)
 - [scripts/migrate-claude-md.sh](scripts/migrate-claude-md.sh) — Phase G2 split migration helper
 - [commands/plan.md](commands/plan.md) — workflow entry point
 - [templates/triggers.json.template](templates/triggers.json.template) — canonical state schema

@@ -15,9 +15,19 @@ This file supplements [CLAUDE.md](CLAUDE.md) (methodology canonical rules).
 mode: team
 production_branch: main
 agent_branch: ai-dev
-agent_doc_branch: ai-documentation
 integration_branch: main
 pr_tool: manual
 ```
 
 Dog-fooding: methodology itself uses team-mode to validate the branching contract. Since it is a single-owner project, `integration_branch: main` (no separate dev branch). Agent commits to `ai-dev`, `/deploy` outputs PR URL, owner self-merges.
+
+---
+
+## Remotes
+
+```yaml
+origin_url: https://github.com/cait-solutions/it-dev-methodology.git
+```
+
+Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mismatch) and `/deploy` (validates before push).
+**Tokens:** stored in OS credential manager (`gh auth login`). Never put tokens in this file.

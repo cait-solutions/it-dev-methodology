@@ -41,6 +41,48 @@ if [[ "$_target_abs" == "$_method_abs" ]]; then
   IS_SELF_APPLY=true
 fi
 
+# ---------------------------------------------------------------------------
+# Auto-pull: keep methodology up to date before syncing.
+# Skipped for self-apply (methodology IS the source).
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]]; then
+  if git -C "$METHODOLOGY_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+    if git -C "$METHODOLOGY_DIR" remote get-url origin > /dev/null 2>&1; then
+      if [[ -z "$(git -C "$METHODOLOGY_DIR" status --porcelain 2>/dev/null)" ]]; then
+        echo "→ Pulling latest methodology from origin/main..."
+        if git -C "$METHODOLOGY_DIR" pull --ff-only --quiet origin main 2>/dev/null; then
+          VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
+          echo "  ✓ Updated to v$VERSION"
+        else
+          echo "  ⚠️  Auto-pull failed — syncing from local v$VERSION"
+        fi
+      else
+        echo "  ⚠️  Methodology repo has local changes — using local v$VERSION"
+      fi
+      echo ""
+    fi
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Remote URL check: auto-correct origin if CLAUDE.local.md ## Remotes specifies origin_url.
+# Helps agents that used a wrong URL after cloning or manual setup.
+# ---------------------------------------------------------------------------
+if [[ -f "$TARGET_DIR/CLAUDE.local.md" ]]; then
+  _config_url="$(grep "^origin_url:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null | head -1 | sed 's/^origin_url:[[:space:]]*//' | tr -d '\r')"
+  if [[ -n "$_config_url" ]] && git -C "$TARGET_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+    _current_url="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null || true)"
+    if [[ -n "$_current_url" && "$_current_url" != "$_config_url" ]]; then
+      echo "→ Remote URL mismatch detected:"
+      echo "  CLAUDE.local.md: $_config_url"
+      echo "  Current origin:  $_current_url"
+      git -C "$TARGET_DIR" remote set-url origin "$_config_url"
+      echo "  ✓ Remote corrected"
+      echo ""
+    fi
+  fi
+fi
+
 if [[ ! -d "$TARGET_DIR/.claude" ]]; then
   if [[ "$IS_SELF_APPLY" == "true" ]]; then
     mkdir -p "$TARGET_DIR/.claude/"{commands,agents,rules,state,hooks}
@@ -252,12 +294,31 @@ check_artifact_subst() {
 # Commands — always overwrite (canonical source is methodology).
 # ---------------------------------------------------------------------------
 echo "→ commands/"
+CHANGED_CMDS=()
 for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
   [[ -f "$cmd" ]] || continue
   name="$(basename "$cmd")"
-  inject_md_banner "$cmd" "$TARGET_DIR/.claude/commands/$name"
-  echo "  ✓ $name"
+  dest="$TARGET_DIR/.claude/commands/$name"
+  old_body=""
+  [[ -f "$dest" ]] && old_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
+  inject_md_banner "$cmd" "$dest"
+  new_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
+  if [[ "$old_body" != "$new_body" ]]; then
+    old_lines=$(echo "$old_body" | wc -l)
+    new_lines=$(echo "$new_body" | wc -l)
+    delta=$((new_lines - old_lines))
+    [[ $delta -gt 0 ]] && delta_str="+${delta}" || delta_str="${delta}"
+    echo "  ✓ $name  [${delta_str} строк — изменено содержимое]"
+    CHANGED_CMDS+=("$name")
+  else
+    echo "  ✓ $name"
+  fi
 done
+if [[ ${#CHANGED_CMDS[@]} -gt 0 ]]; then
+  echo ""
+  echo "  Реальные изменения в содержимом (${#CHANGED_CMDS[@]}):"
+  for c in "${CHANGED_CMDS[@]}"; do echo "    • $c"; done
+fi
 
 # Delete commands that no longer exist in methodology (renamed/removed upstream).
 for existing in "$TARGET_DIR"/.claude/commands/*.md; do
@@ -310,6 +371,26 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
     esac
     echo "  ✓ $dest_name"
   done
+fi
+
+# ---------------------------------------------------------------------------
+# Scripts — universal infrastructure, always overwrite (consumer only).
+# Copies templates/scripts/* to target/scripts/. Skipped for self-apply because
+# scripts/ in the methodology repo is the canonical source, not a copy.
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/scripts" ]]; then
+  if compgen -G "$METHODOLOGY_DIR/templates/scripts/*" > /dev/null 2>&1; then
+    echo "→ scripts/"
+    mkdir -p "$TARGET_DIR/scripts"
+    for script in "$METHODOLOGY_DIR"/templates/scripts/*; do
+      [[ -f "$script" ]] || continue
+      name="$(basename "$script")"
+      dest="$TARGET_DIR/scripts/$name"
+      cp "$script" "$dest"
+      chmod +x "$dest" 2>/dev/null || true
+      echo "  ✓ $name"
+    done
+  fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -399,6 +480,30 @@ else
   check_artifact_subst "docs/adr/README.md"               "templates/adr/README.template.md"              "$_pname"
   check_artifact       "inbox/README.md"                  "templates/inbox/README.template.md"
   check_artifact_subst ".claude/rules/README.md"          "templates/.claude/rules/README.template.md" "$_pname"
+fi
+
+# ---------------------------------------------------------------------------
+# .gitignore check: warn if methodology runtime entries are missing.
+# Does not auto-modify — consumer owns their .gitignore.
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]]; then
+  _gi="$TARGET_DIR/.gitignore"
+  _required=(".claude/commands/" ".claude/hooks/" ".claude/model-tiers.md" ".claude/.version" ".claude/state/")
+  _missing=()
+  if [[ -f "$_gi" ]]; then
+    for entry in "${_required[@]}"; do
+      grep -qF "$entry" "$_gi" 2>/dev/null || _missing+=("$entry")
+    done
+  else
+    _missing=("${_required[@]}")
+  fi
+  if [[ ${#_missing[@]} -gt 0 ]]; then
+    echo ""
+    echo "⚠️  .gitignore is missing methodology runtime entries."
+    echo "   These files are regenerated by sync — committing them creates noise."
+    echo "   Add to $TARGET_DIR/.gitignore:"
+    for m in "${_missing[@]}"; do echo "     $m"; done
+  fi
 fi
 
 echo ""

@@ -162,6 +162,10 @@
 - Изменилось поведение существующей команды по отношению к артефактам (новый read/write, новое поле triggers.json) → ARTIFACT-MAP.md стрелки актуальны?
 - ARTIFACT-MAP изменён → table↔Mermaid консистентность: каждая **команда** в "Читает" имеет `-.->` или `===` стрелку (human actors не требуют); нода без единой стрелки → 🟡 WARNING "ARTIFACT-MAP node island"
 
+**Actor discovery-path check** (для любого проекта):
+- Добавлен новый механизм (скрипт, команда, webhook, автоматизация, cron)? → есть ли описание trigger-point в файле который читается автоматически (CLAUDE.md или README.md)?
+- Нет → 🟡 WARNING "actor discovery-path missing — агент в новой сессии не найдёт как запустить этот механизм"
+
 **Bootstrap-command contract** (только для methodology-platform tasks):
 - [ ] Изменена команда: ссылается на новые файлы? → `new-project-init.sh` создаёт их?
 - [ ] Изменён bootstrap: новый файл создаётся? → хотя бы одна команда на него ссылается?
