@@ -174,7 +174,10 @@
    - [ ] Concurrency — есть race conditions если 2 процесса одновременно?
    - Для каждого: явно описать "если это не true — что сломается?"
 8. **Adjacent impact актуален:** смежные зоны из /plan Шаг -1.3 проверены? Если был затронут методологический артефакт (ARTIFACT-MAP и т.п.) — полный аудит всех стрелок/секций, не только изменённых *(closes G-001)*
-9. **[methodology] Mermaid изменён:** запустить `bash scripts/validate-mermaid-links.sh` — все .md файлы включая gitignored; MISSING_LINK или STALE_LINK = блок до фикса
+9. **[methodology] Mermaid изменён:** запустить обе команды (two-repo architecture):
+   - `bash scripts/validate-mermaid-links.sh` (methodology repo)
+   - `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation` (documentation repo — USER-MAP/SYSTEM-MAP/ARTIFACT-MAP)
+   MISSING_LINK или STALE_LINK = блок до фикса. URL_TOO_LONG = warning, не блок (mini/full паттерн)
 
 Если хоть одна точка не пройдена → исправить до коммита.
 
