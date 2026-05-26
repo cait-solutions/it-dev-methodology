@@ -589,6 +589,23 @@
 
 **Lite mode:** строки неприменимые к задаче (напр. "Масштабируемое" для однострочного багфикса) → пиши `N/A — Lite: [причина]` вместо %. Порог 80% применяется только к non-N/A строкам.
 
+### Risk Tier Assessment (заполнить ДО таблицы)
+
+| Tier | Признаки | #4 min | Все остальные min |
+|---|---|---|---|
+| `[critical]` | auth / payment / data integrity / 3+ consumers / нет rollback | **97%** | 85% |
+| `[standard]` | feature / isolated module / reversible | **95%** | 80% |
+| `[low-risk]` | doc-only / methodology rule / no adjacent code paths | **90%** | 80% |
+
+```
+Tier: [critical | standard | low-risk]
+Обоснование: [одна строка]
+Binding minimums: #4 = X%, остальные = Y%
+```
+
+⛔ Нельзя рекомендовать ниже floor своего tier без явного обоснования.
+⛔ Рекомендованный minimum — порог для этого плана, не пожелание.
+
 | № | Свойство (краткое описание) | Confidence | Evidence (конкретный шаг + что доказано) |
 |---|---|---|---|
 | 1 | **Архитектурно правильное** — паттерн/тип решения соответствует классу задачи (выбран правильный regulator level: schema constraint / validator / middleware / prompt-rule) | __% | Шаг 0.5: какой уровень регулятора выбран и почему он минимально достаточен |
