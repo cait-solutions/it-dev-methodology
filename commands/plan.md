@@ -265,6 +265,7 @@
 **1. Перечисли смежные зоны:**
 Что читает компонент который меняешь? Что зависит от него?
 - Для `[methodology]`: ARTIFACT-MAP, SYSTEM-MAP, USER-MAP, PRODUCT.md — всегда в списке; **если добавляется новый файл в `commands/` или `templates/` — попадает ли он к консьюмерам через `sync-methodology.sh`? Если нет — добавить в `templates/` или явно обосновать out-of-scope** (closes G-025)
+- Для любого проекта — **Gitignore ownership check:** если целевой файл физически присутствует в дереве, проверить: `git check-ignore -v <path>`. Hit → файл принадлежит upstream repo (например, `.claude/commands/*.md` в консьюмере = копии из it-dev-methodology). Изменение = отдельный PR в upstream, не в текущем проекте. Если git недоступен → предупредить разработчика и проверить вручную. **Исключение:** build-артефакты (`dist/`, `*.pyc`, `node_modules/`) — не methodology ownership, редактировать нормально. (closes G-007)
 - Для `[code]`: параллельные модули с тем же паттерном, shared state, event consumers
 - Для `[data]`: downstream сервисы, кеши, consumer модели
 
