@@ -154,7 +154,10 @@
 - Архитектурные изменения — SYSTEM-MAP.md / data-map.md / ADR обновлены?
 - Добавлена/изменена зависимость между компонентами или интеграция с внешним сервисом → SYSTEM-MAP.md edges актуальны?
 - SYSTEM-MAP или USER-MAP изменены → Mermaid-диаграмма сохранена? (замена на ASCII = 🔴 CRITICAL)
-- [methodology] Mermaid изменён → `bash scripts/validate-mermaid-links.sh` запущен? Покрывает gitignored файлы вне git diff; проверяет наличие ссылки + соответствие URL. Выход с ошибкой = 🔴 CRITICAL
+- [methodology] Mermaid изменён → обе команды запущены?
+  `bash scripts/validate-mermaid-links.sh` (methodology repo)
+  `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation` (documentation repo)
+  Выход с ошибкой = 🔴 CRITICAL; URL_TOO_LONG = warning, не блок
 - USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
 - Изменился рекомендуемый порядок действий или prerequisites для существующих возможностей → USER-MAP.md потоки актуальны?
 - Новая команда или тип артефакта добавлены → `docs/product/ARTIFACT-MAP.md` обновлён?
