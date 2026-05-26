@@ -589,7 +589,7 @@
 | 2 | **Структурное** — закрывает класс проблем, управляет системой а не точечно; будущие случаи того же класса предотвращены автоматически | __% | Шаг -1.3: класс; Шаг 0.5: regulator level; что именно предотвращает рецидив |
 | 3 | **Масштабируемое** — выдержит 10× нагрузку (данных / файлов / операций) + **multi-use** (reuse блоков/кода в нескольких местах) + **легко расширяется** новыми вариациями добавляемых сейчас сущностей; ИЛИ N/A для не-runtime задач | __% | Шаг 1.5: bottleneck при нагрузке + reuse-potential + extension paths для новых вариаций; или явное N/A с обоснованием |
 | 4 | **Без регрессий** — adjacent paths и зависимости не сломаются (**минимум 95%** — см. Жёсткие правила) | __% | Шаг -1.3 adjacent: какие зоны проверены; Шаг 2 grep: какой паттерн искал и где |
-| 5 | **Forward-thinking** — 3 шага вперёд по ROADMAP и нагрузке + **предвидение поведения**: максимальное количество вариаций use cases (включая non-obvious), будущее scaling, какие edge-сценарии возникнут — что пользователи/разработчики будут делать с этим решением через 1-3 итерации в разных контекстах | __% | Шаг 1.5 + Шаг 98: variations use cases, non-obvious сценарии, behavior prediction, какие задачи разблокирует/не сломает |
+| 5 | **Forward-thinking** — 3 шага вперёд по ROADMAP и нагрузке + **предвидение поведения**: максимальное количество вариаций use cases (включая non-obvious), будущее scaling, какие edge-сценарии возникнут + **integration / combinations**: если решение использует несколько механизмов (API + Function Calling, два feature flags, multi-mode конфигурации) — что происходит когда они применяются ВМЕСТЕ в production-config, а не только тестируются в изоляции? | __% | Шаг 1.5 + Шаг 98: variations use cases, non-obvious сценарии, behavior prediction, integration testing combinations, какие задачи разблокирует/не сломает |
 | 6 | **All aspects covered** — смежные зоны, зависимости, нет дублирования существующих команд/шагов + **thread-pulling**: если в задаче упоминается конкретное (имя, команда, файл, поле) — проверить нет ли других экземпляров того же класса, стоит ли расширить scope. "Тянуть за ниточку" зависимости, не обрывать на видимом scope | __% | Шаг -1.2: что не закрывается; Шаг -1.3: adjacent + thread-pull проверки; Шаг 1.5 Justification: почему новая абстракция нужна |
 | 7 | **Maximum-altitude view** — архитектура с высоты, что система делает в целом, а не точка решения | __% | Шаг 1 + 1.5 + 98.7: senior reviewer перспектива — как решение выглядит на уровне всего проекта |
 
@@ -597,6 +597,7 @@
 - ⛔ Evidence пустой → шаг не зачтён; заполни или вернись.
 - ⛔ Confidence < 80% хотя бы по одному свойству → план не готов; вернись и закрой gap ИЛИ явно эскалируй в OPEN-QUESTIONS с рекомендацией.
 - ⛔ **#4 (Без регрессий) — минимум 95%** (override общего 80% порога). Регрессии — асимметричный риск: cost поломки adjacent paths выше потенциальной пользы. <95% = блок до выполнения adjacent grep полностью ИЛИ явного N/A с обоснованием (для doc-only / methodology-rule / typo-fix задач где adjacent paths логически отсутствуют).
+- ⛔ **Test isolation ≠ production reality.** Если confidence (особенно #5) опирается на test results — verify что тест-матрица включает PRODUCTION CONFIGURATION (combined mechanisms работающие одновременно), не только isolated mechanism testing. Изоляция → false high confidence; реальность раскрывается только при первом production-config запуске.
 - ⛔ "100%" без конкретного evidence = самообман; снижай % или дополни evidence.
 - 80-99% — норма, если evidence конкретен и риски записаны в Шаг 3 "Риски".
 
@@ -624,9 +625,10 @@
    - ✅ Перед G-030 fix grep "this repo" / "Methodology Platform" по commands/ + templates/ — подтвердил отсутствие stale references
    - ❌ Изменили handler, не проверили параллельные branches в других commands
 
-5. **Forward-thinking** — предвидение поведения + use case variations
+5. **Forward-thinking** — предвидение поведения + use case variations + integration testing
    - ✅ SYSTEM-MAP v1.9 — variations покрыты: /architecture-audit Round 3 не потратит цикл на drift; Lint-7 preventive в каждом /code; **non-obvious use case:** если кто-то добавит ARTIFACT-MAP таблицу — Lint-7 сработает там тоже (single rule covers все табличные артефакты, не только Confidence Declaration)
    - ❌ Решили use case "fix Confidence таблица" но не подумали "что если кто-то меняет ARTIFACT-MAP таблицу или generic markdown table — нужно ли то же правило?" — non-obvious use case упущен; через 2 итерации придётся писать дубликат правила
+   - ❌ **VPS-тесты тестировали Function Calling (T2) и API endpoints (T1, T3) раздельно** — в T2 никогда не передавался `google_search` одновременно с `_CHAT_TOOLS`. Constraint «нельзя вместе» не был в тест-матрице → 99% confidence ложна при первом production-config запуске. **Класс:** «tested isolated mechanisms, not combined production configuration» — изоляция даёт false high confidence
 
 6. **All aspects covered** — смежные зоны + thread-pulling зависимостей
    - ✅ Меняя описание /plan свойств — thread-pulled все места: /review Confidence Audit (другой формат, не дубль), /architecture-audit S-* блоки (per-recommendation, не дубль), templates/* (нет упоминаний spec), DEVLOG/AGENT-GAPS (историческое, не зависимость) — потянул все ниточки прежде чем закрыть scope
