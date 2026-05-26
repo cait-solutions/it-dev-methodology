@@ -16,10 +16,21 @@ mode: team
 production_branch: main
 agent_branch: ai-dev
 integration_branch: main
-pr_tool: manual
+pr_tool: auto-merge
+auto_deploy: true
 ```
 
-Dog-fooding: methodology itself uses team-mode to validate the branching contract. Since it is a single-owner project, `integration_branch: main` (no separate dev branch). Agent commits to `ai-dev`, `/deploy` outputs PR URL, owner self-merges.
+Dog-fooding: methodology itself uses team-mode to validate the branching contract. Since it is a single-owner project, `integration_branch: main` (no separate dev branch). `pr_tool: auto-merge` — `deploy-push.sh` creates PR and merges immediately via `gh`. `auto_deploy: true` — agent runs /deploy automatically after /code (Lite) or confirmed /review without separate prompt.
+
+---
+
+## Auto-deploy (this project only)
+
+`auto_deploy: true` — поведенческое правило для агента:
+- **Lite mode `/code`:** после self-lint passed → пропустить "Запустить /review?" → сразу запустить `bash scripts/deploy-push.sh` (push + PR + auto-merge)
+- **Full mode `/code` + подтверждённый `/review` (✅ merge):** сразу запустить `bash scripts/deploy-push.sh`
+- После deploy → `bash scripts/sync-methodology.sh .` (self-apply)
+- Не требует отдельного `/deploy` шага — он встроен в конец /code
 
 ---
 
