@@ -387,6 +387,12 @@
 Для каждого факта:
 - [ ] Подтверждено в реальном коде? (grep, файлы:строки)
 - [ ] Возраст < 30 дней или подтверждено независимым источником?
+- [ ] **ADR / design-spec drift check** (если задача касается ADR или design specs — `docs/adr/`, `docs/architecture/`, `docs/services/*/`):
+      `git log -1 --format=%ad <ADR-file>` vs `git log -1 --format=%ad <код-файл(ы)>`.
+      - Код **новее** ADR → возможен Type C/E
+      - ADR **новее** кода → возможен Type B
+      - Fallback (shallow clone): сравнить по file metadata
+      Findings → feed в Подшаг 2 классификацию ниже
 
 Если нет — **Type D**, отвергнуть.
 
