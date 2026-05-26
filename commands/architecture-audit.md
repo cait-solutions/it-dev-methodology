@@ -264,6 +264,8 @@ A: ✓/✗ | B: ✓/✗ | C: ✓/✗
 - Замещает: <список L1-3 правил из decommission>
 - Cost: <оценка>
 - PR draft: см. ниже
+- **Confidence:** Root cause confirmed: __% (N recurring, M addressed) | L4+ feasible: __% | Scope accurate: __% | Overall: __%
+- ⛔ Overall < 70% → status: `proposed-speculative` (не `proposed`)
 
 ### S-2: ...
 
