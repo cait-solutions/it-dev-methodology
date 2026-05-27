@@ -497,16 +497,24 @@
 - `classDef`/`style` копировать из оригинала только для затронутых nodes
 - Если в оригинале есть Legend node — включить как anchor
 - Не добавлять placeholder nodes (`TODO`, `...`, `etc.`)
+- 🗺 **USER-MAP draft**: потоки ДОЛЖНЫ включать outcome-артефакты — куда команда пишет результат (`DEVLOG.md`, `HYPOTHESES.md`, `RISKS.md`, `ROADMAP.md`, и т.п.), а не только следующий UI-шаг. Модель: `actor → trigger → flow → outcome-artifact`
 
-**Генерация URL (надёжный способ через stdin):**
+**Генерация URL:**
 
+Приоритет 1 — если `scripts/mermaid-link.py` доступен:
 ```bash
 py scripts/mermaid-link.py - << 'EOF'
 ```mermaid
-<mermaid-код затронутого scope>
+<мermaid-код затронутого scope>
 ```
 EOF
 ```
+
+Приоритет 2 — если скрипт не найден (например в consumer repo): сгенерировать URL **немедленно inline**, не спрашивать пользователя:
+1. Взять Mermaid-текст диаграммы (без обрамляющих ` ```mermaid ``` `)
+2. Обернуть в JSON: `{"code": "<mermaid-text>", "mermaid": {"theme": "default"}}`
+3. Сжать через zlib deflate уровень 9 → base64url (URL-safe base64 без `=`)
+4. Сформировать URL: `https://mermaid.live/edit#pako:<base64url>`
 
 *(read-only утилита — исключение из запрета на запуск команд в /plan)*
 

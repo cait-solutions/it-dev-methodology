@@ -201,7 +201,7 @@
 - [ ] Если `/plan` Шаг 1.65 создал `[DRAFT]` артефакты → финализировать каждый затронутый draft:
   1. Взять Mermaid-код из draft как основу; расширить до полной карты (все nodes/edges, не только touched scope)
   2. **Требования к финализированной полной карте:**
-     - 🗺 USER-MAP: все акторы проекта + все capabilities/flows (в т.ч. незатронутые); полная `subgraph` структура; `style` для всех nodes
+     - 🗺 USER-MAP: все акторы проекта + все capabilities/flows (в т.ч. незатронутые); полная `subgraph` структура; `style` для всех nodes; потоки ДОЛЖНЫ включать outcome-артефакты (`DEVLOG.md`, `HYPOTHESES.md`, `RISKS.md`, и т.п.) — модель `actor → trigger → flow → outcome-artifact`, не только UI-переходы
      - 🏗 SYSTEM-MAP: все architectural layers + все межслойные edges; Легенда с описанием arrow types
      - 📦 ARTIFACT-MAP: все команды + все артефакты; все edges (R/W/RW/C); `classDef` для всех категорий; Legend subgraph
   3. Запустить `py scripts/mermaid-link.py <file>` → обновить ссылку над блоком
