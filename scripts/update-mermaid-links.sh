@@ -189,7 +189,7 @@ def update_file(path):
                     print(f"  new: {new_line.rstrip()}")
                 else:
                     updated[existing_link_idx] = new_line
-                    print(f"UPDATED  STALE → fresh  {rel}:{block_start+1}")
+                    print(f"UPDATED  STALE -> fresh  {rel}:{block_start+1}")
                 changes += 1
             else:
                 # Missing — insert new link line above the block
@@ -205,7 +205,7 @@ def update_file(path):
                     updated.insert(block_start, new_link_line)
                     # Adjust i for the 3 inserted lines
                     i += 3
-                    print(f"UPDATED  MISSING → inserted  {rel}:{block_start+1}")
+                    print(f"UPDATED  MISSING -> inserted  {rel}:{block_start+1}")
                 changes += 1
 
         i += 1
