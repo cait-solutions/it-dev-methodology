@@ -176,10 +176,14 @@
    - [ ] Concurrency — есть race conditions если 2 процесса одновременно?
    - Для каждого: явно описать "если это не true — что сломается?"
 8. **Adjacent impact актуален:** смежные зоны из /plan Шаг -1.3 проверены? Если был затронут методологический артефакт (ARTIFACT-MAP и т.п.) — полный аудит всех стрелок/секций, не только изменённых *(closes G-001)*
-9. **[methodology] Mermaid изменён:** запустить обе команды (two-repo architecture):
-   - `bash scripts/validate-mermaid-links.sh` (methodology repo)
-   - `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation` (documentation repo — USER-MAP/SYSTEM-MAP/ARTIFACT-MAP)
-   MISSING_LINK или STALE_LINK = блок до фикса. URL_TOO_LONG = warning, не блок (mini/full паттерн)
+9. **[methodology] Mermaid изменён:** авто-обновить ссылки + валидировать:
+   ```bash
+   bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation
+   bash scripts/update-mermaid-links.sh  # methodology repo
+   bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation
+   bash scripts/validate-mermaid-links.sh
+   ```
+   MISSING_LINK или STALE_LINK после update = блок до ручного фикса. URL_TOO_LONG = warning, не блок (mini/full паттерн)
 
 Если хоть одна точка не пройдена → исправить до коммита.
 
@@ -206,7 +210,7 @@
      - 🗺 USER-MAP: все акторы проекта + все capabilities/flows (в т.ч. незатронутые); полная `subgraph` структура; `style` для всех nodes; потоки ДОЛЖНЫ включать outcome-артефакты (`DEVLOG.md`, `HYPOTHESES.md`, `RISKS.md`, и т.п.) — модель `actor → trigger → flow → outcome-artifact`, не только UI-переходы
      - 🏗 SYSTEM-MAP: все architectural layers + все межслойные edges; Легенда с описанием arrow types
      - 📦 ARTIFACT-MAP: все команды + все артефакты; все edges (R/W/RW/C); `classDef` для всех категорий; Legend subgraph
-  4. Запустить `py scripts/mermaid-link.py <file>` → обновить ссылку над блоком
+  4. Запустить `bash scripts/update-mermaid-links.sh <file>` → ссылка обновится автоматически
   5. Убрать маркер `[DRAFT]` из ссылки (в /plan Шаг 1.65 — draft ссылка отдельная, файл карты не трогается)
 
 **После деплоя (в /deploy):**
