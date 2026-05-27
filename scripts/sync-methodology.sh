@@ -170,6 +170,48 @@ EOF
   } > "$dest"
 }
 
+# inject_skill_banner: copy SKILL.md with banner metadata injected into YAML frontmatter.
+# YAML frontmatter MUST stay on line 1 (Agent Skills spec). Banner goes into metadata: block.
+# Replaces {{SYNCED_AT}} placeholder in the metadata block.
+inject_skill_banner() {
+  local src="$1"
+  local dest="$2"
+  # Replace {{SYNCED_AT}} placeholder with actual date; sed is Bash 3.2 safe.
+  sed "s/{{SYNCED_AT}}/$SYNCED_AT/g" "$src" > "$dest"
+}
+
+# sync_skills: copy skills/ directory to target .claude/skills/ with banner injection.
+# Skipped for self-apply (methodology IS the source).
+# Only copies skills/ if the directory exists in methodology.
+sync_skills() {
+  local target="$1"
+  if [[ ! -d "$METHODOLOGY_DIR/skills" ]]; then
+    return 0
+  fi
+  if compgen -G "$METHODOLOGY_DIR/skills/*" > /dev/null 2>&1; then
+    echo "→ skills/"
+    mkdir -p "$target/.claude/skills"
+    for skill_dir in "$METHODOLOGY_DIR/skills"/*/; do
+      [[ -d "$skill_dir" ]] || continue
+      skill_name="$(basename "$skill_dir")"
+      dest_dir="$target/.claude/skills/$skill_name"
+      mkdir -p "$dest_dir"
+      if [[ -f "$skill_dir/SKILL.md" ]]; then
+        inject_skill_banner "$skill_dir/SKILL.md" "$dest_dir/SKILL.md"
+        echo "  ✓ $skill_name/SKILL.md"
+      fi
+      # Copy any additional files in skill dir (e.g., examples/, README)
+      for extra in "$skill_dir"/*; do
+        [[ -f "$extra" ]] || continue
+        fname="$(basename "$extra")"
+        [[ "$fname" == "SKILL.md" ]] && continue
+        cp "$extra" "$dest_dir/$fname"
+        echo "  ✓ $skill_name/$fname"
+      done
+    done
+  fi
+}
+
 # sync_claude_canonical: overwrite CLAUDE.md with canonical methodology rules.
 # On first run: if CLAUDE.md exists without banner, migrate project content to CLAUDE.local.md.
 sync_claude_canonical() {
@@ -374,6 +416,14 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
 fi
 
 # ---------------------------------------------------------------------------
+# Skills — always overwrite (canonical source is methodology skills/).
+# Skipped for self-apply (methodology IS the source).
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]]; then
+  sync_skills "$TARGET_DIR"
+fi
+
+# ---------------------------------------------------------------------------
 # Scripts — universal infrastructure, always overwrite (consumer only).
 # Copies templates/scripts/* to target/scripts/. Skipped for self-apply because
 # scripts/ in the methodology repo is the canonical source, not a copy.
@@ -488,7 +538,7 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "$IS_SELF_APPLY" == "false" ]]; then
   _gi="$TARGET_DIR/.gitignore"
-  _required=(".claude/commands/" ".claude/hooks/" ".claude/model-tiers.md" ".claude/.version" ".claude/state/")
+  _required=(".claude/commands/" ".claude/hooks/" ".claude/skills/" ".claude/model-tiers.md" ".claude/.version" ".claude/state/")
   _missing=()
   if [[ -f "$_gi" ]]; then
     for entry in "${_required[@]}"; do
