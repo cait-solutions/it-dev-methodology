@@ -34,10 +34,24 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Argument parsing (no flags — simple positional arguments).
+# Argument parsing.
+# Usage: new-project-init.sh <project-name> [target-dir] [--with-marketing]
+#   --with-marketing  Also copy marketing skills (.claude/skills/) and MARKETING.md template.
 # ---------------------------------------------------------------------------
-PROJECT_NAME="${1:?Usage: $0 <project-name> [target-dir]}"
-TARGET_DIR="${2:-./$PROJECT_NAME}"
+WITH_MARKETING=false
+PROJECT_NAME=""
+TARGET_DIR=""
+for arg in "$@"; do
+  case "$arg" in
+    --with-marketing) WITH_MARKETING=true ;;
+    *) if [[ -z "$PROJECT_NAME" ]]; then PROJECT_NAME="$arg"; elif [[ -z "$TARGET_DIR" ]]; then TARGET_DIR="$arg"; fi ;;
+  esac
+done
+if [[ -z "$PROJECT_NAME" ]]; then
+  echo "Usage: $0 <project-name> [target-dir] [--with-marketing]" >&2
+  exit 1
+fi
+TARGET_DIR="${TARGET_DIR:-./$PROJECT_NAME}"
 
 METHODOLOGY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
@@ -86,6 +100,14 @@ EOF
   } > "$dest"
 }
 
+# inject_skill_banner: copy SKILL.md with {{SYNCED_AT}} substituted in metadata block.
+# YAML frontmatter must stay on line 1 — banner goes inside metadata: field.
+inject_skill_banner() {
+  local src="$1"
+  local dest="$2"
+  sed "s/{{SYNCED_AT}}/$SYNCED_AT/g" "$src" > "$dest"
+}
+
 # ---------------------------------------------------------------------------
 # Slash commands.
 # ---------------------------------------------------------------------------
@@ -132,6 +154,36 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
     esac
     echo "  ✓ $dest_name"
   done
+fi
+
+# ---------------------------------------------------------------------------
+# Skills — copied only when --with-marketing flag is set.
+# Marketing skills require MARKETING.md; not all projects need them.
+# ---------------------------------------------------------------------------
+if [[ "$WITH_MARKETING" == "true" ]] && [[ -d "$METHODOLOGY_DIR/skills" ]]; then
+  if compgen -G "$METHODOLOGY_DIR/skills/*" > /dev/null 2>&1; then
+    echo "→ skills/ (--with-marketing)"
+    mkdir -p "$TARGET_DIR/.claude/skills"
+    for skill_dir in "$METHODOLOGY_DIR/skills"/*/; do
+      [[ -d "$skill_dir" ]] || continue
+      skill_name="$(basename "$skill_dir")"
+      dest_dir="$TARGET_DIR/.claude/skills/$skill_name"
+      mkdir -p "$dest_dir"
+      if [[ -f "$skill_dir/SKILL.md" ]]; then
+        inject_skill_banner "$skill_dir/SKILL.md" "$dest_dir/SKILL.md"
+        echo "  ✓ $skill_name/SKILL.md"
+      fi
+    done
+    # Also add MARKETING.md template if missing
+    if [[ -f "$METHODOLOGY_DIR/templates/MARKETING.template.md" ]]; then
+      if [[ ! -f "$TARGET_DIR/MARKETING.md" ]]; then
+        sed "s/{{Project Name}}/$PROJECT_NAME/g" "$METHODOLOGY_DIR/templates/MARKETING.template.md" > "$TARGET_DIR/MARKETING.md"
+        echo "  ✓ MARKETING.md (added from template)"
+      else
+        echo "  - MARKETING.md (exists — preserved)"
+      fi
+    fi
+  fi
 fi
 
 # ---------------------------------------------------------------------------
