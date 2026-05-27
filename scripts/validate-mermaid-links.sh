@@ -117,8 +117,8 @@ def check_file(path):
 
                 if url_len > 2000:
                     print("WARNING  URL_TOO_LONG  {}:{} (len={})".format(path, block_start + 1, url_len))
-                    print("         Consider two-diagram pattern: overview (<2000 chars) + full (copy-paste)")
-                    print("         See templates/ARTIFACT-MAP.template.md for example")
+                    print("         Simplify diagram (remove style lines) to fit under 2000 chars.")
+                    print("         See CLAUDE.md Mermaid link rule for guidance.")
                     print()
                     warnings += 1
                 elif found_url is None:
