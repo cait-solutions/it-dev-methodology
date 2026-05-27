@@ -99,10 +99,18 @@ See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) for rationale.
 
 ```yaml
 origin_url: https://github.com/<owner>/<repo>.git   # canonical remote URL for this repo
+push_token_owner: <github-username-with-write-access>  # who must have write access for git push to succeed
 ```
 
 Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mismatch) and `/deploy` (validates before push).
 **Tokens:** store in OS credential manager (`gh auth login` / `git credential manager`). Never put tokens in this file.
+
+**`push_token_owner`:** при 403/credential failure агент выведет это имя в сообщении пользователю чтобы было понятно какой аккаунт нужно авторизовать.
+
+> **Existing projects (migration):** если CLAUDE.local.md уже создан без этого поля — добавь вручную:
+> ```yaml
+> push_token_owner: <github-username-with-write-access>
+> ```
 
 ---
 
