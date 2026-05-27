@@ -86,8 +86,18 @@ def check_file(path):
     errors = 0
     warnings = 0
     i = 0
+    in_code_fence = False
     while i < len(lines):
-        if lines[i].rstrip('\n').strip() == '```mermaid':
+        stripped = lines[i].rstrip('\n').strip()
+        if not in_code_fence and stripped.startswith('```') and stripped != '```mermaid':
+            in_code_fence = True
+            i += 1
+            while i < len(lines) and lines[i].rstrip('\n').strip() != '```':
+                i += 1
+            in_code_fence = False
+            i += 1
+            continue
+        if stripped == '```mermaid':
             block_start = i
             i += 1
             block_lines = []
