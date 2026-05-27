@@ -71,6 +71,20 @@ node_to_artifact() {
     esac
 }
 
+# Verified W-only edges: command mentions artifact but does NOT read it as semantic input.
+# Format: "SRC-->TGT" (no spaces). Add here after manual verification.
+VERIFIED_W="
+Deploy-->DL
+Arch-->DL
+PReview-->PROD
+SyncV-->OQ
+SyncV-->DL
+"
+
+is_verified_w() {
+    echo "$VERIFIED_W" | grep -qF "$1-->$2"
+}
+
 errors=0
 checked=0
 
@@ -116,6 +130,9 @@ while IFS= read -r line; do
     grep -Eqi -- "$artifact" "$full_path" 2>/dev/null && artifact_in_file=1
 
     if [ "$artifact_in_file" -eq 1 ]; then
+        if is_verified_w "$src" "$tgt"; then
+            continue
+        fi
         has_read_context=0
         grep -Eqi -- "Читает|читать|прочитать" "$full_path" 2>/dev/null && has_read_context=1
         if [ "$has_read_context" -eq 1 ]; then
