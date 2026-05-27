@@ -34,6 +34,16 @@ Dog-fooding: methodology itself uses team-mode to validate the branching contrac
 
 ---
 
+## Consumer repos — READ ONLY
+
+❌ **НИКОГДА не коммитить, не пушить, не изменять файлы** в consumer репо:
+- `erp-documentantion/` (и любые sibling repos не являющиеся `it-dev-methodology` или `it-dev-methodology-documentation`)
+- Consumer repos используются ТОЛЬКО для чтения (анализ паттернов, диагностика)
+- Все изменения только в `it-dev-methodology/` и `it-dev-methodology-documentation/`
+- Перед `git add` / `git commit` — проверить что cwd находится в одном из двух разрешённых репо
+
+---
+
 ## Remotes
 
 ```yaml
