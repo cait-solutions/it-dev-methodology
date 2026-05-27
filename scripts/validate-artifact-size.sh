@@ -68,6 +68,11 @@ DEFAULT_BUDGETS = {
     'PRODUCT.md': 16000,
     'docs/product/USER-MAP.md': 16000,
     'docs/architecture/SYSTEM-MAP.md': 16000,
+    # Команды методологии — контроль разрастания (VISION Ось 5 Enforcement).
+    # Превышение = кандидат на cut-not-add разбор в /review. Агент скимит длинную
+    # команду → ценные шаги тонут (тот же класс что PROMPT_BLOAT у runtime-промптов).
+    'commands/*.md': 24000,
+    '.claude/commands/*.md': 24000,
 }
 
 # Маркеры подавления tool invocation — высокая плотность = prompt bloat сигнал.
