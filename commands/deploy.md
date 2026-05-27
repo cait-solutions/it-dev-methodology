@@ -151,6 +151,29 @@ git push origin {agent_branch}:{agent_branch}
 
 PR title: взять последнюю строку DEVLOG (что: ...). Human reviews → merge в `integration_branch`.
 
+**Credential failure protocol (при 403 / "Write access denied" / TTY error / "No such device"):**
+
+⛔ **СТОП немедленно. НЕ пробовать другие токены из `.git-credentials` или других источников.**
+
+Вывести пользователю:
+```
+git push failed: нет write-access для {origin_url}
+Нужен токен с правами repo:write для {owner}/{repo}
+
+Варианты:
+  a) gh auth login → повторить /deploy
+  b) добавить токен вручную:
+     git remote set-url origin https://<user>:<pat>@github.com/<owner>/<repo>.git
+     затем повторить /deploy
+  c) добавить агента как collaborator в GitHub Settings → Collaborators
+
+push_token_owner (из CLAUDE.local.md): {push_token_owner или "не указан"}
+```
+
+Записать в DEVLOG: `[deploy-blocked:credentials] — push к {origin_url} заблокирован, нет write-access`
+
+Ждать решения пользователя. Не переходить к smoke test. Не продолжать деплой.
+
 ---
 
 ## Шаг 3.1 — Selftest (если есть)
@@ -208,11 +231,9 @@ PR title: взять последнюю строку DEVLOG (что: ...). Human
 - **team:** `git log -1 --oneline origin/{agent_branch}` — `agent_branch` опубликован?
 
 Если ДА → ✅ push succeeded
-Если НЕТ → ⚠️ push failed или не произошёл:
-  - Если код ошибки **403/404** → **сначала** проверить `memory/*.md` + DEVLOG последние 7 дней на known issues с этим remote URL — задокументированный known issue исключает полный diagnostic chain (G-026)
-  - solo retry: `git push origin {agent_branch}:{production_branch}`
-  - team retry: `git push origin {agent_branch}:{agent_branch}`
-  - Если fails → сохранить error message в DEVLOG `[async-failure:git-push]`
+Если НЕТ → ⚠️ push не прошёл:
+  - Если причина **403 / TTY error** → это credential failure; протокол уже отработал в Шаг 3.1 (СТОП + сообщение пользователю). Здесь только подтвердить что коммит не ушёл.
+  - Иные причины (network timeout, remote unavailable) → сохранить error в DEVLOG `[async-failure:git-push]`
   - ⛔ НЕ продолжать если git push failed
 
 ### Подшаг 2 — CI/CD trigger (если применимо)
