@@ -171,6 +171,15 @@ graph LR
     PVision ===|"план"| RM
     SyncV   ===|"sync vs реальность"| VI
 
+    %% --- RW: triggers.json (читают все команды, пишут при завершении) ---
+    Plan    ===|"счётчики + сессия"| TJ
+    Deploy  ===|"last_deploy"| TJ
+    PCheck  ===|"last_product_check"| TJ
+    Retro   ===|"last_retro"| TJ
+    Arch    ===|"last_architecture_audit"| TJ
+    PVision ===|"last_product_vision"| TJ
+    SyncV   ===|"last_sync_vision"| TJ
+
     %% --- R: читает как input (-.->), только те что не покрыты RW выше ---
     %% /plan
     VI    -.->|"стратег. контекст"| Plan
@@ -209,9 +218,8 @@ graph LR
         C1(( )):::legend --x|"C · закрывает"| C2(( )):::legend
     end
 
-    %% RW (===) edge indices: 18-22 (Code), 26 (Retro), 28-36 в основной схеме, 56 в легенде
-    %% (legend сдвинулся с 54 на 56 после добавления AG-.->Arch и Retro-.->Arch в v4.3.0)
-    linkStyle 18,19,20,21,22,26,28,29,30,31,32,33,34,35,36,56 stroke:#ff8c00,stroke-width:3px
+    %% RW (===) edge indices: 18-22 (Code×5), 26 (Retro→ID), 28-36 (RW block), 37-43 (TJ block), 63 (Legend)
+    linkStyle 18,19,20,21,22,26,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,63 stroke:#ff8c00,stroke-width:3px
 ```
 
 > **Легенда:** `-->` пишет (W) · `-.->` читает (R) · `===` читает+пишет (RW, оранжевый) · `--x` закрывает (C) · Артефакт без входящих стрелок = кандидат на рудимент
