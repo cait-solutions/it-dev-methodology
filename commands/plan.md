@@ -469,6 +469,35 @@
 
 **Draft = touched scope only:** только nodes/edges затронутые планом + минимальные anchor nodes для контекста. Не генерировать полную карту.
 
+**Требования к содержимому draft (per-map):**
+
+🗺 **USER-MAP draft:**
+- Graph direction: `graph TD`
+- Anchor nodes (обязательно): акторы (`Dev`, `PM` или аналоги проекта) + затронутые `subgraph`-ы
+- Включить: nodes/edges затронутые планом + 1 уровень прямых связей для контекста
+- Модель edges: `actor → trigger → entity/flow → outcome` — сохранять label-текст стрелок
+- Style: сохранить `fill`/`stroke` для затронутых nodes; несмежные subgraph-ы не включать
+- Лимит: ~15 nodes; если больше — сократить до прямо затронутых + их акторов
+
+🏗 **SYSTEM-MAP draft:**
+- Graph direction: `graph TB`
+- Anchor nodes (обязательно): изменённый layer (subgraph) + все layers с которыми есть прямые edges в scope плана
+- Включить: изменённый layer + его прямые in/out edges; arrow types строго: `-->` копирование, `-.->` runtime read, `==>` runtime write, `--o` git
+- Исключить: layers без изменений И без связей с изменёнными
+
+📦 **ARTIFACT-MAP draft:**
+- Graph direction: `graph LR`
+- Anchor nodes (обязательно): команда-источник изменения + все затронутые артефакты + легенда (Legend subgraph если есть в оригинале)
+- Включить: новые/изменённые edges + существующие edges между теми же nodes
+- Arrow types строго: `-->` W (пишет), `-.->` R (читает), `===` RW (читает+пишет), `--x` C (закрывает)
+- `classDef` скопировать из оригинала для затронутых nodes
+
+**Общие правила для всех draft:**
+- EN node IDs, RU/emoji labels — как в оригинале карты
+- `classDef`/`style` копировать из оригинала только для затронутых nodes
+- Если в оригинале есть Legend node — включить как anchor
+- Не добавлять placeholder nodes (`TODO`, `...`, `etc.`)
+
 **Генерация URL (надёжный способ через stdin):**
 
 ```bash
