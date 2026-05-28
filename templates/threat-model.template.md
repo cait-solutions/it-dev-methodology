@@ -36,9 +36,11 @@ Browser (untrusted) → [Auth Provider] → Frontend → [API Gateway] → Servi
 | Актив | Ценность | Где хранится | Кто имеет доступ |
 |---|---|---|---|
 | <Персональные данные пользователей> | Высокая | <таблица / сервис> | <роли> |
-| <API-ключи внешних сервисов> | Критическая | `.env` / secret manager | <окружения> |
+| <API-ключи внешних сервисов> | Критическая | `.env` (canonical) / `~/.config/it-dev/secrets.env` (shared) / external manager (Vault/AWS/etc.) — см. [skills/secrets-management/SKILL.md](../skills/secrets-management/SKILL.md) | <окружения> |
 | <JWT / session tokens> | Высокая | <client storage> | <issuer + verifier> |
 | | | | |
+
+> **v4.34.0+ note:** methodology platform даёт 4-слойную защиту для секретов в `.env`: (1) `settings.json` Read+Bash deny (L5 tool permission), (2) `bash_protect.py` env-dump patterns (L4), (3) `secrets-guard.py` commit-time hook (L4), (4) `/review` token detector (L4). См. CLAUDE.md секцию Secrets & Credentials и ADR-001.
 
 ---
 

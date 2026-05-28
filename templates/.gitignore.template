@@ -37,7 +37,18 @@ __pycache__/
 .Python
 env/
 venv/
+
+# Secrets (managed via methodology secrets-management — see skills/secrets-management/)
+# Canonical store: .env (per-project) + ~/.config/it-dev/secrets.env (shared).
+# Whitelist: .env.example, .env.*.template (templates are safe to commit).
+# NEVER remove these lines without rotating affected tokens first.
 .env
+.env.*
+!.env.example
+!.env.*.template
+secrets.local.*
+.env.lock
+.env.tmp.*
 
 # Node
 node_modules/

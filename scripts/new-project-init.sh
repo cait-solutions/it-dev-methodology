@@ -262,6 +262,25 @@ copy_with_subst "$METHODOLOGY_DIR/templates/HYPOTHESES.template.md"      "$TARGE
 copy_with_subst "$METHODOLOGY_DIR/templates/RISKS.template.md"           "$TARGET_DIR/RISKS.md"
 
 # ---------------------------------------------------------------------------
+# Secrets foundation (v4.34.0+).
+# .env.example and secrets-manifest.yaml are CANONICAL — overwritten on init.
+# .env itself is NEVER created by init — user copies from .env.example and
+# fills values via `bash scripts/set-secret.sh KEY <value>`.
+# ---------------------------------------------------------------------------
+echo "→ secrets foundation/"
+if [[ -f "$METHODOLOGY_DIR/templates/.env.example.template" ]]; then
+  copy_with_subst "$METHODOLOGY_DIR/templates/.env.example.template" "$TARGET_DIR/.env.example"
+fi
+if [[ -f "$METHODOLOGY_DIR/templates/secrets-manifest.yaml.template" ]]; then
+  mkdir -p "$TARGET_DIR/.claude"
+  if [[ -f "$TARGET_DIR/.claude/secrets-manifest.yaml" ]]; then
+    echo "  - .claude/secrets-manifest.yaml (exists — preserved; manual review for new manifest_version)"
+  else
+    copy_with_subst "$METHODOLOGY_DIR/templates/secrets-manifest.yaml.template" "$TARGET_DIR/.claude/secrets-manifest.yaml"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Vision — both single-tier and multi-tier structures created.
 # Solo-dev projects use VISION.md; multi-service projects use docs/vision/
 # ---------------------------------------------------------------------------

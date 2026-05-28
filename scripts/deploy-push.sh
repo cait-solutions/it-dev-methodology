@@ -43,6 +43,14 @@ echo "  production_branch:  $PRODUCTION_BRANCH"
 [[ "$MODE" == "team" ]] && echo "  pr_tool:            $PR_TOOL"
 echo ""
 
+# Authentication note:
+# This script uses plain `git push` — git itself handles credentials via the
+# configured credential helper. For HTTPS remotes, recommended setup (v4.34.0+):
+#   git config credential.<remote-host>.helper \
+#     "!bash $(pwd)/scripts/git-credential-from-env.sh"
+# This way the GITHUB_PAT (or analog) is read from .env without the agent
+# ever seeing the value. See skills/secrets-management/SKILL.md for details.
+
 if [[ "$MODE" == "team" ]]; then
   echo "▶ Team mode → git push origin ${AGENT_BRANCH}:${AGENT_BRANCH}"
   git push origin "${AGENT_BRANCH}:${AGENT_BRANCH}"
