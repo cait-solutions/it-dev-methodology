@@ -64,7 +64,11 @@
 
 ---
 
-## Шаг 2а — Agent Gaps signal (lightweight)
+## Шаг 2а — Gaps signal (lightweight, два класса)
+
+Два namespace gap'ов — два signal раздельно. AGENT-GAPS = methodology signal, PRODUCT-GAPS = product roadmap signal.
+
+### 2а.1 — AGENT-GAPS signal (methodology)
 
 Прочитать `AGENT-GAPS.md` (если существует).
 
@@ -77,28 +81,63 @@
 **Если файл существует:**
 
 1. Посчитать total / open / addressed / wont-fix
-2. Группировать open по `Категория`
+2. Группировать open по `Категория` (prompt-gap / context-gap / assumption-gap / logic-gap / state-stale)
 3. Сравнить с прошлым `/retro` — выросло / упало / стабильно?
 
 Вывод (короткий, без анализа паттернов):
 
 ```
-## Agent Gaps signal
+## AGENT-GAPS signal (methodology)
 Total: N  | Open: K  | Addressed: M  | Wont-fix: L
 Изменение с прошлого /retro: +ΔN (или = / -ΔN)
 
 Топ-3 открытых категорий:
 - context-gap × 3
-- completeness-gap × 1
+- prompt-gap × 1
 - ...
 ```
 
-### Структурный сигнал → /architecture-audit
-
-Условия эскалации в `/architecture-audit`:
-
+**Структурный сигнал → /architecture-audit:**
 - `open + addressed` любой одной категории **≥ 3** → 🔬 «достаточно данных для pattern analysis, запусти /architecture-audit для Level 4+ ladder»
 - `agent_gaps_open_count` **≥ 10** → 🔬 «накопилась критическая масса, /architecture-audit обязателен в ближайший /plan»
+
+### 2а.2 — PRODUCT-GAPS signal (product roadmap)
+
+Прочитать `PRODUCT-GAPS.md` (если существует).
+
+**Если файл отсутствует:**
+```
+⚠️ PRODUCT-GAPS.md не найден. Если у тебя реальный продукт — создай из templates/PRODUCT-GAPS.md.template
+   или запусти sync-methodology.sh. Пропускаю signal.
+```
+
+**Если файл существует:**
+
+1. Посчитать total / open / in-roadmap / wont-fix / resolved
+2. Группировать open по **Severity** (🔴 High / 🟡 Medium / 🟢 Low) + по **Категория** (feature/capability/ux/integration/edge-case)
+3. Сравнить с прошлым `/retro` — выросло / упало?
+
+Вывод:
+
+```
+## PRODUCT-GAPS signal (product roadmap)
+Total: P  | Open: K  | In-roadmap: M  | Wont-fix: L  | Resolved: R
+
+Severity distribution (open):
+- 🔴 High × N
+- 🟡 Medium × M
+- 🟢 Low × K
+
+Топ-3 категорий:
+- feature-gap × X
+- edge-case-gap × Y
+- ux-gap × Z
+```
+
+**Структурный сигнал → /product-review:**
+- 🔴 High **≥ 3** open → 🔬 «накопились High-severity gap'ы, запусти /product-review для приоритизации в ROADMAP»
+- `product_gaps_open_count` **≥ 5** → 🔬 «product backlog растёт, /product-review для batch обработки»
+- /product-review должен учитывать PRODUCT-GAPS вместе с IDEAS (IDEAS = raw signal, PRODUCT-GAPS = classified)
 
 `/retro` **не анализирует** паттерны сам — это работа `/architecture-audit` Шаг 4-9.
 
