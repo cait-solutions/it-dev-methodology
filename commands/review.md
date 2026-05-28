@@ -1,6 +1,6 @@
 # /review — Архитектурное ревью
 
-> **Цель:** последняя проверка перед merge — архитектурные нарушения, регрессии adjacent paths, class-bugs, sync validators (PRODUCT/USER-MAP/SYSTEM-MAP/ARTIFACT-MAP/ADR), документация. НЕ стиль, НЕ форматирование, НЕ автор — независимый критик. Output: 🔴 fix now / 🟡 disposition tagged / 🔵 Recommendation / ✅ merge.
+> **Цель:** последняя проверка перед merge — архитектурные нарушения, регрессии adjacent paths, class-bugs, sync validators (PRODUCT/USER-MAP/SYSTEM-MAP/ARTIFACT-MAP/ADR), документация. НЕ стиль, НЕ форматирование, НЕ автор — независимый критик. Output: 🔴 fix now / 🔵 Suggestion (с disposition tag) / ✅ merge.
 
 Ты — строгий критик кода, не автор. Ищешь нарушения архитектурных контрактов, не стилистические мелочи.
 
@@ -265,14 +265,13 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 
 **Правило: каждый finding требует явного disposition.**
 
-| Секция | Тег | Когда использовать |
-|---|---|---|
-| 🟡 | `deploy action` | git-операция, DEVLOG-запись и т.п. — обработать при /deploy |
-| 🟡 | `fix now` | блокирует merge — исправить до коммита |
-| 🟡 | `deferred` | не исправляем сейчас, причина + DEVLOG |
-| 🔵 | `quick win` | < 2 мин — исправляю в /code прямо сейчас |
-| 🔵 | `backlog` | → IDEAS.md `[reviewed:suggestion]` |
-| 🔵 | `deferred` | → DEVLOG `[suggestion-deferred:reason]` |
+| Тег | Когда использовать |
+|---|---|
+| `deploy action` | git-операция, DEVLOG-запись и т.п. — обработать при /deploy |
+| `fix now` | блокирует merge — исправить до коммита |
+| `quick win` | < 2 мин — исправляю в /code прямо сейчас |
+| `backlog` | → IDEAS.md `[reviewed:suggestion]` |
+| `deferred` | не исправляем сейчас, причина + DEVLOG / `[suggestion-deferred:reason]` |
 
 Все findings ДОЛЖНЫ иметь disposition. Без disposition — review не завершён.
 
@@ -291,12 +290,9 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 **Рекомендация:** [конкретно что исправить]
 **Если merge as-is:** [конкретный сценарий поломки]
 
-### 🟡 Предупреждения
+### 🔵 Suggestions
 - [описание] — **deploy action**: [что сделать при /deploy]
 - [описание] — **fix now**: [конкретный фикс]
-- [описание] — **deferred**: [причина]
-
-### 🔵 Suggestions
 - [описание] — **quick win**, исправляю в /code
 - [описание] — **backlog**: IDEAS.md `[reviewed:suggestion]`
 - [описание] — **deferred**: [причина]
@@ -309,7 +305,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - [что проверено и соответствует правилам — информация, не чеклист]
 
 ### Автоматически пофиксено (если применимо)
-- [список 🟡/🔵 которые уже исправлены — не требуют действий]
+- [список 🔵 которые уже исправлены — не требуют действий]
 
 ### Confidence Audit
 
@@ -318,13 +314,13 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - **Overall confidence:** __% — [что именно верифицировано: системность / регрессии / scope]
 - **Главный риск остаётся:** [или "нет" если все критические закрыты]
 
-⛔ Если < 80% — добавить в 🔴 или 🟡 с конкретным action before merge.
+⛔ Если < 80% — добавить в 🔴 (критическое) или 🔵 с тегом `fix now` с конкретным action before merge.
 
 ---
 
 ### Итог
 
-**Статус:** [🔴 не merge / 🟡 merge с условиями / ✅ merge]
+**Статус:** [🔴 не merge / 🔵 merge с условиями (fix-now/deploy-action) / ✅ merge]
 
 **Plan:** [N] fix-now · [N] deploy-action · [N] quick-win · [N] backlog · [N] deferred
 
