@@ -7,16 +7,14 @@
 # Exit 0 = clean; Exit 1 = MISSING_LINK or STALE_LINK found
 #
 # Checks per ```mermaid block:
-#   MISSING_LINK — no mermaid.live link within 5 lines above the block (only if URL ≤ 2000 chars)
+#   MISSING_LINK — no mermaid.live link within 5 lines above the block
 #   STALE_LINK   — existing link URL does not match regenerated URL for current code
-#   URL_TOO_LONG — regenerated URL > 2000 chars (warning only — no exit 1)
 #
 # Skips:
 #   *.template.md files (placeholder URLs, not deployed content)
 #   consumers/       (external project reference snapshots)
 #   .git/            (always)
 #   blocks with TODO: in code (unfilled placeholders)
-#   blocks where expected URL > 2000 for MISSING_LINK (copy-paste workflow is correct)
 
 set -e
 
@@ -84,7 +82,6 @@ def check_file(path):
         return 0, 0
 
     errors = 0
-    warnings = 0
     i = 0
     in_code_fence = False
     while i < len(lines):
@@ -113,15 +110,8 @@ def check_file(path):
                 found_url = m.group(1) if m else None
 
                 expected_url = encode_mermaid(code)
-                url_len = len(expected_url)
 
-                if url_len > 2000:
-                    print("WARNING  URL_TOO_LONG  {}:{} (len={})".format(path, block_start + 1, url_len))
-                    print("         Simplify diagram (remove style lines) to fit under 2000 chars.")
-                    print("         See CLAUDE.md Mermaid link rule for guidance.")
-                    print()
-                    warnings += 1
-                elif found_url is None:
+                if found_url is None:
                     print("ERROR    MISSING_LINK  {}:{}".format(path, block_start + 1))
                     print("         No mermaid.live link found within {} lines above block.".format(WINDOW))
                     print("         Fix: py scripts/mermaid-link.py \"{}\"".format(path))
@@ -136,7 +126,7 @@ def check_file(path):
 
         i += 1
 
-    return errors, warnings
+    return errors
 
 
 def find_md_files(root):
@@ -150,24 +140,16 @@ def find_md_files(root):
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else '.'
     total_errors = 0
-    total_warnings = 0
     file_count = 0
     for path in find_md_files(root):
         file_count += 1
-        e, w = check_file(path)
-        total_errors += e
-        total_warnings += w
+        total_errors += check_file(path)
 
     print("Checked: {} .md files".format(file_count))
     print()
     if total_errors > 0:
         print("FAIL: {} error(s) found (MISSING_LINK or STALE_LINK)".format(total_errors))
-        if total_warnings > 0:
-            print("WARN: {} warning(s) (URL_TOO_LONG)".format(total_warnings))
         sys.exit(1)
-    elif total_warnings > 0:
-        print("WARN: {} warning(s) (URL_TOO_LONG) — not blocking".format(total_warnings))
-        sys.exit(0)
     else:
         print("OK: All Mermaid blocks have valid mermaid.live links.")
         sys.exit(0)

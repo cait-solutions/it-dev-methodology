@@ -98,13 +98,6 @@ def main() -> None:
 
     for code in codes:
         url = encode_mermaid(code)
-        if len(url) > 2000:
-            print(
-                f"⚠️  URL length {len(url)} > 2000 — Windows ShellExecute limit (~2048).\n"
-                "   Clicking this link in Windows apps may open a search engine instead of the browser.\n"
-                "   Workaround: pipe to clip and paste manually:  py scripts/mermaid-link.py <file> | clip",
-                file=sys.stderr,
-            )
         print(url)
 
 

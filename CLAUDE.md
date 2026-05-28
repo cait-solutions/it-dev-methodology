@@ -1,0 +1,320 @@
+# CLAUDE.md — methodology-platform
+
+Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md](CLAUDE_LONG.md).
+
+> **Convention:** CLAUDE.md = WHAT (rules). CLAUDE_LONG.md = WHY (rationale, edge cases, examples).
+
+**Project type:** `methodology-platform` — особый. Это продукт методологии для других проектов. Runtime-проверки неприменимы. Применимы: контракты команд, валидность скриптов, кросс-ссылки артефактов.
+
+---
+
+## Read before work
+
+1. [VISION.md](VISION.md) перед каждым `/plan`
+2. [PRODUCT.md](PRODUCT.md) — что методология обещает консьюмерам
+3. [SYSTEM-MAP.md](../it-dev-methodology-documentation/docs/architecture/SYSTEM-MAP.md) — связи компонентов
+4. [USER-MAP.md](../it-dev-methodology-documentation/docs/product/USER-MAP.md) — пользовательские потоки и capabilities
+5. [ARTIFACT-MAP.md](../it-dev-methodology-documentation/docs/product/ARTIFACT-MAP.md) — артефакты и их владельцы
+
+---
+
+## Architecture invariants (MUST / MUST NOT)
+
+Методология = 6 слоёв (см. [SYSTEM-MAP.md](../it-dev-methodology-documentation/docs/architecture/SYSTEM-MAP.md)): команды / шаблоны / хуки / агенты-скелеты / скрипты / **skills** (Agent Skills, knowledge-domain).
+
+**MUST:**
+- `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/`, `skills/` — единственный источник правды (синхронизируются консьюмерам)
+- `commands-local/` — methodology-only команды (НЕ синхронизируются консьюмерам; пример: `/pull-consumers`)
+- Любая правка синхронизируемого артефакта → bump VERSION
+- При изменении схемы `triggers.json.template` → мажор bump
+- `skills/*/SKILL.md` — YAML frontmatter MUST быть на строке 1; banner идёт в `metadata:` блок, НЕ как HTML-комментарий сверху (Agent Skills spec: frontmatter на line 1 обязательно)
+
+**MUST NOT:**
+- ❌ Редактировать `.claude/commands/*.md` напрямую — это банер-prefixed копии; канон в `commands/`
+- ❌ Редактировать `.claude/skills/*/SKILL.md` напрямую — копии с `{{SYNCED_AT}}`; канон в `skills/`
+- ❌ Удалять команды без мажор bump VERSION + migration инструкция (breaking)
+- ❌ Использовать bash 4-features (`${var,,}`, associative arrays) — Git Bash на Windows ставит 3.2
+- ❌ Дублировать контент между шаблонами
+- ❌ Класть команду которая должна попадать к консьюмерам в `commands-local/` (правило: shared → `commands/`, methodology-only → `commands-local/`)
+- ❌ Менять `sync-methodology.sh` / `new-project-init.sh` итерацию команд на recursive (`find`, `**/*.md`) без явного exclude `commands-local/`
+
+Rationale: [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md).
+
+---
+
+## Stack
+
+- **Скрипты:** Bash 3.2+ (Git Bash on Windows)
+- **Хуки:** Python 3.10+
+- **Шаблоны:** Markdown + JSON + YAML
+- **CI/CD:** ручной push в GitHub
+- **Деплой:** `git push origin main`; consumers подтягивают через `sync-methodology.sh`
+
+---
+
+## Data ownership (short)
+
+| Слой | Источник правды | Кто пишет | Инвалидация |
+|---|---|---|---|
+| `commands/*.md` | да | владелец | при правке + push |
+| `templates/*.md` | да | владелец | при правке + push |
+| `templates/.claude/hooks/*.py` | да | владелец | при правке + push |
+| `templates/.claude/agents/*.template.md` | да | владелец (структура); консьюмер (тело) | при правке + push |
+| `skills/*/SKILL.md` | да | владелец | при правке + push |
+| `VERSION` | да | владелец | при ручном bump |
+| `.claude/` (этот репо) | нет (производное) | `sync-methodology.sh .` | при self-sync |
+| Консьюмер `.claude/commands/*.md` | нет (производное) | `sync-methodology.sh` | при sync |
+| Консьюмер `.claude/skills/*/SKILL.md` | нет (производное) | `sync-methodology.sh` | при sync |
+
+Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данных-полная).
+
+---
+
+## Don'ts
+
+- ❌ Не редактировать `.claude/commands/*.md` напрямую (банер-prefixed копии)
+- ❌ Не удалять команды без мажор bump + migration
+- ❌ Не ломать `methodology-platform` плейсхолдер
+- ❌ Не использовать bash 4+
+- ❌ Не коммитить `.claude/settings.local.json`
+- ❌ Не дублировать контент между шаблонами
+- ❌ Не использовать project-specific имена в templates (canon + consumers должны быть абстрактны; примеры в comments только)
+
+---
+
+## Workflow rules
+
+**Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
+
+**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
+
+**Deploy rule:** "деплой" = `git push origin main`. Перед каждым push:
+1. `/review` если не запускался
+2. DEVLOG запись `[deploy]` / `[feat:X]` / `[fix:X]` / `[methodology]`
+3. Bump VERSION если изменены команды / шаблоны / хуки
+
+**Architecture decision rule:** новая команда / шаблон / изменение `triggers.json` схемы → запустить `architect` sub-agent. Сначала собственная рекомендация, потом architect.
+
+**Fix rule:**
+- Симптом или причина? Симптом → найди причину
+- Локальный или системный? Локальный без обоснования = красный флаг
+
+**Completeness rule:**
+Каждое решение (в /plan, /code, /review, /deploy) ДОЛЖНО явно указать:
+- Что закрывается (main path, happy cases)
+- Что НЕ закрывается (gaps, edge cases, параллельные пути)
+- Почему эти gaps OK или требуют дополнительных шагов
+Без этого анализа → план не утверждён, код не merged, деплой не выполнен.
+
+Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
+
+---
+
+## Regulator levels (Level-4 framework)
+
+Strong → weak: Schema constraint > No alternative path > Input structure > Few-shot > Description > Prompt rule.
+
+При добавлении правила → спросить "есть ли level-4+ структурный фикс?". Если да — primary, правило secondary.
+
+Пример: defensive `triggers.json` чтение в командах = level-1. Level-4 — единая схема в `templates/triggers.json.template`.
+
+Details: [CLAUDE_LONG.md § Level-4 framework](CLAUDE_LONG.md).
+
+---
+
+## Model tier rule
+
+Каждая команда методологии MUST содержать секцию `## Рекомендуемая модель` (5 полей: Default tier / Upgrade / Downgrade / Mid-task escalation / Pre-flight model check).
+
+Канон: [.claude/model-tiers.md](.claude/model-tiers.md). При добавлении новой команды → добавь строку в матрицу + секцию в command-файл; `/review` блокирует merge без обеих.
+
+Pre-flight check **спрашивает пользователя** о текущей модели (не self-detect — system prompt unreliable). Подтверждённое значение переиспользуется в сессии.
+
+Когда Anthropic переименовывает модели — обнови **только** Mapping таблицу в `model-tiers.md`.
+
+Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
+
+---
+
+## Mermaid link rule
+
+При каждой записи или обновлении ` ```mermaid ` блока в артефакте — **автоматически** обновить ссылку:
+
+```bash
+# Авто-обновление всех ссылок в documentation repo (предпочтительно):
+bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation
+
+# Авто-обновление конкретного файла:
+bash scripts/update-mermaid-links.sh ../it-dev-methodology-documentation/docs/product/USER-MAP.md
+
+# Ручная генерация URL для одного файла (если скрипт недоступен):
+py scripts/mermaid-link.py <file>
+```
+
+Ссылка — дополнение к коду диаграммы, не замена. Self-hosted: изменить `BASE_URL` в `scripts/mermaid-link.py`.
+
+**Одна диаграмма — одна кликабельная ссылка.** Разбивать на mini + full секции запрещено: дублирование и путаница. URL любой длины — кликабелен в markdown-рендерерах (GitHub, VSCode, браузер).
+
+**Авто-обновление (two-repo):** для methodology-platform — выполни ОБЕ команды:
+- `bash scripts/update-mermaid-links.sh` — methodology repo
+- `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation` — documentation repo
+
+**Валидация:** `bash scripts/validate-mermaid-links.sh [--root DIR]`
+Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов — только одна команда.
+
+---
+
+## Documentation map rule
+
+**SYSTEM-MAP и USER-MAP MUST содержать Mermaid-диаграмму.** Замена на ASCII art или plain text запрещена — в больших проектах только Mermaid обеспечивает читаемый обзор.
+
+**Гибридный язык (EN + RU):**
+- Технические термины, имена файлов/команд — EN: `commands/`, `triggers.json`, `/plan → /code`
+- Описания поведения, аннотации, метки на русском: `"анализ накопленного"`, `"единственный источник правды"`
+- Пример корректного node: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
+
+**Repo / setup контекст обязателен в USER-MAP.** Если проект использует внешний methodology-repo или infrastructure-repo — добавить `subgraph` или аннотацию, показывающую откуда берутся команды/шаблоны. Без этого новый разработчик не поймёт структуру.
+
+`/review` блокирует merge если: (1) SYSTEM-MAP или USER-MAP изменены и Mermaid удалён; (2) новый разработчик не сможет понять repo-структуру из диаграммы.
+
+---
+
+## DEVLOG теги
+
+`[fix:component]` `[feat:command]` `[feat:template]` `[feat:hook]` `[feat:script]` `[methodology]` `[process:X]` `[milestone]`
+
+Phase-теги: `[phase-a]` … — milestone history.
+
+Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`
+
+**Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name.
+
+Одна проблема — один semantic indicator, даже если люди называют по-разному:
+- `[git-failure]` — не `[git_push-failed]` ИЛИ `[github-error]` ИЛИ `[branch-push-issue]` (все sync failures)
+- `[async-failure:operation]` — не `[vault-sync-error]` И `[queue-dropped]` (оба fire-and-forget failures)
+- `[state-pollution]` — не `[history-leak]` И `[cache-contamination]` (оба внутренние состояния)
+
+**Reason:** Regex-based detection fails когда люди называют одно разными именами. Semantic category stays stable.
+
+---
+
+## Security: real threats
+
+**Утечка GitHub PAT и других токенов (was High → Mitigated):** Структурно закрыто секцией [Secrets & Credentials](#secrets--credentials) — 4 слоя защиты (gitignore, pre-commit hook, /review detector, tool deny). См. ниже.
+
+**Прямой push в main (High):** Branch protection не настроен. Будущая задача — required PR + review.
+
+**Drift между методологией и консьюмерами (Med):** Sync ручной. Будущая задача — auto version-drift check в `/plan` Шаг -3.
+
+**Sync overwrites local fills (Low):** `docs_reminder.py` LIBS заполняется per-project. Будущая задача — поддержка `*.local.py` соседних файлов.
+
+Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md).
+
+---
+
+## Secrets & Credentials
+
+> **Phase 1 / v4.32.0:** Foundation слой. Phases 2-5 (command integration, full docs/Mermaid, sync rules, consumer migration) — отдельные релизы. Сейчас доступны: templates, scripts core, hooks, tool deny rules.
+
+### Canonical storage
+
+Один источник правды для секретов per проект:
+
+| Источник | Назначение | Прио |
+|---|---|---|
+| `./.env` | per-project секреты (gitignored, chmod 600) | 1 |
+| `~/.config/it-dev/secrets.env` | cross-project shared (опционально) | 2 |
+| process env vars | CI/CD compatibility | 3 |
+
+Декларация требуемых секретов: `.claude/secrets-manifest.yaml` (committed, без значений — только names + `how_to_obtain`).
+
+### MUST
+
+- ✅ Использовать `bash scripts/with-secret.sh KEY -- <command>` чтобы передать секрет subprocess'у — значение **не попадает** в stdout агента.
+- ✅ Использовать `bash scripts/check-secret.sh KEY` для boolean проверки (exit 0/1, без значения).
+- ✅ Использовать `bash scripts/set-secret.sh KEY value` для **одноразового** добавления секрета пользователем (это **пользователь** запускает, не агент).
+- ✅ Для git operations с HTTPS — configure `git-credential-from-env.sh` как credential helper (git сам читает токен, агент не в цепочке).
+- ✅ При отсутствии required секрета — HARD BLOCK + показать `how_to_obtain` из manifest. Не запрашивать токен через chat — только one-time setup через `set-secret.sh`.
+
+### MUST NOT
+
+- ❌ Агент НЕ ЧИТАЕТ `.env` / `secrets.env` напрямую (Read tool / `cat .env` / `head .env` блокируются через `settings.json` deny + `bash_protect.py`).
+- ❌ Агент НЕ ВЫПОЛНЯЕТ `env`, `printenv`, `set | grep`, `echo $SECRET_*` — блокируется hook'ом `bash_protect.py`.
+- ❌ Агент НЕ ВПИСЫВАЕТ значения секретов в chat / DEVLOG / commit messages / любые файлы. Если случилось — `bash scripts/secrets-scrub.sh` (Phase 2) + rotate token.
+- ❌ Не storage'ить `sensitivity: high` ключи в shared scope (`set-secret.sh --shared` blocked manifest-ом).
+- ❌ Не bypass-ить pre-commit hook через `--no-verify` без рукописного обоснования в DEVLOG (`/review` всё равно catch-ит leak).
+- ❌ Не editить `templates/.claude/hooks/secrets-guard.py` и `templates/.claude/hooks/bash_protect.py` без понимания whitelist semantics — false negative означает утечку.
+
+### Threat model (краткая)
+
+| Вектор | Защита (слой) | Регулятор |
+|---|---|---|
+| Случайный `git add .env` | `.gitignore` excludes `.env`, `.env.*` (whitelist `.env.example`) | L4 — отсутствие альтернативного пути |
+| Force `git add -f .env` | `secrets-guard.py` PreToolUse блокирует commit | L4 — Schema constraint (hook exit 2) |
+| Token в коде | `secrets-guard.py` token-prefix + entropy на staged diff; `/review` detector на PR | L4 + L3 (двойная проверка) |
+| Агент читает `.env` любой командой (cat/grep/sed/awk/python -c/node -e/...) | `bash_protect.py` **inverted-match**: любая non-whitelisted команда с `.env` arg блокируется. Закрывает класс bypass'ов, не enumerate-list | L5 — нет alternative path |
+| Агент дампит ENV (`env`, `printenv`, `echo $VAR`) | `bash_protect.py` `ENV_DUMP_PATTERNS` блокирует | L5 |
+| Агент читает через Read tool | `settings.json` `permissions.deny` для `Read(./.env)` etc | L5 — tool permission |
+| Утечка через chat history | `secrets-scrub.sh` (Phase 2) cleanup в `~/.claude/projects/`; ротация токена | L2 — reactive |
+
+### Scope limits (что Phase 1 НЕ закрывает)
+
+Phase 1 защищает **agent-mediated утечки** (через transcript, git commits, file system). Эти векторы остаются **открытыми** и требуют OS/process-level mitigation:
+
+- **`/proc/<pid>/environ` visibility** — `with-secret.sh` injects через env subprocess; другие процессы того же UID могут видеть `environ`. Mitigation: trust local OS boundary; full disk encryption; не запускать untrusted code локально.
+- **Core dumps** — содержат full memory с секретами. Mitigation: `ulimit -c 0` в shell init.
+- **Verbose process monitoring** (htop с `-S`) — показывает env vars. Mitigation: не запускать с такими флагами на dev машине.
+- **Git history** — если секрет уже committed, удаление из HEAD не очищает клоны/бэкапы. Mitigation: rotation токена при провайдере + Phase 2 `secrets-scrub.sh`. **Phase 1 предотвращает попадание в первый коммит**, не лечит existing exposure.
+- **CI/CD artifacts** — если CI baking `.env` в images/builds, secrets leak там. Mitigation: mount secrets at runtime, не at build time. Phase 5 skill даст guidance.
+- **OS keyring vs `.env`** — `.env` это **default**, не **mandate**. Consumer проекты с enterprise требованиями могут использовать Vault / AWS Secrets / Azure Key Vault через priority chain step 3 (process env): `vault kv get ... | export KEY=VALUE && bash scripts/with-secret.sh KEY -- cmd`. Phase 5 skill документирует integration patterns.
+- **Token rotation и audit log** — manual через `set-secret.sh`; auto-rotation requires provider-specific adapters (out of methodology scope). Phase 2 skill даст rotation workflow per common providers (GitHub, Anthropic, AWS).
+
+### Что осталось на Phase 2-5
+
+- `/secrets` команда (audit / setup / list / scrub)
+- `secrets-scrub.sh` для cleanup transcripts
+- `clone-consumer.sh` через credential helper
+- `_get-secret-raw.sh` escape-hatch с `--explicit-stdout` forcing function
+- `/code`, `/review`, `/plan` интеграция секций "before any operation requiring secret"
+- Skill `secrets-management/SKILL.md` (knowledge-domain)
+- SYSTEM-MAP / USER-MAP / ARTIFACT-MAP updates
+- `deploy-push.sh` миграция на credential helper
+- `pull-consumers.md` миграция
+
+---
+
+## Key files
+
+- [scripts/new-project-init.sh](scripts/new-project-init.sh) — bootstrap (`--with-marketing` flag для skills слоя)
+- [scripts/sync-methodology.sh](scripts/sync-methodology.sh) — sync (включает `sync_skills()` для `.claude/skills/`)
+- [scripts/deploy-push.sh](scripts/deploy-push.sh) — deploy push (reads mode from CLAUDE.local.md, enforces solo/team pattern)
+- [scripts/update-mermaid-links.sh](scripts/update-mermaid-links.sh) — **авто-обновление** mermaid.live URL во всех .md файлах (MISSING/STALE → fresh); URL любой длины
+- [scripts/migrate-claude-md.sh](scripts/migrate-claude-md.sh) — Phase G2 split migration helper
+- [commands/plan.md](commands/plan.md) — workflow entry point
+- [commands-local/pull-consumers.md](commands-local/pull-consumers.md) — **LOCAL-ONLY** команда: pull всех consumer repos из workspace + diff новых methodology-tracked записей (AGENT-GAPS/PRODUCT-GAPS/DEVLOG/etc). НЕ синхронизируется консьюмерам
+- [templates/triggers.json.template](templates/triggers.json.template) — canonical state schema
+- [templates/model-tiers.md](templates/model-tiers.md) — model recommendation registry
+- [templates/AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) — AI gap capture (consumer artifact)
+- [templates/MARKETING.template.md](templates/MARKETING.template.md) — marketing central context (consumer artifact, --with-marketing)
+- [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
+- [skills/define-positioning/SKILL.md](skills/define-positioning/SKILL.md) — Agent Skill: positioning framework (12 секций)
+- [scripts/with-secret.sh](scripts/with-secret.sh) — **secrets injection** (primary tool): `bash scripts/with-secret.sh KEY -- <cmd>` — значение не в stdout
+- [scripts/check-secret.sh](scripts/check-secret.sh) — boolean existence check (exit 0/1, без значения)
+- [scripts/set-secret.sh](scripts/set-secret.sh) — atomic write в `.env` (one-time setup пользователем)
+- [scripts/validate-secrets.sh](scripts/validate-secrets.sh) — manifest vs `.env` consistency check
+- [scripts/git-credential-from-env.sh](scripts/git-credential-from-env.sh) — git credential helper для HTTPS push/pull без агента в цепочке
+- [templates/.env.example.template](templates/.env.example.template) — template для consumer `.env`
+- [templates/secrets-manifest.yaml.template](templates/secrets-manifest.yaml.template) — declared secrets schema
+- [templates/.claude/hooks/secrets-guard.py](templates/.claude/hooks/secrets-guard.py) — PreToolUse: блокирует commit с tokens/staged .env
+- [VERSION](VERSION) — semver
+
+**Skills layer:** `skills/*/SKILL.md` — Agent Skills (knowledge-domain, auto-activation). Синхронизируются в `.claude/skills/` через `sync_skills()`. Banner в `metadata:` блоке frontmatter (НЕ HTML-комментарий — YAML frontmatter must be line 1). Workflow-команды (`/plan /code /review /deploy` и др.) остаются slash — это инвариант (VISION Граница 8).
+
+---
+
+## External links
+
+- GitHub: https://github.com/cait-solutions/it-dev-methodology
+- Примеры консьюмер-проектов:
+  - **Single-developer project** (e.g., solo-dev consumer) — single-tier vision
+  - **Multi-service platform** (e.g., team-based consumer) — multi-tier vision, per-service триггеры, inbox, ADR

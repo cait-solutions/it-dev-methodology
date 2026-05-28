@@ -150,13 +150,6 @@ def update_file(path):
                 continue
 
             expected_url = encode_mermaid(code)
-            url_len = len(expected_url)
-
-            if url_len > 2000:
-                rel = os.path.relpath(path)
-                print(f"WARNING  URL_TOO_LONG  {rel}:{block_start+1} (len={url_len})")
-                i += 1
-                continue
 
             # Search for existing mermaid.live link within WINDOW lines above
             window_start = max(0, block_start - WINDOW)
