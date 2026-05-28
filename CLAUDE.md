@@ -153,7 +153,16 @@ py scripts/mermaid-link.py <file>
 
 Ссылка — дополнение к коду диаграммы, не замена. Self-hosted: изменить `BASE_URL` в `scripts/mermaid-link.py`.
 
-**Одна диаграмма — одна кликабельная ссылка.** Разбивать на mini + full секции запрещено: дублирование и путаница. URL любой длины — кликабелен в markdown-рендерерах (GitHub, VSCode, браузер).
+**Формат над каждым mermaid-блоком** (вставляется автоматически скриптом):
+```
+> 🔗 [Открыть в Mermaid Live](https://mermaid.live/edit#pako:...)
+> ```
+> https://mermaid.live/edit#pako:...
+> ```
+```
+Ссылка — кликабельна в Chrome/GitHub. Code block — тройной клик выделяет только URL для paste в браузер.
+
+**Одна диаграмма — одна ссылка.** Разбивать на mini + full запрещено: дублирование и путаница.
 
 **Авто-обновление (two-repo):** для methodology-platform — выполни ОБЕ команды:
 - `bash scripts/update-mermaid-links.sh` — methodology repo
