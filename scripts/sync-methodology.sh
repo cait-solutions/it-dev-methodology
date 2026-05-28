@@ -69,7 +69,7 @@ fi
 # Helps agents that used a wrong URL after cloning or manual setup.
 # ---------------------------------------------------------------------------
 if [[ -f "$TARGET_DIR/CLAUDE.local.md" ]]; then
-  _config_url="$(grep "^origin_url:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null | head -1 | sed 's/^origin_url:[[:space:]]*//' | tr -d '\r')"
+  _config_url="$( (grep "^origin_url:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null || true) | head -1 | sed 's/^origin_url:[[:space:]]*//' | tr -d '\r')"
   if [[ -n "$_config_url" ]] && git -C "$TARGET_DIR" rev-parse --git-dir > /dev/null 2>&1; then
     _current_url="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null || true)"
     if [[ -n "$_current_url" && "$_current_url" != "$_config_url" ]]; then
