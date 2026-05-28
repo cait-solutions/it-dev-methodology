@@ -102,15 +102,15 @@
 - [ ] Решение явно указывает что закрывается и что НЕ закрывается?
 - [ ] Список gaps назван явно (не "вроде всё")?
 - [ ] Обоснование почему gaps OK или требуют action?
-- Если < 90% покрыто И no justification → 🟡 WARNING "High-risk gaps not mitigated"
-- Если без явного анализа → 🟡 WARNING "Completeness analysis missing"
+- Если < 90% покрыто И no justification → 🔵 Recommendation "High-risk gaps not mitigated"
+- Если без явного анализа → 🔵 Recommendation "Completeness analysis missing"
 
 **Параллельные пути — grep:**
 - Если изменён компонент → grep по аналогичным паттернам в проекте
 - **Class bug rule:** если изменён код отправки/обработки данных → grep по аналогичным паттернам без защитных обёрток
 
 **Conversation state pollution check** (только если `project_type: ai-agent` в CLAUDE.md):
-- Tool возвращает > 5 строк текста на error path? → 🟡 WARNING
+- Tool возвращает > 5 строк текста на error path? → 🔵 Recommendation
 - Возвращает список (задачи, файлы) как error response? → 🔴 CRITICAL
 - Тест: что увидит пользователь в следующих 2-3 запросах после этого error?
 
@@ -133,7 +133,7 @@
 
 **Prompt engineering (если менялся промпт):**
 - Доменное ограничение или кейс-ограничение?
-- Кейс → 🟡 WARNING — не закрывает класс проблем
+- Кейс → 🔵 Recommendation — не закрывает класс проблем
 
 **Out-of-scope findings:**
 - Замечены паттерны или возможные улучшения вне scope текущего fix? → добавить в IDEAS.md
@@ -144,7 +144,7 @@
 - [ ] Можно ли закрыть через структуру данных?
 - [ ] Если Level 4 невозможен — явно указать почему
 
-🟡 WARNING если предложены только методологические правила без code-level альтернативы.
+🔵 Recommendation если предложены только методологические правила без code-level альтернативы.
 
 **Документация — Sync validators framework (config-driven L3):**
 
@@ -184,7 +184,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - Архитектурные изменения — SYSTEM-MAP.md / data-map.md / ADR обновлены?
 - Добавлена/изменена зависимость между компонентами или интеграция с внешним сервисом → SYSTEM-MAP.md edges актуальны?
 - SYSTEM-MAP или USER-MAP изменены → Mermaid-диаграмма сохранена? (замена на ASCII = 🔴 CRITICAL)
-- Mermaid изменён → **hybrid language check** (CLAUDE.md гибридный язык): labels nodes и edges используют RU для описаний поведения / названий слоёв + EN для технических identifiers (имена файлов, команд)? Полностью EN labels (кроме identifiers) = 🟡 WARNING "Mermaid language: пройти по labels, перевести описания на RU. ❌ `Hooks Layer` / `reads config` / `writes state` → ✅ `Слой хуков` / `читает config` / `пишет state`". Closes G-049 «agent assumed hybrid rule only applies to existing maps, not new Mermaid drafts».
+- Mermaid изменён → **hybrid language check** (CLAUDE.md гибридный язык): labels nodes и edges используют RU для описаний поведения / названий слоёв + EN для технических identifiers (имена файлов, команд)? Полностью EN labels (кроме identifiers) = 🔵 Recommendation "Mermaid language: пройти по labels, перевести описания на RU. ❌ `Hooks Layer` / `reads config` / `writes state` → ✅ `Слой хуков` / `читает config` / `пишет state`". Closes G-049 «agent assumed hybrid rule only applies to existing maps, not new Mermaid drafts».
 - [methodology] Mermaid изменён → ссылки авто-обновлены и валидны? (run update then validate):
   `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation && bash scripts/update-mermaid-links.sh`
   `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation && bash scripts/validate-mermaid-links.sh`
@@ -194,11 +194,11 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - Новая команда или тип артефакта добавлены → `docs/product/ARTIFACT-MAP.md` обновлён?
 - Изменился порог триггера → ARTIFACT-MAP.md колонка "Частота" актуальна?
 - Изменилось поведение существующей команды по отношению к артефактам (новый read/write, новое поле triggers.json) → ARTIFACT-MAP.md стрелки актуальны?
-- ARTIFACT-MAP изменён → table↔Mermaid консистентность: каждая **команда** в "Читает" имеет `-.->` или `===` стрелку (human actors не требуют); нода без единой стрелки → 🟡 WARNING "ARTIFACT-MAP node island"
+- ARTIFACT-MAP изменён → table↔Mermaid консистентность: каждая **команда** в "Читает" имеет `-.->` или `===` стрелку (human actors не требуют); нода без единой стрелки → 🔵 Recommendation "ARTIFACT-MAP node island"
 
 **Actor discovery-path check** (для любого проекта):
 - Добавлен новый механизм (скрипт, команда, webhook, автоматизация, cron)? → есть ли описание trigger-point в файле который читается автоматически (CLAUDE.md или README.md)?
-- Нет → 🟡 WARNING "actor discovery-path missing — агент в новой сессии не найдёт как запустить этот механизм"
+- Нет → 🔵 Recommendation "actor discovery-path missing — агент в новой сессии не найдёт как запустить этот механизм"
 
 **Artifact size & prompt bloat check** (если изменён артефакт-инструкция: CLAUDE.md, карты, или runtime-промпт продукта — системный промпт бота/агента):
 - Запустить `bash scripts/validate-artifact-size.sh` (для methodology-platform — также `--root ../<doc-repo>`). Меряет две оси против budget из `CLAUDE.local.md ## Artifact budgets`:
@@ -207,7 +207,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - **L3 разбор каждого WARNING** (размер ≠ автоматический приговор):
   - `SIZE_EXCEEDED` → раздутие (структурно сжать, вынести в LONG-файл) ИЛИ контент оправдан (обосновать почему)?
   - `PROMPT_BLOAT` → **душит ли обилие запретов вызов инструментов?** Проверить на реальном поведении: модель зовёт tools при таком промпте? Если нет → сократить/реструктурировать запреты (не усиливать descriptions — это не поможет поверх перегруженного промпта)
-- Скрипт не запускался при изменении артефакта-инструкции → 🟡 WARNING "size/bloat не проверен"
+- Скрипт не запускался при изменении артефакта-инструкции → 🔵 Recommendation "size/bloat не проверен"
 
 **Bootstrap-command contract** (только для methodology-platform tasks):
 - [ ] Изменена команда: ссылается на новые файлы? → `new-project-init.sh` создаёт их?
@@ -220,7 +220,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - **Если PR добавляет шаг/правило в команду** → обязательный вопрос: **«что убрал или слил для net-zero?»**
   - Назвать КОНКРЕТНО что удалено/консолидировано (не «оптимизировал формулировки» — какой шаг/правило).
   - Если убрать нечего → обосновать почему рост оправдан: новый **подтверждённый класс** проблем (G-NNN), не дубль существующего шага.
-- 🟡 WARNING если добавлен шаг без named removal И без обоснования класса. Цель — дисциплина cut-not-add, не запрет роста.
+- 🔵 Recommendation если добавлен шаг без named removal И без обоснования класса. Цель — дисциплина cut-not-add, не запрет роста.
 - *NB:* это policy layer поверх `/retro` Шаг 4.5 (тот измеряет ценность шагов HIT/SILENT; этот ловит разрастание в момент добавления). Комплементарны, не дубль.
 
 **Конкретный тест-сценарий (обязательно):**
@@ -252,7 +252,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 Варианты:
   a) Закрыть review на текущей модели — финальный отчёт может пропустить тонкости
   b) Прервать review, переключиться на upgrade tier, перезапустить
-  c) Зафиксировать как 🟡 WARNING "review incomplete due to model tier" в выводе
+  c) Зафиксировать как 🔵 Recommendation "review incomplete due to model tier" в выводе
 
 Жду ответа: (a/b/c)
 ```

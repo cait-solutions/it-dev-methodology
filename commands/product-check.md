@@ -25,22 +25,22 @@
 5. **Хранилища:** таблица хранилищ в PRODUCT.md совпадает с data-map?
 6. **Дата обновления:** есть и актуальна?
 7. **ARTIFACT-MAP freshness** (если есть `docs/product/ARTIFACT-MAP.md`):
-   - Новые команды в `commands/` не отражены в Command Reference → 🟡 WARNING
-   - Нода без единой стрелки (island) → 🟡 WARNING "node island — проверь Gate 2"
-   - `[TODO:]` маркеры в Artifact Reference → 🟡 WARNING "таблица не заполнена"
+   - Новые команды в `commands/` не отражены в Command Reference → 🔵 Recommendation
+   - Нода без единой стрелки (island) → 🔵 Recommendation "node island — проверь Gate 2"
+   - `[TODO:]` маркеры в Artifact Reference → 🔵 Recommendation "таблица не заполнена"
 
 7б. **ARTIFACT-MAP arrow type check** (если есть `docs/product/ARTIFACT-MAP.md`):
    **Если доступен `scripts/validate-artifact-map.sh`** (methodology-platform или consumer с установленным скриптом):
    ```
    bash scripts/validate-artifact-map.sh
    ```
-   Exit 1 → 🟡 WARNING "W→RW candidate detected: [список]" — проверить каждый вручную.
+   Exit 1 → 🔵 Recommendation "W→RW candidate detected: [список]" — проверить каждый вручную.
 
    **Если скрипта нет** — ручной spot-check:
    - Для каждого `===` (RW) ребра: команда действительно И читает И пишет?
    - Для каждого `-->` (W) ребра: читает ли как логический вход? Если да → `===`
    Приоритет: `===` рёбра первыми.
-   → 🟡 WARNING "arrow type mismatch: [команда] → [артефакт] — ожидается [тип], реально [тип]"
+   → 🔵 Recommendation "arrow type mismatch: [команда] → [артефакт] — ожидается [тип], реально [тип]"
 8. **USER-MAP freshness** (если есть `docs/product/USER-MAP.md`):
    - Прочитать `triggers.json` → `last_user_map_sync.plans_since` (если поле отсутствует — считать 0, не ошибка)
    - Если ≥ 10 → ⚠️ "USER-MAP давно не проверялся — соответствует ли текущим возможностям продукта?"

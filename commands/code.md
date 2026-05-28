@@ -189,7 +189,7 @@
    bash scripts/validate-mermaid-links.sh
    ```
    MISSING_LINK или STALE_LINK после update = блок до ручного фикса. URL_TOO_LONG = warning, не блок (mini/full паттерн)
-10. **Изменён артефакт-инструкция** (CLAUDE.md, карты, runtime-промпт бота/агента): запустить `bash scripts/validate-artifact-size.sh` (methodology — также `--root ../<doc-repo>`). `SIZE_EXCEEDED` или `PROMPT_BLOAT` = 🟡 WARNING → разобрать в /review (размер vs оправдано; плотность запретов душит ли tools). Не блок, но не игнорировать.
+10. **Изменён артефакт-инструкция** (CLAUDE.md, карты, runtime-промпт бота/агента): запустить `bash scripts/validate-artifact-size.sh` (methodology — также `--root ../<doc-repo>`). `SIZE_EXCEEDED` или `PROMPT_BLOAT` = 🔵 Recommendation → разобрать в /review (размер vs оправдано; плотность запретов душит ли tools). Не блок, но не игнорировать.
 
 Если хоть одна точка не пройдена → исправить до коммита.
 
