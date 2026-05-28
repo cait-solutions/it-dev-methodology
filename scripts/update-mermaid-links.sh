@@ -90,7 +90,8 @@ BASE_URL    = "https://mermaid.live"
 LINK_RE     = re.compile(r'(https://mermaid\.live[^\)\s]+)')
 LINK_LINE_RE = re.compile(r'^(>\s*🔗\s*\[.*?\]\()https://mermaid\.live[^\)]+(\).*)')
 LEGACY_HINT_RE = re.compile(r'^>\s*_\(обновить ссылку')
-WINDOW      = 5
+LEGACY_QUOTE_CB_RE = re.compile(r'^>\s*```')  # old format: blockquote-wrapped code block
+WINDOW      = 10
 EXCLUDE_DIRS = {'.git', 'consumers'}
 
 
@@ -165,19 +166,67 @@ def update_file(path):
 
             rel = os.path.relpath(path)
 
+            # Helper: scrub legacy post-link junk (hint line + blockquote-wrapped code block)
+            def scrub_legacy_after(start_idx):
+                """Remove legacy hint line + legacy `> ``` ... > ``` ` blockquote code block.
+                Returns number of lines removed."""
+                removed = 0
+                idx = start_idx
+                # Remove legacy hint
+                if idx < len(updated) and LEGACY_HINT_RE.match(updated[idx]):
+                    del updated[idx]
+                    removed += 1
+                # Remove legacy blockquote code block (> ``` ... > ```)
+                if idx < len(updated) and LEGACY_QUOTE_CB_RE.match(updated[idx]):
+                    end = idx + 1
+                    while end < len(updated) and not LEGACY_QUOTE_CB_RE.match(updated[end]):
+                        # Safety: only consume blockquote-prefixed content
+                        if not updated[end].lstrip().startswith('>') and updated[end].strip() != '':
+                            break
+                        end += 1
+                    if end < len(updated) and LEGACY_QUOTE_CB_RE.match(updated[end]):
+                        # Delete from idx through end inclusive
+                        for _ in range(end - idx + 1):
+                            del updated[idx]
+                            removed += 1
+                return removed
+
             if existing_link_idx is not None:
                 existing_url_m = LINK_RE.search(updated[existing_link_idx])
                 url_is_stale = not (existing_url_m and existing_url_m.group(1) == expected_url)
 
-                # Check post-link structure
-                cb_idx = existing_link_idx + 1
-                has_legacy_hint = (cb_idx < len(updated) and LEGACY_HINT_RE.match(updated[cb_idx]))
-                # has_cb examined after potential legacy removal
-                next_after_link = cb_idx + (1 if has_legacy_hint else 0)
-                has_cb = (next_after_link < len(updated) and updated[next_after_link].rstrip() == '> ```')
+                # Detect new format: blank, ```, url, ```, blank, ```mermaid (or just ``` URL ``` directly)
+                # After link line at cb_idx, expect: blank line OR ``` directly
+                def has_new_format(link_idx):
+                    """Check if plain code block with URL follows the link line."""
+                    j = link_idx + 1
+                    # Skip optional blank
+                    if j < len(updated) and updated[j].strip() == '':
+                        j += 1
+                    if j >= len(updated) or updated[j].rstrip() != '```':
+                        return False, None
+                    url_idx = j + 1
+                    if url_idx >= len(updated):
+                        return False, None
+                    if updated[url_idx].rstrip() != expected_url:
+                        return False, url_idx  # exists but stale URL inside
+                    close_idx = url_idx + 1
+                    if close_idx >= len(updated) or updated[close_idx].rstrip() != '```':
+                        return False, None
+                    return True, url_idx
+
+                cb_ok, inner_url_idx = has_new_format(existing_link_idx)
+
+                # Check for legacy artifacts
+                scan_idx = existing_link_idx + 1
+                has_legacy_hint = (scan_idx < len(updated) and LEGACY_HINT_RE.match(updated[scan_idx]))
+                # Old format had `> ``` ` right after link OR after hint
+                legacy_cb_check_idx = scan_idx + (1 if has_legacy_hint else 0)
+                has_legacy_cb = (legacy_cb_check_idx < len(updated)
+                                 and LEGACY_QUOTE_CB_RE.match(updated[legacy_cb_check_idx]))
 
                 # Nothing to do?
-                if not url_is_stale and has_cb and not has_legacy_hint:
+                if not url_is_stale and cb_ok and not has_legacy_hint and not has_legacy_cb:
                     i += 1
                     continue
 
@@ -188,8 +237,10 @@ def update_file(path):
                         actions.append("STALE URL")
                     if has_legacy_hint:
                         actions.append("REMOVE legacy hint")
-                    if not has_cb:
-                        actions.append("INSERT code block")
+                    if has_legacy_cb:
+                        actions.append("REMOVE legacy blockquote cb")
+                    if not cb_ok:
+                        actions.append("INSERT plain code block")
                     print(f"FIX      {rel}:{block_start+1}  ({', '.join(actions)})")
                 else:
                     # 1. Update URL in link line if stale
@@ -203,46 +254,41 @@ def update_file(path):
                         updated[existing_link_idx] = new_line
                         actions.append("URL updated")
 
-                    # 2. Remove legacy hint line if present
-                    if has_legacy_hint:
-                        del updated[cb_idx]
-                        actions.append("legacy hint removed")
+                    # 2. Scrub all legacy artifacts (hint + blockquote cb)
+                    removed = scrub_legacy_after(existing_link_idx + 1)
+                    if removed:
+                        actions.append(f"legacy scrubbed ({removed} lines)")
 
-                    # 3. Ensure code block exists (recompute index after legacy removal)
-                    cb_idx = existing_link_idx + 1
-                    cb_exists = (cb_idx < len(updated) and updated[cb_idx].rstrip() == '> ```')
-                    if not cb_exists:
-                        updated.insert(cb_idx, '> ```\n')
-                        updated.insert(cb_idx + 1, f'> {expected_url}\n')
-                        updated.insert(cb_idx + 2, '> ```\n')
-                        actions.append("code block inserted")
-                    else:
-                        # cb exists — refresh URL inside if stale
-                        url_line_idx = cb_idx + 1
-                        if url_line_idx < len(updated) and updated[url_line_idx].startswith('> https://mermaid.live'):
-                            if updated[url_line_idx].rstrip() != f'> {expected_url}':
-                                updated[url_line_idx] = f'> {expected_url}\n'
-                                actions.append("code block URL refreshed")
+                    # 3. Ensure plain code block exists with current URL
+                    cb_ok2, inner_idx2 = has_new_format(existing_link_idx)
+                    if not cb_ok2:
+                        # Insert: blank, ```, url, ```, blank — directly after link
+                        ins_at = existing_link_idx + 1
+                        updated.insert(ins_at, '\n')
+                        updated.insert(ins_at + 1, '```\n')
+                        updated.insert(ins_at + 2, f'{expected_url}\n')
+                        updated.insert(ins_at + 3, '```\n')
+                        updated.insert(ins_at + 4, '\n')
+                        actions.append("plain code block inserted")
 
                     print(f"UPDATED  {rel}:{block_start+1}  ({', '.join(actions)})")
                 changes += 1
             else:
-                # Missing — insert link + code block with URL above the ```mermaid line
+                # Missing — insert link + plain code block with URL above the ```mermaid line
                 new_link_line = f'> 🔗 [Открыть в Mermaid Live]({expected_url})\n'
-                cb_open  = '> ```\n'
-                url_line = f'> {expected_url}\n'
-                cb_close = '> ```\n'
                 if DRY_RUN:
                     print(f"MISSING  {rel}:{block_start+1}")
                     print(f"  insert: {new_link_line.rstrip()}")
                 else:
+                    # Insert in reverse so block_start stays valid
                     updated.insert(block_start, '\n')
-                    updated.insert(block_start, cb_close)
-                    updated.insert(block_start, url_line)
-                    updated.insert(block_start, cb_open)
+                    updated.insert(block_start, '```\n')
+                    updated.insert(block_start, f'{expected_url}\n')
+                    updated.insert(block_start, '```\n')
+                    updated.insert(block_start, '\n')
                     updated.insert(block_start, new_link_line)
-                    # Adjust i for the 5 inserted lines
-                    i += 5
+                    # Adjust i for the 6 inserted lines
+                    i += 6
                     print(f"UPDATED  MISSING -> inserted  {rel}:{block_start+1}")
                 changes += 1
 
