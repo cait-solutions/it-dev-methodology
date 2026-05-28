@@ -137,6 +137,60 @@ Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mism
 
 ---
 
+## Sync validators
+
+Конфиг для `/review` sync validators framework — config-driven L3 проверки что doc-артефакты обновлены вместе с изменениями кода. При каждом `/review` агент проходит по validators: если `trigger_paths` совпадают с изменёнными файлами (`git diff main..HEAD --name-only`) но `required_artifact` НЕ в diff → выдаёт 🔵 **Recommendation** с disposition (fix now / deferred / backlog / irrelevant).
+
+**Опт-ин:** если эта секция отсутствует — validators не запускаются (нет config = нет validation). Существующие subjective checks в `/review` Документация продолжают работать.
+
+```yaml
+- name: PRODUCT-whole
+  trigger_paths: ["src/**", "lib/**", "app/**", "services/**"]
+  required_artifact: PRODUCT.md
+  reason: "Поведение продукта изменилось — PRODUCT.md описание актуально?"
+
+- name: PRODUCT-components
+  trigger_paths: ["src/**", "lib/**", "app/**", "services/**"]
+  required_artifact: PRODUCT.md
+  required_section: "## Логика компонентов"
+  reason: "Изменён код компонента — секция в PRODUCT.md ## Логика компонентов обновлена (Покрывает / НЕ покрывает / Ключевые правила)?"
+
+- name: USER-MAP
+  trigger_paths: ["src/api/**", "src/cli/**", "commands/**", "src/ui/**"]
+  required_artifact: docs/product/USER-MAP.md
+  reason: "Изменилась user-facing capability / workflow — USER-MAP обновлён?"
+
+- name: SYSTEM-MAP
+  trigger_paths: ["src/services/**", "src/components/**", "src/integrations/**"]
+  required_artifact: docs/architecture/SYSTEM-MAP.md
+  reason: "Новый компонент / связь / интеграция — SYSTEM-MAP обновлён?"
+
+- name: ARTIFACT-MAP
+  trigger_paths: ["commands/**", "templates/**", "scripts/**"]
+  required_artifact: docs/product/ARTIFACT-MAP.md
+  reason: "Новая команда / артефакт / read-write pattern — ARTIFACT-MAP обновлён?"
+
+- name: ADR-status
+  trigger_paths: ["src/**", "lib/**"]
+  required_artifact: docs/adr/
+  optional: true
+  reason: "Реализуется ADR — статус ADR обновлён (Proposed → Accepted)? Запускается только если PR commit message упоминает ADR-NNN."
+```
+
+**Поля:**
+- `name` — идентификатор validator (для disposition tracking)
+- `trigger_paths` — glob patterns кода, изменение которого требует обновления `required_artifact`. Адаптируй под структуру проекта (если у вас `apps/` или `packages/*/src/**` — переопредели)
+- `required_artifact` — путь к артефакту относительно корня проекта
+- `required_section` (опционально) — конкретная подсекция артефакта которая должна быть в diff (для tightening)
+- `optional: true` (опционально) — validator запускается только при специальных условиях (см. ADR-status)
+- `reason` — текст Recommendation, конкретный вопрос пользователю
+
+**Добавить новый validator:** дополни list — `/review` автоматически подхватит. Удалить — удали блок.
+
+**Existing projects (migration):** добавь секцию с default validators выше. Path patterns могут потребовать tuning под структуру проекта.
+
+---
+
 ## Auto-update
 
 Конфиг для `auto-update-watchdog.py` SessionStart hook — авто-pull методологии + bootstrap detection. При каждом запуске Claude Code hook проверяет интервал и при необходимости запускает `sync-methodology.sh`.

@@ -146,14 +146,38 @@
 
 🟡 WARNING если предложены только методологические правила без code-level альтернативы.
 
-**Документация:**
+**Документация — Sync validators framework (config-driven L3):**
+
+Прочитать `CLAUDE.local.md` секцию `## Sync validators`. Если секция отсутствует → пропустить sync validators (нет config = нет validation), продолжить existing subjective checks ниже.
+
+Если секция есть — выполнить `git diff main..HEAD --name-only` → получить список изменённых файлов (`diff_files`). Для **каждого** validator в config:
+
+1. **Match trigger_paths:** есть ли в `diff_files` файлы совпадающие с `trigger_paths` (glob patterns)?
+   - Нет → validator не triggered, пропустить
+   - Да → запомнить совпавшие файлы
+2. **Optional flag:** если `optional: true` — проверить условие активации (напр. для `ADR-status` — упоминается ли `ADR-NNN` в commit message). Если не активирован → пропустить
+3. **Check required_artifact:** есть ли `required_artifact` в `diff_files`?
+   - Если задан `required_section` → проверить что секция упомянута в diff артефакта (`git diff main..HEAD -- <required_artifact>` содержит `<required_section>`)
+   - Да → silent (sync OK)
+   - Нет → 🔵 **Recommendation** (формат ниже)
+
+**Формат Recommendation:**
+
+```
+🔵 Recommendation: <name из config>
+Причина: <reason из config>
+Затронутые файлы: <список совпавших с trigger_paths>
+Не обновлено: <required_artifact>
+Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelevant + явное обоснование]
+```
+
+**Disposition обязательна** — пользователь выбирает явно, не игнорирует. "irrelevant" требует обоснование (например, "refactor без поведенческих изменений", "test-only change").
+
+**Закрывает класс** «agent забыл обновить doc артефакт при изменении кода» для всех артефактов Категории А единым механизмом (PRODUCT-whole / PRODUCT-components / USER-MAP / SYSTEM-MAP / ARTIFACT-MAP / ADR-status). PRODUCT components check (v4.19.0) рефакторен в этот framework — L3 в `/plan` -1.3 (превентивно) + L4 здесь (финальная сверка).
+
+**Subjective checks (остаются — ловят nuance что обновить, не "обновлено ли вообще"):**
 - Поведение изменилось — PRODUCT.md обновлён?
 - Изменилось количество шагов, точек или числовые параметры команды → PRODUCT.md числовые данные актуальны?
-- **PRODUCT.md `## Логика компонентов` sync check** (L4 git diff анализ): пройти по `git diff main..HEAD --name-only`:
-  - Найти изменённые файлы кода (не doc, не config, не tests) — какие компоненты они затрагивают?
-  - Для каждого затронутого компонента → проверить что секция `### <component>` в PRODUCT.md `## Логика компонентов` тоже в diff
-  - Изменён код компонента но секция в PRODUCT.md не в diff → 🔵 **Recommendation** (не блок merge): «Изменены файлы кода компонента `<X>`: [список]. Секция `### <X>` в PRODUCT.md `## Логика компонентов` не обновлена этим PR. Возможно ли это behavior change который требует обновления (Покрывает / НЕ покрывает / Ключевые правила)? Или это refactor без поведенческих изменений? Ответь явно в /review summary.» **Disposition выбирает пользователь:** обновить секцию (fix now) / отметить refactor-no-behavior-change (deferred с пояснением в DEVLOG) / отметить компонент не имеет секции в PRODUCT.md → создать секцию (backlog) / иные.
-  - Закрывает класс «agent забыл обновить PRODUCT.md component section при изменении поведения» (L3 в /plan -1.3 — превентивно; L4 здесь — финальная сверка перед merge).
 
 - Изменились пользовательские возможности (`/code` добавил/изменил/убрал команды или UX) → USER-MAP.md обновлён?
 - PRODUCT.md изменён — USER-MAP.md всё ещё консистентен? (capabilities, data flow)
