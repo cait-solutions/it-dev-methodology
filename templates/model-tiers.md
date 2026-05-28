@@ -37,6 +37,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/product-check` | Fast | (always Fast — структурное сравнение текста с кодом) | (always Fast) |
 | `/diagnose` | **Capable** | 3+ failed hypotheses (нужно искать unusual root cause) | (никогда — диагностика всегда сложна) |
 | `/onboard` | Default | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
+| `/sync-audit` | **Default** | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare) |
 
 ---
 

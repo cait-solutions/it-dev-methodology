@@ -176,6 +176,14 @@
    Рекомендуемая модель: **Capable tier** (Opus) — strategic depth обязательна.
    (y/n/skip)"
 
+**Триггер: /sync-audit** (если есть `.claude/.version`):
+- Прочитать `.claude/.version` (текущая methodology version) + `.claude/state/triggers.json` `last_sync_audit.methodology_version` (последняя audit version)
+- Compute minor delta. Если ≥ `audit_threshold` (default 3 из `CLAUDE.local.md ## Auto-update`) ИЛИ `last_sync_audit` отсутствует И текущая version ≥ `v4.16.0`
+- → "Methodology обновлена с момента последнего sync-audit (delta N minor). Запустить /sync-audit? Проверка 5 gap-классов (PRODUCT components, Sync validators, Auto-update, Mermaid hybrid, Skills frontmatter).
+   Рекомендуемая модель: **Default tier** (Sonnet) — checklist + grep + report.
+   (y/n/skip)"
+- Fallback trigger: если `auto-update-watchdog.py` recommendation был пропущен в SessionStart или hook отсутствует
+
 **Триггер: новая идея без контекста:**
 - Запрос описывает фичу не упомянутую в IDEAS.md/ROADMAP.md
 - → "Добавить в IDEAS.md перед планированием? (y/n)"

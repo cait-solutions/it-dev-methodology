@@ -53,6 +53,13 @@ Detected capabilities:
 
 Если активна **только A** → дальше выполняется только Способность A (Шаги 1-4), пропускается всё остальное.
 
+**Cross-reference на `/sync-audit`:**
+
+> /architecture-audit это **архитектурный** audit — что **построено в проекте** vs design (SYSTEM-MAP drift, AGENT-GAPS pattern analysis).
+> Для **methodology adoption** audit — что **methodology предлагает** vs **применено в проекте** (PRODUCT components, Sync validators, Mermaid hybrid, Skills frontmatter) — запусти `/sync-audit`.
+> Особенно если methodology version delta ≥ 3 minor versions с момента последнего audit.
+> Эти команды **дополняют друг друга**: одна про архитектуру проекта, другая про adoption features методологии. Не дублируют scope. См. также IDEAS 2026-05-28 — рассматривается возможное объединение в `/project-audit` через 2-3 /retro циклов если empirical signal покажет нужность.
+
 ---
 
 ## Шаг 1 — Inventory (Способность A: SYSTEM-MAP)
