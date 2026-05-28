@@ -17,11 +17,18 @@
 ## Подготовка
 
 Прочитать:
-1. IDEAS.md — все записи (сырые сигналы)
-2. DEVLOG.md — записи за последние 14 дней
-3. VISION.md — активные оси (если есть)
+1. **IDEAS.md** — raw signals (сырые сигналы, пользователь сказал «было бы удобно»)
+2. **PRODUCT-GAPS.md** (если существует) — classified product gaps (P-NNN записи: feature/capability/ux/integration/edge-case с severity)
+3. DEVLOG.md — записи за последние 14 дней
+4. VISION.md — активные оси (если есть)
 
-Если IDEAS.md пуст или только шаблон → "IDEAS.md не заполнен. Анализ невозможен без данных."
+Два artefakta signal:
+- **IDEAS** = raw → пользователь делает observation, нет structure
+- **PRODUCT-GAPS** = classified → structured gap с severity / категорией / гипотезой почему не покрыто / potential fix
+
+Workflow: reviewed IDEAS → если confirmed actionable gap → конвертируется в новую P-NNN запись в PRODUCT-GAPS.md → в `/product-review` сортируется по severity → попадает в ROADMAP.
+
+Если оба пусты (IDEAS + PRODUCT-GAPS) → "IDEAS.md и PRODUCT-GAPS.md не заполнены. Анализ невозможен без данных."
 
 ---
 
@@ -61,6 +68,20 @@
 
 Спросить: "Перенести High-приоритетные в ROADMAP.md → Considered? (y/n)"
 Не переносить самостоятельно — ждать ответа пользователя.
+
+**Дополнительно: IDEAS → PRODUCT-GAPS classification**
+
+Если в этом /product-review были reviewed IDEAS которые описывают **product coverage gap** (а не workflow friction) — спросить:
+
+```
+📋 Reviewed IDEA [IDEA-описание] описывает product coverage gap.
+   Конвертировать в PRODUCT-GAPS запись P-NNN? (y/n)
+   - Категория: [feature-gap | capability-gap | ux-gap | integration-gap | edge-case-gap]
+   - Severity: [🔴 High | 🟡 Medium | 🟢 Low]
+   - Use case (затронут): [конкретный сценарий]
+```
+
+При `y` — создать P-NNN запись в PRODUCT-GAPS.md, в IDEAS пометить `[reviewed:converted-to-P-NNN]`.
 
 Обновить triggers.json: `last_product_review = { date: today, plans_since: 0 }`
 

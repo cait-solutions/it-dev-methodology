@@ -3,6 +3,12 @@ Stop hook — scans the last Claude response AND last user message for
 admission/correction phrases. When found and AGENT-GAPS.md was not recently
 written, outputs a reminder so Claude proposes logging the gap.
 
+Scope (since v4.24.0): только AGENT-GAPS (agent's reasoning failures —
+"я пропустил", "ты прав", "я не предусмотрел"). НЕ записывает в
+PRODUCT-GAPS.md — product coverage gaps классифицируются вручную через
+/plan Шаг -4 (user feedback "продукт не покрывает X" → PRODUCT-GAPS,
+не auto-detected этим hook).
+
 Wired in .claude/settings.json under "hooks.Stop".
 
 Anti-loop: stop_hook_active=True means we are already in a hook-triggered

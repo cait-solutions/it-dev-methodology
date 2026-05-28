@@ -82,6 +82,19 @@
    - Все labels hybrid → 🟢 OK
    - Нет Mermaid blocks → 🟢 N/A
 
+### Gap 6: PRODUCT-GAPS.md (v4.24.0)
+
+**Цель:** проверить что product gaps namespace отделён от agent gaps.
+
+1. Существует ли `PRODUCT-GAPS.md` в корне проекта?
+2. Если существует `AGENT-GAPS.md` И существует `PRODUCT-GAPS.md` → 🟢 OK (split применён)
+3. Если есть только `AGENT-GAPS.md` без `PRODUCT-GAPS.md` → 🟡 **Medium severity** — рекомендация запустить migration script + bootstrap PRODUCT-GAPS из template
+4. Если ни одного нет → 🟢 N/A (gap culture не используется в проекте)
+
+Output:
+- Оба файла OK → 🟢 split применён
+- Только AGENT-GAPS → 🟡 рекомендация: `bash <methodology>/scripts/migrate-agent-to-product-gaps.sh --dry-run` + bootstrap из template
+
 ### Gap 5: Skills frontmatter spec (v4.16.2) — только если `.claude/skills/` существует
 
 **Цель:** проверить что Agent Skills frontmatter соответствует Anthropic spec.
