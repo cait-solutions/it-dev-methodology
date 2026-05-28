@@ -190,7 +190,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - [methodology] Mermaid изменён → ссылки авто-обновлены и валидны? (run update then validate):
   `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation && bash scripts/update-mermaid-links.sh`
   `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation && bash scripts/validate-mermaid-links.sh`
-  После update: STALE/MISSING = 🔴 CRITICAL (ручной фикс); URL_TOO_LONG = warning, не блок
+  После update: STALE/MISSING = 🔴 CRITICAL (ручной фикс).
 - USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
 - Изменился рекомендуемый порядок действий или prerequisites для существующих возможностей → USER-MAP.md потоки актуальны?
 - Новая команда или тип артефакта добавлены → `docs/product/ARTIFACT-MAP.md` обновлён?

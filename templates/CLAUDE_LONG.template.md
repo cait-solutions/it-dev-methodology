@@ -373,7 +373,7 @@
 | `sync-methodology.sh` | Обновление `.claude/commands/hooks/skills/` из methodology repo (включает auto git pull) |
 | `deploy-push.sh` | Push в agent_branch + PR создание + auto-merge (если configured) per branching mode |
 | `update-mermaid-links.sh` | Авто-обновление mermaid.live URL во всех .md файлах (regen после изменения diagram) |
-| `validate-mermaid-links.sh` | Verify Mermaid links: MISSING / STALE / URL_TOO_LONG checks |
+| `validate-mermaid-links.sh` | Verify Mermaid links: MISSING / STALE checks |
 | `validate-artifact-size.sh` | SIZE_EXCEEDED + PROMPT_BLOAT detection для артефактов-инструкций (config-driven budgets) |
 | `mermaid-link.py` | Generate mermaid.live URL из mermaid code (CLI utility) |
 | `migrate-claude-md.sh` | Phase G2 split migration helper (CLAUDE.md → CLAUDE.md + CLAUDE_LONG.md) |

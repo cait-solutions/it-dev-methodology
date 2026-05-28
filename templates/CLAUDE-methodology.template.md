@@ -145,7 +145,7 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 - `bash scripts/validate-mermaid-links.sh` — methodology repo (commands/, templates/, scripts/)
 - `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation` — documentation repo (USER-MAP, SYSTEM-MAP, ARTIFACT-MAP)
 
-Exit 1 = MISSING_LINK или STALE_LINK; предупреждение (не блок) = URL_TOO_LONG (> 2000 символов → mini/full паттерн, см. `templates/ARTIFACT-MAP.template.md`). Для single-repo проектов — только первая команда.
+Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов — только первая команда.
 
 ---
 
