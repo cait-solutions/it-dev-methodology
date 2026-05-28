@@ -44,6 +44,25 @@ Dog-fooding: methodology itself uses team-mode to validate the branching contrac
 
 ---
 
+## Consumers
+
+Auto-discovery параметры для `/pull-consumers` (см. [commands-local/pull-consumers.md](commands-local/pull-consumers.md)).
+
+```yaml
+consumers_root: ..              # path relative to methodology repo
+marker_file: .claude/.version   # marker that a sibling folder is methodology consumer
+```
+
+`/pull-consumers` сканирует `<methodology-repo>/<consumers_root>/*/` и считает консьюмером любую sibling папку имеющую `.git/` И `<marker_file>`. Список **не ведётся вручную** — добавил папку в VSCode workspace (sibling к methodology) → следующий запуск её подхватит.
+
+**Что НЕ нужно делать:**
+- ❌ Не вести явный список консьюмеров здесь — discovery автоматический
+- ❌ Не править `marker_file` без причины — `.claude/.version` создаётся `new-project-init.sh` и одинаков для всех консьюмеров
+
+**Когда менять `consumers_root`:** если methodology repo переместился в подпапку (например `tools/methodology/`) — обновить путь относительно нового положения.
+
+---
+
 ## Remotes
 
 ```yaml

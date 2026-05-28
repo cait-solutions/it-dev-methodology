@@ -10,6 +10,9 @@ Thumbs.db
 # Test outputs
 /tmp/
 
+# Scratch files (mermaid URL generation via py scripts/mermaid-link.py)
+.tmp-mermaid.*
+
 # Project artifacts (NOT for methodology-platform consumers)
 # Canonical templates for consumers are in templates/
 # Restored by: bash scripts/sync-methodology.sh .

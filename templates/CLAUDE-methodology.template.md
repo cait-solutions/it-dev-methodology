@@ -23,7 +23,8 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 Методология = 5 слоёв (см. [SYSTEM-MAP.md](docs/architecture/SYSTEM-MAP.md)): команды / шаблоны / хуки / агенты-скелеты / скрипты.
 
 **MUST:**
-- `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/` — единственный источник правды
+- `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/` — единственный источник правды (синхронизируется консьюмерам)
+- `commands-local/` — methodology-only команды (НЕ синхронизируется консьюмерам; пример: `/pull-consumers`)
 - Любая правка синхронизируемого артефакта → bump VERSION
 - При изменении схемы `triggers.json.template` → мажор bump
 
@@ -32,6 +33,8 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 - ❌ Удалять команды без мажор bump VERSION + migration инструкция (breaking)
 - ❌ Использовать bash 4-features (`${var,,}`, associative arrays) — Git Bash на Windows ставит 3.2
 - ❌ Дублировать контент между шаблонами
+- ❌ Класть команду которая должна попадать к консьюмерам в `commands-local/` (правило: shared → `commands/`, methodology-only → `commands-local/`)
+- ❌ Менять `sync-methodology.sh` / `new-project-init.sh` итерацию команд на recursive (`find`, `**/*.md`) без явного exclude `commands-local/`
 
 Rationale: [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md).
 
@@ -201,6 +204,7 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 - [scripts/deploy-push.sh](scripts/deploy-push.sh) — deploy push (reads mode from CLAUDE.local.md, enforces solo/team pattern)
 - [scripts/migrate-claude-md.sh](scripts/migrate-claude-md.sh) — Phase G2 split migration helper
 - [commands/plan.md](commands/plan.md) — workflow entry point
+- [commands-local/pull-consumers.md](commands-local/pull-consumers.md) — **LOCAL-ONLY** команда: pull всех consumer repos из workspace + diff новых methodology-tracked записей. НЕ синхронизируется консьюмерам
 - [templates/triggers.json.template](templates/triggers.json.template) — canonical state schema
 - [templates/model-tiers.md](templates/model-tiers.md) — model recommendation registry
 - [templates/AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) — AI gap capture (consumer artifact)
