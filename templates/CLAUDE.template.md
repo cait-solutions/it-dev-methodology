@@ -51,6 +51,8 @@ Before first commit in session: read `agent_branch` from `CLAUDE.local.md`, then
 
 **Onboard update rule:** When adding a new slash command, agent, or rules file → update `/onboard` in the same commit/PR. Onboarding that doesn't reflect the current toolset misleads contributors.
 
+**Skill frontmatter spec compliance rule:** When creating or editing `skills/*/SKILL.md` (Agent Skills) — frontmatter MUST follow [official Anthropic spec](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview). Supported top-level keys: `name`, `description` (+ optional `metadata`). `description` MUST be **single-line string** ≤ 1024 chars (multi-line `description: |` blocks are parsed by linters as separate keys — broken state). `version`/`type` and any custom fields → inside `metadata:` block. `name` — lowercase + digits + hyphens only, ≤ 64 chars, no "anthropic"/"claude". Before commit: verify with IDE linter. In `/plan` Step 1.7 (contract) for new skills: explicitly fetch current Anthropic spec, don't pattern-match against existing files.
+
 For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md#реализация-через-code-расширенно).
 
 ---

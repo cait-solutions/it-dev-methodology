@@ -1,20 +1,19 @@
 ---
 name: customer-research
-description: |
-  Помогает провести исследование клиентов: ICP, персоны, Jobs-to-be-done, анализ отзывов и интервью.
-  Активируй когда пользователь упоминает: "персоны", "ICP", "идеальный клиент", "customer research", "Jobs-to-be-done", "JTBD", "кто наш клиент", "анализ отзывов", "интервью с клиентами", "review mining", "customer interviews", "target persona", "customer segments".
-  Создаёт или обновляет MARKETING.md (секция ICP & Personas). Требует наличия MARKETING.md в корне проекта.
-version: 1.0.0
-type: knowledge-skill
+description: Помогает провести исследование клиентов - ICP, персоны, Jobs-to-be-done, анализ отзывов и интервью. Активируй когда пользователь упоминает персоны, ICP, идеальный клиент, customer research, Jobs-to-be-done, JTBD, кто наш клиент, анализ отзывов, интервью с клиентами, review mining, customer interviews, target persona, customer segments. Создаёт или обновляет MARKETING.md (секция ICP & Personas). Требует наличия MARKETING.md в корне проекта. Порядок Foundation block - второй (после define-positioning, перед competitor-profiling). Читает Positioning из MARKETING.md чтобы понять целевой сегмент. Если Positioning не заполнен - рекомендует запустить define-positioning первым.
 metadata:
+  version: 1.0.0
+  type: knowledge-skill
   auto_generated: false
-  methodology_version: v4.16.0
+  methodology_version: v4.16.2
   synced_at: "{{SYNCED_AT}}"
   source: https://github.com/cait-solutions/it-dev-methodology
-  banner: "Synced from methodology-platform v4.16.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
+  banner: "Synced from methodology-platform v4.16.2 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
 
 # customer-research — ICP, Персоны и JTBD
+
+**Порядок Foundation block:** второй (после `define-positioning`, перед `competitor-profiling`). Читает Positioning из MARKETING.md чтобы понять целевой сегмент. Если Positioning не заполнен — рекомендует запустить `define-positioning` первым.
 
 Ты помогаешь провести исследование клиентов: выявить идеальный профиль покупателя, построить персоны и сформулировать Jobs-to-be-done. Работаешь строго в рамках маркетинг-контекста проекта.
 

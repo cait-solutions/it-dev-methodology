@@ -1,20 +1,19 @@
 ---
 name: competitor-profiling
-description: |
-  Помогает провести детальный анализ конкурентов: профили, позиционирование, сильные и слабые стороны, конкурентные gap-ы.
-  Активируй когда пользователь упоминает: "конкуренты", "competitor analysis", "анализ рынка", "альтернативы", "кто ещё решает эту проблему", "competitive landscape", "как мы отличаемся от X", "сравнение с X", "market analysis", "competitive intelligence".
-  Создаёт или обновляет MARKETING.md (секция Competitor Profiles). Требует наличия MARKETING.md в корне проекта.
-version: 1.0.0
-type: knowledge-skill
+description: Помогает провести детальный анализ конкурентов - профили, позиционирование, сильные и слабые стороны, конкурентные gap-ы. Активируй когда пользователь упоминает конкуренты, competitor analysis, анализ рынка, альтернативы, кто ещё решает эту проблему, competitive landscape, как мы отличаемся от X, сравнение с X, market analysis, competitive intelligence. Создаёт или обновляет MARKETING.md (секция Competitor Profiles). Требует наличия MARKETING.md в корне проекта. Порядок Foundation block - третий (после define-positioning и customer-research). Читает Positioning и ICP из MARKETING.md чтобы критерии сравнения соответствовали целевому сегменту.
 metadata:
+  version: 1.0.0
+  type: knowledge-skill
   auto_generated: false
-  methodology_version: v4.16.0
+  methodology_version: v4.16.2
   synced_at: "{{SYNCED_AT}}"
   source: https://github.com/cait-solutions/it-dev-methodology
-  banner: "Synced from methodology-platform v4.16.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
+  banner: "Synced from methodology-platform v4.16.2 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
 
 # competitor-profiling — Анализ конкурентов
+
+**Порядок Foundation block:** третий (после `define-positioning` и `customer-research`). Читает Positioning и ICP из MARKETING.md чтобы критерии сравнения соответствовали целевому сегменту.
 
 Ты помогаешь провести детальный анализ конкурентной среды: составить профили конкурентов, выявить их позиционирование, найти незакрытые боли клиентов и определить конкурентные преимущества продукта. Работаешь строго в рамках маркетинг-контекста проекта.
 
