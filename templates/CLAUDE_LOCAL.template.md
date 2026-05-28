@@ -137,6 +137,30 @@ Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mism
 
 ---
 
+## Auto-update
+
+Конфиг для `auto-update-watchdog.py` SessionStart hook — авто-pull методологии + bootstrap detection. При каждом запуске Claude Code hook проверяет интервал и при необходимости запускает `sync-methodology.sh`.
+
+```yaml
+enabled: true
+interval_hours: 2
+on_failure: notify
+methodology_path: ../it-dev-methodology
+```
+
+**Поля:**
+- `enabled` — `true` / `false`. Отключить для offline-окружений или CI/CD где sync управляется внешним процессом.
+- `interval_hours` — частота проверки (часы). Default `2` — баланс актуальности и шума. Можно ставить `0.5` для max-fresh или `24` для daily.
+- `on_failure` — поведение при ошибке (нет интернета, GitHub down, sync fail):
+  - `notify` — warning в чат, агент продолжает работать (рекомендуется)
+  - `silent` — игнорировать тихо
+  - `block` — exit 1 (hook fail; не рекомендуется кроме CI/CD)
+- `methodology_path` — путь к склонированному `it-dev-methodology` относительно корня проекта. Default `../it-dev-methodology`.
+
+**Bootstrap mode:** если `.claude/.version` отсутствует — методология не была инициализирована в этом проекте. Hook печатает рекомендацию для агента, агент в первом ответе предложит запустить `new-project-init.sh`.
+
+---
+
 ## External links
 
 - Runbooks: `<link>`
