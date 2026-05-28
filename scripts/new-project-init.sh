@@ -110,6 +110,9 @@ inject_skill_banner() {
 
 # ---------------------------------------------------------------------------
 # Slash commands.
+#
+# NOTE: Glob 'commands/*.md' намеренно НЕ матчит 'commands-local/*.md' —
+# methodology-only команды не bootstrap'ятся консьюмерам. См. commands-local/.keep.
 # ---------------------------------------------------------------------------
 echo "→ commands/"
 for cmd in "$METHODOLOGY_DIR"/commands/*.md; do

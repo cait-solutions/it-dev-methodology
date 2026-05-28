@@ -38,6 +38,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/diagnose` | **Capable** | 3+ failed hypotheses (нужно искать unusual root cause) | (никогда — диагностика всегда сложна) |
 | `/onboard` | Default | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
 | `/sync-audit` | **Default** | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare) |
+| `/pull-consumers` | **Fast** | (никогда — git fetch + diff parsing + report, no reasoning) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Запускается вручную перед /retro или анализом методологии |
 
 ---
 

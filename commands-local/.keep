@@ -1,0 +1,12 @@
+# commands-local/ — methodology-only commands
+
+Команды в этой папке **НЕ синхронизируются** консьюмерам через `sync-methodology.sh` или `new-project-init.sh`.
+
+Используй для команд которые имеют смысл только для maintainer'а методологии (например `/pull-consumers` для анализа gaps консьюмеров).
+
+**Граница:**
+- `commands/` — общие команды для всех (sync'ятся в `.claude/commands/` каждого консьюмера)
+- `commands-local/` — только для methodology repo (НЕ sync'атся)
+- `templates/` — канонические шаблоны для bootstrap новых проектов
+
+**Sync exclusion гарантируется** через `glob 'commands/*.md'` в обоих sync скриптах — `commands-local/*.md` не матчится, автоматически выпадает.
