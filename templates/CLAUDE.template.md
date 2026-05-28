@@ -59,6 +59,12 @@ where `<methodology_path>` defaults to `../it-dev-methodology` (configurable in 
 
 **PRODUCT.md component sync rule:** When planning work that touches code of any component / service / module — `/plan` Step -1.3 (Adjacent Impact) reads PRODUCT.md `## Логика компонентов → ### <component>` section. If missing → block plan until section is created together with user. If exists → cite it in `## Agent's understanding` block of Step 3 template (verbatim quotes, not paraphrase). If your understanding doesn't match PRODUCT.md → STOP until clarification with user. When changing component behavior (Покрывает / НЕ покрывает / Ключевые правила shift) → section MUST be in "Затронутые файлы" of Step 3 and updated in `/code` Step 5. `/review` runs L4 git diff sync check (см. **Sync validators framework rule** ниже): code files changed without corresponding PRODUCT.md section update → 🔵 Recommendation with user disposition (fix now / deferred / backlog). Two-level defense: L3 in `/plan` preventively + L4 in `/review` as final sync check before merge.
 
+**Purpose registry rule:** Каждый нормативный элемент методологии имеет **explicit purpose** во избежание класса ошибок «agent assumes purpose by position in workflow» (G-049):
+- **Slash-команды (`commands/*.md`):** inline `> **Цель:** <одна строка>` сразу после H1 заголовка
+- **Hooks / scripts / state artifacts / templates:** строка в [CLAUDE_LONG.md § Purpose registry](CLAUDE_LONG.md) реестре
+
+При создании нового элемента — обязательно добавить purpose в соответствующее место. При переименовании / удалении — обновить registry. Это L3 регулятор (rule + procedural) для closes G-049 класс «purpose-by-position assumption».
+
 **Gap classification rule (AGENT vs PRODUCT):** Два namespace для gap'ов:
 - **AGENT-GAPS.md** — agent's **reasoning** failures (я как агент пропустил правило / проигнорировал / неверно assumed). Категории: `prompt-gap`, `context-gap`, `logic-gap`, `assumption-gap`, `state-stale`. Сигнал для **методологии** (правило в commands/ закрывает класс).
 - **PRODUCT-GAPS.md** — product's **coverage** gaps (продукт не имеет feature / capability / use case). Категории: `feature-gap`, `capability-gap`, `ux-gap`, `integration-gap`, `edge-case-gap`. Сигнал для **product roadmap** (/plan для фичи закрывает gap).

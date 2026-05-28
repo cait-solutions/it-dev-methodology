@@ -1,5 +1,7 @@
 # /architecture-audit — Структурный аудит проекта
 
+> **Цель:** структурный аудит **архитектуры проекта** — SYSTEM-MAP ↔ code drift, AGENT-GAPS pattern analysis (Level 4+ ladder), decommission candidates, cross-project aggregation. НЕ для methodology adoption (это `/sync-audit`), НЕ для тактических проблем (это `/retro`), НЕ для product gaps (это `/product-review`).
+
 Универсальная команда структурного анализа. Применима к **любому проекту** (консьюмер или methodology-platform). Способности команды активируются автоматически по наличию артефактов в проекте:
 
 | Способность | Активируется если | Применимо к |
