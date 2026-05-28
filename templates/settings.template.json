@@ -36,6 +36,13 @@
           { "type": "command", "command": "py .claude/hooks/agent-gaps-watchdog.py" }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "py .claude/hooks/auto-update-watchdog.py" }
+        ]
+      }
     ]
   }
 }
