@@ -910,12 +910,9 @@ Binding minimums: #4 = X%, остальные = Y%
 Приоритет 1 — если `scripts/mermaid-link.py` доступен:
 ```bash
 py scripts/mermaid-link.py - << 'EOF'
-> 🔗 [Открыть в Mermaid Live](https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyubAntSg3MTNF98KuC_subFG4sP3ChotNFxuAnL0Xmy82AenNF_YpFCfnF6TaKeko5UKUA7VWxyiVZKTmpsYoWcUopaSmJZbmlMQo1QLVJJaW5AdX5iUrWZUUlabqKJUWpCSWpLpkJqYXJeZCBGsBq084Tg)
+[Открыть в Mermaid Live](https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyubAntSg3MTNF98KuC_subFG4sP3ChotNFxuAnL0Xmy82AenNF_YpFCfnF6TaKeko5UKUA7VWxyiVZKTmpsYoWcUopaSmJZbmlMQo1QLVJJaW5AdX5iUrWZUUlabqKJUWpCSWpLpkJqYXJeZCBGsBq084Tg)
 
-```
 https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyubAntSg3MTNF98KuC_subFG4sP3ChotNFxuAnL0Xmy82AenNF_YpFCfnF6TaKeko5UKUA7VWxyiVZKTmpsYoWcUopaSmJZbmlMQo1QLVJJaW5AdX5iUrWZUUlabqKJUWpCSWpLpkJqYXJeZCBGsBq084Tg
-```
-
 
 ```mermaid
 <мermaid-код затронутого scope>

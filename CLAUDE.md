@@ -155,9 +155,13 @@ py scripts/mermaid-link.py <file>
 
 **Формат над каждым mermaid-блоком** (вставляется автоматически скриптом):
 
-Blockquote-ссылка, затем пустая строка, затем plain fenced code block (без `> ` префикса) с URL внутри. Пример смотри в любом обновлённом артефакте (`docs/architecture/SYSTEM-MAP.md`).
+```
+[Открыть в Mermaid Live](url)
 
-Ссылка — кликабельна в Chrome/GitHub. Plain code block (без `> ` префикса) — тройной клик выделяет **только** URL без markdown-символов.
+https://mermaid.live/edit#pako:...
+```
+
+Markdown-ссылка → кликабельна в Chrome/GitHub. URL на отдельной строке без обёрток → тройной клик выделяет **только** URL.
 
 **Одна диаграмма — одна ссылка.** Разбивать на mini + full запрещено: дублирование и путаница.
 
