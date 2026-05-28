@@ -557,6 +557,11 @@ else
   check_artifact_subst "docs/data-map.md"                 "templates/data-map.template.md"            "$_pname"
   check_artifact_subst "docs/glossary.md"                 "templates/glossary.template.md"            "$_pname"
   check_artifact_subst "docs/BEHAVIOR.md"                 "templates/BEHAVIOR.template.md"            "$_pname"
+
+  # Secrets foundation (Phase 1 / v4.32.0+): never overwrite — these may hold
+  # real configuration once filled. .env itself is NEVER created by sync.
+  check_artifact_subst ".env.example"                     "templates/.env.example.template"           "$_pname"
+  check_artifact_subst ".claude/secrets-manifest.yaml"    "templates/secrets-manifest.yaml.template"  "$_pname"
   check_artifact_subst "docs/adr/README.md"               "templates/adr/README.template.md"              "$_pname"
   check_artifact       "inbox/README.md"                  "templates/inbox/README.template.md"
   check_artifact_subst ".claude/rules/README.md"          "templates/.claude/rules/README.template.md" "$_pname"

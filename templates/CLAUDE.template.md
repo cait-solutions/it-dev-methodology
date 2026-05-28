@@ -170,6 +170,32 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 
 ---
 
+## Secrets & Credentials
+
+**Canonical store:** `.env` (per-project, gitignored) + optional `~/.config/it-dev/secrets.env` (shared). Declaration of required keys: `.claude/secrets-manifest.yaml`.
+
+**MUST:**
+- Setup new secret (one-time, user runs): `bash scripts/set-secret.sh KEY <value>`
+- Audit what's needed vs present: `/secrets` or `bash scripts/validate-secrets.sh`
+- Use secret in command (agent-safe): `bash scripts/with-secret.sh KEY -- <command>` (value never enters agent stdout/transcript)
+- Boolean check: `bash scripts/check-secret.sh KEY` (exit 0/1, no value)
+- Git HTTPS push/pull: configure `scripts/git-credential-from-env.sh` as credential helper
+
+**MUST NOT:**
+- ❌ Agent reading `.env` directly — blocked by `settings.json` Read+Bash deny rules
+- ❌ Agent running `env` / `printenv` / `echo $SECRET` / `source .env` — blocked by `bash_protect.py` hook
+- ❌ Writing secret values into chat / DEVLOG / commit messages
+- ❌ Committing `.env` (gitignored; `secrets-guard.py` blocks force-add at commit-time)
+- ❌ `--no-verify` to bypass pre-commit hook without DEVLOG justification
+
+**On compromise:** rotate at provider IMMEDIATELY → `set-secret.sh KEY <new>` → `bash scripts/secrets-scrub.sh` (cleanup transcripts) → check git history. See `skills/secrets-management/SKILL.md` for full runbook.
+
+**Scope limit:** these defenses are agent-mediated (transcript / git / fs). They do NOT protect against OS-level compromise (process inspection, core dumps, memory scraping) — assume local OS is trusted boundary.
+
+**External secret managers** (Vault / AWS / Azure): integrate via priority chain step 3 (process env). See skill for patterns.
+
+---
+
 ## Hybrid dev
 
 For projects combining AI agent workflow with manual human development:

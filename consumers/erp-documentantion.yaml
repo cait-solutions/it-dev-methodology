@@ -1,5 +1,7 @@
 # Consumer project reference — erp-documentantion
-# Token: never store here. Use git credential helper or run clone manually.
+# v4.34.0+: tokens are NEVER stored in this file or pasted into URLs.
+# Use `bash scripts/clone-consumer.sh erp-documentantion` (reads `.env` via
+# credential helper — token never appears in shell history or URL).
 
 name: erp-documentantion
 repo: https://code.nexchance.de/nexchance/erp-documentantion.git
@@ -8,7 +10,15 @@ local_path: consumers/repos/erp-documentantion
 purpose: methodology analysis — compare consumer artifacts with methodology templates
 status: reference-only  # clone not present until manually cloned
 
-# To clone (run once, token not stored after):
-#   GIT_TOKEN=<your-token> git clone "https://oauth2:${GIT_TOKEN}@code.nexchance.de/nexchance/erp-documentantion.git" consumers/repos/erp-documentantion
-# Then for future pulls (configure credential helper):
-#   git -C consumers/repos/erp-documentantion config credential.helper manager
+# To clone:
+#   bash scripts/clone-consumer.sh erp-documentantion
+#
+# Prerequisites (one-time setup per developer):
+#   1. Ensure GITHUB_PAT (or analog for this host) is set:
+#        bash scripts/check-secret.sh GITHUB_PAT  # exit 0 = present
+#   2. If missing:
+#        bash scripts/set-secret.sh GITHUB_PAT <value>
+#   3. Re-run clone-consumer.sh; it configures the per-host credential helper
+#      automatically (uses scripts/git-credential-from-env.sh).
+#
+# To future-pull: cd consumers/repos/erp-documentantion && git pull

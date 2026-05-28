@@ -185,7 +185,7 @@ Phase-теги: `[phase-a]` … — milestone history.
 
 ## Security: real threats
 
-**Утечка GitHub PAT (High):** Единственный токен с риском. Локально владельца, не в репо.
+**Утечка токенов (was High → Mitigated, v4.34.0):** Структурно закрыто секцией [Secrets & Credentials](#secrets--credentials) ниже. Defense layers: L5 tool permission (`settings.json` Read+Bash deny на `.env`), L4 commit-time hook (`secrets-guard.py`), L4 PR review detector, L2 rotation discipline.
 
 **Прямой push в main (High):** Branch protection не настроен. Будущая задача — required PR + review.
 
@@ -194,6 +194,92 @@ Phase-теги: `[phase-a]` … — milestone history.
 **Sync overwrites local fills (Low):** `docs_reminder.py` LIBS заполняется per-project. Будущая задача — поддержка `*.local.py` соседних файлов.
 
 Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md).
+
+---
+
+## Secrets & Credentials
+
+### Canonical storage (single source of truth per project)
+
+| Источник | Назначение | Приоритет |
+|---|---|---|
+| `./.env` | per-project секреты (gitignored, chmod 600) | 1 |
+| `~/.config/it-dev/secrets.env` | cross-project shared (опционально) | 2 |
+| process env vars | CI/CD compatibility | 3 |
+
+Декларация **какие** секреты нужны проекту: `.claude/secrets-manifest.yaml` (committed, без значений — только names + purpose + `how_to_obtain`).
+
+### MUST (обязательные правила для агентов)
+
+- ✅ Использовать `bash scripts/with-secret.sh KEY -- <command>` для передачи секрета subprocess'у. Значение **не попадает** в stdout агента → не в transcript → не в API.
+- ✅ Использовать `bash scripts/check-secret.sh KEY` для boolean проверки (exit 0/1, без значения).
+- ✅ Использовать `bash scripts/set-secret.sh KEY value` для one-time добавления (пользователь запускает, не агент).
+- ✅ Для git HTTPS — `scripts/git-credential-from-env.sh` как credential helper (git сам читает токен, агент не в цепочке).
+- ✅ При отсутствии required секрета → HARD BLOCK + показать `how_to_obtain` из manifest. **Не запрашивать токен через chat** — only one-time setup через `set-secret.sh`.
+- ✅ Для аудита/scrub — команда `/secrets` (audit / setup / list / scrub).
+
+### MUST NOT (запреты — закрыто структурно)
+
+- ❌ Агент НЕ ЧИТАЕТ `.env` напрямую — заблокировано `settings.json` `Read(./.env)` + `Bash(cat .env*)` deny rules (L5 tool permission).
+- ❌ Агент НЕ ВЫПОЛНЯЕТ `env`, `printenv`, `set | grep`, `echo $SECRET_VAR`, `source .env` — блокируется `bash_protect.py` (L4 hook).
+- ❌ Агент НЕ ВПИСЫВАЕТ значения секретов в chat / DEVLOG / commit messages / любые файлы. Если случилось — `bash scripts/secrets-scrub.sh` (cleanup transcripts) + **немедленно rotate token** у провайдера.
+- ❌ Не хранить `sensitivity: high` ключи в `--shared` scope (блокируется manifest-ом).
+- ❌ Не bypass-ить pre-commit hook через `--no-verify` без записи в DEVLOG (`/review` всё равно catch-ит leak).
+- ❌ Не editить `templates/.claude/hooks/secrets-guard.py` / `bash_protect.py` без понимания whitelist semantics — false negative = утечка.
+
+### Threat model (по векторам, level-аннотированный)
+
+| Вектор | Защита | Регулятор | Note |
+|---|---|---|---|
+| `git add .env` (случайный) | `.gitignore` excludes `.env`, `.env.*` (whitelist `.env.example`) | L4 | |
+| `git add -f .env` (форсированный) | `secrets-guard.py` PreToolUse блокирует commit | L4 | |
+| Token в коде (любом файле) | `secrets-guard.py` token-prefix + entropy на staged diff; `/review` detector на PR | L4 × 2 | |
+| Агент `cat/grep/awk/sed/xxd/base64/python .env` | `settings.json` `Bash(cat .env*)` etc. deny rules | L5 | Tool permission, не regex |
+| Агент `env` / `printenv` / `echo $SECRET` | `bash_protect.py` `ENV_DUMP_PATTERNS` | L4 | Reliably detectable |
+| Агент `Read` tool на `.env` | `settings.json` `Read(./.env)` deny | L5 | |
+| Утечка через chat history | `/secrets scrub` cleanup в `~/.claude/projects/`; ротация токена | L2 (reactive) | |
+| Compromise ноутбука | Out of scope — OS trust boundary | — | См. Scope limits |
+
+### Scope limits (что Phase 1-5 НЕ закрывают)
+
+Эти защиты **agent-mediated** (transcript, git, file system). Открыты и требуют OS/process-level mitigation:
+
+- **`/proc/<pid>/environ` visibility** — другие процессы UID видят subprocess env. Mitigation: trust local OS boundary; full disk encryption.
+- **Core dumps** — содержат full memory. Mitigation: `ulimit -c 0`.
+- **Verbose process monitoring** (htop `-S`) — показывает env vars. Mitigation: не запускать с такими флагами.
+- **Git history** — если секрет уже committed в прошлом, удаление из HEAD не очищает клоны. Mitigation: rotate token + `bash scripts/secrets-scrub.sh` + (manual) `git filter-repo` если критично. Phase 1-5 предотвращают **попадание** в commit, не лечат historical exposure.
+- **CI/CD baking secrets в images/builds** — mount secrets at runtime, не at build. См. skill `secrets-management` Phase 5.
+- **Determined adversarial prompt** — может построить bypass через base64 encode + remote send + reconstruct. Phase 1-5 поднимает barrier, не делает невозможным. **Rotation discipline** обязательна как defense-in-depth.
+
+### Vault / external secret manager integration
+
+`.env` — это **default**, не **mandate**. Consumer проекты с enterprise требованиями могут добавить Vault / AWS Secrets / Azure Key Vault через priority chain step 3 (process env):
+
+```bash
+# Pre-step: retrieve from external manager → export
+export GITHUB_PAT=$(vault kv get -field=token kv/github)
+# Methodology takes over via env
+bash scripts/with-secret.sh GITHUB_PAT -- git push origin ai-dev
+```
+
+См. skill `secrets-management` для integration patterns с конкретными провайдерами.
+
+### Token rotation workflow
+
+Manual через `bash scripts/set-secret.sh KEY <new-value>` атомарно заменяет. Auto-rotation requires provider-specific adapters (out of methodology scope — каждый provider свой API). См. skill секцию "Rotation workflow per common providers" (GitHub, Anthropic, AWS).
+
+### Compromise response
+
+Если ты подозреваешь что секрет утёк:
+
+1. **Rotate at provider IMMEDIATELY** — revoke old token, generate new.
+2. **`bash scripts/set-secret.sh KEY <new-value>`** — update local store.
+3. **`bash scripts/secrets-scrub.sh`** — очистить transcripts в `~/.claude/projects/`.
+4. **`git log -p | grep -i <key-name>`** — проверить historical exposure в git.
+5. Если в git history → `git filter-repo --replace-text` + force-push + notify всех contributors.
+6. Notify affected external services о возможной exposure.
+
+См. skill `secrets-management/SKILL.md` для пошагового runbook.
 
 ---
 
@@ -209,6 +295,18 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 - [templates/model-tiers.md](templates/model-tiers.md) — model recommendation registry
 - [templates/AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) — AI gap capture (consumer artifact)
 - [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
+- [scripts/with-secret.sh](scripts/with-secret.sh) — **secrets injection** (primary tool): `with-secret.sh KEY -- cmd` — значение не в stdout
+- [scripts/check-secret.sh](scripts/check-secret.sh) — boolean existence check (exit 0/1)
+- [scripts/set-secret.sh](scripts/set-secret.sh) — atomic write в `.env` (one-time setup)
+- [scripts/validate-secrets.sh](scripts/validate-secrets.sh) — manifest ↔ `.env` consistency
+- [scripts/git-credential-from-env.sh](scripts/git-credential-from-env.sh) — git credential helper
+- [scripts/secrets-scrub.sh](scripts/secrets-scrub.sh) — cleanup transcripts (`~/.claude/projects/`) от случайных утечек
+- [scripts/clone-consumer.sh](scripts/clone-consumer.sh) — clone consumer репо без exposing tokens в URL
+- [commands/secrets.md](commands/secrets.md) — `/secrets` команда: audit / setup / list / scrub
+- [skills/secrets-management/SKILL.md](skills/secrets-management/SKILL.md) — knowledge: rotation, Vault integration, compromise response
+- [templates/.env.example.template](templates/.env.example.template) — consumer template (commit-safe)
+- [templates/secrets-manifest.yaml.template](templates/secrets-manifest.yaml.template) — declared-secrets schema
+- [templates/.claude/hooks/secrets-guard.py](templates/.claude/hooks/secrets-guard.py) — PreToolUse: блок commit с token / staged .env
 - [VERSION](VERSION) — semver
 
 ---
