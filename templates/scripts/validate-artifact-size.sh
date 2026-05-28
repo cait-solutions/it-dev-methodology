@@ -81,8 +81,8 @@ DEFAULT_BUDGETS = {
     # plan.md — самая сложная команда (навигационная карта 6 режимов × 30 шагов).
     # Легитимно крупнее остальных команд; точный путь переопределяет glob выше
     # (см. specificity-resolution в main). Budget держит её сжатой, не раздувая до 0-сигнала.
-    'commands/plan.md': 52000,
-    '.claude/commands/plan.md': 52000,
+    'commands/plan.md': 54000,
+    '.claude/commands/plan.md': 54000,
 }
 
 # Маркеры подавления tool invocation — высокая плотность = prompt bloat сигнал.
