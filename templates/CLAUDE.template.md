@@ -83,7 +83,7 @@ Strong → weak:
 5. Tool description — weak
 6. Prompt rule — ignored
 
-**Rule:** when adding behavior — start from level 4-6, not 1-3. Prompt-only rule as first solution = 🟡 WARNING in `/review`. Before accepting any methodology rule — ask "is there a level-4+ structural fix?". If yes — that's primary, rule secondary.
+**Rule:** when adding behavior — start from level 4-6, not 1-3. Prompt-only rule as first solution = 🔵 Recommendation in `/review`. Before accepting any methodology rule — ask "is there a level-4+ structural fix?". If yes — that's primary, rule secondary.
 
 Details: [CLAUDE_LONG.md § Level-4 framework](CLAUDE_LONG.md#сила-регуляторов-поведения-level-4-framework--расширенно).
 
