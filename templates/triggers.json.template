@@ -13,7 +13,8 @@
     "inbox_unprocessed_count": 0,
     "open_questions_open_count": 0,
     "open_questions_stale_count": 0,
-    "agent_gaps_open_count": 0
+    "agent_gaps_open_count": 0,
+    "product_gaps_open_count": 0
   },
   "skipped_warnings": {
     "architecture_audit": 0,
