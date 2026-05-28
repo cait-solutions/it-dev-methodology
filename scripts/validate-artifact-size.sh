@@ -78,11 +78,14 @@ DEFAULT_BUDGETS = {
     # команду → ценные шаги тонут (тот же класс что PROMPT_BLOAT у runtime-промптов).
     'commands/*.md': 24000,
     '.claude/commands/*.md': 24000,
+    # commands-local/ — methodology-only команды (не sync'атся к консьюмерам);
+    # тот же budget что и commands/ — единая граница для всех slash-команд.
+    'commands-local/*.md': 24000,
     # plan.md — самая сложная команда (навигационная карта 6 режимов × 30 шагов).
     # Легитимно крупнее остальных команд; точный путь переопределяет glob выше
     # (см. specificity-resolution в main). Budget держит её сжатой, не раздувая до 0-сигнала.
-    'commands/plan.md': 54000,
-    '.claude/commands/plan.md': 54000,
+    'commands/plan.md': 58000,
+    '.claude/commands/plan.md': 58000,
 }
 
 # Маркеры подавления tool invocation — высокая плотность = prompt bloat сигнал.
