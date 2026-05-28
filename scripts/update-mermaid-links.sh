@@ -2,9 +2,8 @@
 # update-mermaid-links.sh — auto-update mermaid.live URLs in .md files
 #
 # For each ```mermaid block in .md files:
-#   - If link is missing → inserts new link line above the block
-#   - If link is stale   → replaces existing link with fresh URL
-#   - If URL > 2000      → skips (copy-paste workflow, warns only)
+#   - If link is missing → inserts link + code block with URL above the block
+#   - If link is stale   → replaces URL in link line and code block
 #
 # Usage:
 #   bash scripts/update-mermaid-links.sh [--root DIR] [--dry-run] [FILE...]
@@ -24,8 +23,7 @@
 #   bash scripts/update-mermaid-links.sh --root .
 #   bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation
 #
-# Exit 0 always (warnings on stderr for URL_TOO_LONG).
-# Returns count of updated links on stdout summary line.
+# Exit 0 always. Returns count of updated links on stdout summary line.
 #
 # Bash 3.2+ compatible; requires Python 3.10+
 
@@ -77,6 +75,11 @@ import os
 import re
 import json
 import zlib
+# Force UTF-8 stdout on Windows (cp1252 can't encode emoji in print)
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 import base64
 
 DRY_RUN     = sys.argv[1] == "1"
@@ -164,17 +167,20 @@ def update_file(path):
             if existing_link_idx is not None:
                 existing_url_m = LINK_RE.search(updated[existing_link_idx])
                 if existing_url_m and existing_url_m.group(1) == expected_url:
-                    # Already fresh
-                    i += 1
-                    continue
-                # Stale — replace URL in that line
+                    # URL is fresh — but check if code block is present after link line
+                    cb_idx = existing_link_idx + 1
+                    has_cb = (cb_idx < len(updated) and updated[cb_idx].rstrip() == '> ```')
+                    if has_cb:
+                        # Format is complete
+                        i += 1
+                        continue
+                    # URL fresh but code block missing — fall through to add it
+                # Stale — replace URL in the link line
                 old_line = updated[existing_link_idx]
-                # Try structured replacement first (> 🔗 [...](URL) pattern)
                 m = LINK_LINE_RE.match(old_line)
                 if m:
                     new_line = m.group(1) + expected_url + m.group(2) + '\n'
                 else:
-                    # Fallback: replace URL anywhere in line
                     new_line = LINK_RE.sub(expected_url, old_line)
                 if DRY_RUN:
                     print(f"STALE    {rel}:{block_start+1}")
@@ -182,22 +188,31 @@ def update_file(path):
                     print(f"  new: {new_line.rstrip()}")
                 else:
                     updated[existing_link_idx] = new_line
+                    # Also update URL in code block line (> `url`) if present right after link line
+                    cb_idx = existing_link_idx + 1
+                    if cb_idx < len(updated) and updated[cb_idx].rstrip() == '> ```':
+                        url_line_idx = cb_idx + 1
+                        if url_line_idx < len(updated) and updated[url_line_idx].startswith('> https://mermaid.live'):
+                            updated[url_line_idx] = f'> {expected_url}\n'
                     print(f"UPDATED  STALE -> fresh  {rel}:{block_start+1}")
                 changes += 1
             else:
-                # Missing — insert new link line above the block
+                # Missing — insert link + code block with URL above the ```mermaid line
                 new_link_line = f'> 🔗 [Открыть в Mermaid Live]({expected_url})\n'
-                update_line = '> _(обновить ссылку: `py scripts/mermaid-link.py <file>`)_\n'
+                cb_open  = '> ```\n'
+                url_line = f'> {expected_url}\n'
+                cb_close = '> ```\n'
                 if DRY_RUN:
                     print(f"MISSING  {rel}:{block_start+1}")
                     print(f"  insert: {new_link_line.rstrip()}")
                 else:
-                    # Insert before the ```mermaid line
                     updated.insert(block_start, '\n')
-                    updated.insert(block_start, update_line)
+                    updated.insert(block_start, cb_close)
+                    updated.insert(block_start, url_line)
+                    updated.insert(block_start, cb_open)
                     updated.insert(block_start, new_link_line)
-                    # Adjust i for the 3 inserted lines
-                    i += 3
+                    # Adjust i for the 5 inserted lines
+                    i += 5
                     print(f"UPDATED  MISSING -> inserted  {rel}:{block_start+1}")
                 changes += 1
 
