@@ -57,6 +57,8 @@ Before first commit in session: read `agent_branch` from `CLAUDE.local.md`, then
 `bash <methodology_path>/scripts/new-project-init.sh .`
 where `<methodology_path>` defaults to `../it-dev-methodology` (configurable in [CLAUDE.local.md](CLAUDE.local.md) `## Auto-update`). The `auto-update-watchdog.py` SessionStart hook detects this state and prints a reminder into your context — surface it to the user, don't silently work without methodology bootstrap.
 
+**PRODUCT.md component sync rule:** When planning work that touches code of any component / service / module — `/plan` Step -1.3 (Adjacent Impact) reads PRODUCT.md `## Логика компонентов → ### <component>` section. If missing → block plan until section is created together with user. If exists → cite it in `## Agent's understanding` block of Step 3 template (verbatim quotes, not paraphrase). If your understanding doesn't match PRODUCT.md → STOP until clarification with user. When changing component behavior (Покрывает / НЕ покрывает / Ключевые правила shift) → section MUST be in "Затронутые файлы" of Step 3 and updated in `/code` Step 5. `/review` runs L4 git diff sync check: code files changed without corresponding PRODUCT.md section update → 🔵 Recommendation with user disposition (fix now / deferred / backlog). Two-level defense: L3 in `/plan` preventively + L4 in `/review` as final sync check before merge.
+
 For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md#реализация-через-code-расширенно).
 
 ---
