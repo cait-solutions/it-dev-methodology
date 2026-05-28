@@ -334,6 +334,11 @@ check_artifact_subst() {
 
 # ---------------------------------------------------------------------------
 # Commands — always overwrite (canonical source is methodology).
+#
+# NOTE: Glob 'commands/*.md' намеренно НЕ матчит 'commands-local/*.md' —
+# папка commands-local/ содержит methodology-only команды (например /pull-consumers)
+# которые НЕ должны попадать к консьюмерам. Если меняешь итерацию на recursive
+# (find / **/*.md) — добавь явное исключение commands-local/.
 # ---------------------------------------------------------------------------
 echo "→ commands/"
 CHANGED_CMDS=()
@@ -362,11 +367,36 @@ if [[ ${#CHANGED_CMDS[@]} -gt 0 ]]; then
   for c in "${CHANGED_CMDS[@]}"; do echo "    • $c"; done
 fi
 
+# ---------------------------------------------------------------------------
+# Commands-local — ТОЛЬКО при self-apply (methodology-platform = sama консьюмер).
+# Consumer projects НЕ получают local commands (это design — см. NOTE выше).
+# Без этого блока /pull-consumers и другие maintainer-only команды unusable
+# даже в самой methodology-platform (closes G-051).
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "true" ]] && [[ -d "$METHODOLOGY_DIR/commands-local" ]]; then
+  if compgen -G "$METHODOLOGY_DIR/commands-local/*.md" > /dev/null 2>&1; then
+    echo "→ commands-local/ (self-apply only)"
+    for cmd in "$METHODOLOGY_DIR"/commands-local/*.md; do
+      [[ -f "$cmd" ]] || continue
+      name="$(basename "$cmd")"
+      dest="$TARGET_DIR/.claude/commands/$name"
+      inject_md_banner "$cmd" "$dest"
+      echo "  ✓ $name"
+    done
+  fi
+fi
+
 # Delete commands that no longer exist in methodology (renamed/removed upstream).
+# При self-apply также проверяем commands-local/ — иначе следующий sync удалит файл который только что скопировали.
 for existing in "$TARGET_DIR"/.claude/commands/*.md; do
   [[ -f "$existing" ]] || continue
   name="$(basename "$existing")"
-  if [[ ! -f "$METHODOLOGY_DIR/commands/$name" ]]; then
+  exists_canonical=false
+  [[ -f "$METHODOLOGY_DIR/commands/$name" ]] && exists_canonical=true
+  if [[ "$IS_SELF_APPLY" == "true" ]] && [[ -f "$METHODOLOGY_DIR/commands-local/$name" ]]; then
+    exists_canonical=true
+  fi
+  if [[ "$exists_canonical" == "false" ]]; then
     echo "  ✗ $name (removed upstream — deleting)"
     rm "$existing"
   fi
