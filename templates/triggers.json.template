@@ -41,5 +41,11 @@
     "version_before": null,
     "version_after": null,
     "status": null
+  },
+  "last_sync_audit": {
+    "date": null,
+    "methodology_version": null,
+    "gaps_found": 0,
+    "gaps_high_severity": 0
   }
 }
