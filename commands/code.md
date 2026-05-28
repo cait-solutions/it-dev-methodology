@@ -208,17 +208,23 @@
 - [ ] Если добавлена/изменена зависимость между компонентами → SYSTEM-MAP.md edges обновлены?
 - [ ] Если изменилось поведение команды по отношению к артефактам (новый read/write) → ARTIFACT-MAP.md стрелки обновлены?
 - [ ] Если изменились правила AI-агента или рабочего процесса → CLAUDE.md
-- [ ] Если `/plan` Шаг 1.65 создал `[DRAFT]` артефакты → финализировать каждый затронутый draft **постоянной карты**:
+- [ ] Если `/plan` Шаг 99.54 создал `[DRAFT]` артефакты → финализировать каждый затронутый draft **постоянной карты**:
   ⛔ **НЕ брать draft как основу** — draft содержит только touched scope (~15 nodes) и перезапишет полную карту если использовать его как базу.
-  ⛔ **Ad-hoc «было→станет» (вариант 4 Шага 1.65) НЕ финализируется** — это preview-only эскиз, постоянной карты для него нет. Пропустить.
+  ⛔ **Ad-hoc «было→станет» (вариант 4 Шага 99.54) НЕ финализируется** — это preview-only эскиз, постоянной карты для него нет. Пропустить.
   1. Прочитать **существующий файл карты целиком** (USER-MAP.md / SYSTEM-MAP.md / ARTIFACT-MAP.md)
   2. Применить изменения из плана к существующей полной карте (добавить/изменить nodes и edges из draft)
   3. **Проверить что финальная карта содержит:**
      - 🗺 USER-MAP: все акторы проекта + все capabilities/flows (в т.ч. незатронутые); полная `subgraph` структура; `style` для всех nodes; потоки ДОЛЖНЫ включать outcome-артефакты (`DEVLOG.md`, `HYPOTHESES.md`, `RISKS.md`, и т.п.) — модель `actor → trigger → flow → outcome-artifact`, не только UI-переходы
      - 🏗 SYSTEM-MAP: все architectural layers + все межслойные edges; Легенда с описанием arrow types
      - 📦 ARTIFACT-MAP: все команды + все артефакты; все edges (R/W/RW/C); `classDef` для всех категорий; Legend subgraph
-  4. Запустить `bash scripts/update-mermaid-links.sh <file>` → ссылка обновится автоматически
-  5. Убрать маркер `[DRAFT]` из ссылки (в /plan Шаг 1.65 — draft ссылка отдельная, файл карты не трогается)
+  4. **Hybrid language self-check** (CLAUDE.md правило): пройти по всем labels nodes и edges финальной карты:
+     - Имена файлов / команд / технических identifiers → EN (`CLAUDE.local.md`, `/plan`, `auto-update-watchdog.py`)
+     - Названия слоёв / описания поведения / глаголы действий → RU (`Слой хуков`, `читает интервал`, `пишет last_pull`, `вызывает при bootstrap`)
+     - ❌ Anti-pattern: `"Hooks Layer"`, `"reads to detect"`, `"writes last_pull"`, `"invokes if bootstrap"` — всё EN, нарушает hybrid правило
+     - ✅ Pattern: `"🪝 Слой хуков"`, `"читает чтобы определить bootstrap"`, `"пишет last_pull"`, `"вызывает при bootstrap"`
+     - Если хоть один label полностью на EN (кроме технических identifiers) → исправить **до** запуска `update-mermaid-links.sh` (закрывает G-049 класс «agent ignores hybrid language rule when generating Mermaid»)
+  5. Запустить `bash scripts/update-mermaid-links.sh <file>` → ссылка обновится автоматически
+  6. Убрать маркер `[DRAFT]` из ссылки (в /plan Шаг 99.54 — draft ссылка отдельная, файл карты не трогается)
 
 - [ ] Финализация карт завершена (запись в файлы через `update-mermaid-links.sh`). **Показ обновлённых карт пользователю** — переместился в Шаг 6 (предпоследним пунктом, перед self-lint), чтобы ссылки были рядом с финальным `/review` prompt. Здесь — только write/finalize, не display.
 
