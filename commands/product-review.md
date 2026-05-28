@@ -1,5 +1,7 @@
 # /product-review — Продуктовый анализ сигналов
 
+> **Цель:** обработать накопленные IDEAS.md (raw signals) + PRODUCT-GAPS.md (classified gaps) → приоритизировать → перенести actionable в ROADMAP. Reviewed IDEA = product gap → конвертация в P-NNN запись. НЕ для архитектурных решений, НЕ для стратегии (это /product-vision).
+
 Запускается по триггеру из /plan или вручную раз в 14 дней.
 
 ---

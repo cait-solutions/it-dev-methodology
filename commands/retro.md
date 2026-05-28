@@ -1,6 +1,6 @@
 # /retro — Тактическая ретроспектива проекта
 
-**Назначение:** гигиена проекта за период — skip rates, stale Open Questions, reminder health, продуктовый поток, повторяющиеся проблемы в DEVLOG.
+> **Цель:** гигиена проекта за период — skip rates, stale Open Questions, reminder health, продуктовый поток, повторяющиеся проблемы в DEVLOG, AGENT-GAPS / PRODUCT-GAPS signals. НЕ для архитектурных решений (это /architecture-audit) и НЕ для стратегии (это /product-vision).
 
 **Применимо к любому проекту** (консьюмер или methodology-platform).
 

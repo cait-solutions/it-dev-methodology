@@ -1,5 +1,7 @@
 # /sync-vision — Двусторонняя сверка vision ↔ реальность
 
+> **Цель:** синхронизировать VISION/ADR с реальностью кода (inbox + OPEN-QUESTIONS + Type C конфликты). Two-way check: vision устарел? код drifts? Обновить VISION.md / RISKS.md / OPEN-QUESTIONS.md. Запускается по триггеру (10+ inbox, 5+ OQ, Type C обнаружен), не регулярно.
+
 Запускается:
 - 10+ inbox файлов накопилось
 - 5+ записей OPEN-QUESTIONS со status Open

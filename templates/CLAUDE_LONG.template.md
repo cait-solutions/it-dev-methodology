@@ -346,3 +346,61 @@
 - Incident response: <link> — кто on-call, как эскалация
 - Communication channels: <Slack/Discord/email>
 - External APIs: <список с rate limits, SLA, contact info>
+
+---
+
+## Purpose registry
+
+Однострочная цель каждого нормативного элемента методологии. Для **slash-команд** purpose inline в команде (`> Цель:` в первой строке после H1) — этот реестр для **не-step элементов** (hooks, scripts, state artifacts).
+
+При создании нового hook / script / artifact-template — обязательно добавить строку сюда (правило в CLAUDE.md).
+
+### Hooks (.claude/hooks/)
+
+| Hook | Event | Цель |
+|---|---|---|
+| `auto-update-watchdog.py` | SessionStart | Авто-pull методологии (interval-based, default 2h) + bootstrap detection + /sync-audit recommendation при version delta ≥ threshold |
+| `agent-gaps-watchdog.py` | Stop | Детектирует agent's admission ("я пропустил", "ты прав") → предлагает AGENT-GAPS entry. Только AGENT-GAPS, не PRODUCT-GAPS. |
+| `docs_reminder.py` | UserPromptSubmit | Reminder фетчить doc URLs перед editing library кода |
+| `protect.py` | PreToolUse (Edit/Write) | Защита sensitive files от случайной правки (.env, secrets, deploy scripts) |
+| `bash_protect.py` | PreToolUse (Bash) | Защита от опасных bash команд (force push, hard reset, clean -f) |
+
+### Scripts (scripts/)
+
+| Script | Цель |
+|---|---|
+| `new-project-init.sh` | Bootstrap нового проекта — создаёт `.claude/`, копирует templates, init triggers.json, bootstrap AGENT-GAPS + PRODUCT-GAPS |
+| `sync-methodology.sh` | Обновление `.claude/commands/hooks/skills/` из methodology repo (включает auto git pull) |
+| `deploy-push.sh` | Push в agent_branch + PR создание + auto-merge (если configured) per branching mode |
+| `update-mermaid-links.sh` | Авто-обновление mermaid.live URL во всех .md файлах (regen после изменения diagram) |
+| `validate-mermaid-links.sh` | Verify Mermaid links: MISSING / STALE / URL_TOO_LONG checks |
+| `validate-artifact-size.sh` | SIZE_EXCEEDED + PROMPT_BLOAT detection для артефактов-инструкций (config-driven budgets) |
+| `mermaid-link.py` | Generate mermaid.live URL из mermaid code (CLI utility) |
+| `migrate-claude-md.sh` | Phase G2 split migration helper (CLAUDE.md → CLAUDE.md + CLAUDE_LONG.md) |
+| `migrate-agent-to-product-gaps.sh` | Interactive миграция AGENT-GAPS records → PRODUCT-GAPS (v4.24.0+); по записи user confirms classification |
+
+### State artifacts
+
+| Artifact | Цель |
+|---|---|
+| `.claude/.version` | Marker «методология инициализирована» + tracking текущей semver |
+| `.claude/state/triggers.json` | State tracking: счётчики plans_since per command, timestamps last_*, skipped_warnings, last_auto_pull, last_sync_audit |
+| `.claude/.auto-update.lock` | Race condition защита для параллельных auto-pull (PID + timeout 60s) |
+| `CLAUDE.local.md` | Project-specific config (Branching, Remotes, Auto-update, Sync validators, Artifact budgets) |
+| `AGENT-GAPS.md` | Agent's reasoning failures log (G-NNN entries) — methodology signal |
+| `PRODUCT-GAPS.md` | Product coverage gaps log (P-NNN entries) — roadmap signal |
+
+### Canonical templates (templates/)
+
+| Template | Цель |
+|---|---|
+| `CLAUDE.template.md` | Canonical methodology rules (auto-updated в консьюмерах через sync) |
+| `CLAUDE_LONG.template.md` | WHY layer — rationale, edge cases, purpose registry (этот файл) |
+| `CLAUDE_LOCAL.template.md` | Bootstrap CLAUDE.local.md с дефолтами per-project config |
+| `settings.template.json` | Default Claude Code hooks wiring (PreToolUse/UserPromptSubmit/Stop/SessionStart) |
+| `triggers.json.template` | Canonical schema state tracking |
+| `MARKETING.template.md` | Central marketing context (Positioning / ICP / Competitor sections) |
+| `AGENT-GAPS.md.template` | Bootstrap AGENT-GAPS log (agent reasoning failures only) |
+| `PRODUCT-GAPS.md.template` | Bootstrap PRODUCT-GAPS log (product coverage gaps only) |
+
+**Rule (closes G-049 / G-050 / purpose-ambiguity class):** при добавлении нового hook / script / artifact-template — обязательно строка в этот реестр. При удалении — удалить строку. При переименовании — обновить. CLAUDE.md MUST правило обеспечивает enforcement.

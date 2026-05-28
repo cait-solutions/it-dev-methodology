@@ -1,5 +1,7 @@
 # /deploy — Деплой с safety checks
 
+> **Цель:** безопасно опубликовать изменения (push в production_branch или PR в integration_branch per branching mode) + обязательная DEVLOG запись + smoke test + after-effects check. НЕ для разработки или диагностики — только release step.
+
 **ОБЯЗАТЕЛЬНО:** код в правильной ветке, PR создан/одобрен.
 
 ---
