@@ -1,20 +1,19 @@
 ---
 name: define-positioning
-description: |
-  Помогает определить позиционирование продукта: ценностное предложение, целевой сегмент, дифференциатор, messaging.
-  Активируй когда пользователь упоминает: "позиционирование", "ценностное предложение", "кому мы продаём", "как нам отличаться", "что мы обещаем клиентам", "value proposition", "positioning", "target audience", "differentiation".
-  Создаёт или обновляет MARKETING.md (секция Positioning). Требует наличия MARKETING.md в корне проекта.
-version: 1.0.0
-type: knowledge-skill
+description: Помогает определить позиционирование продукта - ценностное предложение, целевой сегмент, дифференциатор, messaging. Активируй когда пользователь упоминает позиционирование, ценностное предложение, кому мы продаём, как нам отличаться, что мы обещаем клиентам, value proposition, positioning, target audience, differentiation. Создаёт или обновляет MARKETING.md (секция Positioning). Требует наличия MARKETING.md в корне проекта. Порядок Foundation block - первый (этот skill), перед customer-research и competitor-profiling. Positioning задаёт целевой сегмент который используют следующие два skills.
 metadata:
+  version: 1.0.0
+  type: knowledge-skill
   auto_generated: false
-  methodology_version: v4.11.0
+  methodology_version: v4.16.2
   synced_at: "{{SYNCED_AT}}"
   source: https://github.com/cait-solutions/it-dev-methodology
-  banner: "Synced from methodology-platform v4.11.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
+  banner: "Synced from methodology-platform v4.16.2 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
 
 # define-positioning — Позиционирование продукта
+
+**Порядок Foundation block:** первый (этот skill), перед `customer-research` и `competitor-profiling`. Positioning задаёт целевой сегмент который используют следующие два skills.
 
 Ты помогаешь определить стратегическое позиционирование продукта. Работаешь строго в рамках маркетинг-контекста проекта.
 
