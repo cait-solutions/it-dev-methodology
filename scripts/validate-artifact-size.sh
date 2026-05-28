@@ -65,14 +65,24 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else '.'
 DEFAULT_BUDGETS = {
     'CLAUDE.md': 14000,
     'CLAUDE.local.md': 8000,
-    'PRODUCT.md': 16000,
-    'docs/product/USER-MAP.md': 16000,
-    'docs/architecture/SYSTEM-MAP.md': 16000,
+    # Documentation-карты: budget откалиброван по эмпирике (реальный размер + ~1.3x
+    # запас на рост). Эти артефакты легитимно крупны — содержат Mermaid-блок
+    # (закодированная диаграмма + текст) + полный обзор. Единый 16000 ложно
+    # флагал их; калибровка per-file убирает шум, сохраняя сигнал при реальном раздувании.
+    'PRODUCT.md': 30000,
+    'docs/product/USER-MAP.md': 34000,
+    'docs/architecture/SYSTEM-MAP.md': 26000,
+    'docs/product/ARTIFACT-MAP.md': 28000,
     # Команды методологии — контроль разрастания (VISION Ось 5 Enforcement).
     # Превышение = кандидат на cut-not-add разбор в /review. Агент скимит длинную
     # команду → ценные шаги тонут (тот же класс что PROMPT_BLOAT у runtime-промптов).
     'commands/*.md': 24000,
     '.claude/commands/*.md': 24000,
+    # plan.md — самая сложная команда (навигационная карта 6 режимов × 30 шагов).
+    # Легитимно крупнее остальных команд; точный путь переопределяет glob выше
+    # (см. specificity-resolution в main). Budget держит её сжатой, не раздувая до 0-сигнала.
+    'commands/plan.md': 34000,
+    '.claude/commands/plan.md': 34000,
 }
 
 # Маркеры подавления tool invocation — высокая плотность = prompt bloat сигнал.
@@ -141,11 +151,27 @@ def main():
     warnings = 0
     checked = 0
 
-    for pattern, budget in sorted(budgets.items()):
-        for path in sorted(resolve_files(ROOT, pattern)):
-            m = measure(path)
-            if m is None:
-                continue
+    # Specificity resolution: один файл может матчить несколько паттернов
+    # (напр. plan.md матчит и 'commands/*.md', и 'commands/plan.md').
+    # Каждый файл проверяется РОВНО ОДИН раз против самого специфичного паттерна.
+    # Специфичность: точный путь (без '*') > glob. При равенстве — больший budget
+    # (точный per-file override сознательно ослабляет общий glob-лимит).
+    def specificity(pat):
+        return (0 if '*' in pat else 1)
+
+    file_to_budget = {}  # abspath -> (budget, pattern)
+    for pattern, budget in budgets.items():
+        for path in resolve_files(ROOT, pattern):
+            key = os.path.abspath(path)
+            prev = file_to_budget.get(key)
+            cand = (specificity(pattern), budget, pattern)
+            if prev is None or cand[:2] > (specificity(prev[1]), prev[0]):
+                file_to_budget[key] = (budget, pattern)
+
+    for path in sorted(file_to_budget):
+        budget = file_to_budget[path][0]
+        m = measure(path)
+        if m is not None:
             checked += 1
             size, marker_count, density = m
             rel = os.path.relpath(path, ROOT)
