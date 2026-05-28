@@ -165,4 +165,88 @@ Post-check confidence: NN% — [что нашёл]
 
 ---
 
+## Шаг 6 — Assisted gap capture (ОБЯЗАТЕЛЬНО после Шага 5)
+
+> Выполняется **только** при успешном Шаге 5 (root cause confirmed ≥ 95%).
+> При Шаге 4 escalation (все гипотезы опровергнуты) — этот шаг пропускается.
+> Симметрично `/plan` Шагу -4 (тот capture входящих коррекций; этот — исходящих root causes).
+
+### 6.1 — Семантическая классификация
+
+Без вопросов к пользователю — агент сам классифицирует root cause:
+
+- **agent** — причина в том что **AI не подумал / пропустил правило / принял ложное assumption**. Закрывается правилом в методологии.
+- **product** — причина в том что **продукт не покрывает функцию / use case / edge case**. Закрывается /plan для продукта.
+- **external** — root cause во внешней системе (network, API quota, OS, 3rd-party). Не agent gap, не product gap.
+
+При сомнении → **agent** (можно reclassify в /retro).
+
+### 6.2 — Дедуп-grep
+
+Перед записью — grep по 2-3 ключевым словам из root cause в целевом gap-файле:
+
+```bash
+grep -i "<ключевое слово из root cause>" AGENT-GAPS.md   # для agent
+grep -i "<ключевое слово из root cause>" PRODUCT-GAPS.md  # для product
+```
+
+- **Hit** → "📝 Похожий gap `G-NNN` уже есть — обновлён (добавлена запись в существующий)."
+- **Нет hit** → перейти к 6.3.
+- **Файл отсутствует** → одна строка warning "AGENT-GAPS.md не найден — пропущено (gracefully)" и перейти к 6.5.
+
+### 6.3 — Автоматическая запись
+
+Без вопросов к пользователю — агент определяет ID (`G-NNN` / `P-NNN`) и добавляет запись **сверху** в секцию `## Записи`:
+
+**Для agent gap → `AGENT-GAPS.md`** (формат из template):
+```
+---
+Gap-ID: G-NNN
+Дата: YYYY-MM-DD
+Контекст: /diagnose
+Что пропустил: [root cause из Шага 5 — одна строка]
+Как обнаружено: /diagnose root cause confirmed
+Категория: [prompt-gap | context-gap | logic-gap | assumption-gap | completeness-gap | scope-gap]
+Гипотеза: [одна строка — почему AI это пропустил]
+Agent failure mode: [model-error | context-missed | prompt-ambiguous | state-stale | scope-exceeded | other]
+Potential fix: [конкретный checklist item или изменение шаблона]
+Статус: open
+---
+```
+
+**Для product gap → `PRODUCT-GAPS.md`** (формат из template):
+```
+---
+Gap-ID: P-NNN
+Дата: YYYY-MM-DD
+Контекст: /diagnose
+Что не покрывает: [root cause из Шага 5 — одна строка]
+Severity: 🔴 High | 🟡 Medium | 🟢 Low
+Категория: [feature-gap | capability-gap | ux-gap | integration-gap | edge-case-gap]
+Use case (затронут): [конкретный сценарий пользователя]
+Сигнал источник: agent observation (/diagnose)
+Гипотеза почему не покрыто: [одна строка]
+Potential fix: [предложение что нужно построить]
+Связано с: —
+Статус: open
+---
+```
+
+### 6.4 — Извещение
+
+После записи — одна строка-извещение:
+
+- **agent:** `📝 Записано в AGENT-GAPS.md: G-NNN — [краткое что пропустил]`
+- **product:** `📝 Записано в PRODUCT-GAPS.md: P-NNN — [краткое что не покрывает]`
+- **external:** `ℹ️ External root cause — не gap методологии, в файлы не записано.`
+
+### 6.5 — Переход в /plan
+
+```
+→ /plan для фикса
+  Упомяни G-NNN / P-NNN в /plan вводе чтобы избежать дублирования в /plan Шаге -4.
+```
+
+---
+
 $ARGUMENTS
