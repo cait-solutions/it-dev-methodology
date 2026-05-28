@@ -54,10 +54,10 @@ if [[ "$IS_SELF_APPLY" == "false" ]]; then
           VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
           echo "  ✓ Updated to v$VERSION"
         else
-          echo "  ⚠️  Auto-pull failed — syncing from local v$VERSION"
+          echo "  ⚠️  Auto-pull failed — syncing from local $VERSION"
         fi
       else
-        echo "  ⚠️  Methodology repo has local changes — using local v$VERSION"
+        echo "  ⚠️  Methodology repo has local changes — using local $VERSION"
       fi
       echo ""
     fi
