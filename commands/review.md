@@ -275,6 +275,8 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 
 Все findings ДОЛЖНЫ иметь disposition. Без disposition — review не завершён.
 
+**Тон Suggestions:** каждый пункт — actionable рекомендация агента, не констатация проблемы. Формат: «Рекомендую [действие] чтобы / иначе [последствие]». ❌ «VERSION bump missing» → ✅ «Рекомендую добавить VERSION bump — иначе consumers не получат обновление».
+
 ```markdown
 ## Ревью: [файл / PR]
 
@@ -291,11 +293,11 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 **Если merge as-is:** [конкретный сценарий поломки]
 
 ### 🔵 Suggestions
-- [описание] — **deploy action**: [что сделать при /deploy]
-- [описание] — **fix now**: [конкретный фикс]
-- [описание] — **quick win**, исправляю в /code
-- [описание] — **backlog**: IDEAS.md `[reviewed:suggestion]`
-- [описание] — **deferred**: [причина]
+- Рекомендую [конкретное действие] — иначе [последствие] — **deploy action**
+- Рекомендую [конкретное действие] чтобы [цель] — **fix now**
+- Рекомендую [конкретное действие] — **quick win**, исправляю в /code
+- Рекомендую [конкретное действие] — **backlog**: IDEAS.md `[reviewed:suggestion]`
+- Рекомендую [конкретное действие] — **deferred**: [причина]
 
 ### Архитектурные вопросы
 - [вопрос требующий решения команды]
