@@ -36,6 +36,7 @@ DEFAULTS = {
     "interval_hours": 2,
     "on_failure": "notify",  # notify | silent | block
     "methodology_path": "../it-dev-methodology",
+    "audit_threshold": 3,  # minor version delta для recommendation /sync-audit
 }
 
 LOCK_TIMEOUT_SECONDS = 60
@@ -159,6 +160,30 @@ def release_lock(lock_path: Path) -> None:
         pass
 
 
+def parse_version(v: str | None) -> tuple[int, int, int] | None:
+    """Парсит 'v4.22.0' или '4.22.0' → (4, 22, 0). None при невалидном."""
+    if not v:
+        return None
+    m = re.match(r"v?(\d+)\.(\d+)\.(\d+)", v.strip())
+    if not m:
+        return None
+    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+
+
+def semver_minor_delta(before: str | None, after: str | None) -> int | None:
+    """Возвращает количество minor versions между before и after (для same major).
+    None если нельзя сравнить или major изменился (forced trigger через 999)."""
+    b = parse_version(before)
+    a = parse_version(after)
+    if b is None or a is None:
+        return None
+    if b[0] != a[0]:
+        return 999  # major bump = forced trigger
+    if a <= b:
+        return 0
+    return a[1] - b[1]
+
+
 def main() -> int:
     project_root = Path.cwd()
     claude_local = project_root / "CLAUDE.local.md"
@@ -245,6 +270,19 @@ def main() -> int:
         # Успех — печатать только если версия реально изменилась (anti-spam)
         if version_before != version_after and version_after is not None:
             print(f"✓ Methodology auto-synced: {version_before} → {version_after}")
+
+            # /sync-audit recommendation — если delta ≥ audit_threshold minor versions
+            delta = semver_minor_delta(version_before, version_after)
+            if delta is not None and delta >= config["audit_threshold"]:
+                delta_text = "major bump" if delta == 999 else f"{delta} minor versions"
+                print(
+                    f"\n🔔 Methodology version delta: {delta_text}. "
+                    f"Рекомендация: запусти `/sync-audit` чтобы проверить какие новые features "
+                    f"требуют backfill в этом проекте (PRODUCT components, Sync validators, "
+                    f"Mermaid hybrid, Skills frontmatter, и т.д.).\n"
+                    f"   Порог настраивается через `audit_threshold` в CLAUDE.local.md ## Auto-update "
+                    f"(текущий: {config['audit_threshold']})."
+                )
 
         return 0
 
