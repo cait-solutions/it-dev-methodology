@@ -89,6 +89,7 @@ FILES       = sys.argv[3:]
 BASE_URL    = "https://mermaid.live"
 LINK_RE     = re.compile(r'(https://mermaid\.live[^\)\s]+)')
 LINK_LINE_RE = re.compile(r'^(>\s*🔗\s*\[.*?\]\()https://mermaid\.live[^\)]+(\).*)')
+LEGACY_HINT_RE = re.compile(r'^>\s*_\(обновить ссылку')
 WINDOW      = 5
 EXCLUDE_DIRS = {'.git', 'consumers'}
 
@@ -166,35 +167,64 @@ def update_file(path):
 
             if existing_link_idx is not None:
                 existing_url_m = LINK_RE.search(updated[existing_link_idx])
-                if existing_url_m and existing_url_m.group(1) == expected_url:
-                    # URL is fresh — but check if code block is present after link line
-                    cb_idx = existing_link_idx + 1
-                    has_cb = (cb_idx < len(updated) and updated[cb_idx].rstrip() == '> ```')
-                    if has_cb:
-                        # Format is complete
-                        i += 1
-                        continue
-                    # URL fresh but code block missing — fall through to add it
-                # Stale — replace URL in the link line
-                old_line = updated[existing_link_idx]
-                m = LINK_LINE_RE.match(old_line)
-                if m:
-                    new_line = m.group(1) + expected_url + m.group(2) + '\n'
-                else:
-                    new_line = LINK_RE.sub(expected_url, old_line)
+                url_is_stale = not (existing_url_m and existing_url_m.group(1) == expected_url)
+
+                # Check post-link structure
+                cb_idx = existing_link_idx + 1
+                has_legacy_hint = (cb_idx < len(updated) and LEGACY_HINT_RE.match(updated[cb_idx]))
+                # has_cb examined after potential legacy removal
+                next_after_link = cb_idx + (1 if has_legacy_hint else 0)
+                has_cb = (next_after_link < len(updated) and updated[next_after_link].rstrip() == '> ```')
+
+                # Nothing to do?
+                if not url_is_stale and has_cb and not has_legacy_hint:
+                    i += 1
+                    continue
+
+                actions = []
+
                 if DRY_RUN:
-                    print(f"STALE    {rel}:{block_start+1}")
-                    print(f"  old: {old_line.rstrip()}")
-                    print(f"  new: {new_line.rstrip()}")
+                    if url_is_stale:
+                        actions.append("STALE URL")
+                    if has_legacy_hint:
+                        actions.append("REMOVE legacy hint")
+                    if not has_cb:
+                        actions.append("INSERT code block")
+                    print(f"FIX      {rel}:{block_start+1}  ({', '.join(actions)})")
                 else:
-                    updated[existing_link_idx] = new_line
-                    # Also update URL in code block line (> `url`) if present right after link line
+                    # 1. Update URL in link line if stale
+                    if url_is_stale:
+                        old_line = updated[existing_link_idx]
+                        m = LINK_LINE_RE.match(old_line)
+                        if m:
+                            new_line = m.group(1) + expected_url + m.group(2) + '\n'
+                        else:
+                            new_line = LINK_RE.sub(expected_url, old_line)
+                        updated[existing_link_idx] = new_line
+                        actions.append("URL updated")
+
+                    # 2. Remove legacy hint line if present
+                    if has_legacy_hint:
+                        del updated[cb_idx]
+                        actions.append("legacy hint removed")
+
+                    # 3. Ensure code block exists (recompute index after legacy removal)
                     cb_idx = existing_link_idx + 1
-                    if cb_idx < len(updated) and updated[cb_idx].rstrip() == '> ```':
+                    cb_exists = (cb_idx < len(updated) and updated[cb_idx].rstrip() == '> ```')
+                    if not cb_exists:
+                        updated.insert(cb_idx, '> ```\n')
+                        updated.insert(cb_idx + 1, f'> {expected_url}\n')
+                        updated.insert(cb_idx + 2, '> ```\n')
+                        actions.append("code block inserted")
+                    else:
+                        # cb exists — refresh URL inside if stale
                         url_line_idx = cb_idx + 1
                         if url_line_idx < len(updated) and updated[url_line_idx].startswith('> https://mermaid.live'):
-                            updated[url_line_idx] = f'> {expected_url}\n'
-                    print(f"UPDATED  STALE -> fresh  {rel}:{block_start+1}")
+                            if updated[url_line_idx].rstrip() != f'> {expected_url}':
+                                updated[url_line_idx] = f'> {expected_url}\n'
+                                actions.append("code block URL refreshed")
+
+                    print(f"UPDATED  {rel}:{block_start+1}  ({', '.join(actions)})")
                 changes += 1
             else:
                 # Missing — insert link + code block with URL above the ```mermaid line
