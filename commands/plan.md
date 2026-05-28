@@ -723,10 +723,19 @@ Binding minimums: #4 = X%, остальные = Y%
 2. **Структурное** — ✅ Lint-7 срабатывает в каждом /code (закрывает класс «summary inconsistency табличных артефактов»). ❌ Поправили только USER-MAP — точечно, не для всех Mermaid-файлов.
 3. **Масштабируемое (3 оси)** — ✅ **A** один JOIN+индексы, миллион SKU без деградации; **B** stateless JWT, нет блокировки sessions при 1000 логинах; **C** новый отчёт через тот же `ReportProvider`, ядро не трогаем. ❌ Написали «масштабируемо» про объём (A), не проверив concurrency (B) → race condition в production. 📝 N/A для doc / methodology / prompt-правил (нет runtime; иногда применима только ось C).
 4. **Без регрессий** — ✅ grep по паттерну в commands/ + templates/ подтвердил отсутствие stale references. ❌ Изменили handler, не проверили параллельные branches.
-5. **Forward-thinking** — ✅ предусмотрели non-obvious use case: добавят ARTIFACT-MAP таблицу — то же правило сработает (single rule, не дубликат). ❌ **Integration miss:** тестировали Function Calling и API раздельно, constraint «нельзя вместе» не был в тест-матрице → 99% confidence ложна при первом production-config запуске («isolated mechanisms ≠ combined production config»).
+5. **Forward-thinking** — предвидение поведения + variations use cases + integration testing combinations.
+   - ✅ **Non-obvious use case:** добавят ARTIFACT-MAP таблицу — то же правило (Lint-7) сработает там автоматически. Single rule covers все табличные артефакты, не только Confidence Declaration — через 2 итерации не придётся писать дубликат правила.
+   - ❌ **Variation miss:** решили use case «fix Confidence таблица» но не подумали «что если кто-то меняет ARTIFACT-MAP или generic markdown table — нужно ли то же правило?» — non-obvious use case упущен → через 2 итерации дубликат правила.
+   - ❌ **Integration miss (production-config ≠ isolated test):** VPS-тесты гоняли Function Calling (T2) и API endpoints (T1, T3) **раздельно** — в T2 никогда не передавался `google_search` одновременно с `_CHAT_TOOLS`. Constraint «нельзя вместе» не был в тест-матрице → 99% confidence ложна при первом production-config запуске. **Класс:** «tested isolated mechanisms, not combined production configuration» — изоляция даёт false high confidence; реальность раскрывается только при первом production-config запуске.
 6. **All aspects covered** — ✅ thread-pulled все места: /review Confidence Audit, /architecture-audit, templates/, DEVLOG — потянул каждую ниточку перед закрытием scope. ❌ Удалили поле из шаблона без grep по репо → пропустили CLAUDE.local.md (G-023), dependency осталась stale.
 7. **Maximum-altitude view** — ✅ fix consistent с two-repo pattern (canon в code repo, артефакты в doc repo). ❌ Создали новый artifact-тип когда ARTIFACT-MAP/USER-MAP уже покрывает.
-8. **Performance** (скорость ОДНОЙ операции; vs 3-B = ТЫСЯЧА одновременных) — ✅ «один агрегирующий GROUP BY, не N+1: 10к SKU = 1 запрос вместо 10000». ❌ «решение быстрое» — вода без конкретики (класс реализации, число запросов, почему быстрее альтернативы). Пример с остатками попадает И в 8 (медленный N+1) И в 3-B (плохо параллелится) — обе строки, evidence не дублировать.
+
+**3-bis. Performance (свойство 8) vs Нагрузка/concurrency (свойство 3-B) — в чём разница:**
+- **Свойство 8 (Performance):** быстро ли отрабатывает **ОДИН** запрос. N+1 (200 запросов) vs один JOIN — разница на порядок при ОДНОМ пользователе.
+- **Свойство 3-B (Нагрузка):** выдержит ли решение **ТЫСЯЧУ одновременных**. Даже быстрый запрос кладёт БД если блокирует таблицу при concurrency.
+- Пример с остатками попадает в **оба**: медленный N+1 (8) + плохо параллелится под нагрузкой (3-B). Заполнять обе строки, evidence не дублировать.
+
+8. **Performance** (скорость ОДНОЙ операции; vs 3-B = ТЫСЯЧА одновременных) — ✅ «один агрегирующий GROUP BY, не N+1: 10к SKU = 1 запрос вместо 10000». ❌ «решение быстрое» — вода без конкретики (класс реализации, число запросов, почему быстрее альтернативы). ❌ Выбрали первое работающее решение (loop + per-item query) не сравнив с агрегацией — Performance не оценён осознанно.
 9. **Security** — ✅ «новый endpoint через тот же AuthGuard; не-PII в логах только id; параметризованный запрос». ❌ «авторизация есть» — не сказано какая, на всех ли ветках, что на error path.
 
 **Итог:** "Готов" или "Не готов: [какой gap закрыть до /code]" — одна строка.
