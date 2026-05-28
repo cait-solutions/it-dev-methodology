@@ -159,111 +159,72 @@ def update_file(path):
 
             expected_url = encode_mermaid(code)
 
-            # Search for existing mermaid.live markdown link within WINDOW lines above.
-            # Prefer markdown-link line ([...](url)) over bare URL line — bare URLs
-            # may be artifacts of the old "URL on its own line" format and shouldn't
-            # be treated as the canonical link.
+            # Search for any existing mermaid.live URL within WINDOW lines above.
+            # Canonical format is a single bare URL line (Ctrl+Click opens in browser,
+            # triple-click selects only the URL). Markdown-wrapped links from earlier
+            # versions are detected and replaced with the bare-URL form.
             window_start = max(0, block_start - WINDOW)
             existing_link_idx = None
-            markdown_link_idx = None
-            any_url_idx = None
             for j in range(window_start, block_start):
-                line = updated[j]
-                if '](' in line and LINK_RE.search(line):
-                    markdown_link_idx = j
+                if LINK_RE.search(updated[j]):
+                    existing_link_idx = j
                     break
-                if any_url_idx is None and LINK_RE.search(line):
-                    any_url_idx = j
-            existing_link_idx = markdown_link_idx if markdown_link_idx is not None else any_url_idx
 
             rel = os.path.relpath(path)
 
-            # New flat format above each ```mermaid block:
-            #   [Открыть в Mermaid Live](url)
-            #   <blank>
-            #   <bare url on its own line>
+            # Canonical format above each ```mermaid block:
+            #   <bare URL on its own line>
             #   <blank>
             #   ```mermaid
 
-            def scrub_above_mermaid(end_idx):
-                """Remove everything between the link line (exclusive) and end_idx (exclusive,
-                = the ```mermaid line). Used to wipe legacy artifacts (hint, blockquote cb,
-                plain cb, old bare url, blanks) before inserting fresh structure."""
-                removed = 0
-                idx = end_idx
-                # Walk backwards: while previous line is legacy/cleanup-eligible, delete it
-                # Stop at the link line itself
-                pass  # implemented inline below
-
             if existing_link_idx is not None:
-                existing_url_m = LINK_RE.search(updated[existing_link_idx])
-                url_is_stale = not (existing_url_m and existing_url_m.group(1) == expected_url)
+                desired_url_line = f'{expected_url}\n'
 
-                # Determine current link line content; we want it as plain markdown link (no blockquote, no emoji prefix)
-                desired_link_line = f'[Открыть в Mermaid Live]({expected_url})\n'
-                link_line_correct = (updated[existing_link_idx] == desired_link_line)
-
-                # Determine current "between" content (between link line and ```mermaid)
-                # Desired: blank, bare-url, blank
+                # Anything between existing_link_idx and block_start should be wiped to:
+                # [bare_url, blank]
+                # That means: line at existing_link_idx becomes the URL, lines between
+                # (existing_link_idx+1) and block_start become exactly [blank].
+                url_line_correct = (updated[existing_link_idx] == desired_url_line)
                 between_start = existing_link_idx + 1
-                between_end = block_start  # exclusive — the ```mermaid line index
-                between = updated[between_start:between_end]
-                desired_between = ['\n', f'{expected_url}\n', '\n']
-                between_correct = (between == desired_between)
+                between = updated[between_start:block_start]
+                between_correct = (between == ['\n'])
 
-                if link_line_correct and between_correct and not url_is_stale:
+                if url_line_correct and between_correct:
                     i += 1
                     continue
 
                 actions = []
 
                 if DRY_RUN:
-                    if url_is_stale:
-                        actions.append("STALE URL")
-                    if not link_line_correct:
-                        actions.append("REWRITE link line (flat format)")
+                    if not url_line_correct:
+                        actions.append("REWRITE URL line (bare)")
                     if not between_correct:
-                        actions.append("REWRITE between (blank/url/blank)")
+                        actions.append("REWRITE between (single blank)")
                     print(f"FIX      {rel}:{block_start+1}  ({', '.join(actions)})")
                 else:
-                    # Rewrite link line to canonical flat form
-                    if not link_line_correct:
-                        updated[existing_link_idx] = desired_link_line
-                        actions.append("link line normalized")
-                    elif url_is_stale:
-                        updated[existing_link_idx] = desired_link_line
-                        actions.append("URL updated")
+                    if not url_line_correct:
+                        updated[existing_link_idx] = desired_url_line
+                        actions.append("URL line normalized to bare")
 
-                    # Rewrite "between" section: delete all lines between link and ```mermaid,
-                    # insert canonical [blank, bare-url, blank]
                     if not between_correct:
-                        # Recompute between_end since updated may have shifted (link line stays at same idx)
-                        # Delete from between_start up to (but not including) block_start
-                        del updated[between_start:block_start]
-                        # Insert canonical 3 lines at between_start
-                        updated.insert(between_start, '\n')
-                        updated.insert(between_start + 1, f'{expected_url}\n')
-                        updated.insert(between_start + 2, '\n')
-                        # Adjust i: block_start position shifted by (3 - removed_count)
                         removed_count = block_start - between_start
-                        i = between_start + 3  # i now points at ```mermaid
-                        actions.append(f"between rewritten (removed {removed_count}, inserted 3)")
+                        del updated[between_start:block_start]
+                        updated.insert(between_start, '\n')
+                        i = between_start + 1  # i now points at ```mermaid
+                        actions.append(f"between rewritten (removed {removed_count}, inserted 1)")
 
                     print(f"UPDATED  {rel}:{block_start+1}  ({', '.join(actions)})")
                 changes += 1
             else:
-                # Missing — insert link + blank + bare url + blank above the ```mermaid line
+                # Missing — insert bare URL + blank above the ```mermaid line
                 if DRY_RUN:
                     print(f"MISSING  {rel}:{block_start+1}")
-                    print(f"  insert flat format: link + bare url")
+                    print(f"  insert bare URL")
                 else:
-                    # Insert in reverse so block_start stays valid
+                    # Insert in reverse so block_start stays valid: bare URL + blank
                     updated.insert(block_start, '\n')
                     updated.insert(block_start, f'{expected_url}\n')
-                    updated.insert(block_start, '\n')
-                    updated.insert(block_start, f'[Открыть в Mermaid Live]({expected_url})\n')
-                    # 4 lines inserted; advance i past them
-                    i += 4
+                    i += 2
                     print(f"UPDATED  MISSING -> inserted  {rel}:{block_start+1}")
                 changes += 1
 
