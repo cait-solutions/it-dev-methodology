@@ -1,6 +1,17 @@
 # Claude Code local user settings (not shared across team)
 .claude/settings.local.json
 
+# Secrets — methodology dogfoods its own protection (v4.34.1+, closes G-014).
+# Canonical store: .env (per-project) + ~/.config/it-dev/secrets.env (shared).
+# Whitelist: .env.example (committed template, never contains real values).
+.env
+.env.*
+!.env.example
+!.env.*.template
+secrets.local.*
+.env.lock
+.env.tmp.*
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -200,6 +200,68 @@ echo '{"tool_input":{"command":"git commit -m test"}}' | py "$GUARD" >/dev/null 
 _assert "secrets-guard blocks token in committed source" "$?" "2"
 
 echo ""
+echo "=== Group 8: v4.34.1 hardening regressions ==="
+
+# G-014 regression: methodology own .gitignore must exclude .env patterns.
+# This test reads the source repo's gitignore (not test dir's) to verify
+# that future maintainers don't accidentally remove the rules.
+METH_GITIGNORE="$METH_DIR/.gitignore"
+if [[ -f "$METH_GITIGNORE" ]]; then
+  grep -qE '^\.env$' "$METH_GITIGNORE" && grep -qE '^\.env\.\*$' "$METH_GITIGNORE" && \
+    grep -qE '^!\.env\.example$' "$METH_GITIGNORE"
+  _assert "G-014: methodology own .gitignore protects secrets" "$?" "0"
+else
+  fail=$((fail+1)); fail_details+=("G-014: methodology .gitignore not found"); echo "  FAIL  G-014: .gitignore missing"
+fi
+
+# G-015 regression: settings.json deny includes critical reader patterns
+# beyond the v4.34.0 cat/grep/awk list (python/node/perl/diff/iconv/tee).
+SETTINGS="$METH_DIR/templates/settings.template.json"
+if [[ -f "$SETTINGS" ]]; then
+  expected_patterns=(
+    '"Bash(python \*\.env\*)"'
+    '"Bash(node \*\.env\*)"'
+    '"Bash(perl \*\.env\*)"'
+    '"Bash(diff \*\.env\*)"'
+    '"Bash(iconv \*\.env\*)"'
+    '"Bash(tee \*\.env\*)"'
+  )
+  all_present=true
+  for pat in "${expected_patterns[@]}"; do
+    if ! grep -qF "${pat//\\/}" "$SETTINGS"; then
+      all_present=false
+      break
+    fi
+  done
+  if $all_present; then
+    pass=$((pass+1)); $VERBOSE && echo "  PASS  G-015: settings.json deny covers python/node/perl/diff/iconv/tee"
+  else
+    fail=$((fail+1)); fail_details+=("G-015: settings.json missing expected reader patterns"); echo "  FAIL  G-015: missing patterns"
+  fi
+else
+  fail=$((fail+1)); fail_details+=("G-015: settings.template.json not found"); echo "  FAIL  G-015"
+fi
+
+# G-016 regression: set-secret.sh contains stat-verify after chmod 600.
+# We don't try to detect actual NTFS behaviour (depends on OS); we verify
+# the script has the warn block that would fire on detection.
+SETSECRET="$METH_DIR/scripts/set-secret.sh"
+if grep -q "Windows NTFS" "$SETSECRET" && grep -q "icacls" "$SETSECRET"; then
+  pass=$((pass+1)); $VERBOSE && echo "  PASS  G-016: set-secret.sh has Windows NTFS chmod warn"
+else
+  fail=$((fail+1)); fail_details+=("G-016: set-secret.sh missing NTFS warn block"); echo "  FAIL  G-016: NTFS warn missing"
+fi
+
+# G-017 regression: /plan Шаг 99.3 contains mandatory sub-checks block.
+PLAN="$METH_DIR/commands/plan.md"
+if grep -q "Mandatory sub-checks" "$PLAN" && grep -q "Dogfood check" "$PLAN" && \
+   grep -q "Systematic source enumeration" "$PLAN" && grep -q "Cross-platform verification" "$PLAN"; then
+  pass=$((pass+1)); $VERBOSE && echo "  PASS  G-017: /plan Confidence Declaration has mandatory sub-checks"
+else
+  fail=$((fail+1)); fail_details+=("G-017: /plan mandatory sub-checks block missing"); echo "  FAIL  G-017: sub-checks missing"
+fi
+
+echo ""
 echo "=== Summary ==="
 total=$((pass + fail))
 echo "  Passed: $pass / $total"

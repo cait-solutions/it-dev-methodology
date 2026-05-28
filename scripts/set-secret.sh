@@ -166,6 +166,25 @@ fi
 mv "$TMP" "$TARGET"
 chmod 600 "$TARGET" 2>/dev/null || true
 
+# Verify chmod actually took effect (closes G-016 — Windows NTFS doesn't enforce
+# POSIX permissions by default, so chmod 600 may be silently ignored).
+# Warn once per session, not per key — use marker in $TMPDIR.
+_marker="${TMPDIR:-/tmp}/.set-secret-chmod-warned-$$"
+if [[ ! -f "$_marker" ]]; then
+  _actual=$(stat -c '%a' "$TARGET" 2>/dev/null || stat -f '%Lp' "$TARGET" 2>/dev/null || echo "")
+  if [[ -n "$_actual" && "$_actual" != "600" && "$_actual" != "400" ]]; then
+    echo "" >&2
+    echo "⚠️  chmod 600 requested but actual permissions: $_actual" >&2
+    echo "    (likely Windows NTFS — POSIX permissions not enforced through filesystem)" >&2
+    echo "    File is readable by other local users." >&2
+    echo "    On shared Windows workstation, restrict via PowerShell:" >&2
+    echo "      icacls \"$TARGET\" /inheritance:r /grant:r \"%USERNAME%:F\"" >&2
+    echo "    On single-user dev machine: trusted OS boundary, no action needed." >&2
+    echo "    (This warning shown once per session.)" >&2
+    : > "$_marker" 2>/dev/null || true
+  fi
+fi
+
 # Release lock (only matters for mkdir fallback path).
 if [[ -d "$LOCK" ]]; then
   rmdir "$LOCK" 2>/dev/null || true

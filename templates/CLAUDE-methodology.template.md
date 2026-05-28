@@ -234,7 +234,7 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 | `git add .env` (случайный) | `.gitignore` excludes `.env`, `.env.*` (whitelist `.env.example`) | L4 | |
 | `git add -f .env` (форсированный) | `secrets-guard.py` PreToolUse блокирует commit | L4 | |
 | Token в коде (любом файле) | `secrets-guard.py` token-prefix + entropy на staged diff; `/review` detector на PR | L4 × 2 | |
-| Агент `cat/grep/awk/sed/xxd/base64/python .env` | `settings.json` `Bash(cat .env*)` etc. deny rules | L5 | Tool permission, не regex |
+| Агент `cat/grep/awk/sed/xxd/base64/python/node/perl/diff/iconv/tee/dd .env` | `settings.json` `permissions.deny` enumerated patterns (73 rules в v4.34.1+) | L5 — **common-paths** | Не universal: `bash -c '...'` wrapping, base64-encode-and-exfil, или unenumerated команды могут обходить. Rotation discipline = final safety net |
 | Агент `env` / `printenv` / `echo $SECRET` | `bash_protect.py` `ENV_DUMP_PATTERNS` | L4 | Reliably detectable |
 | Агент `Read` tool на `.env` | `settings.json` `Read(./.env)` deny | L5 | |
 | Утечка через chat history | `/secrets scrub` cleanup в `~/.claude/projects/`; ротация токена | L2 (reactive) | |
@@ -250,6 +250,11 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 - **Git history** — если секрет уже committed в прошлом, удаление из HEAD не очищает клоны. Mitigation: rotate token + `bash scripts/secrets-scrub.sh` + (manual) `git filter-repo` если критично. Phase 1-5 предотвращают **попадание** в commit, не лечат historical exposure.
 - **CI/CD baking secrets в images/builds** — mount secrets at runtime, не at build. См. skill `secrets-management` Phase 5.
 - **Determined adversarial prompt** — может построить bypass через base64 encode + remote send + reconstruct. Phase 1-5 поднимает barrier, не делает невозможным. **Rotation discipline** обязательна как defense-in-depth.
+- **Windows NTFS chmod 600 не enforced** (v4.34.1+ explicit, closes G-016): Git Bash и WSL native applications не пробрасывают POSIX permissions через NTFS by default. `bash scripts/set-secret.sh` вызывает `chmod 600 .env` но реально файл остаётся `rw-r--r--` (читаемый all local users). На single-user dev машине — practical impact zero. На shared workstation — реальный риск. Mitigation: (1) single-user — assume trusted OS boundary; (2) shared workstation — manual restrict via PowerShell:
+  ```powershell
+  icacls .env /inheritance:r /grant:r "%USERNAME%:F"
+  ```
+  Это применяет ACL: только текущий пользователь имеет full access; все остальные denied. `set-secret.sh` warns при detection mismatch (v4.34.1+).
 
 ### Vault / external secret manager integration
 

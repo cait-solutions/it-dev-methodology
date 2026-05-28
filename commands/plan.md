@@ -756,6 +756,29 @@ Binding minimums: #4 = X%, остальные = Y%
 - ⛔ **Названия свойств строго EN (RU)** — `Architecturally sound (Архитектурно правильное)` и т.д. Не сокращать до одного языка.
 - 80-99% — норма, если evidence конкретен и риски записаны в Шаг 3 "Риски".
 
+**Mandatory sub-checks для свойств #4 / #5 / #9** *(v4.34.1+, closes G-017 — class «inflated Confidence без verification»):*
+
+Для свойств с наибольшим риском inflated claims — обязательные checkbox sub-проверки. Каждый checkbox **должен** быть marked `[x]` (проверка сделана) или `[N/A — причина]` (не применимо с обоснованием). `[ ]` (пустой) = свойство автоматически downgraded до confidence ≤ 80%, **не subjective**.
+
+Для **#4 (No regressions)**:
+- [ ] **Dogfood check:** если меняется template/правило для consumers — то же изменение применено к methodology repo own соответствующему файлу? *(closes G-014 class — methodology не должна shipping rules которые сама не использует)*
+- [ ] **Adjacent file pair grep:** для каждого `templates/X.template` — проверен соответствующий `X` в repo own (gitignore, settings.json, scripts)? Если pair не существует — явное `[N/A — нет own version]` с обоснованием
+- [ ] **Class-bug grep:** найден pattern в одной точке → grep по другим возможным точкам того же класса в проекте?
+
+Для **#5 (Forward-thinking)**:
+- [ ] **Cross-platform verification:** изменение testируется на ALL supported platforms (Git Bash Windows + Linux + macOS если применимо)? Если только одна — явное `[N/A — text-only / methodology-rule]` *(closes G-016 class — assumption "POSIX universal" without empirical verification)*
+- [ ] **Post-mutating-op inspection:** после операций которые меняют state (chmod, chown, mv, ln) — есть stat / verify шаг подтверждающий effect? Или explicit warning если effect не verified?
+- [ ] **Production-config integration test:** если решение комбинирует механизмы (hook + settings + script) — все вместе тестировались как production config, не каждый отдельно?
+
+Для **#9 (Security)**:
+- [ ] **Systematic source enumeration:** список deny patterns / threat vectors / attack surfaces из systematic source (man pages categorical, OWASP, BSD/GNU tooling taxonomy) — не из памяти? *(closes G-015 class — enumeration completeness)*
+- [ ] **Adversarial bypass test:** проведён test попыток обхода защиты? Если patterns enumerative — protected vs unprotected scenarios documented?
+- [ ] **Honest claim calibration:** if claim "L5 structural" — verified что определение L5 (Schema constraint OR No alternative path) applies? Если enumerated list с known gaps — claim "L5 common-paths" / "best-effort", не "structural"
+
+**Жёсткое правило:** хотя бы один `[ ]` (unchecked, not marked `[N/A — ...]`) → confidence для свойства автоматически ≤ 80%. Не subjective оценка agent'а. Если agent заявляет 95%+ при unchecked sub-check — review caller (или sam agent в Шаге 99.3 self-review) reverts confidence к 80% явно.
+
+**Применимо когда:** Full mode + свойство non-N/A. Lite mode skips entirely (как сейчас).
+
 **Требование честности:**
 - ⛔ Все non-N/A строки ≥90% **без объяснения** → подозрительно: назови явно почему нет слабых мест.
 - Обязательно: в финальной таблице укажи МИНИМУМ одну строку с реальным gap, ограничением, или non-trivial риском — даже если confidence высокий. Если таковых нет — напиши одну строку "Чего мы не знаем: [конкретно]".

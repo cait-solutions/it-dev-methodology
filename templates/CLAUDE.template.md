@@ -182,7 +182,7 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 - Git HTTPS push/pull: configure `scripts/git-credential-from-env.sh` as credential helper
 
 **MUST NOT:**
-- ❌ Agent reading `.env` directly — blocked by `settings.json` Read+Bash deny rules
+- ❌ Agent reading `.env` directly — blocked by `settings.json` Read+Bash deny rules for **common-path readers** (cat/grep/awk/sed/xxd/base64/python/node/perl/diff/iconv/tee/dd/etc., 73 patterns in v4.34.1+). Not universal — `bash -c '...'` wrapping or unenumerated commands can bypass. Rotation discipline = final safety net.
 - ❌ Agent running `env` / `printenv` / `echo $SECRET` / `source .env` — blocked by `bash_protect.py` hook
 - ❌ Writing secret values into chat / DEVLOG / commit messages
 - ❌ Committing `.env` (gitignored; `secrets-guard.py` blocks force-add at commit-time)
@@ -190,7 +190,7 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 
 **On compromise:** rotate at provider IMMEDIATELY → `set-secret.sh KEY <new>` → `bash scripts/secrets-scrub.sh` (cleanup transcripts) → check git history. See `skills/secrets-management/SKILL.md` for full runbook.
 
-**Scope limit:** these defenses are agent-mediated (transcript / git / fs). They do NOT protect against OS-level compromise (process inspection, core dumps, memory scraping) — assume local OS is trusted boundary.
+**Scope limit:** these defenses are agent-mediated (transcript / git / fs). They do NOT protect against OS-level compromise (process inspection, core dumps, memory scraping) — assume local OS is trusted boundary. **Windows NTFS specifically:** `chmod 600` on `.env` is **best-effort only** — Git Bash does not enforce POSIX permissions through NTFS by default. On shared Windows workstation: run `icacls .env /inheritance:r /grant:r "%USERNAME%:F"` (PowerShell) to restrict access to current user only. `set-secret.sh` warns when chmod mismatch is detected (v4.34.1+).
 
 **External secret managers** (Vault / AWS / Azure): integrate via priority chain step 3 (process env). See skill for patterns.
 

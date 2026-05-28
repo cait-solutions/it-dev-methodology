@@ -49,7 +49,36 @@
       "Bash(shuf .env*)",
       "Bash(paste .env*)",
       "Bash(dd if=.env*)",
-      "Bash(dd if=./.env*)"
+      "Bash(dd if=./.env*)",
+
+      "Bash(python *.env*)",
+      "Bash(python -* *.env*)",
+      "Bash(python3 *.env*)",
+      "Bash(python3 -* *.env*)",
+      "Bash(py *.env*)",
+      "Bash(py -* *.env*)",
+      "Bash(node *.env*)",
+      "Bash(node -* *.env*)",
+      "Bash(nodejs *.env*)",
+      "Bash(ruby *.env*)",
+      "Bash(ruby -* *.env*)",
+      "Bash(perl *.env*)",
+      "Bash(perl -* *.env*)",
+      "Bash(php *.env*)",
+      "Bash(deno *.env*)",
+      "Bash(bun *.env*)",
+
+      "Bash(diff *.env*)",
+      "Bash(diff -* *.env*)",
+      "Bash(cmp *.env*)",
+      "Bash(iconv *.env*)",
+      "Bash(iconv -* *.env*)",
+      "Bash(nl *.env*)",
+      "Bash(pr *.env*)",
+      "Bash(expand *.env*)",
+      "Bash(unexpand *.env*)",
+      "Bash(tee *.env*)",
+      "Bash(tee -* *.env*)"
     ]
   },
   "hooks": {
