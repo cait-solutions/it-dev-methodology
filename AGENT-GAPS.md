@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-061
+Дата: 2026-05-29
+Контекст: /diagnose — вопрос пользователя "учтено ли удаление секрета?"
+Что пропустил: secrets-management система не имеет операции удаления ключа. Есть: add/show/edit/update/rollback/scrub/validate — нет delete. Use cases не покрыты: (1) сервис выведен из эксплуатации → нужно убрать KEY из .env + manifest; (2) ошибочно добавлен KEY → быстрый откат без перезаписи; (3) cleanup orphan keys которые уже не нужны.
+Как обнаружено: пользователь спросил напрямую "учтено ли удаление секрета?"
+Категория: completeness-gap
+Гипотеза: при разработке secrets-management v4.34.0–v4.41.0 фокусировались на add/rotation/show workflow. Delete — редкая операция, не вошла в scope ни одного /plan. Не задали вопрос "весь ли CRUD покрыт?" при планировании.
+Agent failure mode: scope-exceeded
+Potential fix: добавить scripts/secrets-delete.sh (atomic delete KEY из .env + optional: remove entry из secrets-manifest.yaml), добавить /secrets --delete KEY в команду. Атомарность: backup перед удалением (.env.backup-{ts}), flock, подтверждение пользователем. Warning если KEY = required в manifest: "KEY помечен required — удаление может сломать проверки. Продолжить? (yes/no)"
+Статус: open
+---
 Gap-ID: G-060
 Дата: 2026-05-29
 Контекст: /diagnose — consumer агент спрашивал через AskUserQuestion о Keycloak URL вместо поиска в secrets
