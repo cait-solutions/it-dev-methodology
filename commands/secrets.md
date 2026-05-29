@@ -26,10 +26,19 @@
 
      ⚠️  KEY — это имя которое ТЫ придумываешь для каждого сервиса (UPPER_SNAKE_CASE).
          Каждый сервис = отдельный вызов с уникальным именем:
-           bash scripts/set-secret.sh GITHUB_PAT          # для GitHub
-           bash scripts/set-secret.sh GITLAB_NEXCHANCE    # для GitLab
-           bash scripts/set-secret.sh ANTHROPIC_API_KEY   # для Anthropic
+           bash scripts/set-secret.sh GITHUB_PAT               # для GitHub
+           bash scripts/set-secret.sh GITLAB_ERP_DOCS_PAT      # для GitLab ERP (read-only)
+           bash scripts/set-secret.sh ANTHROPIC_API_KEY        # для Anthropic
          Один и тот же KEY дважды = перезапись предыдущего значения!
+
+     📐 Рекомендуемый формат: ПРОВАЙДЕР_[ПРОЕКТ]_[ТИП]
+           GITHUB_PAT                  # один GitHub аккаунт
+           GITHUB_CAIT_PAT             # GitHub если несколько аккаунтов
+           GITLAB_ERP_DOCS_PAT         # GitLab self-hosted, ERP docs, read-only
+           GITLAB_ERP_PAT              # GitLab self-hosted, read-write
+           ANTHROPIC_API_KEY           # Anthropic (стандартное имя)
+           OPENAI_API_KEY              # OpenAI (стандартное имя)
+         [ПРОЕКТ] добавляй только если один провайдер = несколько аккаунтов/проектов.
 
   👁  Посмотреть какие секреты есть/нужны
      bash scripts/secrets-show.sh                    (table, без значений)
