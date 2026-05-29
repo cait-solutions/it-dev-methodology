@@ -138,7 +138,7 @@ _cleanup() {
   fi
   exit $code
 }
-trap _cleanup INT TERM
+trap _cleanup INT TERM EXIT
 
 # Acquire lock.
 if command -v flock >/dev/null 2>&1; then
@@ -445,7 +445,7 @@ if [[ -d "$LOCK" ]]; then
 fi
 
 # Disable trap cleanup (success path).
-trap - INT TERM
+trap - INT TERM EXIT
 
 # Cleanup old backups.
 if [[ -d "$(dirname "$TARGET")" ]]; then
