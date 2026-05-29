@@ -112,6 +112,12 @@
 
 Каждый триггер — **предложение с подтверждением**, никогда не авто-запуск.
 
+### Подшаг -0.5 — Чтение AGENT-GAPS преамбулы (closes G-009)
+
+Если в проекте есть `AGENT-GAPS.md` — **прочитать его секцию `## Записи` (хотя бы последние 5-7 open записей) ДО начала анализа задачи**. Цель: не повторить уже задокументированный gap-класс. Если текущая задача семантически близка к open gap (тот же компонент / тот же класс ошибки) — учесть его `Potential fix` как контекст. Это дешевле чем повторить ошибку и записать дубликат в Шаге -4.
+
+Если `AGENT-GAPS.md` отсутствует → пропустить тихо.
+
 ### Подшаг 0 — Проверка незавершённого /code
 
 1. Прочитать `.claude/state/triggers.json`, поле `last_plan_session`
@@ -467,6 +473,7 @@
 - Этот компонент — источник правды или производный?
 - **Justification check** *(обязательный — против over-engineering):* какая существующая граница (репо / namespace / схема / процесс / контейнер) уже даёт то разделение / контроль, которое мы вводим? Если граница есть — почему её **недостаточно**? Если ответа на "почему недостаточно" нет — это сигнал что новая абстракция дублирует существующую.
 - **Actor discovery-path check** *(для `[process]` и `[infra]` задач):* кто будет запускать этот механизм в будущих сессиях? Откуда они узнают что нужно его запустить? Для methodology-platform: попадает ли trigger-point в `CLAUDE.md` или другой всегда-читаемый артефакт? (closes G-022)
+- **Multi-tenancy / multi-account check** *(обязательный для задач касающихся credentials / per-user state / per-service config / hosting):* рассмотрен ли case **N>1** — multi-host, multi-account, multi-environment, multi-tenant? Если scope ограничен **N=1** — это должно быть **явное design decision** с обоснованием «почему N=1 достаточно сейчас + что меняется при N>1» (не молчаливое предположение). ⛔ Без явного ответа для credential/config задач → план неполный. (closes G-053: assumption-gap «single-host scope предположен молча»; secrets-manifest v1 hardcoded GITHUB_PAT — классический пример нерассмотренного N>1)
 
 **Связь с VISION:** на какую ось работает задача? Что разблокирует?
 
@@ -905,24 +912,29 @@ Binding minimums: #4 = X%, остальные = Y%
 - Без placeholder (`TODO` / `...` / `etc.`)
 - USER-MAP потоки ДОЛЖНЫ доходить до outcome-артефакта (`DEVLOG` / `HYPOTHESES` / `RISKS` / `ROADMAP`), не только до следующего UI-шага
 
-**Генерация URL:**
+**⛔ Генерация URL — ОБЯЗАТЕЛЬНО. Оба пути дают URL прямо сейчас, без отсрочки на /code.**
 
-Приоритет 1 — если `scripts/mermaid-link.py` доступен:
+**Путь A — если `scripts/mermaid-link.py` доступен** (methodology repo):
 ```bash
-py scripts/mermaid-link.py - << 'EOF'
-https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyubAntSg3MTNF98KuC_subFG4sP3ChotNFxuAnL0Xmy82AenNF_YpFCfnF6TaKeko5UKUA7VWxyiVZKTmpsYoWcUopaSmJZbmlMQo1QLVJJaW5AdX5iUrWZUUlabqKJUWpCSWpLpkJqYXJeZCBGsBq084Tg
-
+# Записать диаграмму в temp-файл и сгенерировать URL:
+# (heredoc stdin ломает кириллицу на Windows/Git Bash — используем файловый режим)
+py scripts/mermaid-link.py _tmp_draft.mmd
+# После получения URL — удалить: rm _tmp_draft.mmd (или через Edit tool)
+```
+Содержимое `_tmp_draft.mmd`:
+````
 ```mermaid
-<мermaid-код затронутого scope>
+<mermaid-код затронутого scope>
 ```
-EOF
-```
+````
 
-Приоритет 2 — если скрипт не найден (например в consumer repo): сгенерировать URL **немедленно inline**, не спрашивать пользователя:
+**Путь B — если скрипт не найден** (consumer repo или offline): сгенерировать URL **немедленно inline**, не спрашивать пользователя:
 1. Взять Mermaid-текст диаграммы (без обрамляющих ` ```mermaid ``` `)
 2. Обернуть в JSON: `{"code": "<mermaid-text>", "mermaid": {"theme": "default"}}`
 3. Сжать через zlib deflate уровень 9 → base64url (URL-safe base64 без `=`)
 4. Сформировать URL: `https://mermaid.live/edit#pako:<base64url>`
+
+⛔ **Если Путь A недоступен или вернул ошибку — немедленно Путь B. Нет третьего варианта. "Ссылка будет в /code" = нарушение шага.**
 
 *(read-only утилита — исключение из запрета на запуск команд в /plan)*
 

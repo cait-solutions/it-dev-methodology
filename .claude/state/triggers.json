@@ -1,0 +1,119 @@
+{
+  "global": {
+    "last_sync_vision": {
+      "date": "2026-05-18",
+      "plans_since": 26
+    },
+    "last_retro": {
+      "date": "2026-05-27",
+      "plans_since": 3
+    },
+    "last_product_review": {
+      "date": "2026-05-26",
+      "plans_since": 9
+    },
+    "last_product_check": {
+      "date": "2026-05-27",
+      "plans_since": 3
+    },
+    "last_product_vision": {
+      "date": "2026-05-27",
+      "plans_since": 4
+    },
+    "last_user_map_sync": {
+      "date": "2026-05-27",
+      "plans_since": 7
+    },
+    "last_architecture_audit": {
+      "date": "2026-05-27",
+      "plans_since": 3,
+      "recommendations": [
+        {
+          "id": "R-023",
+          "type": "drift",
+          "summary": "S-3 SYSTEM-MAP scripts/ — добавить update-mermaid-links.sh + validate-doc-freshness.sh (добавлены v4.11.1 и v4.9.17, не отражены)",
+          "status": "implemented",
+          "scope": "documentation",
+          "implementation_pr": "v4.11.2"
+        },
+        {
+          "id": "R-024",
+          "type": "gap-structural",
+          "summary": "S-1 completeness-gap partial-check: усилить /code Шаг 1.7 явным вопросом 'N из M однотипных → grep всех M'",
+          "status": "implemented",
+          "scope": "methodology",
+          "implementation_pr": "v4.11.2"
+        },
+        {
+          "id": "R-025",
+          "type": "gap-structural",
+          "summary": "S-2 logic-gap memory-vs-read: добавить антипример в /plan Шаг -1.5 'при вопросе о поведении команды — читать файл'",
+          "status": "implemented",
+          "scope": "methodology",
+          "implementation_pr": "v4.11.2"
+        },
+        {
+          "id": "R-004",
+          "type": "decommission",
+          "summary": "merge /plan Шаг 0.1 + 98 Pre-Mortem — defer 3rd cycle: нет SILENT данных из /retro 4.5",
+          "status": "proposed-deferred",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-005",
+          "type": "decommission",
+          "summary": "cut /review Шаг 3.5 — defer 3rd cycle: нет HIT/SILENT данных",
+          "status": "proposed-deferred",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-006",
+          "type": "gap-structural",
+          "summary": "Complexity budget rule в CLAUDE.md — defer (ждать 2+ retro циклов)",
+          "status": "proposed-deferred",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-007",
+          "type": "gap-structural",
+          "summary": "Deploy-time consumer instruction generator — defer (G-019 без повтора)",
+          "status": "proposed-deferred",
+          "scope": "methodology",
+          "implementation_pr": null
+        }
+      ],
+      "previous_cycle_implementation_rate": "7/10 (70%) — R-008/009/013/020/021/022 implemented; R-010 wont-fix; R-004/005/006/007 deferred"
+    }
+  },
+  "per_service": {},
+  "queues": {
+    "inbox_unprocessed_count": 0,
+    "open_questions_open_count": 0,
+    "open_questions_stale_count": 0
+  },
+  "skipped_warnings": {
+    "architecture_audit": 0,
+    "sync_vision": 0,
+    "retro": 0,
+    "review_skipped": 0,
+    "code_skipped": 0,
+    "product_review_skipped": 0,
+    "product_check_skipped": 0,
+    "product_vision_skipped": 0
+  },
+  "last_plan_session": {
+    "completed_at": "2026-05-29T00:00:00Z",
+    "task_id": "fix-g052-draft-map-url",
+    "service": "methodology-platform",
+    "mode": "Full",
+    "code_run": true
+  },
+  "last_deploy": {
+    "date": "2026-05-28",
+    "status": "ok",
+    "phase": "repo-split-v1-v4.36.2"
+  }
+}
