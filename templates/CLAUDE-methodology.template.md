@@ -325,6 +325,22 @@ Manual через `bash scripts/set-secret.sh KEY <new-value>` атомарно 
 
 ---
 
+## Migration guide
+
+При обновлении методологии (после `sync-methodology.sh`) — запусти `/sync-audit`. Команда автоматически:
+1. Определяет delta между твоей версией и текущей
+2. Показывает ordered action plan (Critical → Recommended → Optional)
+3. Проверяет 5 gap-классов в твоём проекте
+
+Полный changelog с actions: [CHANGELOG.md](CHANGELOG.md) в methodology repo.
+
+**Быстрый старт после sync:**
+```bash
+/sync-audit    # посмотреть что нужно сделать
+```
+
+---
+
 ## External links
 
 - GitHub: {{github-url}}
