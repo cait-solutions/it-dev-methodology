@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-060
+Дата: 2026-05-29
+Контекст: /diagnose — consumer агент спрашивал через AskUserQuestion о Keycloak URL вместо поиска в secrets
+Что пропустил: consumer на v4.9.12 не имеет secrets-management инфраструктуры (появилась v4.34.0). Агент правомерно спросил пользователя — нет check-secret.sh, нет .env, нет secrets-manifest.yaml. Системная проблема: /code не содержит обязательного pre-check "перед работой с external service проверь secrets". Даже если бы инфраструктура была — агент мог не знать что KEYCLOAK_REALM_URL нужно искать там.
+Как обнаружено: пользователь сообщил что консьюмер не понимает где находить "парли" (параметры) — агент задал вопрос через popup вместо самостоятельного поиска
+Категория: completeness-gap
+Гипотеза: (1) consumer stale version без secrets инфраструктуры; (2) /code Шаг 1 не содержит "external service pre-check" → агент не знает куда смотреть для credentials
+Agent failure mode: context-missed
+Potential fix: (1) добавить в /code Шаг 1 пункт "External service check: если задача взаимодействует с внешним API/DB/auth — проверить check-secret.sh <KEY> до начала. Missing → показать how_to_obtain из manifest, HARD BLOCK"; (2) в secrets-manifest.yaml template добавить common external services examples (KEYCLOAK_REALM_URL, DATABASE_URL и т.п.) чтобы consumer заполнял при первом sync; (3) consumer нужен sync до v4.44.x для получения secrets инфраструктуры
+Статус: open
+---
 Gap-ID: G-059
 Дата: 2026-05-29
 Контекст: /review — reviewer фокусировался только на последних commits вместо полного branch diff

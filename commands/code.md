@@ -81,6 +81,19 @@
 - [ ] Если целевой файл = методологический артефакт (ARTIFACT-MAP / SYSTEM-MAP / USER-MAP / docs/product/*.md) → прочитать файл **ПОЛНОСТЬЮ**, не только изменяемую секцию
 - [ ] Сверить список смежных зон из /plan Шаг -1.3 — все ли действительно не затронуты?
 - [ ] **Gitignore ownership check:** если целевой файл gitignored (`git check-ignore -v <path>` даёт hit) И является methodology artifact (`.claude/commands/`, `commands/`, `templates/`) → ⛔ СТОП: файл принадлежит upstream repo; изменение = PR туда, не здесь. Build-артефакты (`dist/`, `*.pyc`) — исключение, редактировать нормально. Если git недоступен → предупредить разработчика. (closes G-007)
+- [ ] **External service pre-check (closes G-060):** если задача взаимодействует с внешним сервисом (Keycloak, database, API, SMTP, S3, и т.п.) — проверить наличие секретов ДО начала реализации:
+  ```bash
+  bash scripts/check-secret.sh KEY_NAME   # exit 0 = установлен, exit 1 = missing
+  ```
+  Если **missing** → показать `how_to_obtain` из `.claude/secrets-manifest.yaml` для этого KEY, вывести точную команду установки, **HARD BLOCK** до подтверждения пользователем что установил:
+  ```
+  ⛔ SECRET MISSING: KEY_NAME не установлен.
+     Как получить: <how_to_obtain из manifest>
+     Установить: bash scripts/set-secret.sh KEY_NAME  (интерактивно)
+     После установки напиши "готово" — продолжу.
+  ```
+  Если `scripts/check-secret.sh` **недоступен** (consumer на старой версии без secrets infra) → 🟡 warn: "Нет secrets infrastructure — запусти sync-methodology.sh . чтобы получить скрипты. Пока продолжаю без проверки." → не блокировать.
+  Если задача не требует external сервисов — явно написать `[N/A — задача не требует external services]` и продолжить.
 
 Если что-то не найдено — СТОП, сообщи разработчику.
 
