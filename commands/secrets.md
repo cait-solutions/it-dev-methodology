@@ -51,6 +51,13 @@
   🔄 Обновить значение (rotation)
      bash scripts/secrets-update.sh KEY              (interactive, with re-paste confirm)
 
+  🗑️  Удалить секрет (сервис выведен из эксплуатации или ошибочно добавлен)
+     bash scripts/secrets-delete.sh KEY                (с подтверждением)
+     bash scripts/secrets-delete.sh KEY --yes          (без подтверждения, CI/CD)
+     bash scripts/secrets-delete.sh KEY --from-manifest  (также удалить из manifest)
+
+     ⚠️  Если KEY = required: true в manifest — будет warning. Backup создаётся автоматически.
+
   ↩️  Восстановить из backup (если ошибся)
      bash scripts/secrets-rollback.sh                (latest backup)
      bash scripts/secrets-rollback.sh --list         (показать все backups)
