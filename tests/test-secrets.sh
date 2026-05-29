@@ -353,6 +353,42 @@ bash scripts/secrets-cleanup-backups.sh --all >/dev/null 2>&1
 _assert "secrets-cleanup-backups --all runs" "$?" "0"
 
 echo ""
+echo "=== Group 12: v4.42.0 gap-closure regressions ==="
+
+# G-054: keychain_backend config respected (default off → .env used, no keychain call)
+cat >> .claude/secrets-manifest.yaml <<'EOF'
+
+config_keychain_test: true
+EOF
+# with keychain_backend absent/false, lookup must still find .env value
+bash scripts/set-secret.sh KEYCHAIN_OFF_TEST "plainvalue123" --no-confirm >/dev/null 2>&1
+result=$(bash scripts/with-secret.sh KEYCHAIN_OFF_TEST -- bash -c 'echo "$KEYCHAIN_OFF_TEST"' 2>/dev/null)
+[[ "$result" == "plainvalue123" ]]
+_assert "G-054: keychain_backend off → .env lookup works (no regression)" "$?" "0"
+
+# G-054: with-secret.sh contains keychain backend logic (platform-conditional)
+grep -q "_lookup_keychain" "$METH_DIR/scripts/with-secret.sh" && \
+  grep -q "KEYCHAIN_BACKEND" "$METH_DIR/scripts/with-secret.sh" && \
+  grep -q "Darwin" "$METH_DIR/scripts/with-secret.sh"
+_assert "G-054: with-secret.sh has platform-conditional keychain backend" "$?" "0"
+
+# G-009: /plan has AGENT-GAPS preamble pre-flight rule
+grep -q "AGENT-GAPS преамбул" "$METH_DIR/commands/plan.md"
+_assert "G-009: /plan Pre-flight reads AGENT-GAPS preamble" "$?" "0"
+
+# G-020: CLAUDE methodology template has Any-Edit Mermaid rule
+grep -q "Any-Edit rule" "$METH_DIR/templates/CLAUDE-methodology.template.md"
+_assert "G-020: Mermaid Any-Edit rule in CLAUDE template" "$?" "0"
+
+# G-053: /plan Шаг 1.5 has multi-tenancy sub-check
+grep -q "Multi-tenancy / multi-account check" "$METH_DIR/commands/plan.md"
+_assert "G-053: /plan multi-tenancy sub-check present" "$?" "0"
+
+# G-054: skill documents direnv/.netrc/keychain rationale
+grep -q "Why NOT direnv" "$METH_DIR/skills/secrets-management/SKILL.md"
+_assert "G-054: skill has direnv/.netrc/keychain rationale section" "$?" "0"
+
+echo ""
 echo "=== Summary ==="
 total=$((pass + fail))
 echo "  Passed: $pass / $total"
