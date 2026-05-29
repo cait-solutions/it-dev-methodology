@@ -232,6 +232,7 @@ interval_hours: 2
 on_failure: notify
 methodology_path: ../it-dev-methodology
 audit_threshold: 3
+auto_pull: false
 ```
 
 **Поля:**
@@ -243,6 +244,7 @@ audit_threshold: 3
   - `block` — exit 1 (hook fail; не рекомендуется кроме CI/CD)
 - `methodology_path` — путь к склонированному `it-dev-methodology` относительно корня проекта. Default `../it-dev-methodology`.
 - `audit_threshold` — minor version delta после auto-pull при котором hook рекомендует запустить `/sync-audit` (default `3`). Например, sync с `v4.18.0` на `v4.22.0` = delta 4 ≥ 3 → recommendation. Major bump (`v4.X.Y` → `v5.X.Y`) → forced trigger независимо от threshold.
+- `auto_pull` — `false` (default) / `true`. Если `true`, `/sync-audit` Шаг -0.5 автоматически делает `git pull` в локальной `it-dev-methodology/` без вопроса — при условии что GITHUB_PAT (или аналог) доступен через `with-secret.sh`. Используй `true` если credential helper настроен и хочешь полностью автоматический flow. Default `false` = показывает инструкцию и ждёт подтверждения.
 
 **Bootstrap mode:** если `.claude/.version` отсутствует — методология не была инициализирована в этом проекте. Hook печатает рекомендацию для агента, агент в первом ответе предложит запустить `new-project-init.sh`.
 

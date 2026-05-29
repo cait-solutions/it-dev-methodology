@@ -2,6 +2,24 @@
 
 Consumer migration guide. Каждый milestone = что добавилось + что нужно запустить.
 
+---
+
+## v4.44.0 — /sync-audit делает pull перед анализом (2026-05-29)
+
+**Что добавилось:** `/sync-audit` теперь начинает с Шага -0.5 — проверяет есть ли обновления в локальной `it-dev-methodology/` и предлагает pull перед delta analysis. Без этого delta analysis мог сравнивать с устаревшей локальной версией и говорить "всё актуально" хотя на remote уже v4.43.x. Добавлено поле `auto_pull: true/false` в `CLAUDE.local.md ## Auto-update`.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .          # получить обновлённую команду /sync-audit
+```
+
+После этого при запуске `/sync-audit` он сам предложит обновить `it-dev-methodology/`. Для автоматического pull без вопросов добавь в `CLAUDE.local.md ## Auto-update`:
+```yaml
+auto_pull: true
+```
+
+**Priority:** 🟡 Recommended — делает `/sync-audit` честным (не сравнивает со stale локальной копией).
+
 > **Читается `/sync-audit` автоматически** для delta analysis.
 > Записи в формате: версия → title → actions (ordered).
 > При добавлении нового feature → добавить запись сюда (см. /code Шаг 5 checklist).
