@@ -27,6 +27,49 @@
 
 ---
 
+## Шаг 1b — Version delta analysis (v4.43.0+)
+
+**Цель:** показать что конкретно добавилось в методологии с версии consumer и что нужно сделать.
+
+1. Взять `consumer_version` из `.claude/.version`
+2. Взять `current_version` из methodology `VERSION` файла (если methodology repo доступен рядом) или из `synced_at` в `.claude/.version`
+3. Открыть `CHANGELOG.md` в methodology repo (путь: рядом с methodology или `../it-dev-methodology/CHANGELOG.md`)
+4. Найти все записи **выше** блока `## v{consumer_version}` — это новые milestones
+5. Вывести ordered plan:
+
+```
+## Version delta: {consumer_version} → {current_version}
+
+Найдено N новых milestones. Рекомендуемый порядок действий:
+
+### 🔴 Critical (выполни в первую очередь)
+[milestone title] (vX.Y.Z)
+  Что добавилось: ...
+  Команды:
+    bash scripts/sync-methodology.sh .
+    bash scripts/set-secret.sh KEY
+
+### 🟡 Recommended
+...
+
+### 🟢 Optional
+...
+
+---
+Следующий шаг: выполни Critical actions, затем запусти /sync-audit снова.
+```
+
+**Если CHANGELOG.md недоступен:**
+```
+ℹ️  CHANGELOG.md не найден — delta analysis пропущен.
+   Найди methodology repo рядом и запусти sync-methodology.sh .
+   Затем повтори /sync-audit.
+```
+
+**Если consumer_version = current_version:** пропустить, написать "✅ Версия актуальна".
+
+---
+
 ## Шаг 1 — Inventory gaps (5 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.

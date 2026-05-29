@@ -277,9 +277,9 @@ def main() -> int:
                 delta_text = "major bump" if delta == 999 else f"{delta} minor versions"
                 print(
                     f"\n🔔 Methodology version delta: {delta_text}. "
-                    f"Рекомендация: запусти `/sync-audit` чтобы проверить какие новые features "
-                    f"требуют backfill в этом проекте (PRODUCT components, Sync validators, "
-                    f"Mermaid hybrid, Skills frontmatter, и т.д.).\n"
+                    f"Рекомендация: запусти `/sync-audit` — покажет что добавилось "
+                    f"(delta analysis + ordered action plan) и 5 gap-классов "
+                    f"(PRODUCT components, Sync validators, Mermaid hybrid, Skills frontmatter).\n"
                     f"   Порог настраивается через `audit_threshold` в CLAUDE.local.md ## Auto-update "
                     f"(текущий: {config['audit_threshold']})."
                 )
