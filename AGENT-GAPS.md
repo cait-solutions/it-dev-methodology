@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-056
+Дата: 2026-05-29
+Контекст: /diagnose — consumer Mermaid ссылка в старом формате (с заголовком + blockquote вместо bare URL)
+Что пропустил: `update-mermaid-links.sh`, `mermaid-link.py`, `validate-mermaid-links.sh`, `validate-doc-freshness.sh` никогда не добавлялись в `templates/scripts/` → consumer проекты не получают эти скрипты через `sync-methodology.sh`. Consumer на v4.10.6 физически не может запустить обновление ссылок ни в старом ни в новом формате — скрипта нет вообще.
+Как обнаружено: пользователь указал на скриншот: consumer (ai-assistant-documentation) генерирует ссылку в старом формате с заголовком и blockquote вместо bare URL
+Категория: completeness-gap
+Гипотеза: при добавлении скриптов в `templates/scripts/` мы фокусировались на secrets-management и deploy скриптах. Mermaid утилиты воспринимались как "methodology-internal" инструменты — не подумали что consumer тоже нуждается в них для обновления ссылок в собственных артефактах (SYSTEM-MAP, USER-MAP, ARTIFACT-MAP).
+Agent failure mode: context-missed
+Potential fix: добавить в `templates/scripts/`: update-mermaid-links.sh, mermaid-link.py, validate-mermaid-links.sh, validate-doc-freshness.sh. Добавить в /code Шаг 5 checklist пункт: "новый скрипт в `scripts/` → нужно ли его в `templates/scripts/` для consumer distribution?" (аналог вопроса про sync).
+Статус: addressed (v4.42.6)
+---
 Gap-ID: G-055
 Дата: 2026-05-29
 Контекст: /diagnose — maps не обновлены после v4.42.0 (keychain backend)
