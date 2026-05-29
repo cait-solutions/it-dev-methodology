@@ -246,6 +246,19 @@ auto_pull: false
 - `audit_threshold` — minor version delta после auto-pull при котором hook рекомендует запустить `/sync-audit` (default `3`). Например, sync с `v4.18.0` на `v4.22.0` = delta 4 ≥ 3 → recommendation. Major bump (`v4.X.Y` → `v5.X.Y`) → forced trigger независимо от threshold.
 - `auto_pull` — `false` (default) / `true`. Если `true`, `/sync-audit` Шаг -0.5 автоматически делает `git pull` в локальной `it-dev-methodology/` без вопроса — при условии что GITHUB_PAT (или аналог) доступен через `with-secret.sh`. Используй `true` если credential helper настроен и хочешь полностью автоматический flow. Default `false` = показывает инструкцию и ждёт подтверждения.
 
+> **⚠️ Важно для полностью автоматического flow:**
+> Watchdog каждые 2 часа обновляет `.claude/commands/` и `.claude/hooks/` (что агент выполняет),
+> но **НЕ обновляет** `it-dev-methodology/` (source-шаблоны для `sync-methodology.sh`).
+> Если `auto_pull: false` (default) и пользователь пропускает предложение обновить в Шаг -0.5 —
+> `it-dev-methodology/` source остаётся stale и `sync-methodology.sh` берёт старые шаблоны.
+>
+> **Для полностью автоматического flow установи:**
+> ```yaml
+> auto_pull: true
+> ```
+> Тогда при каждом запуске `/sync-audit` source `it-dev-methodology/` обновляется автоматически,
+> и delta analysis всегда показывает актуальную картину.
+
 **Bootstrap mode:** если `.claude/.version` отсутствует — методология не была инициализирована в этом проекте. Hook печатает рекомендацию для агента, агент в первом ответе предложит запустить `new-project-init.sh`.
 
 ---
