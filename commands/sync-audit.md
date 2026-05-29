@@ -19,6 +19,62 @@
 
 ---
 
+## Шаг -0.5 — Remote update check (v4.44.0+)
+
+**Цель:** убедиться что локальная копия `it-dev-methodology/` актуальна **до** delta analysis. Без этого шага delta analysis сравнивает с потенциально stale версией.
+
+1. Определить путь к methodology: читать `CLAUDE.local.md ## Auto-update → methodology_path` (default: `../it-dev-methodology`)
+2. Проверить что папка существует: если нет → показать инструкцию и перейти к Шагу 0
+3. Проверить наличие новых commits на remote:
+   ```
+   git -C <methodology_path> fetch origin main --dry-run
+   ```
+4. По результату:
+
+**Если fetch failed (exit ≠ 0, network error, auth error):**
+```
+⚠️ Не удалось проверить обновления methodology (сеть недоступна или нет credentials).
+   Продолжаю с текущей локальной версией — delta analysis может быть неполным.
+   Для ручного обновления: git -C <path> pull origin main
+```
+→ продолжить с локальной версией
+
+**Если локальная версия актуальна (no new commits):**
+```
+✅ it-dev-methodology актуальна (нет новых commits на remote).
+```
+→ продолжить к Шагу 0
+
+**Если есть новые commits:**
+```
+📦 Обнаружены обновления it-dev-methodology!
+   Локальная: <local HEAD short>
+   Remote:    <FETCH_HEAD short>
+
+Рекомендую обновить перед анализом чтобы видеть актуальный delta.
+
+Варианты:
+  a) Обновить сейчас (если GITHUB_PAT настроен):
+     bash scripts/with-secret.sh GITHUB_PAT -- git -C <path> pull origin main --ff-only
+
+  b) Обновить вручную в терминале:
+     git -C <path> pull origin main
+
+  c) Пропустить — продолжить с текущей локальной версией (delta может быть неполным)
+
+Выбор (a/b/c):
+```
+
+**Если выбрано (a):** выполнить pull через with-secret.sh. При ошибке (non-ff, auth) → fallback к инструкции (b).
+**Если выбрано (b):** показать точную команду и ждать подтверждения "готово".
+**Если выбрано (c):** продолжить с предупреждением.
+
+**После успешного pull:** перечитать `CHANGELOG.md` с диска (обновлённый файл) перед Шагом 1b.
+
+**Если `auto_pull: true` в `CLAUDE.local.md ## Auto-update`:** автоматически выбрать вариант (a) без вопроса. Показать только результат.
+
+---
+
 ## Шаг 0 — Pre-flight
 
 1. Прочитать `.claude/.version` → текущая methodology version (например `v4.22.0`)
