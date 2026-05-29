@@ -55,6 +55,13 @@
      bash scripts/secrets-rollback.sh                (latest backup)
      bash scripts/secrets-rollback.sh --list         (показать все backups)
 
+  📥 Клонировать репо (через credential helper — токен НЕ в URL)
+     bash scripts/clone-consumer.sh <name>           (читает consumers/<name>.yaml)
+
+     ⚠️  НЕ делать: git clone https://token@github.com/...  (токен в URL → shell history leak!)
+     ✅  Правильно: bash scripts/clone-consumer.sh ai-assistant-documentation
+         Токен берётся из .env через git-credential-from-env.sh — агент его не видит.
+
   🧹 Поиск утечек в transcripts
      bash scripts/secrets-scrub.sh                   (read-only)
      bash scripts/secrets-scrub.sh --clean           (destructive, asks confirm)

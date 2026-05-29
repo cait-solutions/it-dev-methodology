@@ -1,0 +1,15 @@
+# Consumer project reference — ai-assistant-documentation
+# v4.42.4+: use clone-consumer.sh, never paste token into URL.
+
+name: ai-assistant-documentation
+repo: https://github.com/IDK-IDK/ai-assistant-documentation.git
+local_path: consumers/repos/ai-assistant-documentation
+purpose: AI assistant project — methodology consumer
+status: reference-only
+
+# To clone (run once):
+#   bash scripts/clone-consumer.sh ai-assistant-documentation
+#
+# Prerequisites:
+#   bash scripts/check-secret.sh GITHUB_AI_ASSISTANT_DOC  # exit 0 = present
+#   If missing: bash scripts/set-secret.sh GITHUB_AI_ASSISTANT_DOC
