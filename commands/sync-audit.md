@@ -180,9 +180,11 @@ Output:
 | 5 | Skills frontmatter spec | 🔴/🟢 | [N skills с нарушениями] | `/plan`: spec compliance fix |
 
 **Контекст:**
-- Methodology version: `<from .claude/.version>`
+- Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная
+- Последний sync-audit был на: `<last_sync_audit.methodology_version из triggers.json>` (или «никогда»)
 - Last auto-pull: `<from triggers.json>`
-- Last sync-audit: `<from triggers.json>` (или «никогда» если first run)
+
+⚠️ **Важно:** финальная фраза "полностью применена" должна содержать версию из `.claude/.version` (текущая), **не** из triggers.json (stale значение прошлого аудита). Пример корректной фразы: "Methodology **v4.43.0** (текущая в репо) проверена на соответствие 5 gap-классам. Audit запускался в контексте v4.43.0."
 
 ---
 
