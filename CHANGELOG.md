@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.44.1 — auto_pull: полностью автоматический flow (2026-05-29)
+
+**Что добавилось:** явное объяснение почему `auto_pull: true` нужен для полного авто-flow. Watchdog обновляет `.claude/` но НЕ `it-dev-methodology/` source — без `auto_pull: true` при автозапуске `/sync-audit` source может быть stale.
+
+**Actions:**
+```yaml
+# Добавь в CLAUDE.local.md ## Auto-update:
+auto_pull: true   # для полностью автоматического flow
+```
+
+**Priority:** 🟡 Recommended если используешь watchdog auto-trigger (раз в 2 часа).
+
+---
+
 ## v4.44.0 — /sync-audit делает pull перед анализом (2026-05-29)
 
 **Что добавилось:** `/sync-audit` теперь начинает с Шага -0.5 — проверяет есть ли обновления в локальной `it-dev-methodology/` и предлагает pull перед delta analysis. Без этого delta analysis мог сравнивать с устаревшей локальной версией и говорить "всё актуально" хотя на remote уже v4.43.x. Добавлено поле `auto_pull: true/false` в `CLAUDE.local.md ## Auto-update`.
