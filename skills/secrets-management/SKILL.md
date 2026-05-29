@@ -382,6 +382,65 @@ bash scripts/with-secret.sh GITHUB_PAT -- git push
 
 ---
 
+## Why NOT direnv / .netrc / OS keychain as PRIMARY storage (design rationale)
+
+Частый вопрос reviewer'ов: «почему не взяли стандартный direnv / `.netrc` / OS keychain вместо своего `.env` + `set-secret.sh`?». Краткий ответ: **они решают storage-at-rest, наш primary threat — agent transcript leak. Это ортогональные оси.** Каждый из них можно использовать как **backend** (см. ниже), но не как primary access mechanism.
+
+### direnv — ❌ anti-pattern для agent-mediated security
+
+direnv авто-экспортирует `.env` в **parent shell environment** на `cd`. Но Claude Code's Bash tool работает именно в этом parent shell → секрет становится видим агенту через `printenv VAR`, `echo $VAR`, `python -c "import os; os.environ"` и сотни других путей. Наш `bash_protect.py` блок `env`/`echo $SECRET` становится **бесполезен** — значение уже в окружении.
+
+**Наш `with-secret.sh KEY -- cmd` делает обратное:** значение видит только subprocess `cmd`, parent shell агента — никогда. Это и есть differentiator. direnv — отличный developer-convenience tool, но его суть (экспорт в окружение) противоречит нашему требованию (скрыть от parent).
+
+### .netrc — ограниченный scope, тот же read-leak
+
+`.netrc` — стандарт для git/curl HTTPS credentials (`machine/login/password` triple). Но:
+- Только git-style credentials — нет произвольных API keys (`sk-ant-...`), DB connection strings, и т.п.
+- `cat ~/.netrc` → значение в transcript (тот же leak что `.env`, не безопаснее)
+- Нет manifest declaration, нет metadata (service_name, expires_at)
+
+Для **git-HTTPS-only** consumers `.netrc` — валидная альтернатива нашему `git-credential-from-env.sh` (git читает его нативно). Но наш scope шире.
+
+### OS keychain — лучше at-rest, но ортогонально + fragmented
+
+macOS Keychain / Windows Credential Manager / Linux libsecret — **encrypted at rest** (наш `.env` plaintext — здесь keychain объективно сильнее). НО:
+- При **чтении** значение в stdout: `security find-generic-password -w` → leak идентичен `.env`. Keychain защищает at-rest, не at-read.
+- Cross-platform fragmentation: 3 разных CLI API.
+- Headless/CI: keychain недоступен (нет GUI unlock).
+
+**Keychain решает другую угрозу** (украли диск → файл зашифрован), не нашу (значение → transcript → API). Ортогонально.
+
+### Using them as a storage BACKEND (поверх нашего injection layer)
+
+Priority chain **step 3 (process env)** позволяет любой из них как backend — наш injection layer берёт управление на этапе передачи subprocess'у:
+
+```bash
+# direnv as backend (не как primary — явный exec, не auto-export в agent shell):
+direnv exec . bash scripts/with-secret.sh KEY -- cmd
+
+# OS keychain as backend (macOS):
+export GITHUB_PAT=$(security find-generic-password -w -s github)
+bash scripts/with-secret.sh GITHUB_PAT -- git push
+
+# OS keychain (Windows Credential Manager via PowerShell):
+# $t = (cmdkey /list ...); export GITHUB_PAT=$t; with-secret ...
+
+# .netrc — git читает нативно (parallel path, не через нас) — для git-only OK
+```
+
+### Platform-conditional storage strategy (recommended)
+
+| Платформа | Keychain availability | Рекомендация |
+|---|---|---|
+| **macOS** | Keychain — из коробки, всегда | keychain backend **приоритизировать** (закрывает at-rest gap, zero extra deps) |
+| **Windows** | Credential Manager — из коробки | keychain backend **приоритизировать** |
+| **Linux desktop** (GNOME/KDE) | libsecret/gnome-keyring — есть, но DE-dependent | `.env` baseline; keychain opt-in если DE present |
+| **Linux headless/server/CI** | ❌ нет гарантии (no DE / GUI unlock) | **`.env` + chmod 600 — надёжный baseline** |
+
+**Вывод:** `.env` остаётся universal baseline (works everywhere, zero deps). На macOS/Windows keychain backend — strict improvement at-rest без нарушения zero-deps. На Linux — conditional (см. `with-secret.sh` step 0 keychain detection, v4.42.0+).
+
+---
+
 ## OS-level hardening recommendations
 
 Phase 1-5 защиты — **agent-mediated**. Они НЕ закрывают OS-level compromise. Дополнительные recommendations:

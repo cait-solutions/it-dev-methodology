@@ -70,11 +70,77 @@ if [[ -f "$MANIFEST" ]]; then
 fi
 
 # Look up a single key in priority chain.
+# Optional keychain backend (v4.42.0+, closes G-054). Opt-in via manifest
+# config `keychain_backend: true`. Platform-conditional: macOS `security`,
+# Windows Credential Manager, Linux libsecret (`secret-tool`). Value retrieved
+# here is IMMEDIATELY passed to env subprocess — never to this script's stdout.
+#
+# Why step 0 (before .env): keychain is encrypted-at-rest (stronger than
+# plaintext .env). If user opted in AND keychain has the value, prefer it.
+# Falls through to .env if keychain unavailable or key absent.
+KEYCHAIN_BACKEND="false"
+if [[ -f "$MANIFEST" ]]; then
+  _kb=$(grep -E "^[[:space:]]*keychain_backend:" "$MANIFEST" 2>/dev/null \
+        | head -1 | sed 's/.*keychain_backend:[[:space:]]*//' \
+        | tr -d '"'"'"'' | tr -d '[:space:]' || true)
+  [[ "$_kb" == "true" ]] && KEYCHAIN_BACKEND="true"
+fi
+
+# Keychain service namespace — secrets stored under "it-dev-methodology/<KEY>".
+_KEYCHAIN_SERVICE="it-dev-methodology"
+
+_lookup_keychain() {
+  local key="$1"
+  [[ "$KEYCHAIN_BACKEND" != "true" ]] && return 1
+  local value=""
+  case "$(uname -s 2>/dev/null)" in
+    Darwin)
+      # macOS Keychain
+      command -v security >/dev/null 2>&1 || return 1
+      value=$(security find-generic-password -s "$_KEYCHAIN_SERVICE" -a "$key" -w 2>/dev/null || true)
+      ;;
+    Linux)
+      # libsecret (GNOME keyring / KWallet via Secret Service) — DE-dependent.
+      command -v secret-tool >/dev/null 2>&1 || return 1
+      value=$(secret-tool lookup service "$_KEYCHAIN_SERVICE" account "$key" 2>/dev/null || true)
+      ;;
+    MINGW*|MSYS*|CYGWIN*)
+      # Windows Credential Manager via PowerShell (CredentialManager module
+      # not guaranteed; use cmdkey-stored generic credential read via powershell).
+      command -v powershell >/dev/null 2>&1 || return 1
+      value=$(powershell -NoProfile -Command "
+        \$ErrorActionPreference='SilentlyContinue'
+        \$c = & cmdkey /list:${_KEYCHAIN_SERVICE}/${key} 2>\$null
+        # cmdkey does not return password; fall back to nothing (Windows secure
+        # password retrieval requires DPAPI store — out of scope for v4.42.0).
+        Write-Output ''
+      " 2>/dev/null | tr -d '\r' || true)
+      # Windows password retrieval intentionally returns empty — see skill note.
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+  if [[ -n "$value" ]]; then
+    echo "$value"
+    return 0
+  fi
+  return 1
+}
+
 # WARNING: this function's echo IS the value. It is captured into a variable
 # below and IMMEDIATELY passed to env subprocess — never to stdout of this script.
 _lookup() {
   local key="$1"
   local value=""
+
+  # Step 0: keychain backend (opt-in, encrypted at-rest).
+  if [[ "$KEYCHAIN_BACKEND" == "true" ]]; then
+    if value=$(_lookup_keychain "$key"); then
+      echo "$value"
+      return 0
+    fi
+  fi
 
   if [[ -f ".env" ]]; then
     value=$(grep -E "^${key}=" ".env" 2>/dev/null | head -1 \

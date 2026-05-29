@@ -147,6 +147,8 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 
 Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов — только первая команда.
 
+**⛔ Any-Edit rule (closes G-020):** правило применяется при **ЛЮБОЙ** правке ` ```mermaid ` блока — Edit / Write tool, прямая правка, не только в формальном `/code` Шаг 4 workflow. После каждого Edit/Write который трогает файл с Mermaid-блоком → **сразу** запустить `bash scripts/update-mermaid-links.sh <file>` (или `--root` для doc-repo). Не откладывать до /code — при ad-hoc правке /code может вообще не запускаться, и ссылка останется stale. Self-check после каждого Mermaid Edit: «я тронул ```mermaid``` блок? → запустил update-mermaid-links?»
+
 ---
 
 ## Documentation map rule
