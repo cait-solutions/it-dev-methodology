@@ -24,6 +24,13 @@
   📝 Добавить новый секрет
      bash scripts/set-secret.sh KEY                  (interactive: service, URL, login, value)
 
+     ⚠️  KEY — это имя которое ТЫ придумываешь для каждого сервиса (UPPER_SNAKE_CASE).
+         Каждый сервис = отдельный вызов с уникальным именем:
+           bash scripts/set-secret.sh GITHUB_PAT          # для GitHub
+           bash scripts/set-secret.sh GITLAB_NEXCHANCE    # для GitLab
+           bash scripts/set-secret.sh ANTHROPIC_API_KEY   # для Anthropic
+         Один и тот же KEY дважды = перезапись предыдущего значения!
+
   👁  Посмотреть какие секреты есть/нужны
      bash scripts/secrets-show.sh                    (table, без значений)
      bash scripts/secrets-show.sh KEY                (детальный view, без значения)
