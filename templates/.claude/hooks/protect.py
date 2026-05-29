@@ -41,11 +41,17 @@ WHITELIST_PATTERNS = [
     r'(?:^|[\\/])scripts[\\/]validate-secrets\.sh$',
     r'(?:^|[\\/])scripts[\\/]_get-secret-raw\.sh$',
     r'(?:^|[\\/])scripts[\\/]secrets-scrub\.sh$',
+    r'(?:^|[\\/])scripts[\\/]secrets-show\.sh$',
+    r'(?:^|[\\/])scripts[\\/]secrets-edit\.sh$',
+    r'(?:^|[\\/])scripts[\\/]secrets-update\.sh$',
+    r'(?:^|[\\/])scripts[\\/]secrets-rollback\.sh$',
+    r'(?:^|[\\/])scripts[\\/]secrets-cleanup-backups\.sh$',
     r'(?:^|[\\/])scripts[\\/]git-credential-from-env\.sh$',
     r'(?:^|[\\/])scripts[\\/]clone-consumer\.sh$',
     # mirror in templates/scripts/ (consumer-distribution copies)
     r'templates[\\/]scripts[\\/](?:with-secret|set-secret|check-secret|validate-secrets|'
-    r'git-credential-from-env|_get-secret-raw|secrets-scrub|clone-consumer)\.sh$',
+    r'git-credential-from-env|_get-secret-raw|secrets-scrub|secrets-show|secrets-edit|'
+    r'secrets-update|secrets-rollback|secrets-cleanup-backups|clone-consumer)\.sh$',
     # hooks that enforce secret protection (canonical + synced runtime)
     r'(?:^|[\\/])hooks[\\/]secrets-guard\.py$',
     r'templates[\\/]\.claude[\\/]hooks[\\/]secrets-guard\.py$',

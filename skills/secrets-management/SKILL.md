@@ -47,6 +47,158 @@ Bash regex filtering — **best-effort**, не airtight. Determined adversarial 
 
 ---
 
+## Schema v2 (v4.41.0+) — per-entry metadata
+
+Schema v1 хранила только key/purpose/required/how_to_obtain — это работало для single-host scenarios но не отвечало на "к чему этот токен относится" и не поддерживало multi-host routing.
+
+Schema v2 добавляет per-entry поля:
+
+| Поле | Назначение |
+|---|---|
+| `service_name` | Human-readable name (e.g. "GitHub cait-solutions", "GitLab Nexchance") |
+| `service_url` | URL/hostname сервиса — используется git-credential-from-env.sh для routing |
+| `login` | Optional username/email/account ID |
+| `expires_at` | ISO date когда токен истекает — `/secrets --audit` warns в expiry_warn_days |
+| `last_rotated` | Auto-managed timestamp — warns после rotation_warn_days (default 90) |
+| `how_to_obtain_verified_at` | Когда последний раз проверял что `how_to_obtain` URL still works |
+| `scope_note` | Free text re: permissions (e.g. "repo, workflow") — useful для rotation |
+
+**Все поля optional** — v1 entries без них продолжают работать. Schema migration "lazy" — fields populate'ятся при следующем `set-secret KEY`.
+
+### Multi-host scenario (real use case)
+
+Personal GitHub PAT + work GitLab self-hosted в одном проекте:
+
+```yaml
+secrets:
+  - key: GITHUB_PAT
+    service_name: "GitHub (cait-solutions)"
+    service_url: "https://github.com"
+    login: "oauth2"
+    # ...
+
+  - key: GITLAB_NEXCHANCE
+    service_name: "GitLab Nexchance"
+    service_url: "https://code.nexchance.de"
+    login: "vb@nexchance.de"
+    # ...
+```
+
+`git-credential-from-env.sh` extracts request host from git stdin → matches first manifest entry where `service_url` hostname matches → returns that entry's value. **Multi-host routing работает automatically.**
+
+### Known limitation: multi-account same host
+
+Если у тебя 2 GitHub accounts (личный + work) на одном `github.com` — schema v2 first-match wins (warning при multi-match). Workaround:
+- Используй distinct hostnames через `~/.ssh/config` или `/etc/hosts` aliases (e.g. `github-work.com`)
+- ИЛИ wait для schema v3 с `account_filter` field (future)
+
+---
+
+## Configurable values (v4.41.0+)
+
+Defaults в `.claude/secrets-manifest.yaml` config block; per-developer overrides в `CLAUDE.local.md ## Secrets`:
+
+| Value | Default | Override причина |
+|---|---|---|
+| `expiry_warn_days` | 7 | Production: 30+ |
+| `rotation_warn_days` | 90 | High-security: 30 |
+| `how_to_obtain_warn_days` | 180 | Low-churn services: 365 |
+| `backup_retention_hours` | 24 | Compliance: 168 (7d) |
+| `default_url_scheme` | https | Internal: http |
+| `strict_schema` | false | Enterprise: true (enforce v2 fields) |
+
+---
+
+## User workflows (v4.41.0+ subcommands)
+
+### Add new secret (one-time)
+```bash
+bash scripts/set-secret.sh GITHUB_PAT
+# Interactive: prompts service_name, URL, login, expires_at, value (read -s), re-paste
+```
+
+### View metadata (без значения)
+```bash
+bash scripts/secrets-show.sh                    # table
+bash scripts/secrets-show.sh GITHUB_PAT         # detail
+```
+
+### Update value (rotation)
+```bash
+bash scripts/secrets-update.sh GITHUB_PAT
+# Shows masked current → new value (read -s) → re-paste confirm → atomic backup + write
+```
+
+### Edit metadata (без значения)
+```bash
+bash scripts/secrets-edit.sh GITHUB_PAT
+# Updates service_name / URL / login / expires_at; value untouched
+```
+
+### Rollback (если ошибся)
+```bash
+bash scripts/secrets-rollback.sh --list         # available backups
+bash scripts/secrets-rollback.sh                # latest backup
+bash scripts/secrets-rollback.sh .env.backup-20260529-143022   # specific
+```
+
+### Audit hygiene
+```bash
+bash scripts/validate-secrets.sh
+# Shows missing required + expires_at warnings + rotation warnings + how_to_obtain freshness
+```
+
+---
+
+## Onboarding new developer (team mode)
+
+1. Clone repo → `bash scripts/sync-methodology.sh .`
+2. `.claude/secrets-manifest.yaml` уже committed — список нужных secrets visible
+3. `bash scripts/validate-secrets.sh` → shows missing keys + their `how_to_obtain`
+4. Для each missing required: `bash scripts/set-secret.sh KEY` (interactive)
+5. **Manifest shared, values per-developer** — each developer has own `.env`
+
+---
+
+## Migration from `gh auth login`
+
+Если уже используешь `gh auth` для GitHub:
+
+```bash
+# 1. Check current token (manually copy from gh's storage)
+gh auth status
+
+# 2. Add to methodology canonical store
+bash scripts/set-secret.sh GITHUB_PAT
+#    Service: GitHub (cait-solutions)
+#    URL: https://github.com
+#    Login: oauth2
+#    Value: paste from step 1
+
+# 3. Optional: configure credential helper (recommended)
+git config credential."https://github.com".helper \
+  "!bash $(pwd)/scripts/git-credential-from-env.sh"
+
+# 4. Optional cleanup: gh auth logout (gh CLI remains as fallback in priority chain)
+```
+
+`gh auth` остаётся как fallback если methodology helper не находит match (см. git credential helper chain).
+
+---
+
+## CI/CD usage (non-tty)
+
+Interactive `read -s` зависает в CI. Use inline mode:
+
+```bash
+bash scripts/set-secret.sh GITHUB_PAT "$CI_GITHUB_PAT" \
+  --service "GitHub CI" --url "https://github.com" --login "oauth2" --no-confirm
+```
+
+CI secret variable (`CI_GITHUB_PAT`) подставляется envvar — не в shell history.
+
+---
+
 ## Workflow: добавить новый секрет (one-time setup)
 
 Пользователь (НЕ агент) выполняет:
@@ -287,4 +439,4 @@ EMERGENCY:  /secrets --scrub --clean   (destructive, asks confirm)
 - `templates/.claude/hooks/bash_protect.py` — blocks env dumps
 - `templates/.claude/hooks/secrets-guard.py` — blocks git commit of secrets
 
-**Documentation:** [CLAUDE.md § Secrets & Credentials](../../CLAUDE.md#secrets--credentials)
+**Documentation:** consumer's `CLAUDE.md § Secrets & Credentials` (created by `new-project-init.sh` from `templates/CLAUDE.template.md`). For methodology contributors: see `templates/CLAUDE-methodology.template.md § Secrets & Credentials` (the canonical version).

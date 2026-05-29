@@ -124,6 +124,21 @@ missing=()
 for key in "${keys[@]}"; do
   if value=$(_lookup "$key"); then
     env_args+=("${key}=${value}")
+    # Optional verbose service log (no value disclosure).
+    if [[ "${WITH_SECRET_VERBOSE:-}" == "1" && -f "$MANIFEST" ]]; then
+      sn=$(awk -v k="$key" '
+        $0 ~ "^[[:space:]]*-[[:space:]]*key:[[:space:]]*"k"[[:space:]]*$" { found=1; next }
+        found && /^[[:space:]]*-[[:space:]]*key:/ { exit }
+        found && /^[[:space:]]*service_name:[[:space:]]*/ {
+          sub(/^[[:space:]]*service_name:[[:space:]]*/, "")
+          gsub(/^["'"'"']|["'"'"']$/, "")
+          gsub(/[[:space:]]+$/, "")
+          print
+          exit
+        }
+      ' "$MANIFEST")
+      [[ -n "$sn" ]] && echo "with-secret: injecting $key → $sn" >&2
+    fi
   else
     missing+=("$key")
   fi

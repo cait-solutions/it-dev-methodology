@@ -207,7 +207,9 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 | `~/.config/it-dev/secrets.env` | cross-project shared (опционально) | 2 |
 | process env vars | CI/CD compatibility | 3 |
 
-Декларация **какие** секреты нужны проекту: `.claude/secrets-manifest.yaml` (committed, без значений — только names + purpose + `how_to_obtain`).
+Декларация **какие** секреты нужны проекту: `.claude/secrets-manifest.yaml` (committed, без значений).
+
+**Schema v2 (v4.41.0+):** каждая запись имеет `service_name` / `service_url` / `login` (optional) / `expires_at` (optional) / `last_rotated` (auto-managed) / `how_to_obtain_verified_at` (optional) / `scope_note` (optional). `git-credential-from-env.sh` использует `service_url` hostname для **multi-host routing** (один GitHub + один GitLab self-hosted → правильный токен per host). v1 entries backward-compat. Per-developer hygiene thresholds в `CLAUDE.local.md ## Secrets` (rotation_warn_days, expiry_warn_days, etc.).
 
 ### MUST (обязательные правила для агентов)
 
@@ -312,6 +314,11 @@ Manual через `bash scripts/set-secret.sh KEY <new-value>` атомарно 
 - [templates/.env.example.template](templates/.env.example.template) — consumer template (commit-safe)
 - [templates/secrets-manifest.yaml.template](templates/secrets-manifest.yaml.template) — declared-secrets schema
 - [templates/.claude/hooks/secrets-guard.py](templates/.claude/hooks/secrets-guard.py) — PreToolUse: блок commit с token / staged .env
+- [scripts/secrets-show.sh](scripts/secrets-show.sh) — **просмотр metadata** (v4.41.0+): table или single-entry view, без значений
+- [scripts/secrets-update.sh](scripts/secrets-update.sh) — **rotation interactive** (v4.41.0+): value-only update, atomic backup, re-paste confirm
+- [scripts/secrets-edit.sh](scripts/secrets-edit.sh) — **metadata edit** (v4.41.0+): service_name/url/login/expires_at, value untouched
+- [scripts/secrets-rollback.sh](scripts/secrets-rollback.sh) — **restore .env** из .env.backup-{timestamp} (v4.41.0+)
+- [scripts/secrets-cleanup-backups.sh](scripts/secrets-cleanup-backups.sh) — prune старые backup файлы (v4.41.0+)
 - [VERSION](VERSION) — semver
 
 ---

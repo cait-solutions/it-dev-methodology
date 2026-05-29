@@ -84,6 +84,13 @@ cp "$METH_DIR/scripts/set-secret.sh" scripts/
 cp "$METH_DIR/scripts/check-secret.sh" scripts/
 cp "$METH_DIR/scripts/validate-secrets.sh" scripts/
 cp "$METH_DIR/scripts/_get-secret-raw.sh" scripts/
+# v4.41.0+ scripts
+cp "$METH_DIR/scripts/secrets-show.sh" scripts/ 2>/dev/null || true
+cp "$METH_DIR/scripts/secrets-update.sh" scripts/ 2>/dev/null || true
+cp "$METH_DIR/scripts/secrets-edit.sh" scripts/ 2>/dev/null || true
+cp "$METH_DIR/scripts/secrets-rollback.sh" scripts/ 2>/dev/null || true
+cp "$METH_DIR/scripts/secrets-cleanup-backups.sh" scripts/ 2>/dev/null || true
+cp "$METH_DIR/scripts/git-credential-from-env.sh" scripts/ 2>/dev/null || true
 
 echo "Test dir: $TEST_DIR"
 echo "Hook: $HOOK"
@@ -260,6 +267,90 @@ if grep -q "Mandatory sub-checks" "$PLAN" && grep -q "Dogfood check" "$PLAN" && 
 else
   fail=$((fail+1)); fail_details+=("G-017: /plan mandatory sub-checks block missing"); echo "  FAIL  G-017: sub-checks missing"
 fi
+
+echo ""
+echo "=== Group 9: schema v2 metadata fields (v4.41.0+) ==="
+
+# Add a v2 entry via direct manifest edit (interactive mode requires tty).
+cat >> .claude/secrets-manifest.yaml <<'EOF'
+
+  - key: GITLAB_TEST
+    purpose: "test multi-host entry"
+    service_name: "GitLab Test"
+    service_url: "https://gitlab.example.com"
+    login: "testuser@example.com"
+    required: false
+    scope: per-project
+    sensitivity: high
+    token_pattern: "glpat-[A-Za-z0-9_-]{20,}"
+    last_rotated: "2026-05-29"
+    how_to_obtain: |
+      Test entry — do not use in production.
+EOF
+
+# secrets-show.sh single-entry view shows metadata, no values
+output=$(bash scripts/secrets-show.sh GITLAB_TEST 2>&1)
+echo "$output" | grep -q "GitLab Test" && echo "$output" | grep -q "gitlab.example.com" && echo "$output" | grep -q "testuser@example.com"
+_assert "secrets-show shows metadata for v2 entry" "$?" "0"
+
+# secrets-show does NOT print value when value is set
+bash scripts/set-secret.sh GITLAB_TEST "glpat-$(printf 'D%.0s' {1..40})" --no-confirm >/dev/null 2>&1
+output=$(bash scripts/secrets-show.sh GITLAB_TEST 2>&1)
+echo "$output" | grep -q "glpat-DDDD"
+[[ $? -ne 0 ]] && code="0" || code="1"
+_assert "secrets-show does NOT leak value" "$code" "0"
+
+# Tabular list mode shows GITLAB_TEST
+output=$(bash scripts/secrets-show.sh 2>&1)
+echo "$output" | grep -q "GITLAB_TEST"
+_assert "secrets-show list includes new key" "$?" "0"
+
+echo ""
+echo "=== Group 10: end-to-end production-config (add → use → rotate) ==="
+
+# Simulate git credential helper invocation for github.com host
+# Add a GITHUB_PAT v2 entry first
+cat >> .claude/secrets-manifest.yaml <<'EOF'
+
+  - key: GITHUB_PAT_E2E
+    purpose: "e2e test"
+    service_name: "GitHub E2E"
+    service_url: "https://github.example.com"
+    login: "oauth2"
+    required: false
+    scope: per-project
+    sensitivity: high
+    last_rotated: "2026-05-29"
+    how_to_obtain: |
+      Test only.
+EOF
+bash scripts/set-secret.sh GITHUB_PAT_E2E "ghp_$(printf 'E%.0s' {1..40})" --no-confirm >/dev/null 2>&1
+
+# Invoke git-credential-from-env.sh with host=github.example.com
+result=$(printf 'protocol=https\nhost=github.example.com\n\n' | bash "$METH_DIR/scripts/git-credential-from-env.sh" get 2>/dev/null)
+echo "$result" | grep -q "^username=oauth2" && echo "$result" | grep -q "^password=ghp_EEEE"
+_assert "git-credential-from-env: multi-host routing works (github.example.com → GITHUB_PAT_E2E)" "$?" "0"
+
+# Invoke for non-matching host returns silently
+result=$(printf 'protocol=https\nhost=unrelated.example.org\n\n' | bash "$METH_DIR/scripts/git-credential-from-env.sh" get 2>/dev/null)
+[[ -z "$result" ]]
+_assert "git-credential-from-env: no match → empty (git tries next helper)" "$?" "0"
+
+echo ""
+echo "=== Group 11: write-side scripts (rollback, edit) ==="
+
+# Trigger a backup by updating GITLAB_TEST value
+bash scripts/set-secret.sh GITLAB_TEST "glpat-$(printf 'F%.0s' {1..40})" --no-confirm >/dev/null 2>&1
+ls .env.backup-* >/dev/null 2>&1
+_assert "set-secret creates .env.backup-* on overwrite" "$?" "0"
+
+# Rollback list
+bash scripts/secrets-rollback.sh --list >/dev/null 2>&1
+_assert "secrets-rollback --list runs" "$?" "0"
+
+# Cleanup backups
+bash scripts/secrets-cleanup-backups.sh --all >/dev/null 2>&1
+_assert "secrets-cleanup-backups --all runs" "$?" "0"
 
 echo ""
 echo "=== Summary ==="
