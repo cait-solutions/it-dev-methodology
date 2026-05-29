@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-057
+Дата: 2026-05-29
+Контекст: /diagnose — /sync-audit финальный отчёт показывает stale версию
+Что пропустил: `/sync-audit` Шаг 3 Report финальная фраза "Methodology vX.Y.Z полностью применена" берёт версию из `last_sync_audit.methodology_version` в triggers.json — это значение от предыдущего запуска /sync-audit, а не текущая версия. Consumer видит v4.27.0 когда реальная v4.43.0 — вводит в заблуждение.
+Как обнаружено: пользователь увидел "v4.27.0 полностью применена" при текущей методологии v4.43.0
+Категория: logic-gap
+Гипотеза: финальная фраза должна показывать ТЕКУЩУЮ версию из `.claude/.version` (или methodology VERSION), а не last_sync_audit.methodology_version который обновляется только после завершения аудита. Агент перепутал "версия при которой аудит запускался" и "текущая версия методологии".
+Agent failure mode: prompt-ambiguous (формат Шага 5 triggers.json обновления не уточнял что финальная фраза должна брать версию из другого источника)
+Potential fix: в `/sync-audit` Шаг 3 Report финальная фраза должна явно: "Methodology version в этом репо: {.claude/.version value} | Last audit был на: {last_sync_audit.methodology_version}". Или проще: всегда показывать текущую версию из .claude/.version, не из triggers.json. Добавить в Шаг 3 template явный комментарий: "версия для фразы = .claude/.version, не triggers.json".
+Статус: open
+---
 Gap-ID: G-056
 Дата: 2026-05-29
 Контекст: /diagnose — consumer Mermaid ссылка в старом формате (с заголовком + blockquote вместо bare URL)
