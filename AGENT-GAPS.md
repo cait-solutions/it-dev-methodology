@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-059
+Дата: 2026-05-29
+Контекст: /review — reviewer фокусировался только на последних commits вместо полного branch diff
+Что пропустил: /review Шаг 1 содержал `git diff HEAD` — это только uncommitted/последний commit. При запуске после сессии без /plan reviewer видел частичный scope и самостоятельно корректировал ("фокусирую на последних 5 commits") вместо применения структурного правила.
+Как обнаружено: пользователь указал на пример из /review output: "Это огромный накопленный diff vs main — целая сессия разработки. Фокусирую review на последних 5 commits"
+Категория: prompt-gap
+Гипотеза: Шаг 1 `git diff HEAD` — стандартный git-рефлекс, но для branch review нужен `git diff main..HEAD`. Автор не учёл что /review запускается не только сразу после /code (где uncommitted = всё), но и после целой сессии с множеством commits.
+Agent failure mode: prompt-ambiguous
+Potential fix: добавить в /review Шаг 1 branch scope check (`git diff production_branch..HEAD --stat`) как обязательный первый шаг с классификацией scope (компактный vs большой) и выбором фокуса при большом scope. Closes этот gap: commits без /plan теперь явно выявляются и сигнализируются.
+Статус: addressed (v4.44.3)
+---
 Gap-ID: G-057
 Дата: 2026-05-29
 Контекст: /diagnose — /sync-audit финальный отчёт показывает stale версию
