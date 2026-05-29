@@ -114,6 +114,37 @@ Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mism
 
 ---
 
+## Secrets
+
+Per-developer overrides for secrets-management thresholds (v4.41.0+). Defaults are in `.claude/secrets-manifest.yaml` config block — override here for per-developer behaviour without touching shared manifest.
+
+```yaml
+# Hygiene thresholds — when validate-secrets warns
+expiry_warn_days: 7              # warn if expires_at within N days
+rotation_warn_days: 90           # warn if last_rotated older than N days
+how_to_obtain_warn_days: 180     # warn if how_to_obtain_verified_at older
+
+# Backup management — set-secret backs up before each write
+backup_retention_hours: 24       # auto-prune .env.backup-* older than N hours
+
+# UX behaviour
+default_url_scheme: "https"      # auto-prepended when set-secret URL prompt gets bare hostname
+strict_schema: false             # if true: validate-secrets errors (vs warns) on missing v2 fields
+```
+
+**All fields are optional** — if omitted, defaults from `secrets-manifest.yaml` config apply. Manifest defaults are committed (shared); these overrides are per-developer (CLAUDE.local.md is gitignored).
+
+**When to override:**
+- High-security environment: lower `rotation_warn_days` (e.g. 30) for tighter rotation cadence
+- Compliance: increase `backup_retention_hours` (e.g. 168 = 7d) for audit window
+- Production deploys: lower `expiry_warn_days` (e.g. 30) to avoid surprise expiry mid-deploy
+- Internal services: change `default_url_scheme: "http"` if HTTPS unavailable
+- Enterprise: `strict_schema: true` to enforce all v2-recommended fields
+
+See: [skills/secrets-management/SKILL.md](../skills/secrets-management/SKILL.md) for full configurability reference.
+
+---
+
 ## Artifact budgets
 
 Лимиты размера для артефактов-инструкций. Используется `scripts/validate-artifact-size.sh`

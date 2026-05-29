@@ -172,11 +172,15 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 
 ## Secrets & Credentials
 
-**Canonical store:** `.env` (per-project, gitignored) + optional `~/.config/it-dev/secrets.env` (shared). Declaration of required keys: `.claude/secrets-manifest.yaml`.
+**Canonical store:** `.env` (per-project, gitignored) + optional `~/.config/it-dev/secrets.env` (shared). Declaration of required keys + per-service metadata: `.claude/secrets-manifest.yaml` (schema v2+ — service_name/service_url/login enable multi-host git credential routing).
 
 **MUST:**
-- Setup new secret (one-time, user runs): `bash scripts/set-secret.sh KEY <value>`
-- Audit what's needed vs present: `/secrets` or `bash scripts/validate-secrets.sh`
+- Setup new secret (one-time, user runs): `bash scripts/set-secret.sh KEY` (interactive: prompts service_name, URL, login, expires_at, value via read -s)
+- View metadata (no values): `bash scripts/secrets-show.sh` (table) or `bash scripts/secrets-show.sh KEY` (detail)
+- Audit + hygiene warnings (expiry, rotation, missing fields): `/secrets` or `bash scripts/validate-secrets.sh`
+- Update value (rotation): `bash scripts/secrets-update.sh KEY` (atomic backup + re-paste confirm)
+- Edit metadata only (no value): `bash scripts/secrets-edit.sh KEY`
+- Rollback (если ошибся): `bash scripts/secrets-rollback.sh` (latest backup) or `--list`
 - Use secret in command (agent-safe): `bash scripts/with-secret.sh KEY -- <command>` (value never enters agent stdout/transcript)
 - Boolean check: `bash scripts/check-secret.sh KEY` (exit 0/1, no value)
 - Git HTTPS push/pull: configure `scripts/git-credential-from-env.sh` as credential helper

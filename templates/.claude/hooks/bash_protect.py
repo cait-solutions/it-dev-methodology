@@ -84,12 +84,28 @@ ENV_DUMP_PATTERNS = [
 ]
 
 
+# Methodology-managed secret scripts — invocations are allowed even though
+# they reference secret operations. The scripts themselves enforce safety
+# (interactive read -s, no value echo).
+_METHODOLOGY_SECRET_SCRIPTS = (
+    r'bash\s+(?:[^\s;&|]+/)?scripts/'
+    r'(?:with-secret|set-secret|check-secret|validate-secrets|secrets-scrub|'
+    r'secrets-show|secrets-edit|secrets-update|secrets-rollback|'
+    r'secrets-cleanup-backups|git-credential-from-env|clone-consumer)'
+    r'(?:\.sh)?(?:\s|$|[|;&])'
+)
+
+
 try:
     data = json.load(sys.stdin)
 except Exception:
     sys.exit(0)
 
 cmd = (data.get("tool_input") or {}).get("command", "")
+
+# Methodology secret-management scripts — allow even if patterns below match.
+if re.search(_METHODOLOGY_SECRET_SCRIPTS, cmd):
+    sys.exit(0)
 
 for pattern in DANGEROUS_PATTERNS:
     if re.search(pattern, cmd, re.IGNORECASE):
