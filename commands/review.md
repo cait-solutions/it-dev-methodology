@@ -70,9 +70,46 @@
 
 ## Шаг 1 — Прочитай изменения
 
-1. `git diff HEAD` и `git diff --staged`
+**Шаг 1.0 — Branch scope (выполни ПЕРВЫМ):**
+
+```bash
+# Определить production_branch (читать из CLAUDE.local.md ## Branching, default: main)
+git diff <production_branch>..HEAD --stat
+git log <production_branch>..HEAD --oneline
+```
+
+Если `production_branch` не найден как ref → fallback: `git log HEAD~10..HEAD --oneline` с предупреждением.
+
+**Классификация scope:**
+
+- **Компактный scope** (≤ 5 commits, все с `/plan`): продолжить стандартный review.
+- **Большой scope** (> 5 commits ИЛИ есть commits без `/plan`):
+
+```
+⚠️ Branch содержит N commits с момента {production_branch}.
+   Commits без предшествующего /plan:
+   - {hash} {message}  ← нет /plan перед этим
+   - ...
+
+   Весь diff охватывает: {список файлов из git diff main..HEAD --name-only}
+
+   Рекомендую:
+     a) Review всего branch scope (полный — рекомендуется)
+     b) Фокус на последних N commits (укажи N)
+     c) Фокус на конкретных файлах (укажи список)
+
+   Жду выбора (a/b/c):
+```
+
+После выбора — формировать scope review из соответствующего diff.
+
+⚠️ **"Commits без /plan" detection:** grep в commit messages за `feat(` / `fix(` / `docs(` / `chore(` которым **не предшествует** commit с `"plan"` / `/plan` в message. Эвристика, не точный алгоритм — но достаточно для сигнала.
+
+---
+
+1. `git diff HEAD` и `git diff --staged` ← только uncommitted changes (дополнительно к branch scope выше)
 2. Определи тип изменения: Feature / Bug Fix / Migration / Refactor
-3. Определи затронутые домены
+3. Определи затронутые домены на основе **полного branch scope** (не только HEAD)
 
 ---
 
