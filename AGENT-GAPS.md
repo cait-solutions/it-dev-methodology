@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-055
+Дата: 2026-05-29
+Контекст: /diagnose — maps не обновлены после v4.42.0 (keychain backend)
+Что пропустил: после добавления keychain backend в with-secret.sh (новый step 0 + новый edge в SYSTEM-MAP) не обновил USER-MAP и SYSTEM-MAP. Написал "незначительный новый edge — можно добавить в следующем цикле" — субъективный override на mandatory checklist item (/code Шаг 5 line 210).
+Как обнаружено: пользователь: "мне нужно ВСЕГДА обновлять maps"
+Категория: prompt-gap
+Гипотеза: /code Шаг 5 checklist "Если добавлена/изменена зависимость → SYSTEM-MAP.md edges обновлены?" без ⛔ enforcement → агент применил субъективный фильтр "незначительный" → skip.
+Agent failure mode: prompt-ambiguous
+Potential fix: усилить /code Шаг 5 строку до hard rule: "⛔ ANY new component/edge/capability/step → SYSTEM-MAP + USER-MAP + ARTIFACT-MAP ОБЯЗАНЫ быть обновлены. Нет исключений 'незначительный' — только явный N/A с обоснованием." + /review check: "новый script/module в priority chain без map update = 🔴 CRITICAL".
+Статус: addressed (v4.42.1)
+---
 Gap-ID: G-054
 Дата: 2026-05-29
 Контекст: /diagnose (внешняя архитектурная критика secrets решения)
