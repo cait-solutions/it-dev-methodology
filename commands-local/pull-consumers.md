@@ -91,6 +91,25 @@ bash scripts/clone-consumer.sh <name>
 - [ ] `git -C <path> status --porcelain` пусто? Если нет → SKIP «local uncommitted changes»
 - [ ] `git -C <path> remote get-url origin` существует? Если нет → SKIP «no origin remote»
 - [ ] Запомнить `prev_sha = git -C <path> rev-parse HEAD`
+- [ ] **GitHub multi-account check** (только для `github.com` remotes):
+  1. Прочитать `gh_account` из `.claude/secrets-manifest.yaml` для ключа чей `service_url` совпадает с remote hostname
+  2. Если `gh_account` задан → получить активный аккаунт: `gh auth status 2>/dev/null | grep -A1 "github.com" | grep "Active account: true" | ...`
+  3. Если активный ≠ нужному → **НЕ пропускать fetch** — показать warning и переключить:
+  ```
+  ⚠️ GitHub account mismatch для <consumer>:
+     Нужен: <gh_account из manifest>
+     Активен: <current active account>
+     Переключаю: gh auth switch --user <gh_account>
+  ```
+  4. Запомнить original аккаунт ДО switch: `ORIGINAL_GH_ACCOUNT=<current>`
+  5. Установить trap **до** switch: `trap "gh auth switch --user $ORIGINAL_GH_ACCOUNT 2>/dev/null" EXIT INT TERM`
+  6. Выполнить switch: `gh auth switch --user <gh_account>`
+  7. После всех fetch/merge — явный revert: `gh auth switch --user $ORIGINAL_GH_ACCOUNT`
+  8. Снять trap: `trap - EXIT INT TERM`
+  9. В финальном report показать: `🔄 gh account restored: <original>`
+
+  Если `gh_account` не задан в manifest → пропустить check (backward compat).
+  Если `gh` CLI недоступен → пропустить с `🟡 gh CLI not found — skipping account check`.
 
 ⛔ Read-only mode: НИКОГДА не выполнять `git push`, `git commit`, `git reset --hard` в консьюмере. Только `fetch` + `merge --ff-only`. См. CLAUDE.local.md правило «Consumer repos — READ ONLY».
 
