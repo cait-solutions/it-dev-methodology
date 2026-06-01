@@ -176,17 +176,31 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 ## Maps Standard Rule
 
-Единый стандарт написания и поддержания карт проекта. Применяется ко всем трём картам: **SYSTEM-MAP** (архитектура), **USER-MAP** (пользовательские flows), **ARTIFACT-MAP** (lifecycle артефактов). Основан на C4 Model, Arc42, Living Documentation principles.
+Единый стандарт написания и поддержания **views** (карт и связанных артефактов) проекта. Основан на **arc42 multi-viewpoint** + Living Documentation principles + **C4-inspired diagram discipline** (нотация, не таксономия).
 
-### 1. Назначение карт (три разные плоскости)
+> **Точность модели (исправлено по methodology-audit):** три основные карты — это **arc42-style viewpoints** (ортогональные плоскости одной системы), НЕ C4 zoom levels (C4 = один axis granularity: Context→Container→Component→Code). Раньше CLAUDE.md ошибочно заявлял «основан на C4» — наша таксономия ближе к arc42 / 4+1 (Kruchten) views. C4 берём только для **дисциплины диаграмм внутри SYSTEM-MAP** (уровни детализации), не для разделения карт.
 
-| Карта | Отвечает на вопрос | Читает | Пишет |
+### 1. Полный набор views (6, не «3 карты»)
+
+**Living maps (3 — обновляются регулярно, под Maps Standard ниже):**
+
+| Карта | Viewpoint (4+1/arc42) | Отвечает на вопрос | Читает | Пишет |
+|---|---|---|---|---|
+| **SYSTEM-MAP** | Logical + Development | Как устроена система? | Developer, /architecture-audit | Developer + /code при структурных изменениях |
+| **USER-MAP** | Scenarios | Что умеет пользователь? | Developer, /product-check, /onboard | Developer + /code при новых capabilities |
+| **ARTIFACT-MAP** | Data-lineage (methodology-specific) | Кто что обновляет и когда? | /review, /retro, Developer | Developer при добавлении команд/артефактов |
+
+**Supporting views (3 — существуют, обновляются по событию, НЕ living maps):**
+
+| View | Viewpoint | Когда обновляется | Файл |
 |---|---|---|---|
-| **SYSTEM-MAP** | Как устроена система? | Developer, /architecture-audit | Developer + /code при структурных изменениях |
-| **USER-MAP** | Что умеет пользователь? | Developer, /product-check, /onboard | Developer + /code при новых capabilities |
-| **ARTIFACT-MAP** | Кто что обновляет и когда? | /review, /retro, Developer | Developer при добавлении команд/артефактов |
+| **data-map** | Process/data flow | при изменении хранилищ/схемы данных | `docs/data-map.md` (если есть runtime-данные) |
+| **ADR catalog** | Decisions (arc42 §9) | при принятии/superseding решения | `docs/adr/` + `README.md` каталог |
+| **threat-model** | Trust-boundary | на `[security]` планах | `docs/threat-model-*.md` (instantiate из template) |
 
-**Dependency direction:** SYSTEM-MAP ← USER-MAP ← ARTIFACT-MAP. Обратные ссылки = circular reference, запрещено. Нет дублирования фактов между картами — cross-reference вместо копирования.
+**Dependency direction:** SYSTEM-MAP ← USER-MAP ← ARTIFACT-MAP. Обратные ссылки = circular reference, запрещено. Нет дублирования фактов между views — cross-reference вместо копирования.
+
+**Слепое пятно (methodology-audit finding):** текущий набор НЕ покрывает **Temporal/Sequence viewpoint** (порядок: `/plan→/code→/review→/deploy`, порядок хуков PreToolUse→PostToolUse→Stop). Карты показывают *кто что делает*, не *в каком порядке*. Ordering-баги (sync до merge, hook-reordering) структурно невидимы. Кандидат на 7-й view — добавляется только при подтверждённом ordering-инциденте (anti-over-engineering: не добавлять для теоретической полноты).
 
 ### 2. Обязательная структура каждой карты
 

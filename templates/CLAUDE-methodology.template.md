@@ -155,9 +155,9 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 ## Maps Standard Rule
 
-Единый стандарт написания и поддержания карт проекта. Применяется ко всем трём картам: **SYSTEM-MAP** (архитектура), **USER-MAP** (пользовательские flows), **ARTIFACT-MAP** (lifecycle артефактов). Основан на C4 Model, Arc42, Living Documentation principles.
+Единый стандарт написания и поддержания карт проекта. Применяется ко всем трём картам: **SYSTEM-MAP** (архитектура), **USER-MAP** (пользовательские flows), **ARTIFACT-MAP** (lifecycle артефактов). Основан на **arc42 multi-viewpoint** + Living Documentation + **C4-inspired дисциплина диаграмм** (нотация, не таксономия — три карты это ортогональные arc42 viewpoints, не C4 zoom levels). Supporting views: data-map (data flow), ADR catalog (decisions), threat-model (trust boundaries) — обновляются по событию, не living.
 
-### 1. Назначение карт (три разные плоскости)
+### 1. Назначение карт (три разные плоскости — arc42 viewpoints)
 
 | Карта | Отвечает на вопрос | Читает | Пишет |
 |---|---|---|---|
