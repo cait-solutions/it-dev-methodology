@@ -54,7 +54,7 @@
 Рекомендую обновить перед анализом чтобы видеть актуальный delta.
 
 Варианты:
-  a) Обновить сейчас (если GITHUB_PAT настроен):
+  a) Обновить сейчас (если GITHUB_PAT настроен) (рекомендуется):
      bash scripts/with-secret.sh GITHUB_PAT -- git -C <path> pull origin main --ff-only
 
   b) Обновить вручную в терминале:
