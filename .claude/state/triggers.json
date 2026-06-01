@@ -112,7 +112,7 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-01T00:00:00Z",
-    "task_id": "secrets-audit-git-https-leak-S0-S6",
+    "task_id": "migration-registry-sync-audit-single-point",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
@@ -120,6 +120,6 @@
   "last_deploy": {
     "date": "2026-06-01",
     "status": "ok",
-    "phase": "secrets-leak-fix-S0-S3-v4.57.0"
+    "phase": "migration-registry-v4.58.0"
   }
 }
