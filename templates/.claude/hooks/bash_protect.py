@@ -115,9 +115,13 @@ _METHODOLOGY_SECRET_SCRIPTS = (
     r'bash\s+(?:[^\s;&|]+/)?scripts/'
     r'(?:with-secret|set-secret|check-secret|validate-secrets|secrets-scrub|'
     r'secrets-show|secrets-edit|secrets-update|secrets-rollback|'
-    r'secrets-cleanup-backups|git-credential-from-env|clone-consumer)'
+    r'secrets-cleanup-backups|git-credential-from-env|clone-consumer|secrets-delete)'
     r'(?:\.sh)?(?:\s|$|[|;&])'
 )
+
+# Git operations that may reference blocked names in commit messages (-m, -F)
+# or documentation context — these are not execution paths.
+_GIT_COMMIT_ALLOWLIST = r'git\s+(?:commit|tag|notes\s+add)\b'
 
 
 try:
@@ -129,6 +133,10 @@ cmd = (data.get("tool_input") or {}).get("command", "")
 
 # Methodology secret-management scripts — allow even if patterns below match.
 if re.search(_METHODOLOGY_SECRET_SCRIPTS, cmd):
+    sys.exit(0)
+
+# git commit / tag — may reference script names in commit messages, not execution paths.
+if re.search(_GIT_COMMIT_ALLOWLIST, cmd):
     sys.exit(0)
 
 for pattern in DANGEROUS_PATTERNS:
