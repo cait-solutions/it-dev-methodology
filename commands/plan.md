@@ -948,6 +948,7 @@ Binding minimums: #4 = X%, остальные = Y%
 **Общие правила всех draft:**
 - EN node IDs + RU/emoji labels — как в оригинале карты
 - **Hybrid language (CLAUDE.md правило):** технические identifiers (имена файлов, команд) EN; описания поведения / названия слоёв / глаголы действий — RU. ❌ `"Hooks Layer"` / `"reads config"` / `"writes state"` → ✅ `"🪝 Слой хуков"` / `"читает config"` / `"пишет state"`. Closes G-049.
+- ❌ Транслитерация кириллицы латиницей (`"Stanet"`, `"Zapuskaet"`, `"dobavlen"`) — нарушение: это НЕ является RU. Только настоящая кириллица. (НЕ относится к техническим identifiers: `hooks/`, `/plan`, `trigger`)
 - `classDef` / `style` копировать из оригинала только для затронутых nodes
 - Legend node — anchor если есть в оригинале
 - Без placeholder (`TODO` / `...` / `etc.`)

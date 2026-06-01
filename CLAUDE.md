@@ -203,6 +203,7 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 **Mermaid-only.** ASCII art, PlantUML — запрещены.
 
 **Гибридный язык:** технические термины/файлы/команды — EN; описания поведения/аннотации — RU.
+❌ Транслитерация кириллицы латиницей (`"Stanet"`, `"Zapuskaet"`, `"dobavlen"`) — нарушение: это НЕ является RU. Только настоящая кириллица.
 Пример: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
 
 **Детализация:**
