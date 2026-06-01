@@ -58,6 +58,28 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-074
+Дата: 2026-06-01
+Контекст: free-chat — пользователь указал на слабый thinking-ahead
+Что пропустил: при предложении решений агент не думает на шаг вперёд с точки зрения пользователя — предлагал «запускать скрипт отдельной командой» когда удобнее встроить в общую команду; предлагал «валидацию наличия артефакта» не подумав что содержимое артефакта может устареть (валидация даст OK, изменения внутри не учтены). Класс: forward-thinking gap — решение технически корректно, но не дальновидно с UX/integration перспективы.
+Как обнаружено: пользователь явно — «даже на шаг вперёд не было продумано с точки зрения пользователя»
+Категория: prompt-gap
+Гипотеза: /plan Шаг 1.5 «Горизонт 3 шага» проверял технические горизонты (ROADMAP, нагрузка, N>1) но не содержал discipline-creating вопросов про UX friction (JTBD struggling moment) и integration (не дублируем ли соседний механизм). Aspirational «подумай об UX» заполнялся формально.
+Agent failure mode: prompt-ambiguous — шаг допускал формальное заполнение без конкретного UX-анализа
+Potential fix: добавить в /plan Шаг 1.5 Forward-Failure Analysis (industry best practice: FMEA RPN-таблица + JTBD struggling moment + integration/non-duplication check) — discipline-creating, требуют конкретного ответа который нельзя написать формально
+Статус: addressed (v4.51.0 — /plan Шаг 1.5 Forward-Failure Analysis: FMEA + JTBD + integration check)
+---
+Gap-ID: G-073
+Дата: 2026-06-01
+Контекст: free-chat — пользователь указал на слабый post-code аудит
+Что пропустил: /review аудит после кодинга пропускает незакрытые вещи — Completeness check был aspirational («решение указывает что НЕ закрывается?» — заполняется формально). Нет structured списка типичных классов пропусков (CRUD-симметрия, downstream consumers, content-vs-existence, template-sync, trigger-chain, error-path). Тестирование не покрыто явно. Канонический случай: «валидация наличия файла без проверки содержимого» — валидатор OK, артефакт stale, никто не замечает (FMEA Detection=9).
+Как обнаружено: пользователь явно — «недостаточный аудит после кодинга который пропускает незакрытые вещи; уменьшить пропускание аудитом багов»
+Категория: prompt-gap
+Гипотеза: Completeness check в /review был abstract intuition-prompt, не discipline-creating checklist по конкретным классам. Gawande: aspirational checklist заполняется формально, discipline-creating требует evidence.
+Agent failure mode: prompt-ambiguous
+Potential fix: заменить /review Completeness check на 7 структурных классов с evidence requirement (industry: FMEA Detection layer + Gawande discipline) + усилить секцию Тесты (назвать конкретный способ верификации, не «протестировано»)
+Статус: addressed (v4.51.0 — /review Completeness 7 классов + Тесты discipline-creating)
+---
 Gap-ID: G-072
 Дата: 2026-06-01
 Контекст: /diagnose — mermaid ссылки у консьюмера erp-documentantion после всех фиксов
