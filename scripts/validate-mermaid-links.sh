@@ -123,6 +123,14 @@ def check_file(path):
                     print("         Fix: py scripts/mermaid-link.py \"{}\"".format(path))
                     print()
                     errors += 1
+            elif code:  # TODO block — check for stale markdown-link placeholder above
+                window_start = max(0, block_start - WINDOW)
+                window_text = ''.join(lines[window_start:block_start])
+                if LINK_RE.search(window_text):
+                    print("ERROR    STALE_PLACEHOLDER  {}:{}".format(path, block_start + 1))
+                    print("         TODO block has markdown-link placeholder above — run update-mermaid-links.sh to clean up.")
+                    print()
+                    errors += 1
 
         i += 1
 

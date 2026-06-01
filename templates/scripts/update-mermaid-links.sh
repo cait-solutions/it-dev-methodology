@@ -154,6 +154,25 @@ def update_file(path):
             code = ''.join(block_lines).strip()
 
             if not code or 'TODO:' in code:
+                # TODO block: don't generate URL, but clean up stale markdown-link placeholder above.
+                # Canonical placeholder for unfilled blocks: _(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
+                if code:  # only for non-empty TODO blocks
+                    window_start = max(0, block_start - WINDOW)
+                    for j in range(window_start, block_start):
+                        if LINK_RE.search(updated[j]) and LINK_LINE_RE.match(updated[j].rstrip('\n')):
+                            neutral = '_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_\n'
+                            updated[j] = neutral
+                            # Ensure single blank line between placeholder and ```mermaid
+                            between_start = j + 1
+                            between = updated[between_start:block_start]
+                            if between != ['\n']:
+                                del updated[between_start:block_start]
+                                updated.insert(between_start, '\n')
+                                i = between_start + 1
+                            rel = os.path.relpath(path)
+                            print(f"UPDATED  PLACEHOLDER  {rel}:{block_start+1}  (markdown-link → neutral)")
+                            changes += 1
+                            break
                 i += 1
                 continue
 
