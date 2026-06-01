@@ -115,11 +115,11 @@
     "task_id": "methodology-audit-artifacts-maps-universality",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": false
+    "code_run": true
   },
   "last_deploy": {
     "date": "2026-06-01",
     "status": "ok",
-    "phase": "discipline-creating-finalization-v4.53.0"
+    "phase": "methodology-audit-PRs-H-A-B-G-v4.54-v4.56"
   }
 }
