@@ -144,7 +144,7 @@ Gap-ID: G-072
 Гипотеза: скрипты реализованы с логикой "нет реального кода → нет URL → skip" но не реализовали "нет реального кода → заменить старый placeholder на нейтральный"
 Agent failure mode: scope-exceeded — фикс формата ссылок не покрыл case TODO-блоков
 Potential fix: в update-mermaid-links.sh — при TODO-блоке не генерировать URL, но очищать старый markdown-link placeholder (> 🔗 [...](url)) заменяя на _(ссылка: запусти bash scripts/update-mermaid-links.sh)_; то же в validate — не скипать TODO-блоки тихо, а проверять формат placeholder над ними
-Статус: open
+Статус: addressed (v4.58.0 — структурно через migration registry). Root cause повтора у erp: (1) consumer был на stale версии скрипта, (2) sync overwrite-canonical НЕ трансформирует заполненные артефакты — разрыв который sync в принципе не закрывает. Решение: migration registry (Flyway/Alembic) — `scripts/migrations/v4.37.0-mermaid-bare-url.sh` (detect старый формат + idempotent apply), runner `_runner.sh` прогоняет при `/sync-audit` Шаг 1.5, source of truth = migrations-applied.txt (не версия — потому erp synced-to-latest но transform не прогонялся теперь чинится). e2e+idempotency протестировано на mock. Бонус: cross-drive bug в update-mermaid-links.sh (_safe_relpath).
 ---
 Gap-ID: G-071
 Дата: 2026-06-01
@@ -249,7 +249,7 @@ Agent failure mode: context-missed
 Potential fix: Путь B переформулировать: если scripts/mermaid-link.py недоступен → запустить py/python3 scripts/mermaid-link.py через Bash без cd (абсолютный путь к скрипту). Если и это заблокировано — показать код диаграммы + явную инструкцию "вставь на mermaid.live вручную" как единственный допустимый fallback. Subagent для pako encoding — запрещён.
 Статус: open
 ---
-Gap-ID: G-072
+Gap-ID: G-080
 Дата: 2026-06-01
 Контекст: /diagnose — повторный сигнал от пользователя: AskUserQuestion popup без (Recommended) на первом варианте
 Что пропустил: при генерации AskUserQuestion вариантов — не добавлял "(Recommended)" к рекомендуемому первому варианту

@@ -1,6 +1,12 @@
 # /sync-audit — Audit methodology adoption gaps
 
-> **Цель:** проверить какие features methodology (накопившиеся при обновлениях) **не применены** к этому проекту. Не правит сама — только **report + рекомендации `/plan` per gap**. Пользователь выбирает приоритет.
+> **Цель:** проверить какие features methodology (накопившиеся при обновлениях) **не применены** к этому проекту, и **самостоятельно починить** то что чинится детерминированно.
+>
+> **Two-tier disposition (v4.58.0 — user-friendly «одна команда делает всё»):**
+> - **Self-heal (авто, без вопроса):** детерминированные идемпотентные fix'ы где ответ единственный — stale-скрипты (авто-sync), mermaid-ссылки формат (авто update-mermaid-links), очистка placeholder'ов. Consumer запускает ТОЛЬКО `/sync-audit` — остальное делается само.
+> - **Report + рекомендация (требует решения):** неоднозначные gaps где нужен выбор человека (создать секцию PRODUCT.md, исправить broken link на правильный путь, добавить validators) → `/plan` per gap.
+>
+> ⛔ НЕ просить пользователя запускать `bash scripts/...` вручную для self-heal класса — это и есть та работа которую `/sync-audit` делает за него.
 
 **Когда запускать:**
 - Auto-trigger из `auto-update-watchdog.py` после successful sync если methodology version delta ≥ `audit_threshold` minor (default 3)
@@ -126,6 +132,31 @@
 
 ---
 
+## Шаг 1.5 — Run format-migrations (self-heal, v4.58.0)
+
+> **Единая точка обновления consumer'ов.** Когда методология меняет ФОРМАТ уже заполненного артефакта (mermaid-ссылка, placeholder'ы, обёртки секций), `sync-methodology.sh` сам по себе НЕ трогает заполненный пользователем контент — он overwrite-canonical для methodology-owned файлов, но не трансформирует project-owned артефакты. Этот разрыв закрывает **migration registry** (Flyway/Alembic pattern): каждое format-изменение = версионированный migration-файл с idempotent transform. `/sync-audit` прогоняет миграции автоматически.
+>
+> **Расширяемость (структурная):** новое format-улучшение методологии = новый файл `scripts/migrations/v<X.Y.Z>-<id>.sh`. Команда `/sync-audit` **НЕ меняется** — runner подхватывает все миграции из директории. Это и есть «новое учитывается автоматически».
+
+1. **Убедиться что migrations синхронизированы** (consumer мог быть на stale версии без них):
+   ```bash
+   # Если scripts/migrations/ отсутствует или _runner.sh нет → авто-sync (self-heal):
+   test -f scripts/migrations/_runner.sh || bash <methodology_path>/scripts/sync-methodology.sh .
+   ```
+2. **Прогнать runner:**
+   ```bash
+   bash scripts/migrations/_runner.sh .
+   ```
+   Runner: для каждой миграции из `scripts/migrations/v*.sh` — если ещё не применена (по `.claude/state/migrations-applied.txt`) И `detect` находит старый формат → `auto` миграция применяется сама (idempotent), `report` миграция выводится для решения человека.
+3. **Распарсить вывод runner:**
+   - `HEALED: <id> — <описание>` → 🟢 автоматически починено (внести в Шаг 3 отчёт + список изменённых файлов для коммита).
+   - `REPORT: <id> — <описание>` → 🟡 требует решения человека → рекомендация `/plan`.
+   - `SKIPPED` → уже применено / не нужно (молча).
+
+⛔ **Это и есть user-friendly «одна команда».** Consumer запускает только `/sync-audit` — миграции форматов применяются сами. НЕ просить запускать `update-mermaid-links.sh` / migration-скрипты вручную.
+
+---
+
 ## Шаг 1 — Inventory gaps (5 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
@@ -215,38 +246,30 @@ Output:
    - M skills проверено, N с нарушениями → 🔴 **High severity** если N > 0 (skills могут не активироваться корректно)
    - Все OK → 🟢 OK
 
-### Gap 7: Mermaid live links (v4.37.0)
+### Gap 7: Mermaid live links (v4.37.0; migration-based v4.58.0)
 
-**Цель:** проверить что все Mermaid-блоки в проекте имеют актуальные mermaid.live ссылки (голый URL на строке перед блоком).
+**Цель:** все Mermaid-блоки имеют актуальные ссылки в новом формате (голый URL). **Формат-миграция уже выполнена в Шаге 1.5** (`mermaid-bare-url` migration, auto/idempotent — closes G-072: stale-консьюмер чинится сам). Здесь — только финальная валидация что не осталось реальных (не-формат) проблем.
 
-1. Проверить наличие `scripts/update-mermaid-links.sh` и `scripts/validate-mermaid-links.sh`:
-   - Отсутствуют → 🟡 **Medium severity** — запустить `sync-methodology.sh` чтобы получить скрипты
-   - Присутствуют → перейти к п. 2
-2. Запустить валидацию:
+1. Запустить валидацию (формат уже починен миграцией):
    ```bash
    bash scripts/validate-mermaid-links.sh
+   # two-repo: также --root <doc_repo_path>
    ```
-3. Output:
-   - `MISSING_LINK` или `STALE_LINK` найдены → 🟡 **Medium severity**:
-     ```
-     Найдены Mermaid-блоки без актуальных ссылок (MISSING/STALE).
-     Запустить bash scripts/update-mermaid-links.sh и закоммитить? (y/n)
-     ```
-     - `y` → запустить скрипт, показать результат (`Done: N link(s) updated`), предложить закоммитить изменённые файлы
-     - `n` → зафиксировать как 🟡 unresolved, продолжить audit
-   - `OK` → 🟢 OK
-   - Нет Mermaid-блоков в проекте → 🟢 N/A
+2. Output:
+   - `OK` → 🟢 (миграция Шага 1.5 привела формат к актуальному).
+   - `MISSING_LINK`/`STALE_LINK` всё ещё есть после миграции → 🔴 **High**: это РЕАЛЬНАЯ проблема (не формат) — диаграмма изменилась но URL не перегенерён, или блок не покрыт миграцией. Эскалировать.
+   - Нет Mermaid-блоков → 🟢 N/A.
 
 ### Gap 8: Internal link integrity (v4.55.0 — Docs-as-Code)
 
 **Цель:** проверить что markdown-ссылки `[...](path)` на локальные файлы резолвятся (не битые). Ловит class G-076: артефакт ссылается на файл которого нет (typo / перемещён / two-repo артефакт указан локальным путём вместо `../<doc-repo>/`).
 
 1. Проверить наличие `scripts/validate-links.sh`:
-   - Отсутствует → 🟡 **Medium** — запустить `sync-methodology.sh` чтобы получить скрипт
+   - Отсутствует → **авто-sync** `bash <methodology_path>/scripts/sync-methodology.sh .` (self-heal: получить скрипт сам, не просить юзера), затем п. 2
    - Присутствует → п. 2
 2. Запустить: `bash scripts/validate-links.sh`
 3. Output:
-   - `BROKEN_LINK` найдены → 🔴 **High severity**: список битых ссылок (file:line). Это реальные навигационные дыры — исправить путь или (для two-repo артефактов) указать `../<doc_repo_path>/...`.
+   - `BROKEN_LINK` найдены → 🔴 **High severity**: список битых ссылок (file:line). **Report, не auto-fix** — выбор правильного пути неоднозначен (typo? перемещён? two-repo `../<doc_repo_path>/...`?), нужно решение человека → рекомендация `/plan` или точечная правка.
    - `OK` → 🟢 OK
 
 ---
@@ -333,7 +356,8 @@ Output:
 
 ## Ограничения
 
-- /sync-audit покрывает 7 features (v4.16.0-v4.37.0). При добавлении нового feature class в methodology — нужно добавить новую Gap-секцию в эту команду.
+- **Format-changes (трансформация заполненных артефактов) НЕ требуют правки этой команды** — добавь версионированный migration-файл `scripts/migrations/v<X.Y.Z>-<id>.sh` (auto/report), runner Шага 1.5 подхватит автоматически. Это структурное решение расширяемости (Flyway/Alembic pattern).
+- Adoption-gaps (новый структурный feature class: новая секция конфига, новый hook) — пока требуют новую Gap-секцию здесь. Кандидат на будущее: декларативный gap-registry по аналогии с migrations.
 - Mermaid labels check (Gap 4) — sample-based (3-5 blocks), не exhaustive. Полный hybrid refactor требует отдельного /plan.
 - Path patterns для Gap 1 (поиск major компонентов) могут не работать для monorepo / non-standard структур — graceful skip с сообщением «не могу определить структуру, проверь вручную».
 - Не запускает /plan сам — намеренно. Каждый gap может требовать архитектурного решения (где path patterns? создать секции для каких компонентов?). Пользователь решает.
