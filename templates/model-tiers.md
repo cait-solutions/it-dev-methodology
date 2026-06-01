@@ -39,6 +39,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/onboard` | Default | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
 | `/sync-audit` | **Default** | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare) |
 | `/pull-consumers` | **Fast** | (никогда — git fetch + diff parsing + report, no reasoning) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Запускается вручную перед /retro или анализом методологии |
+| `/marketing` | **Fast** | Первый запуск (нет MARKETING.md) → Default (autodraft требует чтения PRODUCT/VISION + генерацию) | Навигация + прогресс state — no reasoning. Только если объясняет skill → Default |
 
 ---
 

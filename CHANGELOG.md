@@ -4,6 +4,25 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.46.0 — feat: /marketing команда-навигатор + слоевая модель (2026-06-01)
+
+**Что добавилось:**
+- `/marketing` — slash-команда навигатор: читает MARKETING.md, показывает прогресс Foundation + Execution skills, рекомендует следующий skill в правильном порядке.
+- Слоевая модель задокументирована: PRODUCT/VISION = внутренний слой, MARKETING = внешний. Marketing skills читают PRODUCT/VISION как вход, пишут только в MARKETING.md.
+- Порядок Foundation block зафиксирован: `product-marketing` (breadth V1) → `define-positioning` → `customer-research` → `competitor-profiling`.
+- Исправлен overlap: `define-positioning` больше не claims "первый" — теперь "второй (после product-marketing)". `product-marketing` уточнён как breadth-старт только на новом MARKETING.md.
+- `MARKETING.md` ресинхронизирован с template (добавлена секция `## Product Context`).
+- `model-tiers.md` расширен строкой `/marketing` (Fast tier, upgrade to Default при первом запуске).
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .   # получить /marketing команду + обновлённые skills
+```
+
+**Priority:** 🟢 Optional (новая UX-возможность, не breaking)
+
+---
+
 ## v4.45.0 — feat: 8 новых marketing skills (2026-06-01)
 
 **Что добавилось:** 8 новых skills в слой `skills/` вдохновлённых репозиторием coreyhaines31/marketingskills:
