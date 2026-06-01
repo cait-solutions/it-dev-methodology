@@ -237,6 +237,18 @@ Output:
    - `OK` → 🟢 OK
    - Нет Mermaid-блоков в проекте → 🟢 N/A
 
+### Gap 8: Internal link integrity (v4.55.0 — Docs-as-Code)
+
+**Цель:** проверить что markdown-ссылки `[...](path)` на локальные файлы резолвятся (не битые). Ловит class G-076: артефакт ссылается на файл которого нет (typo / перемещён / two-repo артефакт указан локальным путём вместо `../<doc-repo>/`).
+
+1. Проверить наличие `scripts/validate-links.sh`:
+   - Отсутствует → 🟡 **Medium** — запустить `sync-methodology.sh` чтобы получить скрипт
+   - Присутствует → п. 2
+2. Запустить: `bash scripts/validate-links.sh`
+3. Output:
+   - `BROKEN_LINK` найдены → 🔴 **High severity**: список битых ссылок (file:line). Это реальные навигационные дыры — исправить путь или (для two-repo артефактов) указать `../<doc_repo_path>/...`.
+   - `OK` → 🟢 OK
+
 ---
 
 ## Шаг 2 — Severity assessment
