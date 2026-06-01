@@ -58,6 +58,17 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-072
+Дата: 2026-06-01
+Контекст: /diagnose — mermaid ссылки у консьюмера erp-documentantion после всех фиксов
+Что пропустил: update-mermaid-links.sh и validate-mermaid-links.sh скипают mermaid-блоки содержащие TODO: — но не очищают старый markdown-link placeholder (> 🔗 [Открыть в Mermaid Live](url)) над этими блоками. Консьюмер получает шаблонный файл с > 🔗 [...] из старого init, запускает sync-audit → Gap 7 видит OK (validate скипает TODO) → проблема не обнаруживается и не исправляется.
+Как обнаружено: разработчик указал — ссылки в USER-MAP.md консьюмера всё ещё в markdown-link формате после sync-audit + update-mermaid-links.sh
+Категория: completeness-gap
+Гипотеза: скрипты реализованы с логикой "нет реального кода → нет URL → skip" но не реализовали "нет реального кода → заменить старый placeholder на нейтральный"
+Agent failure mode: scope-exceeded — фикс формата ссылок не покрыл case TODO-блоков
+Potential fix: в update-mermaid-links.sh — при TODO-блоке не генерировать URL, но очищать старый markdown-link placeholder (> 🔗 [...](url)) заменяя на _(ссылка: запусти bash scripts/update-mermaid-links.sh)_; то же в validate — не скипать TODO-блоки тихо, а проверять формат placeholder над ними
+Статус: open
+---
 Gap-ID: G-071
 Дата: 2026-06-01
 Контекст: /deploy — запись в DEVLOG
