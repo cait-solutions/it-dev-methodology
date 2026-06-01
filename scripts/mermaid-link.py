@@ -38,7 +38,7 @@ def encode_mermaid(code: str) -> str:
     state = json.dumps(
         {
             "code": code,
-            "mermaid": json.dumps({"theme": "default"}, separators=(',', ':')),
+            "mermaid": {"theme": "default"},
             "autoSync": True,
             "updateDiagram": True,
         },

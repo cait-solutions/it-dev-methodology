@@ -58,6 +58,61 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-070
+Дата: 2026-06-01
+Контекст: /plan → draft URL генерация
+Что пропустил: scripts/mermaid-link.py передаёт поле "mermaid" как вложенную JSON-строку (`json.dumps({"theme":"default"})`) вместо объекта. mermaid.live ожидает объект — строка не парсится, ссылка открывается с пустой/сломанной диаграммой.
+Как обнаружено: разработчик указал — draft ссылка в /plan не работала
+Категория: logic-gap
+Гипотеза: при написании скрипта `json.dumps({"theme":"default"})` выглядело как "сериализация вложенного объекта", но на деле создаёт строку внутри строки — double-serialization
+Agent failure mode: model-error — неверное понимание структуры mermaid.live state формата
+Potential fix: убрать вложенный json.dumps — передавать `"mermaid": {"theme": "default"}` как нативный dict
+Статус: closed (fixed inline)
+---
+Gap-ID: G-069
+Дата: 2026-06-01
+Контекст: /diagnose
+Что пропустил: генерировал Mermaid labels транслитерацией кириллицы ("Stanet", "Zapuskaet", "dobavlen") вместо кириллицы, считая это выполнением "RU описания" требования
+Как обнаружено: разработчик указал — на скриншоте диаграммы видны русские слова латинскими буквами (повторный gap, ранее уже указывалось)
+Категория: logic-gap
+Гипотеза: правило "описания поведения → RU" в commands/code.md не содержит explicit запрет транслитерации; агент делает логически-неверный вывод что транслитерация ≡ RU
+Agent failure mode: prompt-ambiguous — инструкция допускала интерпретацию "написал по-русски, пусть и латиницей = RU требование выполнено"
+Potential fix: добавить в commands/code.md:244 и commands/plan.md:950 строку "❌ СТРОГО ЗАПРЕЩЕНО: транслитерация кириллицы латиницей (Stanet, Zapuskaet, dobavlen) — это НЕ является RU. Только настоящая кириллица."
+Статус: open
+---
+Gap-ID: G-068
+Дата: 2026-06-01
+Контекст: /diagnose — mermaid ссылки у консьюмера после обновления
+Что пропустил: при реализации фикса mermaid-link формата (v4.37-v4.40) не обновил шаблоны USER-MAP / SYSTEM-MAP / ARTIFACT-MAP — они остались со старым `> 🔗 [Открыть в Mermaid Live](<url>)`. Консьюмеры получали старый формат при init/sync и видели markdown link вместо голого URL.
+Как обнаружено: разработчик указал — после нескольких циклов диагностики обнаружил что источник проблемы в шаблонах, не в скрипте
+Категория: completeness-gap
+Гипотеза: при каждом фиксе формата ссылок обновлялись только карты в active repos (methodology + doc), но не шаблоны-источники. Правило "если меняешь формат артефакта — обновить шаблон" не было в checklist
+Agent failure mode: scope-exceeded — фикс применялся к instances без upstream template
+Potential fix: добавить в /code Шаг 4 self-review для methodology задач: "если изменился формат артефакта (карты, ссылки, секции) — проверить соответствующий `templates/*.template.md`"; в /review — sync validators должны включать templates/ в scope проверки
+Статус: open
+---
+Gap-ID: G-067
+Дата: 2026-06-01
+Контекст: /diagnose — mermaid ссылки у консьюмера, Gap 7 в sync-audit
+Что пропустил: при добавлении Gap 7 (validate-mermaid-links.sh) в /sync-audit — не добавил автоматический запуск `update-mermaid-links.sh` при обнаружении MISSING/STALE. Gap 7 только репортит проблему и просит пользователя запустить скрипт вручную. Более удобно было бы запускать fix автоматически прямо из sync-audit (с подтверждением или без).
+Как обнаружено: пользователь указал явно после просмотра реализации Gap 7
+Категория: completeness-gap
+Гипотеза: при реализации Gap 7 я следовал паттерну остальных gaps (/sync-audit только репортит, не правит) — но для mermaid ссылок это единственный правильный ответ детерминирован (запустить скрипт), поэтому report-only избыточен
+Agent failure mode: prompt-ambiguous — паттерн "sync-audit только репортит" применён механически без оценки fit
+Potential fix: в Gap 7 добавить: при MISSING/STALE — предложить запустить `bash scripts/update-mermaid-links.sh` прямо из sync-audit (с подтверждением пользователя); это единственный правильный fix и он идемпотентен
+Статус: open
+---
+Gap-ID: G-066
+Дата: 2026-06-01
+Контекст: /diagnose — mermaid.live ссылки отсутствуют у консьюмера erp-documentantion
+Что пропустил: при предыдущих фиксах mermaid link формата (v4.37-v4.40) — обновлялись карты в methodology-platform и it-dev-methodology-documentation, но не выполнялся sync консьюмеров. erp-documentantion не получил update-mermaid-links.sh / mermaid-link.py / validate-mermaid-links.sh — карты оставались без ссылок вообще.
+Как обнаружено: /diagnose — пользователь сообщил "у консьюмера после обновления всё ещё ссылки при тройном клике выделяют заголовок"
+Категория: completeness-gap
+Гипотеза: каждый фикс mermaid-links запускал update-mermaid-links.sh только в known repos (methodology + doc), но не проверял consumer repos через pull-consumers. "Фикс задеплоен" не равно "фикс применён везде где нужен".
+Agent failure mode: scope-exceeded — фикс применялся к source без downstream check на consumers
+Potential fix: добавить в /deploy или /code Шаг 5 для methodology задач затрагивающих scripts/ или mermaid формат — явный checklist пункт: "запустить sync-methodology.sh для известных consumers + update-mermaid-links.sh в каждом"
+Статус: addressed
+---
 Gap-ID: G-065
 Дата: 2026-06-01
 Контекст: /secrets + /diagnose
