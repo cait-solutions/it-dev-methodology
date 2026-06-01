@@ -115,11 +115,11 @@
     "task_id": "secrets-audit-git-https-leak-S0-S6",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": false
+    "code_run": true
   },
   "last_deploy": {
     "date": "2026-06-01",
     "status": "ok",
-    "phase": "methodology-audit-PRs-H-A-B-G-v4.54-v4.56"
+    "phase": "secrets-leak-fix-S0-S3-v4.57.0"
   }
 }
