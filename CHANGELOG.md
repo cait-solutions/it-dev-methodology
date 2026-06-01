@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.54.0 — fix: universality — de-hardcode two-repo paths + hook-consistency check (2026-06-01)
+
+**Что добавилось (эмпирический consumer-аудит → 2 реальных фикса):**
+- **PR A (G-076):** убраны hardcoded `../it-dev-methodology-documentation` из `/code`, `/review`, `/retro`. Новое поле `doc_repo_path` в `CLAUDE.local.md ## Auto-update`: `null` = single-repo (артефакты локальны), путь = two-repo. Команды читают config вместо hardcode. Закрывает leak который видели single-repo consumers (erp: 47 methodology-ссылок, путь к несуществующему sibling-репо).
+- **PR H (G-075):** `sync-methodology.sh` после синка hooks проверяет что каждый hook упомянутый в `settings.json` реально присутствует в `.claude/hooks/`. Отсутствует → `⚠️ HOOK-MISMATCH` (fail loud). Закрывает silent-fail найденный в ai-assistant (auto-update-watchdog.py в settings.json но файла нет → hook падал молча → consumer навсегда stale без предупреждения).
+
+**Actions для consumers:**
+```bash
+bash scripts/sync-methodology.sh .   # получить обновлённые команды + hook-check
+# Затем в CLAUDE.local.md ## Auto-update установить doc_repo_path:
+#   single-repo проект → doc_repo_path: null  (default, ничего не менять)
+#   two-repo проект → doc_repo_path: ../<your-doc-repo>
+```
+
+**Priority:** 🔴 High — закрывает реальные consumer-leaks (эмпирически подтверждены на erp + ai-assistant).
+
+---
+
 ## v4.53.0 — feat: discipline-creating финализация — /architecture-audit + /diagnose + /sync-audit + /product-check (2026-06-01)
 
 **Что добавилось (PR3 of 3 — завершение трансформации всех 9 команд):**

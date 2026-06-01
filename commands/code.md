@@ -204,15 +204,22 @@
    - [ ] Concurrency — есть race conditions если 2 процесса одновременно?
    - Для каждого: явно описать "если это не true — что сломается?"
 8. **Adjacent impact актуален:** смежные зоны из /plan Шаг -1.3 проверены? Если был затронут методологический артефакт (ARTIFACT-MAP и т.п.) — полный аудит всех стрелок/секций, не только изменённых *(closes G-001)*
-9. **[methodology] Mermaid изменён:** авто-обновить ссылки + валидировать:
-   ```bash
-   bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation
-   bash scripts/update-mermaid-links.sh  # methodology repo
-   bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation
-   bash scripts/validate-mermaid-links.sh
-   ```
+9. **Mermaid изменён:** авто-обновить ссылки + валидировать. **Сначала определи структуру репо** (closes G-076):
+   - Прочитать `CLAUDE.local.md ## Auto-update → doc_repo_path`.
+   - **`doc_repo_path: null` (single-repo, default):** артефакты локальны:
+     ```bash
+     bash scripts/update-mermaid-links.sh
+     bash scripts/validate-mermaid-links.sh
+     ```
+   - **`doc_repo_path: <путь>` (two-repo):** обновить ОБА — локальный + doc-репо:
+     ```bash
+     bash scripts/update-mermaid-links.sh --root <doc_repo_path>
+     bash scripts/update-mermaid-links.sh
+     bash scripts/validate-mermaid-links.sh --root <doc_repo_path>
+     bash scripts/validate-mermaid-links.sh
+     ```
    MISSING_LINK или STALE_LINK после update = блок до ручного фикса.
-10. **Изменён артефакт-инструкция** (CLAUDE.md, карты, runtime-промпт бота/агента): запустить `bash scripts/validate-artifact-size.sh` (methodology — также `--root ../<doc-repo>`). `SIZE_EXCEEDED` или `PROMPT_BLOAT` = 🔵 Recommendation → разобрать в /review (размер vs оправдано; плотность запретов душит ли tools). Не блок, но не игнорировать.
+10. **Изменён артефакт-инструкция** (CLAUDE.md, карты, runtime-промпт бота/агента): запустить `bash scripts/validate-artifact-size.sh` (two-repo — также `--root <doc_repo_path>` из `CLAUDE.local.md`). `SIZE_EXCEEDED` или `PROMPT_BLOAT` = 🔵 Recommendation → разобрать в /review (размер vs оправдано; плотность запретов душит ли tools). Не блок, но не игнорировать.
 11. ⛔ **[methodology] Формат артефакта изменён** — «формат» = новый паттерн ссылок / placeholder'ов / секций / Mermaid URL-стиля в картах или командах. **Нет понятия "незначительный"** — любое изменение формата обязательно применяется к шаблонам.
     ```bash
     grep -r "<старый паттерн>" templates/

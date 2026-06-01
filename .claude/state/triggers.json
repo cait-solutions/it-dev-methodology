@@ -112,10 +112,10 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-01T00:00:00Z",
-    "task_id": "discipline-creating-3pr-series-v4.51-53",
+    "task_id": "methodology-audit-artifacts-maps-universality",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": true
+    "code_run": false
   },
   "last_deploy": {
     "date": "2026-06-01",

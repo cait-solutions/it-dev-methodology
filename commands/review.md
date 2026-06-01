@@ -241,9 +241,9 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - Добавлена/изменена зависимость между компонентами или интеграция с внешним сервисом → SYSTEM-MAP.md edges актуальны?
 - SYSTEM-MAP или USER-MAP изменены → Mermaid-диаграмма сохранена? (замена на ASCII = 🔴 CRITICAL)
 - Mermaid изменён → **hybrid language check** (CLAUDE.md гибридный язык): labels nodes и edges используют RU для описаний поведения / названий слоёв + EN для технических identifiers (имена файлов, команд)? Полностью EN labels (кроме identifiers) = 🔵 Recommendation "Mermaid language: пройти по labels, перевести описания на RU. ❌ `Hooks Layer` / `reads config` / `writes state` → ✅ `Слой хуков` / `читает config` / `пишет state`". ❌ Транслитерация кириллицы латиницей (`"Stanet"`, `"Zapuskaet"`, `"dobavlen"`) = 🔴 нарушение (НЕ является RU). Closes G-049, G-069.
-- [methodology] Mermaid изменён → ссылки авто-обновлены и валидны? (run update then validate):
-  `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation && bash scripts/update-mermaid-links.sh`
-  `bash scripts/validate-mermaid-links.sh --root ../it-dev-methodology-documentation && bash scripts/validate-mermaid-links.sh`
+- Mermaid изменён → ссылки авто-обновлены и валидны? Структура из `CLAUDE.local.md ## Auto-update → doc_repo_path` (closes G-076):
+  - **single-repo (`doc_repo_path: null`):** `bash scripts/update-mermaid-links.sh && bash scripts/validate-mermaid-links.sh`
+  - **two-repo (`doc_repo_path` задан):** также `--root <doc_repo_path>` для doc-репо + локально
   После update: STALE/MISSING = 🔴 CRITICAL (ручной фикс).
 - USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
 - Изменился рекомендуемый порядок действий или prerequisites для существующих возможностей → USER-MAP.md потоки актуальны?
