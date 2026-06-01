@@ -359,6 +359,7 @@ Phase 1 защищает **agent-mediated утечки** (через transcript,
 - [templates/AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) — AI gap capture (consumer artifact)
 - [templates/MARKETING.template.md](templates/MARKETING.template.md) — marketing central context (consumer artifact, --with-marketing)
 - [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
+- [templates/.claude/hooks/post-edit-watchdog.py](templates/.claude/hooks/post-edit-watchdog.py) — PostToolUse hook: после Edit/Write с mermaid-блоком → авто-запуск `update-mermaid-links.sh`. Config в `CLAUDE.local.md ## Post-edit hooks`
 - [skills/define-positioning/SKILL.md](skills/define-positioning/SKILL.md) — Agent Skill: positioning framework (12 секций)
 - [scripts/with-secret.sh](scripts/with-secret.sh) — **secrets injection** (primary tool): `bash scripts/with-secret.sh KEY -- <cmd>` — значение не в stdout
 - [scripts/check-secret.sh](scripts/check-secret.sh) — boolean existence check (exit 0/1, без значения)

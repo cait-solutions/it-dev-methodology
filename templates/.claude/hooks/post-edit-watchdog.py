@@ -110,7 +110,9 @@ def main():
     if not changed_text or not file_path:
         sys.exit(0)
 
-    # Load rules — from CLAUDE.local.md or defaults
+    # Load rules — from CLAUDE.local.md or defaults.
+    # Note: if ## Post-edit hooks section exists but has no rules → returns [] → DEFAULT_RULES used.
+    # To disable default mermaid rule: add a dummy rule or remove the section entirely.
     rules = parse_rules_from_claude_local() or DEFAULT_RULES
 
     for rule in rules:
