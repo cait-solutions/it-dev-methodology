@@ -252,6 +252,17 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
   - `PROMPT_BLOAT` → **душит ли обилие запретов вызов инструментов?** Проверить на реальном поведении: модель зовёт tools при таком промпте? Если нет → сократить/реструктурировать запреты (не усиливать descriptions — это не поможет поверх перегруженного промпта)
 - Скрипт не запускался при изменении артефакта-инструкции → 🔵 Recommendation "size/bloat не проверен"
 
+**[methodology] Template-drift check** (только для methodology-platform tasks):
+- Задача меняла формат артефакта (новый стиль ссылок / placeholder'ов / секций / Mermaid URL pattern)?
+  ```bash
+  git diff main..HEAD --name-only | grep -E "^(commands|templates)/"
+  ```
+- Если да: проверить соответствующие `templates/*.template.md` на тот же формат. Несоответствие → 🔴 **CRITICAL**: шаблон не обновлён, consumer получит stale format при следующем sync.
+  ```bash
+  grep -r "<изменённый паттерн>" templates/
+  ```
+- Disposition: fix now (templates/*.template.md исправить в этом PR).
+
 **Bootstrap-command contract** (только для methodology-platform tasks):
 - [ ] Изменена команда: ссылается на новые файлы? → `new-project-init.sh` создаёт их?
 - [ ] Изменён bootstrap: новый файл создаётся? → хотя бы одна команда на него ссылается?
