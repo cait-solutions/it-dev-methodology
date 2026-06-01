@@ -81,6 +81,30 @@ ENV_DUMP_PATTERNS = [
     # methodology scripts read .env via `with-secret.sh` injection pattern instead.
     r'(?:^|[;|&(`]|\&\&|\|\|)\s*source\s+(?:[^\s;&|]+/)?\.env(?:\.[a-z0-9_]+)?(?:\s|$)',
     r'(?:^|[;|&(`]|\&\&|\|\|)\s*\.\s+(?:[^\s;&|]+/)?\.env(?:\.[a-z0-9_]+)?(?:\s|$)',
+    # -----------------------------------------------------------------------
+    # G-062 fixes: two new leak vectors
+    # -----------------------------------------------------------------------
+    # INLINE ENV ASSIGNMENT with secret-like key name and long value.
+    # This is the exact pattern from the Keycloak incident where agent wrote:
+    #   KEYLOCK_ADMIN_CREDENTIALS="KeycloakAdmin2024!" bash scripts/keycloak-...
+    # The value is visible in the Bash tool input → transcript → API.
+    #
+    # Only matches keys containing secret-indicator substrings to avoid
+    # false positives on legitimate vars like NODE_ENV=production.
+    # Secret indicators (case-sensitive): SECRET, TOKEN, PASS, PASSWORD,
+    #   API_KEY, _KEY, KEY_ (standalone), CRED, CREDENTIAL, PWD, AUTH,
+    #   ADMIN, PRIVATE, CERT, BEARER, _PAT, PAT_ (Personal Access Token)
+    r'(?:[A-Z][A-Z0-9_]*(?:SECRET|TOKEN|PASS(?:WORD)?|API_KEY|_KEY|KEY_|CRED(?:ENTIAL)?|'
+    r'PWD|AUTH|ADMIN|PRIVATE|CERT|BEARER|_PAT|PAT_)[A-Z0-9_]*)=["\'][^"\']{8,}["\']'
+    r'[^\S\r\n]+(?:bash|sh|python|py|node)\b',
+    r'(?:[A-Z][A-Z0-9_]*(?:SECRET|TOKEN|PASS(?:WORD)?|API_KEY|_KEY|KEY_|CRED(?:ENTIAL)?|'
+    r'PWD|AUTH|ADMIN|PRIVATE|CERT|BEARER|_PAT|PAT_)[A-Z0-9_]*)=[^\s"\';&|]{8,}'
+    r'[^\S\r\n]+(?:bash|sh|python|py|node)\b',
+    # _get-secret-raw.sh with --explicit-stdout: this script outputs the secret
+    # value to stdout. Agents MUST NOT call it directly (only users can, in terminal).
+    # with-secret.sh injection pattern is the correct agent-facing API.
+    r'_get-secret-raw\.sh\b.*--explicit-stdout',
+    r'_get-secret-raw\.sh\b',  # block entirely — no legitimate agent use case
 ]
 
 

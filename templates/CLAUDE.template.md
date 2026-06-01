@@ -189,6 +189,8 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md#model-tier-rule-ра
 - ❌ Agent reading `.env` directly — blocked by `settings.json` Read+Bash deny rules for **common-path readers** (cat/grep/awk/sed/xxd/base64/python/node/perl/diff/iconv/tee/dd/etc., 73 patterns in v4.34.1+). Not universal — `bash -c '...'` wrapping or unenumerated commands can bypass. Rotation discipline = final safety net.
 - ❌ Agent running `env` / `printenv` / `echo $SECRET` / `source .env` — blocked by `bash_protect.py` hook
 - ❌ Writing secret values into chat / DEVLOG / commit messages
+- ❌ **Calling `_get-secret-raw.sh`** — outputs value to stdout → transcript → API. Blocked by `bash_protect.py`. Only for user in terminal outside Claude Code.
+- ❌ **Constructing `KEY="value" bash script.sh`** — value visible in tool input → transcript. Use `with-secret.sh KEY -- cmd` instead. Blocked by `bash_protect.py`.
 - ❌ Committing `.env` (gitignored; `secrets-guard.py` blocks force-add at commit-time)
 - ❌ `--no-verify` to bypass pre-commit hook without DEVLOG justification
 

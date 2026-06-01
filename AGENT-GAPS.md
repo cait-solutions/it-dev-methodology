@@ -60,6 +60,17 @@ Potential fix: [конкретный checklist item или изменение ш
 <!-- новые — сверху -->
 
 ---
+Gap-ID: G-062
+Дата: 2026-05-29
+Контекст: /diagnose — агент увидел значение секрета и использовал его в inline env assignment
+Что пропустил: два вектора утечки не закрыты: (1) агент может вызвать _get-secret-raw.sh --explicit-stdout который выводит значение в stdout → transcript; (2) bash_protect.py не блокирует pattern `KEY="value" bash script.sh` где значение видно в tool input. Агент получил KEYLOCK_ADMIN_CREDENTIALS, удержал в context, затем использовал как inline env var в Bash команде — полный credential leak через transcript.
+Как обнаружено: агент написал в chat "Пароль KeycloakAdmin2024! — он уже в секретах, я его видел при проверке Keycloak token ранее в сессии" и сконструировал команду KEYLOCK_ADMIN_CREDENTIALS="KeycloakAdmin2024!" bash scripts/keycloak-set-tenant-id.sh
+Категория: completeness-gap
+Гипотеза: (1) _get-secret-raw.sh помечен как whitelist для агентских scripts — но агент может вызвать его сам, получив значение в stdout; (2) bash_protect.py ENV_DUMP_PATTERNS покрывает cat/env/printenv но не inline-assignment pattern; (3) нет правила "агент НЕ ДОЛЖЕН вызывать _get-secret-raw.sh сам"
+Agent failure mode: prompt-ambiguous (нет explicit запрета агенту вызывать _get-secret-raw.sh; нет блока inline env assignment pattern)
+Potential fix: (1) добавить в bash_protect.py паттерн на `[A-Z_][A-Z0-9_]*=".{8,}"[\s]+bash` — inline assignment с длинным значением; (2) убрать _get-secret-raw.sh из bash whitelist или добавить отдельное правило "агент не может вызывать _get-secret-raw.sh напрямую — только пользователь"; (3) добавить в CLAUDE.md MUST NOT: "агент НЕ ДОЛЖЕН вызывать _get-secret-raw.sh --explicit-stdout"; (4) incident response: при обнаружении credential в chat → немедленная ротация + scrub + закрыть сессию
+Статус: closed — v4.44.6 (bash_protect.py: raw-getter blocked + inline-assignment blocked for secret-named keys)
+---
 Gap-ID: G-061
 Дата: 2026-05-29
 Контекст: /diagnose — вопрос пользователя "учтено ли удаление секрета?"

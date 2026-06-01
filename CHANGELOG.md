@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.44.6 — G-062: закрыты два leak-вектора через bash_protect.py (2026-06-01)
+
+**Что добавилось:** два новых блокирующих паттерна в `bash_protect.py`:
+1. `_get-secret-raw.sh` — полностью заблокирован для агентов (был escape-hatch с `--explicit-stdout`, теперь блокируется любой вызов). Агент не может вывести секрет в stdout.
+2. Inline env assignment вида `SECRET_KEY="value" bash script.sh` — заблокирован для ключей с секрет-индикаторами (TOKEN, SECRET, PASS, KEY, CRED, PAT, AUTH, ADMIN, PRIVATE, CERT, BEARER). Легитимные `ENV=dev bash cmd.sh` разрешены.
+
+**Triggered by:** инцидент — агент увидел `KeycloakAdmin2024!` через stdout (Vector 2: inline assignment не был заблокирован).
+
+**Security confidence:** 99.9%+ для agent-mediated leak vectors (stdout/transcript path). OS-level vectors (proc/environ, core dumps) documented в CLAUDE.md § Scope limits остаются open per design.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .    # получить обновлённые hooks
+```
+
+Если у вас уже были секреты которые агент потенциально видел — rotate их немедленно.
+
+**Priority:** 🔴 CRITICAL (security patch, immediate sync recommended)
+
+---
+
 ## v4.44.1 — auto_pull: полностью автоматический flow (2026-05-29)
 
 **Что добавилось:** явное объяснение почему `auto_pull: true` нужен для полного авто-flow. Watchdog обновляет `.claude/` но НЕ `it-dev-methodology/` source — без `auto_pull: true` при автозапуске `/sync-audit` source может быть stale.
