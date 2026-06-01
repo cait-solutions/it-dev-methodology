@@ -219,7 +219,13 @@ Output:
    bash scripts/validate-mermaid-links.sh
    ```
 3. Output:
-   - `MISSING_LINK` или `STALE_LINK` найдены → 🟡 **Medium severity** — запустить `bash scripts/update-mermaid-links.sh` и закоммитить
+   - `MISSING_LINK` или `STALE_LINK` найдены → 🟡 **Medium severity**:
+     ```
+     Найдены Mermaid-блоки без актуальных ссылок (MISSING/STALE).
+     Запустить bash scripts/update-mermaid-links.sh и закоммитить? (y/n)
+     ```
+     - `y` → запустить скрипт, показать результат (`Done: N link(s) updated`), предложить закоммитить изменённые файлы
+     - `n` → зафиксировать как 🟡 unresolved, продолжить audit
    - `OK` → 🟢 OK
    - Нет Mermaid-блоков в проекте → 🟢 N/A
 
