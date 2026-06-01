@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_retro": {
       "date": "2026-06-01",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 13
+      "plans_since": 14
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 7
+      "plans_since": 8
     },
     "last_product_vision": {
       "date": "2026-05-27",
-      "plans_since": 8
+      "plans_since": 9
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 11
+      "plans_since": 12
     },
     "last_architecture_audit": {
       "date": "2026-05-27",
-      "plans_since": 7,
+      "plans_since": 8,
       "recommendations": [
         {
           "id": "R-023",
@@ -88,6 +88,12 @@
       "previous_cycle_implementation_rate": "7/10 (70%) — R-008/009/013/020/021/022 implemented; R-010 wont-fix; R-004/005/006/007 deferred"
     }
   },
+  "last_sync_audit": {
+    "date": "2026-06-01",
+    "methodology_version": "v4.49.0",
+    "gaps_found": 3,
+    "gaps_high_severity": 0
+  },
   "per_service": {},
   "queues": {
     "inbox_unprocessed_count": 0,
@@ -106,7 +112,7 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-01T00:00:00Z",
-    "task_id": "g068-g063-template-propagation-hard-rule",
+    "task_id": "multi-account-gh-auth-awareness",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true

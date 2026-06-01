@@ -76,6 +76,43 @@ Dogfood: methodology platform использует тот же hook что и co
 
 ---
 
+## Auto-update
+
+Конфиг для `auto-update-watchdog.py` SessionStart hook.
+
+```yaml
+enabled: true
+interval_hours: 2
+on_failure: notify
+methodology_path: .
+audit_threshold: 3
+auto_pull: false
+```
+
+`methodology_path: .` — methodology-platform это самоаудит (this repo IS the methodology). Hook проверяет наличие обновлений, но не делает self-pull (вместо этого запускает `sync-methodology.sh .`).
+
+---
+
+## Sync validators
+
+```yaml
+validators:
+  - name: DEVLOG-on-commands-change
+    trigger_paths: ["commands/*.md", "commands-local/*.md"]
+    required_artifact: ../it-dev-methodology-documentation/DEVLOG.md
+    reason: "Изменена команда методологии — DEVLOG запись добавлена?"
+  - name: VERSION-on-sync-artifact-change
+    trigger_paths: ["commands/*.md", "templates/**", "skills/**", "scripts/**"]
+    required_artifact: VERSION
+    reason: "Изменён синхронизируемый артефакт — VERSION bumped?"
+  - name: CHANGELOG-on-consumer-feature
+    trigger_paths: ["templates/scripts/**", "templates/.claude/**"]
+    required_artifact: CHANGELOG.md
+    reason: "Изменён consumer-facing артефакт — CHANGELOG запись добавлена?"
+```
+
+---
+
 ## Remotes
 
 ```yaml
