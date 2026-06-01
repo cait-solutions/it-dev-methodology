@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 #
-# secrets-delete.sh — delete a secret from .env (and optionally from manifest).
+# secrets-delete.sh — delete a secret from .env and manifest.
 #
 # Usage:
-#   bash scripts/secrets-delete.sh KEY                    # interactive confirm (also removes from manifest)
-#   bash scripts/secrets-delete.sh KEY --yes              # skip confirm (CI/CD)
-#   bash scripts/secrets-delete.sh KEY --keep-manifest    # delete from .env only, keep manifest entry
+#   bash scripts/secrets-delete.sh KEY                  # interactive confirm (removes from .env AND manifest)
+#   bash scripts/secrets-delete.sh KEY --yes            # skip confirm (CI/CD)
+#   bash scripts/secrets-delete.sh KEY --keep-manifest  # delete from .env only, keep manifest entry
+#
+# Works even if KEY is already absent from .env (manifest-only cleanup).
 #
 # Exit codes:
 #   0  success
-#   1  KEY not found in .env
+#   1  KEY not found in .env or manifest
 #   2  usage error
 #   5  user aborted
 
@@ -50,15 +52,31 @@ if ! [[ "$KEY" =~ ^[A-Z][A-Z0-9_]*$ ]]; then
   exit 2
 fi
 
-# Check KEY exists in .env
-if [[ ! -f "$TARGET" ]] || ! grep -qE "^${KEY}=" "$TARGET"; then
-  echo "ERROR: $KEY not found in $TARGET" >&2
-  echo "       Available keys: $(awk -F= '/^[A-Z][A-Z0-9_]*=/{print $1}' "$TARGET" 2>/dev/null | tr '\n' ' ')" >&2
+# Check where KEY exists
+ENV_HAS_KEY=false
+MANIFEST_HAS_KEY=false
+
+if [[ -f "$TARGET" ]] && grep -qE "^${KEY}=" "$TARGET"; then
+  ENV_HAS_KEY=true
+fi
+
+if [[ -f "$MANIFEST" ]] && grep -qE "^\s*-\s*key:\s*${KEY}\s*$" "$MANIFEST"; then
+  MANIFEST_HAS_KEY=true
+fi
+
+# Nothing to do?
+if ! $ENV_HAS_KEY && ! $MANIFEST_HAS_KEY; then
+  echo "ERROR: $KEY not found in $TARGET or $MANIFEST" >&2
+  echo "       Available .env keys: $(awk -F= '/^[A-Z][A-Z0-9_]*=/{print $1}' "$TARGET" 2>/dev/null | tr '\n' ' ')" >&2
   exit 1
 fi
 
+if ! $ENV_HAS_KEY; then
+  echo "NOTE: $KEY not in $TARGET (already deleted) — will remove from manifest only." >&2
+fi
+
 # Warn if KEY is required in manifest
-if [[ -f "$MANIFEST" ]]; then
+if $MANIFEST_HAS_KEY && [[ -f "$MANIFEST" ]]; then
   req=$(awk -v k="$KEY" '
     $0 ~ "^[[:space:]]*-[[:space:]]*key:[[:space:]]*"k"[[:space:]]*$" { found=1; next }
     found && /^[[:space:]]*-[[:space:]]*key:/ { exit }
@@ -68,7 +86,6 @@ if [[ -f "$MANIFEST" ]]; then
     echo "" >&2
     echo "WARNING: $KEY is marked required: true in secrets-manifest.yaml" >&2
     echo "    Deleting it will cause validate-secrets.sh to report MISSING." >&2
-    echo "    Consider updating the manifest to required: false first." >&2
     echo "" >&2
   fi
 fi
@@ -76,7 +93,7 @@ fi
 # Confirm
 if ! $SKIP_CONFIRM; then
   if [[ -t 0 ]]; then
-    printf "Delete %s from %s? (yes/no): " "$KEY" "$TARGET"
+    printf "Delete %s? (yes/no): " "$KEY"
     read -r confirm
     if [[ "$confirm" != "yes" ]]; then
       echo "Aborted." >&2
@@ -88,49 +105,47 @@ if ! $SKIP_CONFIRM; then
   fi
 fi
 
-# Backup + atomic delete
-LOCK="${TARGET}.lock"
-TMP="${TARGET}.tmp.$$"
-ts=$(py -c "import datetime; print(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))" 2>/dev/null || echo "$$")
-BACKUP="${TARGET}.backup-${ts}"
+# --- Delete from .env (if present) ---
+if $ENV_HAS_KEY; then
+  LOCK="${TARGET}.lock"
+  TMP="${TARGET}.tmp.$$"
+  ts=$(py -c "import datetime; print(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))" 2>/dev/null || echo "$$")
+  BACKUP="${TARGET}.backup-${ts}"
 
-_cleanup() {
-  local code=$?
-  [[ -f "$TMP" ]] && rm -f "$TMP" 2>/dev/null || true
+  _cleanup() {
+    local code=$?
+    [[ -f "$TMP" ]] && rm -f "$TMP" 2>/dev/null || true
+    [[ -d "$LOCK" ]] && rmdir "$LOCK" 2>/dev/null || true
+    exit $code
+  }
+  trap _cleanup INT TERM EXIT
+
+  if command -v flock >/dev/null 2>&1; then
+    exec 200>"$LOCK"
+    flock -x -w 5 200 || { echo "ERROR: could not acquire lock" >&2; exit 3; }
+  else
+    tries=0
+    while ! mkdir "$LOCK" 2>/dev/null; do
+      tries=$((tries+1)); [[ $tries -gt 50 ]] && { echo "ERROR: lock busy" >&2; exit 3; }; sleep 0.1
+    done
+  fi
+
+  cp "$TARGET" "$BACKUP" 2>/dev/null || true
+  grep -vE "^${KEY}=" "$TARGET" > "$TMP"
+  mv "$TMP" "$TARGET"
+  chmod 600 "$TARGET" 2>/dev/null || true
+
+  trap - INT TERM EXIT
   [[ -d "$LOCK" ]] && rmdir "$LOCK" 2>/dev/null || true
-  exit $code
-}
-trap _cleanup INT TERM EXIT
 
-# Lock
-if command -v flock >/dev/null 2>&1; then
-  exec 200>"$LOCK"
-  flock -x -w 5 200 || { echo "ERROR: could not acquire lock" >&2; exit 3; }
-else
-  tries=0
-  while ! mkdir "$LOCK" 2>/dev/null; do
-    tries=$((tries+1)); [[ $tries -gt 50 ]] && { echo "ERROR: lock busy" >&2; exit 3; }; sleep 0.1
-  done
+  echo "" >&2
+  echo "Deleted $KEY from $TARGET" >&2
+  echo "   Backup: $BACKUP" >&2
+  echo "   To restore: bash scripts/secrets-rollback.sh $BACKUP" >&2
 fi
 
-# Backup
-cp "$TARGET" "$BACKUP" 2>/dev/null || true
-
-# Delete line (atomic via tmp + mv)
-grep -vE "^${KEY}=" "$TARGET" > "$TMP"
-mv "$TMP" "$TARGET"
-chmod 600 "$TARGET" 2>/dev/null || true
-
-# Release lock
-trap - INT TERM EXIT
-[[ -d "$LOCK" ]] && rmdir "$LOCK" 2>/dev/null || true
-
-echo "" >&2
-echo "Deleted $KEY from $TARGET" >&2
-echo "   Backup: $BACKUP" >&2
-
-# Optional: remove from manifest
-if $FROM_MANIFEST && [[ -f "$MANIFEST" ]]; then
+# --- Delete from manifest (default) ---
+if $FROM_MANIFEST && $MANIFEST_HAS_KEY; then
   MTMP="${MANIFEST}.tmp.$$"
   py - "$MANIFEST" "$MTMP" "$KEY" <<'PYEOF'
 import sys, re
@@ -159,5 +174,3 @@ PYEOF
     echo "   Also removed entry from $MANIFEST" >&2
   fi
 fi
-
-echo "   To restore: bash scripts/secrets-rollback.sh $BACKUP" >&2
