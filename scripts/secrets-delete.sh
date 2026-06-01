@@ -3,10 +3,9 @@
 # secrets-delete.sh — delete a secret from .env (and optionally from manifest).
 #
 # Usage:
-#   bash scripts/secrets-delete.sh KEY                    # interactive confirm
+#   bash scripts/secrets-delete.sh KEY                    # interactive confirm (also removes from manifest)
 #   bash scripts/secrets-delete.sh KEY --yes              # skip confirm (CI/CD)
-#   bash scripts/secrets-delete.sh KEY --from-manifest    # also remove from manifest
-#   bash scripts/secrets-delete.sh KEY --yes --from-manifest
+#   bash scripts/secrets-delete.sh KEY --keep-manifest    # delete from .env only, keep manifest entry
 #
 # Exit codes:
 #   0  success
@@ -20,7 +19,9 @@ MANIFEST=".claude/secrets-manifest.yaml"
 TARGET=".env"
 
 usage() {
-  echo "Usage: bash scripts/secrets-delete.sh KEY [--yes] [--from-manifest]" >&2
+  echo "Usage: bash scripts/secrets-delete.sh KEY [--yes] [--keep-manifest]" >&2
+  echo "       Deletes KEY from .env AND manifest by default." >&2
+  echo "       --keep-manifest  remove from .env only, keep manifest entry" >&2
   exit 2
 }
 
@@ -32,14 +33,15 @@ KEY="$1"
 shift
 
 SKIP_CONFIRM=false
-FROM_MANIFEST=false
+FROM_MANIFEST=true
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --yes)            SKIP_CONFIRM=true; shift ;;
-    --from-manifest)  FROM_MANIFEST=true; shift ;;
-    --help|-h)        usage ;;
-    *)                echo "Unknown option: $1" >&2; usage ;;
+    --yes)             SKIP_CONFIRM=true; shift ;;
+    --keep-manifest)   FROM_MANIFEST=false; shift ;;
+    --from-manifest)   FROM_MANIFEST=true; shift ;;  # backward compat
+    --help|-h)         usage ;;
+    *)                 echo "Unknown option: $1" >&2; usage ;;
   esac
 done
 

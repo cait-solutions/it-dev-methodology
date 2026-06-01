@@ -87,9 +87,9 @@
      bash scripts/secrets-update.sh KEY              (interactive, with re-paste confirm)
 
   🗑️  Удалить секрет (сервис выведен из эксплуатации или ошибочно добавлен)
-     bash scripts/secrets-delete.sh KEY                (с подтверждением)
+     bash scripts/secrets-delete.sh KEY                (удаляет из .env И manifest)
      bash scripts/secrets-delete.sh KEY --yes          (без подтверждения, CI/CD)
-     bash scripts/secrets-delete.sh KEY --from-manifest  (также удалить из manifest)
+     bash scripts/secrets-delete.sh KEY --keep-manifest  (только из .env, запись в manifest сохранить)
 
      ⚠️  Если KEY = required: true в manifest — будет warning. Backup создаётся автоматически.
 
