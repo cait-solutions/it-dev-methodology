@@ -1,6 +1,6 @@
 ---
 name: define-positioning
-description: Помогает определить позиционирование продукта - ценностное предложение, целевой сегмент, дифференциатор, messaging. Активируй когда пользователь упоминает позиционирование, ценностное предложение, кому мы продаём, как нам отличаться, что мы обещаем клиентам, value proposition, positioning, target audience, differentiation. Создаёт или обновляет MARKETING.md (секция Positioning). Требует наличия MARKETING.md в корне проекта. Порядок Foundation block - первый (этот skill), перед customer-research и competitor-profiling. Positioning задаёт целевой сегмент который используют следующие два skills.
+description: Помогает углубить позиционирование продукта - ценностное предложение, целевой сегмент, дифференциатор, messaging. Активируй когда пользователь упоминает позиционирование, ценностное предложение, кому мы продаём, как нам отличаться, что мы обещаем клиентам, value proposition, positioning, target audience, differentiation. Создаёт или обновляет MARKETING.md (секция Positioning). Требует наличия MARKETING.md в корне проекта. Foundation block - второй (после product-marketing, перед customer-research и competitor-profiling). Углубляет ## Positioning: positioning statement, target segment, differentiator, messaging pillars. Positioning задаёт целевой сегмент который используют следующие два skills.
 metadata:
   version: 1.0.0
   type: knowledge-skill
@@ -13,7 +13,7 @@ metadata:
 
 # define-positioning — Позиционирование продукта
 
-**Порядок Foundation block:** первый (этот skill), перед `customer-research` и `competitor-profiling`. Positioning задаёт целевой сегмент который используют следующие два skills.
+**Порядок Foundation block:** второй (после `product-marketing`, перед `customer-research` и `competitor-profiling`). Углубляет `## Positioning` — positioning statement, target segment, differentiator, messaging pillars. Positioning задаёт целевой сегмент который используют следующие два skills.
 
 Ты помогаешь определить стратегическое позиционирование продукта. Работаешь строго в рамках маркетинг-контекста проекта.
 
