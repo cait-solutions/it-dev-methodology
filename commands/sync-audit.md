@@ -134,16 +134,23 @@
 
 **Цель:** проверить что секция существует и покрывает major компоненты кодовой базы.
 
-1. Прочитать `PRODUCT.md` — есть ли секция `## Логика компонентов`?
-2. Если есть — посчитать подсекции `### <component-name>`
-3. Просканировать кодовую базу для major компонентов:
-   - `src/services/*` или `services/*` (если monorepo)
-   - `src/components/*` или `lib/*/*`
-   - Топ-уровневые модули (`auth`, `payments`, `users`, и т.п.)
-4. Output:
-   - Секция отсутствует → 🔴 **High severity** — основной sync mechanism v4.19.0 не работает
-   - Секция есть, покрытие < 50% компонентов → 🟡 **Medium severity** — N компонентов без секций
-   - Секция есть, покрытие ≥ 80% → 🟢 OK
+⛔ Discipline-creating: «покрытие < 50%» требует **двух чисел** (documented / total), не оценки на глаз.
+
+1. Есть ли секция `## Логика компонентов` в `PRODUCT.md`? Посчитать подсекции:
+   ```bash
+   grep -c "^### " PRODUCT.md   # documented = число подсекций
+   ```
+2. Посчитать total major-компонентов кодовой базы (адаптировать под структуру):
+   ```bash
+   find src/services src/components lib -maxdepth 1 -type d 2>/dev/null | wc -l   # total
+   # methodology-platform / non-standard struct: компонентов нет → coverage N/A (см. ниже)
+   ```
+3. Вычислить: `coverage = documented / total`. Output по числу:
+   - Секция отсутствует → 🔴 **High** — sync mechanism v4.19.0 не работает
+   - `coverage < 0.5` → 🟡 **Medium** — `{total − documented}` компонентов без секций (перечислить какие)
+   - `coverage ≥ 0.8` → 🟢 OK
+   - `total = 0` (methodology-platform / нет runtime-компонентов) → 🟢 **N/A** — у продукта нет кодовых компонентов для `## Логика компонентов`
+⛔ Severity без показанных чисел documented/total = Gap 1 не проверен.
 
 ### Gap 2: CLAUDE.local.md `## Sync validators` (v4.20.0)
 
