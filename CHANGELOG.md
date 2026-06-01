@@ -4,6 +4,25 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.58.0 — feat: migration registry — /sync-audit как единая точка обновления consumer'ов (2026-06-01)
+
+**Что (структурное решение, Flyway/Alembic pattern):**
+- **`scripts/migrations/`** — версионированные format-миграции. Каждое изменение формата заполненного артефакта = файл `v<X.Y.Z>-<id>.sh` с контрактом: `migration_detect` (нужна ли) + `migration_apply` (idempotent transform) + `MIGRATION_MODE` (auto self-heal / report).
+- **`scripts/migrations/_runner.sh`** — прогоняет миграции новее consumer-версии. Source of truth = `.claude/state/migrations-applied.txt` (per-consumer, gitignored) → решает erp-класс «synced to latest, но старый transform не прогонялся».
+- **`/sync-audit` Шаг 1.5** — вызывает runner автоматически. `HEALED` (авто) / `REPORT` (нужно решение). **Consumer запускает ТОЛЬКО `/sync-audit`** — миграции форматов применяются сами (user-friendly).
+- **Первая миграция `v4.37.0-mermaid-bare-url`** — чинит старый `> 🔗 [Открыть](url)` → голый URL (closes G-072: stale-консьюмер больше не застревает; триплклик выделяет только ссылку).
+- **Расширяемость:** новое format-улучшение = новый migration-файл, команда `/sync-audit` НЕ меняется.
+- **Bonus fix:** `update-mermaid-links.sh` cross-drive bug (`os.path.relpath` ValueError при `--root` на другом диске) → `_safe_relpath` fallback.
+
+**Actions для consumers (одна команда):**
+```bash
+/sync-audit          # синкнет migrations + применит все нужные format-миграции автоматически
+```
+
+**Priority:** 🟡 Medium — структурная основа для авто-обновления consumer-артефактов при эволюции методологии.
+
+---
+
 ## v4.57.0 — security: close confirmed git-https token-leak vector (S0-S3) (2026-06-01)
 
 **Что (security-аудит → 4 структурных фикса; подтверждённая утечка из transcript):**

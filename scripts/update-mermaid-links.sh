@@ -122,6 +122,17 @@ def find_md_files(root):
                 yield os.path.join(dirpath, fn)
 
 
+def _safe_relpath(path):
+    # os.path.relpath raises ValueError on Windows when path and cwd are on
+    # different drives (e.g. file on C:, cwd on L:) — happens when --root points
+    # to another mount. Fall back to the raw path for display only. (cross-drive
+    # safety, same class as G-018 Windows-specific failure)
+    try:
+        return os.path.relpath(path)
+    except ValueError:
+        return path
+
+
 def update_file(path):
     try:
         with open(path, encoding='utf-8') as f:
@@ -169,7 +180,7 @@ def update_file(path):
                                 del updated[between_start:block_start]
                                 updated.insert(between_start, '\n')
                                 i = between_start + 1
-                            rel = os.path.relpath(path)
+                            rel = _safe_relpath(path)
                             print(f"UPDATED  PLACEHOLDER  {rel}:{block_start+1}  (markdown-link → neutral)")
                             changes += 1
                             break
@@ -189,7 +200,7 @@ def update_file(path):
                     existing_link_idx = j
                     break
 
-            rel = os.path.relpath(path)
+            rel = _safe_relpath(path)
 
             # Canonical format above each ```mermaid block:
             #   <bare URL on its own line>

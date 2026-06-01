@@ -489,6 +489,18 @@ if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/script
       chmod +x "$dest" 2>/dev/null || true
       echo "  ✓ $name"
     done
+    # Migration registry subdir (Flyway/Alembic-style) — consumers need these
+    # locally so /sync-audit can run versioned format-migrations on filled artifacts.
+    if [[ -d "$METHODOLOGY_DIR/templates/scripts/migrations" ]]; then
+      mkdir -p "$TARGET_DIR/scripts/migrations"
+      for mig in "$METHODOLOGY_DIR"/templates/scripts/migrations/*; do
+        [[ -f "$mig" ]] || continue
+        mdest="$TARGET_DIR/scripts/migrations/$(basename "$mig")"
+        cp "$mig" "$mdest"
+        chmod +x "$mdest" 2>/dev/null || true
+        echo "  ✓ migrations/$(basename "$mig")"
+      done
+    fi
   fi
 fi
 
