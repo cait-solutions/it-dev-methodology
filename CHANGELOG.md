@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.55.0 — feat: validate-links.sh — Docs-as-Code internal link-check (2026-06-01)
+
+**Что добавилось (PR B из методологического аудита):**
+- `scripts/validate-links.sh` (+ `templates/scripts/`) — проверяет что все markdown-ссылки `[...](path)` на локальные файлы резолвятся. `BROKEN_LINK` = битая навигация. Пропускает: external URL, anchors, glob/placeholder, `.claude/` (derived copies), template-файлы, cross-repo sibling (если отсутствует).
+- Gate в `/review` (BROKEN_LINK = 🔴 CRITICAL) + `/sync-audit` Gap 8.
+- **Эмпирически нашёл 8 реальных битых ссылок** в README.md/PRODUCT.md (class G-076: code-repo ссылался на VISION/ROADMAP/DEVLOG/maps локально, а они в doc-repo) — исправлены на `../it-dev-methodology-documentation/...`.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .       # получить validate-links.sh
+bash scripts/validate-links.sh           # проверить свои артефакты
+```
+
+**Priority:** 🟡 Medium — Docs-as-Code gate, ловит навигационные дыры.
+
+---
+
 ## v4.54.0 — fix: universality — de-hardcode two-repo paths + hook-consistency check (2026-06-01)
 
 **Что добавилось (эмпирический consumer-аудит → 2 реальных фикса):**

@@ -12,7 +12,7 @@ Version: see [VERSION](VERSION) (currently **v3.0.0** — first major bump, brea
 
 Методология развивалась из опыта как single-developer, так и multi-service проектов. Patterns из обоих подходов (хуки, IDEAS таксономия, ROADMAP структура, level-4 framework) влиты как универсальные дополнения.
 
-С версии v2.4.0 методология применяется к самой себе (eats own dog food) — изменения идут через её собственный `/plan` → `/code` → `/review` → `/deploy` процесс. См. [CLAUDE.md](CLAUDE.md), [PRODUCT.md](PRODUCT.md), [VISION.md](VISION.md).
+С версии v2.4.0 методология применяется к самой себе (eats own dog food) — изменения идут через её собственный `/plan` → `/code` → `/review` → `/deploy` процесс. См. [CLAUDE.md](CLAUDE.md), [PRODUCT.md](../it-dev-methodology-documentation/PRODUCT.md), [VISION.md](../it-dev-methodology-documentation/VISION.md).
 
 ## Structure
 
@@ -115,4 +115,4 @@ bash scripts/new-project-init.sh my-app ~/my-app
 # → creates full structure; ignore unused dirs or delete them
 ```
 
-Next planned work — see [ROADMAP.md](ROADMAP.md) for current priorities.
+Next planned work — see [ROADMAP.md](../it-dev-methodology-documentation/ROADMAP.md) for current priorities.
