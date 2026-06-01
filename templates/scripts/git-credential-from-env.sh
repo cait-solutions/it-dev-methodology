@@ -7,8 +7,9 @@
 # the canonical store (.env / shared / process env).
 #
 # v4.41.0+ schema v2: per-entry service_url enables multi-host routing.
-# v1 fallback: if no entry has service_url, treat KEY=GITHUB_PAT as default
-# for github.com requests (backward-compat).
+# Routing is by HOST, never by key name — user picks any key name (closes G-077).
+# Match order: (1) service_url host match → (2) service-field host-token match →
+# (3) literal GITHUB_PAT for github.com (v1 backward-compat) → (4) actionable stderr hint.
 #
 # Setup (one-time, per repo OR globally):
 #
@@ -156,12 +157,52 @@ if [[ ${#MULTI_MATCH[@]} -gt 1 ]]; then
   echo "WARN: if wrong, add account-specific service_url paths or use distinct hostnames" >&2
 fi
 
-# Fallback: v1 backward-compat — if no match and host is github.com, try GITHUB_PAT.
+# Fallback chain (closes G-077: hardcoded GITHUB_PAT vs user-defined key names).
+# Routing is primarily by service_url (above). If no service_url match, try —
+# in order — so user-chosen key names work without renaming to GITHUB_PAT:
+if [[ -z "$MATCHED_KEY" && -f "$MANIFEST" && -n "$REQ_HOST" ]]; then
+  # (a) manifest entry whose `service` field names this host (e.g. service: GitHub
+  #     for github.com) — host token match, case-insensitive, no service_url needed.
+  host_token="${REQ_HOST%%.*}"   # github.com → github
+  while IFS=$'\t' read -r m_key m_svc m_login; do
+    [[ -z "$m_key" ]] && continue
+    # lowercase compare (bash 3.2 — use tr, not ${,,})
+    svc_lc=$(printf '%s' "$m_svc" | tr '[:upper:]' '[:lower:]')
+    tok_lc=$(printf '%s' "$host_token" | tr '[:upper:]' '[:lower:]')
+    if [[ -n "$m_svc" && "$svc_lc" == *"$tok_lc"* ]]; then
+      MATCHED_KEY="$m_key"; MATCHED_LOGIN="$m_login"; break
+    fi
+  done < <(awk '
+    /^[[:space:]]*-[[:space:]]*key:[[:space:]]*/ {
+      if (cur_key) print cur_key "\t" cur_svc "\t" cur_login
+      cur_key=$0; sub(/^[[:space:]]*-[[:space:]]*key:[[:space:]]*/, "", cur_key)
+      gsub(/[[:space:]"'"'"']/, "", cur_key); cur_svc=""; cur_login=""; next
+    }
+    cur_key && /^[[:space:]]*service:[[:space:]]*/ {
+      cur_svc=$0; sub(/^[[:space:]]*service:[[:space:]]*/, "", cur_svc)
+      gsub(/^["'"'"']|["'"'"']$/, "", cur_svc); gsub(/[[:space:]]+$/, "", cur_svc)
+    }
+    cur_key && /^[[:space:]]*login:[[:space:]]*/ {
+      cur_login=$0; sub(/^[[:space:]]*login:[[:space:]]*/, "", cur_login)
+      gsub(/^["'"'"']|["'"'"']$/, "", cur_login); gsub(/[[:space:]]+$/, "", cur_login)
+    }
+    END { if (cur_key) print cur_key "\t" cur_svc "\t" cur_login }
+  ' "$MANIFEST")
+fi
+
+# (b) v1 backward-compat — literal GITHUB_PAT for github.com (only if still no match).
 if [[ -z "$MATCHED_KEY" && "$REQ_HOST" == "github.com" ]]; then
   if value=$(_lookup_value "GITHUB_PAT" 2>/dev/null); then
     MATCHED_KEY="GITHUB_PAT"
     MATCHED_LOGIN="oauth2"
   fi
+fi
+
+# Still no match? Emit actionable hint to stderr (git ignores it, но видно в логах/агенту):
+# объясняет ЧТО сделать вместо молчаливого падения → агент не лезет за токеном вручную.
+if [[ -z "$MATCHED_KEY" && -n "$REQ_HOST" ]]; then
+  echo "git-credential-from-env: нет ключа для '$REQ_HOST' в $MANIFEST." >&2
+  echo "  Добавь любому своему ключу поле service_url: https://$REQ_HOST (имя ключа любое — routing по хосту, НЕ по имени)." >&2
 fi
 
 # No match? Exit 0 silently — git will try next helper (gh CLI, manager, etc).
