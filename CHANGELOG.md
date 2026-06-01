@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.52.0 — feat: discipline-creating classification в /code + /retro (2026-06-01)
+
+**Что добавилось (PR2 of 3 — продолжение FMEA/Gawande трансформации):**
+- `/code` Шаг 0.5 (Local/Systemic) — классификация **по числу** через `grep -c` + `git log -S`, не по интуиции. ≥2 места → системный → архитектурный фикс. «Локальный» без показанного grep = не зачтено.
+- `/retro` Шаг 2 (Pattern detection) — обязательный `grep -oE "\[fix:...\]" | uniq -c | sort -rn` frequency-замер ДО интерпретации. Таблица из чисел grep, не «на глаз». Ловит semantic-дубли (один баг под разными тегами).
+
+**Actions:** нет (behavior change в commands/).
+
+**Priority:** 🟡 Medium — усиливает точность классификации, не breaking.
+
+---
+
 ## v4.51.0 — feat: Forward-Failure Analysis (FMEA+JTBD) + discipline-creating Completeness audit (2026-06-01)
 
 **Что добавилось (industry best practices применены к методологии):**
