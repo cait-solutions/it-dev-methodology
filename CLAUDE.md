@@ -294,6 +294,7 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 - ✅ Использовать `bash scripts/set-secret.sh KEY value` для **одноразового** добавления секрета пользователем (это **пользователь** запускает, не агент).
 - ✅ Для git operations с HTTPS — configure `git-credential-from-env.sh` как credential helper (git сам читает токен, агент не в цепочке).
 - ✅ При отсутствии required секрета — HARD BLOCK + показать `how_to_obtain` из manifest. Не запрашивать токен через chat — только one-time setup через `set-secret.sh`.
+- ✅ **Перед `/secrets` и любым `secrets-*.sh`** — проверить что `.claude/secrets-manifest.yaml` существует в текущем `cwd`. Если нет — найти репо с manifest в workspace и сообщить откуда запускать. Никогда не делать вывод "секреты отсутствуют" только из-за отсутствия manifest в текущем cwd (closes G-065).
 
 ### MUST NOT
 

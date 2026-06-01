@@ -28,6 +28,8 @@ WHITELIST_PATTERNS = [
     r'(?:^|[\\/])\.env\.example\.template$',
     r'(?:^|[\\/])\.env\.[a-z0-9_]+\.template$',
     r'(?:^|[\\/])secrets-manifest\.ya?ml\.template$',
+    # deployed manifest (declaration file — committed to git, contains NO values)
+    r'(?:^|[\\/])\.claude[\\/]secrets-manifest\.ya?ml$',
     # methodology canonical templates describing secrets (.template.md suffix locks it
     # to methodology's own template files, not arbitrary user .md)
     r'templates[\\/].*-secrets?[^/\\]*\.template\.md$',
