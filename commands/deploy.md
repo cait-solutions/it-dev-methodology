@@ -162,7 +162,7 @@ PR title: взять последнюю строку DEVLOG (что: ...). Human
 git push failed: нет write-access для {origin_url}
 Нужен токен с правами repo:write для {owner}/{repo}
 
-Варианты:
+Варианты (выберите согласно вашей настройке):
   a) gh auth login → повторить /deploy
   b) добавить токен вручную:
      git remote set-url origin https://<user>:<pat>@github.com/<owner>/<repo>.git
