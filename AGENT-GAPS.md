@@ -58,6 +58,28 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-076
+Дата: 2026-06-01
+Контекст: методологический аудит — эмпирическая проверка реального consumer (erp-documentantion, single-repo)
+Что пропустил: synced-команды consumer'а содержат hardcoded `../it-dev-methodology-documentation` (code.md:207, review.md:238) и 47 methodology-ссылок (29× methodology-platform, 14× sync-methodology, 4× hardcoded path). erp — single-repo на code.nexchance.de, этого sibling-репо у него физически нет. Consumer видит инструкции про инфраструктуру которой не владеет — friction 5-30 мин/разработчик, критично при scale 100+.
+Как обнаружено: эмпирический аудит erp-documentantion (read-only) — подтвердил теоретический leak живыми file:line
+Категория: scope-gap
+Гипотеза: команды генерируются один раз для methodology-platform (two-repo), затем синкаются consumer'ам через sync-methodology.sh БЕЗ variable substitution. Путь `../it-dev-methodology-documentation` абсолютно-относительный (hardcoded), не из config-переменной.
+Agent failure mode: scope-exceeded — universality по ядру есть, но execution-инструкции hardcode developer layout
+Potential fix: PR A — de-hardcode two-repo paths → runtime detection (есть ли `../it-dev-methodology-documentation`?) + `doc_repo_path` config в CLAUDE.local.md (null для single-repo); methodology-only секции в shared-командах чётче gated с auto-skip по project_type
+Статус: addressed (v4.54.0 — PR A runtime detection + doc_repo_path config)
+---
+Gap-ID: G-075
+Дата: 2026-06-01
+Контекст: методологический аудит — эмпирическая проверка stale consumer (ai-assistant-documentation, v4.10.6, 43 версии позади)
+Что пропустил: ai-assistant `.claude/settings.json` содержит SessionStart hook → `auto-update-watchdog.py`, но самого файла НЕТ в `.claude/hooks/` (есть только 4: agent-gaps-watchdog, bash_protect, docs_reminder, protect). Hook падает молча на каждом старте → auto-update НИКОГДА не срабатывает → consumer навсегда застревает на stale версии БЕЗ предупреждения. Класс «hook сконфигурирован в settings.json но файл не синхронизирован» — самый коварный (silent fail, высокий FMEA Detection=9).
+Как обнаружено: эмпирический аудит ai-assistant (read-only) — code-анализ теоретического аудита это пропустил, нашлось только живой проверкой
+Категория: completeness-gap
+Гипотеза: sync-methodology.sh синкает hooks из templates/.claude/hooks/, но если consumer на старой версии где hook ещё не существовал, а settings.json (вручную или частичным синком) уже ссылается на него — возникает рассинхрон settings↔files. Нет проверки «каждый hook из settings.json реально присутствует в .claude/hooks/».
+Agent failure mode: context-missed — sync не валидирует consistency settings.json hook-references vs реальные файлы
+Potential fix: PR H — sync-methodology.sh после синка hooks проверяет: каждый hook упомянутый в settings.json существует в .claude/hooks/; отсутствует → fail loud (warning + список missing), не silent. Альтернатива L4: auto-update-watchdog.py сам проверяет своё присутствие и предупреждает.
+Статус: addressed (v4.54.0 — PR H sync hook-consistency check)
+---
 Gap-ID: G-074
 Дата: 2026-06-01
 Контекст: free-chat — пользователь указал на слабый thinking-ahead

@@ -443,6 +443,25 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
     esac
     echo "  ✓ $dest_name"
   done
+
+  # Hook-consistency check (closes G-075): каждый hook упомянутый в settings.json
+  # ДОЛЖЕН реально присутствовать в .claude/hooks/. Иначе SessionStart/PreToolUse
+  # hook падает молча → auto-update никогда не срабатывает, consumer застревает на
+  # stale версии без предупреждения. Fail loud, не silent.
+  settings_json="$TARGET_DIR/.claude/settings.json"
+  if [[ -f "$settings_json" ]]; then
+    # извлечь имена hook-файлов из settings.json (.claude/hooks/<name>.py)
+    missing_hooks=""
+    while IFS= read -r hookfile; do
+      [[ -z "$hookfile" ]] && continue
+      [[ -f "$TARGET_DIR/.claude/hooks/$hookfile" ]] || missing_hooks="$missing_hooks $hookfile"
+    done < <(grep -oE '\.claude/hooks/[A-Za-z0-9_-]+\.py' "$settings_json" 2>/dev/null | sed 's#.claude/hooks/##' | sort -u)
+    if [[ -n "$missing_hooks" ]]; then
+      echo "  ⚠️  HOOK-MISMATCH: settings.json ссылается на отсутствующие hooks:$missing_hooks"
+      echo "      → эти hooks упадут молча при запуске. Проверь templates/.claude/hooks/ содержит их,"
+      echo "        либо убери ссылку из settings.json. (closes G-075)"
+    fi
+  fi
 fi
 
 # ---------------------------------------------------------------------------

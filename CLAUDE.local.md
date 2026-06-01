@@ -85,11 +85,14 @@ enabled: true
 interval_hours: 2
 on_failure: notify
 methodology_path: .
+doc_repo_path: ../it-dev-methodology-documentation
 audit_threshold: 3
 auto_pull: false
 ```
 
 `methodology_path: .` — methodology-platform это самоаудит (this repo IS the methodology). Hook проверяет наличие обновлений, но не делает self-pull (вместо этого запускает `sync-methodology.sh .`).
+
+`doc_repo_path: ../it-dev-methodology-documentation` — methodology-platform использует **two-repo** pattern: код здесь, документация (DEVLOG/карты/ADR) в sibling-репо. Команды (`/code`, `/review`, `/retro`) читают это значение для путей к артефактам. Consumer single-repo проекты имеют `doc_repo_path: null` (артефакты локальны). Closes G-076.
 
 ---
 

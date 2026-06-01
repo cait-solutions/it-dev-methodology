@@ -45,12 +45,12 @@
 
 ⛔ Discipline-creating: «найди паттерны» = aspirational (агент пишет «паттернов нет» не считая). Сначала **посчитай**, потом интерпретируй.
 
-**Обязательный frequency-замер (выполнить, показать вывод):**
+**Обязательный frequency-замер (выполнить, показать вывод).** Путь к DEVLOG (closes G-076): single-repo → `DEVLOG.md` локально; two-repo → `<doc_repo_path>/DEVLOG.md` (из `CLAUDE.local.md ## Auto-update`). Ниже `<DEVLOG>` = этот путь:
 ```bash
-# Частота fix-тегов за период (DEVLOG в doc-repo):
-grep -oE "\[fix:[a-z-]+\]" ../it-dev-methodology-documentation/DEVLOG.md | sort | uniq -c | sort -rn | head
+# Частота fix-тегов за период:
+grep -oE "\[fix:[a-z-]+\]" <DEVLOG> | sort | uniq -c | sort -rn | head
 # Все semantic-теги failure-классов:
-grep -oE "\[(fix|regression|async-failure|state-pollution):[a-z-]+\]" ../it-dev-methodology-documentation/DEVLOG.md | sort | uniq -c | sort -rn
+grep -oE "\[(fix|regression|async-failure|state-pollution):[a-z-]+\]" <DEVLOG> | sort | uniq -c | sort -rn
 ```
 
 Из вывода построй таблицу (число — из grep, не из памяти):

@@ -231,6 +231,7 @@ enabled: true
 interval_hours: 2
 on_failure: notify
 methodology_path: ../it-dev-methodology
+doc_repo_path: null
 audit_threshold: 3
 auto_pull: false
 ```
@@ -243,6 +244,7 @@ auto_pull: false
   - `silent` — игнорировать тихо
   - `block` — exit 1 (hook fail; не рекомендуется кроме CI/CD)
 - `methodology_path` — путь к склонированному `it-dev-methodology` относительно корня проекта. Default `../it-dev-methodology`.
+- `doc_repo_path` — **(two-repo проекты)** путь к sibling documentation-репо (где живут DEVLOG/карты/ADR) относительно корня проекта. `null` (default) = **single-repo** проект: артефакты и код в одном репо, команды работают с локальными путями. Задать (например `../my-project-documentation`) только если проект использует two-repo pattern (код + отдельный doc-репо). ⛔ Команды (`/code`, `/review`, `/retro`) читают это значение: если `null` → артефакты ищутся локально; если задан → также проверяется doc-репо. Closes G-076 (раньше путь был hardcoded `../it-dev-methodology-documentation` — ломал single-repo consumers).
 - `audit_threshold` — minor version delta после auto-pull при котором hook рекомендует запустить `/sync-audit` (default `3`). Например, sync с `v4.18.0` на `v4.22.0` = delta 4 ≥ 3 → recommendation. Major bump (`v4.X.Y` → `v5.X.Y`) → forced trigger независимо от threshold.
 - `auto_pull` — `false` (default) / `true`. Если `true`, `/sync-audit` Шаг -0.5 автоматически делает `git pull` в локальной `it-dev-methodology/` без вопроса — при условии что GITHUB_PAT (или аналог) доступен через `with-secret.sh`. Используй `true` если credential helper настроен и хочешь полностью автоматический flow. Default `false` = показывает инструкцию и ждёт подтверждения.
 
