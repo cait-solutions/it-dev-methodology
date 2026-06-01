@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.53.0 — feat: discipline-creating финализация — /architecture-audit + /diagnose + /sync-audit + /product-check (2026-06-01)
+
+**Что добавилось (PR3 of 3 — завершение трансформации всех 9 команд):**
+- `/architecture-audit` 6.3 — recurrence_rate = open/(open+addressed) формула (FMEA Detection logic): ≥0.4 → Level 4+ обязателен.
+- `/diagnose` Шаг 2 — таблица гипотез с исполнимой командой + различающим output (Popper falsifiability). «Посмотреть код» = не зачтено.
+- `/sync-audit` Gap 1 — PRODUCT coverage через `grep -c` + `find | wc -l` (два числа), не «< 50% на глаз». methodology-platform → N/A.
+- `/product-check` п.1-2-6 — команды (`ls`, `git log -1 --format=%ad`) вместо чтения на глаз; дата сверяется с git-историей.
+
+**Actions:** нет (behavior change в commands/).
+
+**Priority:** 🟡 Medium — завершает discipline-creating трансформацию (3-PR серия v4.51-v4.53).
+
+---
+
 ## v4.52.0 — feat: discipline-creating classification в /code + /retro (2026-06-01)
 
 **Что добавилось (PR2 of 3 — продолжение FMEA/Gawande трансформации):**
