@@ -249,6 +249,8 @@ Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_L
 - ❌ Агент НЕ ЧИТАЕТ `.env` / `secrets.env` напрямую (Read tool / `cat .env` / `head .env` блокируются через `settings.json` deny + `bash_protect.py`).
 - ❌ Агент НЕ ВЫПОЛНЯЕТ `env`, `printenv`, `set | grep`, `echo $SECRET_*` — блокируется hook'ом `bash_protect.py`.
 - ❌ Агент НЕ ВПИСЫВАЕТ значения секретов в chat / DEVLOG / commit messages / любые файлы. Если случилось — `bash scripts/secrets-scrub.sh` (Phase 2) + rotate token.
+- ❌ **Агент НЕ ВЫЗЫВАЕТ `_get-secret-raw.sh`** — этот скрипт выводит значение секрета в stdout → попадает в transcript → Anthropic API. Блокируется `bash_protect.py`. Исключительно для ручного запуска пользователем в терминале вне Claude Code. (closes G-062)
+- ❌ **Агент НЕ КОНСТРУИРУЕТ inline env assignment с реальным значением секрета** — паттерн `KEY="secret_value" bash script.sh` виден в tool input → transcript. Использовать `bash scripts/with-secret.sh KEY -- bash script.sh` вместо этого. Блокируется `bash_protect.py`. (closes G-062)
 - ❌ Не storage'ить `sensitivity: high` ключи в shared scope (`set-secret.sh --shared` blocked manifest-ом).
 - ❌ Не bypass-ить pre-commit hook через `--no-verify` без рукописного обоснования в DEVLOG (`/review` всё равно catch-ит leak).
 - ❌ Не editить `templates/.claude/hooks/secrets-guard.py` и `templates/.claude/hooks/bash_protect.py` без понимания whitelist semantics — false negative означает утечку.
