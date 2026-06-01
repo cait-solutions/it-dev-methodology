@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.47.7 — feat: post-edit-watchdog PostToolUse hook (2026-06-01)
+
+**Что добавилось:**
+- `post-edit-watchdog.py` — новый PostToolUse hook: после каждого Edit/Write проверяет изменённый текст на паттерны из конфига и автоматически запускает скрипт. L4 фикс для G-020 (mermaid ссылки не обновлялись при прямом Edit вне /code workflow).
+- Дефолтное правило: ` ```mermaid ` в изменённом тексте → `bash scripts/update-mermaid-links.sh <file>`.
+- Конфигурируется через `CLAUDE.local.md ## Post-edit hooks` (YAML rules) — новые автоматизации без правки кода.
+- Path validation против traversal атак.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .   # получить hook + обновлённые settings.json + CLAUDE_LOCAL.template.md
+# Добавить в CLAUDE.local.md секцию ## Post-edit hooks (или использовать дефолтное правило mermaid)
+```
+
+**Priority:** 🟡 Medium — рекомендуется для проектов с Mermaid-диаграммами.
+
+---
+
 ## v4.46.0 — feat: /marketing команда-навигатор + слоевая модель (2026-06-01)
 
 **Что добавилось:**

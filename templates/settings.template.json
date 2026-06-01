@@ -104,6 +104,14 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "py .claude/hooks/post-edit-watchdog.py" }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

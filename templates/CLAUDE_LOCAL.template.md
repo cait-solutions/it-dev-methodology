@@ -263,6 +263,30 @@ auto_pull: false
 
 ---
 
+## Post-edit hooks
+
+Config для `post-edit-watchdog.py` (PostToolUse hook) — автоматически запускает скрипты
+после Edit/Write если изменённый текст содержит указанный паттерн.
+
+```yaml
+rules:
+  - pattern: "```mermaid"
+    script: scripts/update-mermaid-links.sh
+    file_arg: true
+  # Добавляй новые правила по мере необходимости:
+  # - pattern: "## Changelog"
+  #   script: scripts/my-script.sh
+  #   file_arg: true   # передавать file_path как аргумент (true/false)
+```
+
+- `pattern` — строка которую ищем в изменённом тексте (new_string / content)
+- `script` — путь к скрипту относительно корня проекта (только `scripts/*.sh` и т.п.)
+- `file_arg` — передавать затронутый файл как аргумент скрипту
+
+> Если секция отсутствует — hook использует дефолтное правило mermaid.
+
+---
+
 ## External links
 
 - Runbooks: `<link>`
