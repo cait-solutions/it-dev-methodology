@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-05-18",
-      "plans_since": 28
+      "plans_since": 29
     },
     "last_retro": {
       "date": "2026-05-27",
-      "plans_since": 5
+      "plans_since": 6
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 11
+      "plans_since": 12
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 5
+      "plans_since": 6
     },
     "last_product_vision": {
       "date": "2026-05-27",
-      "plans_since": 6
+      "plans_since": 7
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 9
+      "plans_since": 10
     },
     "last_architecture_audit": {
       "date": "2026-05-27",
-      "plans_since": 5,
+      "plans_since": 6,
       "recommendations": [
         {
           "id": "R-023",
@@ -114,6 +114,6 @@
   "last_deploy": {
     "date": "2026-06-01",
     "status": "ok",
-    "phase": "repo-split-v1-v4.36.2"
+    "phase": "secrets-cwd-awareness-g065-v4.47.1"
   }
 }
