@@ -79,6 +79,48 @@ For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLA
 
 ---
 
+## Maps Standard Rule
+
+Единый стандарт для трёх карт проекта. Основан на C4 Model, Arc42, Living Documentation.
+
+**Три карты — три разные плоскости:**
+- **SYSTEM-MAP** — как устроена система (компоненты, слои, связи)
+- **USER-MAP** — что умеет пользователь (акторы, flows, capabilities)
+- **ARTIFACT-MAP** — кто что обновляет и когда (lifecycle артефактов)
+
+Dependency direction: SYSTEM-MAP ← USER-MAP ← ARTIFACT-MAP. Дублирование фактов между картами запрещено — cross-reference вместо копии.
+
+**Обязательная структура каждой карты:**
+```
+# [ТИП] — {{Project Name}}
+**Версия:** vX.Y  |  **Обновлён:** YYYY-MM-DD  |  **Граф проверен:** YYYY-MM-DD
+## Agent TL;DR      ← 5-15 строк scan-friendly (подсистемы, источники правды, gaps)
+## [Диаграмма]      ← Mermaid с URL выше
+## [Таблицы]        ← полный реестр (каждый компонент — отдельная строка)
+## Refresh Policy   ← когда обновлять + когда НЕ обновлять
+```
+
+**Правила диаграммы:**
+- Mermaid-only. ASCII art, PlantUML — запрещены
+- Гибридный язык: технические термины/команды/файлы — EN; описания поведения/аннотации — RU
+- Детализация: отдельный нод = уникальные связи; группа-blob = одинаковые связи → один нод, label через `·`
+- Диаграмма ~15-20 нодов (структурный обзор). Детали — в таблице
+- Группировка по доменам: `subgraph SecretsSkills` + `subgraph MarketingSkills` раздельно, не `subgraph AllSkills`
+- Типы стрелок (единообразно): `-->` W · `-.->` R · `===` RW · `--o` git · `--x` C
+- Repo/setup контекст обязателен в USER-MAP если используется внешний methodology-repo
+
+**Таблицы — taxonomy:**
+- Триггеры: `🔁` каждый цикл · `📊` по счётчику · `🔭` стратегический · `⚡` по событию
+- Акторы: Developer · PM/Owner · System · External · AI Agent
+
+**Governance:**
+- PR-coupling: обновить карту в том же PR что и изменение которое она отражает
+- Рефакторинг без поведенческих изменений, performance-fix, typo — карту не обновлять
+- Audit: SYSTEM-MAP `/architecture-audit` ≥5 планов · USER-MAP `/product-check` ≥5 · ARTIFACT-MAP `/retro` ≥15
+- `/review` блокирует merge если: Mermaid удалён из SYSTEM/USER-MAP; новая команда/skill/артефакт добавлена без обновления карты
+
+---
+
 ## Regulator levels (Level-4 framework)
 
 Strong → weak:

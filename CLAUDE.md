@@ -172,18 +172,69 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 ---
 
-## Documentation map rule
+## Maps Standard Rule
 
-**SYSTEM-MAP и USER-MAP MUST содержать Mermaid-диаграмму.** Замена на ASCII art или plain text запрещена — в больших проектах только Mermaid обеспечивает читаемый обзор.
+Единый стандарт написания и поддержания карт проекта. Применяется ко всем трём картам: **SYSTEM-MAP** (архитектура), **USER-MAP** (пользовательские flows), **ARTIFACT-MAP** (lifecycle артефактов). Основан на C4 Model, Arc42, Living Documentation principles.
 
-**Гибридный язык (EN + RU):**
-- Технические термины, имена файлов/команд — EN: `commands/`, `triggers.json`, `/plan → /code`
-- Описания поведения, аннотации, метки на русском: `"анализ накопленного"`, `"единственный источник правды"`
-- Пример корректного node: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
+### 1. Назначение карт (три разные плоскости)
 
-**Repo / setup контекст обязателен в USER-MAP.** Если проект использует внешний methodology-repo или infrastructure-repo — добавить `subgraph` или аннотацию, показывающую откуда берутся команды/шаблоны. Без этого новый разработчик не поймёт структуру.
+| Карта | Отвечает на вопрос | Читает | Пишет |
+|---|---|---|---|
+| **SYSTEM-MAP** | Как устроена система? | Developer, /architecture-audit | Developer + /code при структурных изменениях |
+| **USER-MAP** | Что умеет пользователь? | Developer, /product-check, /onboard | Developer + /code при новых capabilities |
+| **ARTIFACT-MAP** | Кто что обновляет и когда? | /review, /retro, Developer | Developer при добавлении команд/артефактов |
 
-`/review` блокирует merge если: (1) SYSTEM-MAP или USER-MAP изменены и Mermaid удалён; (2) новый разработчик не сможет понять repo-структуру из диаграммы.
+**Dependency direction:** SYSTEM-MAP ← USER-MAP ← ARTIFACT-MAP. Обратные ссылки = circular reference, запрещено. Нет дублирования фактов между картами — cross-reference вместо копирования.
+
+### 2. Обязательная структура каждой карты
+
+```
+# [ТИП] — {{Project Name}}
+**Версия:** vX.Y  |  **Обновлён:** YYYY-MM-DD  |  **Граф проверен:** YYYY-MM-DD
+
+## Agent TL;DR      ← 5-15 строк, scan-friendly (подсистемы, источники правды, gaps)
+## [Диаграмма]      ← Mermaid с URL выше
+## [Таблицы]        ← полный реестр компонентов/capabilities/артефактов
+## Refresh Policy   ← когда обновлять + когда НЕ обновлять
+```
+
+### 3. Правила диаграммы
+
+**Mermaid-only.** ASCII art, PlantUML — запрещены.
+
+**Гибридный язык:** технические термины/файлы/команды — EN; описания поведения/аннотации — RU.
+Пример: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
+
+**Детализация:**
+- Отдельный нод = уникальные связи (читает/пишет иначе чем соседи)
+- Группа-blob = одинаковые связи → один нод, label через `·`
+- Диаграмма ~15-20 нодов (обзор). Детали — в таблице.
+- ⛔ Не дублировать в диаграмме то что уже полностью в таблице
+
+**Группировка по доменам** (не по типу): `subgraph SecretsSkills` + `subgraph MarketingSkills` — раздельно, не `subgraph AllSkills`.
+
+**Repo/setup контекст обязателен в USER-MAP** — показать откуда берутся команды/шаблоны если внешний repo.
+
+**Типы стрелок (единообразно):** `-->` W · `-.->` R · `===` RW · `--o` git · `--x` C · `==>` agent-write
+
+### 4. Правила таблиц
+
+Таблицы = полный реестр (каждый компонент — отдельная строка).
+
+**Taxonomy триггеров:** `🔁` каждый цикл · `📊` по счётчику · `🔭` стратегический · `⚡` по событию
+
+**Taxonomy акторов:** Developer · PM/Owner · System · External · AI Agent
+
+### 5. Governance
+
+**PR-coupling:** обновить карту в том же PR что и изменение. Рефакторинг без поведенческих изменений, performance-fix, typo — не обновлять.
+
+**Audit schedule:** SYSTEM-MAP `/architecture-audit` ≥5 планов · USER-MAP `/product-check` ≥5 · ARTIFACT-MAP `/retro` ≥15.
+
+**`/review` блокирует merge если:**
+1. SYSTEM-MAP или USER-MAP изменены и Mermaid удалён
+2. Новый разработчик не поймёт структуру из диаграммы
+3. Новая команда/skill/артефакт добавлена — карта не обновлена
 
 ---
 
