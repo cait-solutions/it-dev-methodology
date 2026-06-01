@@ -207,6 +207,22 @@ Output:
    - M skills проверено, N с нарушениями → 🔴 **High severity** если N > 0 (skills могут не активироваться корректно)
    - Все OK → 🟢 OK
 
+### Gap 7: Mermaid live links (v4.37.0)
+
+**Цель:** проверить что все Mermaid-блоки в проекте имеют актуальные mermaid.live ссылки (голый URL на строке перед блоком).
+
+1. Проверить наличие `scripts/update-mermaid-links.sh` и `scripts/validate-mermaid-links.sh`:
+   - Отсутствуют → 🟡 **Medium severity** — запустить `sync-methodology.sh` чтобы получить скрипты
+   - Присутствуют → перейти к п. 2
+2. Запустить валидацию:
+   ```bash
+   bash scripts/validate-mermaid-links.sh
+   ```
+3. Output:
+   - `MISSING_LINK` или `STALE_LINK` найдены → 🟡 **Medium severity** — запустить `bash scripts/update-mermaid-links.sh` и закоммитить
+   - `OK` → 🟢 OK
+   - Нет Mermaid-блоков в проекте → 🟢 N/A
+
 ---
 
 ## Шаг 2 — Severity assessment
@@ -234,6 +250,7 @@ Output:
 | 3 | Auto-update hook + ## Auto-update | 🟡/🟢 | [статус из Gap 3] | `/plan`: установить hook + добавить секцию |
 | 4 | Mermaid hybrid language | 🟢 | [N файлов с EN labels] | `/plan`: пройти по hybrid refactor (incremental) |
 | 5 | Skills frontmatter spec | 🔴/🟢 | [N skills с нарушениями] | `/plan`: spec compliance fix |
+| 7 | Mermaid live links | 🟡/🟢 | [MISSING/STALE/OK] | `bash scripts/update-mermaid-links.sh` |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная
@@ -290,7 +307,7 @@ Output:
 
 ## Ограничения
 
-- /sync-audit покрывает 5 features (v4.16.0-v4.21.0). При добавлении нового feature class в methodology — нужно добавить новую Gap-секцию в эту команду.
+- /sync-audit покрывает 7 features (v4.16.0-v4.37.0). При добавлении нового feature class в methodology — нужно добавить новую Gap-секцию в эту команду.
 - Mermaid labels check (Gap 4) — sample-based (3-5 blocks), не exhaustive. Полный hybrid refactor требует отдельного /plan.
 - Path patterns для Gap 1 (поиск major компонентов) могут не работать для monorepo / non-standard структур — graceful skip с сообщением «не могу определить структуру, проверь вручную».
 - Не запускает /plan сам — намеренно. Каждый gap может требовать архитектурного решения (где path patterns? создать секции для каких компонентов?). Пользователь решает.
