@@ -57,8 +57,54 @@ Potential fix: [конкретный checklist item или изменение ш
 
 ## Записи
 
+---
+Gap-ID: G-065
+Дата: 2026-06-01
+Контекст: /secrets + /diagnose
+Что пропустил: запустил secrets-show.sh из неправильного cwd — решил что секреты отсутствуют, хотя они лежат в соседнем репо
+Как обнаружено: пользователь показал скриншот с реальными секретами
+Категория: assumption-gap
+Гипотеза: /secrets не уточняет из какого репо запускается; агент не проверил какой репо является «home» для конкретных секретов перед выводом
+Agent failure mode: context-missed
+Potential fix: перед запуском secrets-*.sh проверять cwd совпадает ли с репо у которого есть secrets-manifest.yaml; если нет — выводить warning "running from X, manifest found in Y"
+Статус: open
+---
+Gap-ID: G-063
+Дата: 2026-06-01
+Контекст: /code
+Что пропустил: не обновил triggers.json в конце /code (last_plan_session.code_run = true, last_deploy)
+Как обнаружено: разработчик указал
+Категория: prompt-gap
+Гипотеза: Шаг 0 выполняется в начале /code и агент считает state-update уже сделанным; финальная запись после деплоя не вынесена в отдельный явный шаг — теряется в потоке Шагов 4-6
+Agent failure mode: prompt-ambiguous
+Potential fix: добавить в /code явный финальный пункт после deploy "обновить triggers.json: code_run=true + last_deploy"
+Статус: open
+
+
 <!-- новые — сверху -->
 
+---
+Gap-ID: G-064
+Дата: 2026-06-01
+Контекст: /plan Шаг 99.54 — Draft Maps — сгенерировал невалидный mermaid.live URL через Путь B (inline pako encoding)
+Что пропустил: (1) URL через subagent pako encoding невалиден — mermaid.live показал "Loading URL failed"; (2) фолбэк Путь B (код диаграммы без URL) недопустим — правило требует ВСЕГДА генерировать ссылку на mermaid.live, не код
+Как обнаружено: пользователь прислал скриншот ошибки + уточнил что Draft Maps ВСЕГДА должны давать ссылку, не код
+Категория: logic-gap
+Гипотеза: subagent не может выполнить реальную zlib deflate операцию — возвращает правдоподобный но некорректный base64url; агент не имел fallback кроме "показать код" что тоже нарушает требование
+Agent failure mode: context-missed
+Potential fix: Путь B переформулировать: если scripts/mermaid-link.py недоступен → запустить py/python3 scripts/mermaid-link.py через Bash без cd (абсолютный путь к скрипту). Если и это заблокировано — показать код диаграммы + явную инструкцию "вставь на mermaid.live вручную" как единственный допустимый fallback. Subagent для pako encoding — запрещён.
+Статус: open
+---
+Gap-ID: G-063
+Дата: 2026-06-01
+Контекст: /diagnose — повторный сигнал от пользователя: AskUserQuestion popup без (Recommended) на первом варианте
+Что пропустил: при генерации AskUserQuestion вариантов — не добавлял "(Recommended)" к рекомендуемому первому варианту
+Как обнаружено: пользователь указал повторно (ранее уже сообщал — gap не был структурно закрыт)
+Категория: prompt-gap
+Гипотеза: правило "first option = (Recommended)" есть в system prompt AskUserQuestion tool description, но не продублировано в command-файлах методологии → не активируется в контексте выполнения команд
+Agent failure mode: context-missed
+Potential fix: добавить в `commands/plan.md` и `/diagnose` (или general writing rules в CLAUDE.md) явный checklist пункт: "любой AskUserQuestion → первый вариант ОБЯЗАН содержать '(Recommended)' если у тебя есть мнение"; добавить в /review блокирующую проверку на AskUserQuestion без (Recommended) там где рекомендация очевидна
+Статус: open
 ---
 Gap-ID: G-062
 Дата: 2026-05-29
