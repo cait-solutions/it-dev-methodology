@@ -1,32 +1,32 @@
 {
   "global": {
     "last_sync_vision": {
-      "date": "2026-05-18",
-      "plans_since": 29
+      "date": "2026-06-01",
+      "plans_since": 1
     },
     "last_retro": {
-      "date": "2026-05-27",
-      "plans_since": 6
+      "date": "2026-06-01",
+      "plans_since": 1
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 12
+      "plans_since": 13
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 6
+      "plans_since": 7
     },
     "last_product_vision": {
       "date": "2026-05-27",
-      "plans_since": 7
+      "plans_since": 8
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 10
+      "plans_since": 11
     },
     "last_architecture_audit": {
       "date": "2026-05-27",
-      "plans_since": 6,
+      "plans_since": 7,
       "recommendations": [
         {
           "id": "R-023",
@@ -106,7 +106,7 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-01T00:00:00Z",
-    "task_id": "g069-translit-hybrid-rule",
+    "task_id": "g068-g063-template-propagation-hard-rule",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
@@ -114,6 +114,6 @@
   "last_deploy": {
     "date": "2026-06-01",
     "status": "ok",
-    "phase": "g069-g070-translit-mermaid-v4.48.0"
+    "phase": "g068-g063-template-propagation-v4.49.0"
   }
 }

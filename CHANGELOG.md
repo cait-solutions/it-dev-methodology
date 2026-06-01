@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.49.0 — fix: /code Шаг 4 пункт 11 hard rule + Шаг 7 triggers.json + /review template-drift check (2026-06-01)
+
+**Что добавилось:**
+- `/code` Шаг 4 пункт 11 усилен до ⛔ hard rule: «нет понятия "незначительный" для format changes» — блок при несоответствии templates/*.template.md (closes G-068).
+- `/code` новый Шаг 7 (обязательный финальный): обновление triggers.json после каждого deploy — code_run=true + last_deploy (closes G-063).
+- `/review` новый check «Template-drift»: если PR менял формат артефакта — проверить templates/*.template.md, несоответствие = 🔴 CRITICAL.
+
+**Actions:** нет (behavior change в commands/, не новые файлы).
+
+**Priority:** 🟡 Medium — структурная hygiene, не breaking change.
+
+---
+
 ## v4.47.7 — feat: post-edit-watchdog PostToolUse hook (2026-06-01)
 
 **Что добавилось:**

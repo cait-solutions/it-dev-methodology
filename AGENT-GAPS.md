@@ -58,6 +58,17 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-071
+Дата: 2026-06-01
+Контекст: /deploy — запись в DEVLOG
+Что пропустил: искал DEVLOG.md через Glob в корне it-dev-methodology/ — не нашёл. Сделал вывод что файл отсутствует и предложил создать. На самом деле DEVLOG.md живёт в it-dev-methodology-documentation/ (doc repo). Повторяющийся gap — ранее аналогичные случаи с другими артефактами doc repo.
+Как обнаружено: разработчик указал ("мы его давно ведём")
+Категория: context-gap
+Гипотеза: при поиске файлов агент по умолчанию ищет в активном рабочем репо (it-dev-methodology). Для methodology-platform архитектура two-repo: code в it-dev-methodology, документация/DEVLOG/карты в it-dev-methodology-documentation. Это правило не в CLAUDE.md явно.
+Agent failure mode: context-missed — структура two-repo известна, но не применяется при поиске конкретных файлов
+Potential fix: добавить в CLAUDE.md или команду /deploy явную строку "DEVLOG.md, карты, ADR живут в it-dev-methodology-documentation/ — искать там, не в корне methodology repo"
+Статус: closed (fixed в CLAUDE.md ## Read before work — добавлен explicit two-repo architecture note с полным списком doc-repo артефактов)
+---
 Gap-ID: G-070
 Дата: 2026-06-01
 Контекст: /plan → draft URL генерация
@@ -89,7 +100,7 @@ Gap-ID: G-068
 Гипотеза: при каждом фиксе формата ссылок обновлялись только карты в active repos (methodology + doc), но не шаблоны-источники. Правило "если меняешь формат артефакта — обновить шаблон" не было в checklist
 Agent failure mode: scope-exceeded — фикс применялся к instances без upstream template
 Potential fix: добавить в /code Шаг 4 self-review для methodology задач: "если изменился формат артефакта (карты, ссылки, секции) — проверить соответствующий `templates/*.template.md`"; в /review — sync validators должны включать templates/ в scope проверки
-Статус: open
+Статус: addressed (v4.49.0 — /code Шаг 4 пункт 11 усилен до ⛔ hard rule; /review template-drift check добавлен)
 ---
 Gap-ID: G-067
 Дата: 2026-06-01
@@ -133,7 +144,7 @@ Gap-ID: G-063
 Гипотеза: Шаг 0 выполняется в начале /code и агент считает state-update уже сделанным; финальная запись после деплоя не вынесена в отдельный явный шаг — теряется в потоке Шагов 4-6
 Agent failure mode: prompt-ambiguous
 Potential fix: добавить в /code явный финальный пункт после deploy "обновить triggers.json: code_run=true + last_deploy"
-Статус: open
+Статус: addressed (v4.49.0 — добавлен Шаг 7 «Обновление state» как обязательный финальный шаг /code с ⛔ правилом и explicit JSON snippet)
 
 
 <!-- новые — сверху -->
@@ -150,7 +161,7 @@ Agent failure mode: context-missed
 Potential fix: Путь B переформулировать: если scripts/mermaid-link.py недоступен → запустить py/python3 scripts/mermaid-link.py через Bash без cd (абсолютный путь к скрипту). Если и это заблокировано — показать код диаграммы + явную инструкцию "вставь на mermaid.live вручную" как единственный допустимый fallback. Subagent для pako encoding — запрещён.
 Статус: open
 ---
-Gap-ID: G-063
+Gap-ID: G-072
 Дата: 2026-06-01
 Контекст: /diagnose — повторный сигнал от пользователя: AskUserQuestion popup без (Recommended) на первом варианте
 Что пропустил: при генерации AskUserQuestion вариантов — не добавлял "(Recommended)" к рекомендуемому первому варианту

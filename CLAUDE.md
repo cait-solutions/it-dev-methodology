@@ -10,11 +10,13 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 
 ## Read before work
 
-1. [VISION.md](VISION.md) перед каждым `/plan`
-2. [PRODUCT.md](PRODUCT.md) — что методология обещает консьюмерам
+1. [VISION.md](../it-dev-methodology-documentation/VISION.md) перед каждым `/plan`
+2. [PRODUCT.md](../it-dev-methodology-documentation/PRODUCT.md) — что методология обещает консьюмерам
 3. [SYSTEM-MAP.md](../it-dev-methodology-documentation/docs/architecture/SYSTEM-MAP.md) — связи компонентов
 4. [USER-MAP.md](../it-dev-methodology-documentation/docs/product/USER-MAP.md) — пользовательские потоки и capabilities
 5. [ARTIFACT-MAP.md](../it-dev-methodology-documentation/docs/product/ARTIFACT-MAP.md) — артефакты и их владельцы
+
+> **Two-repo architecture:** `it-dev-methodology/` = код (commands/, templates/, skills/, scripts/). `it-dev-methodology-documentation/` = документация (VISION.md, PRODUCT.md, DEVLOG.md, ROADMAP.md, IDEAS.md, AGENT-GAPS.md, PRODUCT-GAPS.md, docs/architecture/, docs/product/, docs/adr/). При поиске любого из этих файлов — искать в `../it-dev-methodology-documentation/`, НЕ в корне methodology repo. Closes G-071.
 
 ---
 
