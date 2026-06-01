@@ -81,9 +81,9 @@ For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLA
 
 ## Maps Standard Rule
 
-Единый стандарт для трёх карт проекта. Основан на C4 Model, Arc42, Living Documentation.
+Единый стандарт для трёх основных карт проекта. Основан на **arc42 multi-viewpoint** + Living Documentation + **C4-inspired дисциплина диаграмм** (нотация, не таксономия — три карты это ортогональные viewpoints, не C4 zoom levels).
 
-**Три карты — три разные плоскости:**
+**Три карты — три разные плоскости (arc42 viewpoints):**
 - **SYSTEM-MAP** — как устроена система (компоненты, слои, связи)
 - **USER-MAP** — что умеет пользователь (акторы, flows, capabilities)
 - **ARTIFACT-MAP** — кто что обновляет и когда (lifecycle артефактов)

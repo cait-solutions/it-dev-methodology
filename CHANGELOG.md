@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.56.0 — fix: Maps Standard — C4→arc42 claim correction + 6-views рамка + ADR-catalog (2026-06-01)
+
+**Что (PR G из методологического аудита — точность модели карт):**
+- **C4 claim исправлен:** CLAUDE.md + 2 templates заявляли «основан на C4 Model» — неверно. Три карты это **arc42 viewpoints** (ортогональные плоскости), не C4 zoom levels (один axis granularity). C4 оставлен только для дисциплины диаграмм. Источник: methodology-audit (4+1/arc42 mapping).
+- **«3 карты» → «6 views» рамка:** living maps (SYSTEM/USER/ARTIFACT) + supporting views (data-map / ADR catalog / threat-model) явно названы в CLAUDE.md Maps Standard.
+- **Слепое пятно задокументировано:** Temporal/Sequence viewpoint (порядок команд + хуков) — отсутствует, ordering-баги невидимы. Кандидат на 7-й view, активируется при первом ordering-инциденте (anti-over-engineering).
+- **ADR-catalog drift исправлен** (doc-repo): каталог содержал 1 из 3 ADR. Добавлены ADR-002 (branching) + ADR-003 (secrets).
+
+**Actions:** нет (документация/claim). `bash scripts/sync-methodology.sh .` для обновлённого CLAUDE template.
+
+**Priority:** 🟢 Low — точность стандарта (consumer думал что следует C4, а это arc42).
+
+---
+
 ## v4.55.0 — feat: validate-links.sh — Docs-as-Code internal link-check (2026-06-01)
 
 **Что добавилось (PR B из методологического аудита):**
