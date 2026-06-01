@@ -63,6 +63,19 @@ marker_file: .claude/.version   # marker that a sibling folder is methodology co
 
 ---
 
+## Post-edit hooks
+
+```yaml
+rules:
+  - pattern: "```mermaid"
+    script: scripts/update-mermaid-links.sh
+    file_arg: true
+```
+
+Dogfood: methodology platform использует тот же hook что и consumers.
+
+---
+
 ## Remotes
 
 ```yaml
