@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.57.0 — security: close confirmed git-https token-leak vector (S0-S3) (2026-06-01)
+
+**Что (security-аудит → 4 структурных фикса; подтверждённая утечка из transcript):**
+- **S1 (G-077):** `bash_protect.py` новые `SECRET_EXFIL_PATTERNS` — блокирует (a) token-in-URL `https://user:TOKEN@host` (`git remote set-url`/`push`/`clone`), (b) `.env` reads через cat/grep/sed/awk/head/tail/... Закрывает confirmed leak-вектор (агент читал токен → вставлял в git URL → transcript). **11/11 adversarial-тестов**: 5 leak блокируются, 6 легитимных (вкл. `grep ".env" file`, `cat .env.example`, `git push`) разрешены.
+- **S2 (G-078):** `.env` deny-правила добавлены в methodology own `.claude/settings.json` (раньше были только в template — dogfood-нарушение, methodology была уязвима).
+- **S3 (G-079):** `deploy-push.sh` auto-wire credential helper перед push (idempotent: skip если gh уже настроен / SSH / helper отсутствует). Агент делает plain `git push` — токен via helper stdin, НЕ argv.
+- **S0 (G-077):** `git-credential-from-env.sh` routing по host (service_url + service-field token match), НЕ по имени ключа. User-defined имена (напр. `GITHUB_AI_ASSISTANT_DOCUMENTATION_FULL`) работают без переименования в `GITHUB_PAT`. Actionable stderr hint вместо молчаливого падения.
+
+**Actions для consumers:**
+```bash
+bash scripts/sync-methodology.sh .   # получить bash_protect.py + git-credential-from-env.sh + deploy-push.sh
+# .env deny-правила в settings.json применяются при init; existing consumers — sync обновит hook (L4),
+# для L5 denies проверь .claude/settings.json permissions.deny содержит .env правила.
+```
+
+**Принцип (industry):** агент структурно НЕ может назвать значение секрета в команде — auth через side-channel (helper stdin / ssh-agent) который агент не читает. Detection — последняя линия, не первая.
+
+**Priority:** 🔴 High — закрывает подтверждённую (не теоретическую) утечку токенов в transcript.
+
+---
+
 ## v4.56.0 — fix: Maps Standard — C4→arc42 claim correction + 6-views рамка + ADR-catalog (2026-06-01)
 
 **Что (PR G из методологического аудита — точность модели карт):**

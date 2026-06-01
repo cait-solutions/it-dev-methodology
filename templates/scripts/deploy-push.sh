@@ -33,31 +33,71 @@ MODE=$(_get_field "mode" "solo")
 AGENT_BRANCH=$(_get_field "agent_branch" "ai-dev")
 PRODUCTION_BRANCH=$(_get_field "production_branch" "main")
 INTEGRATION_BRANCH=$(_get_field "integration_branch" "$PRODUCTION_BRANCH")
+PR_TOOL=$(_get_field "pr_tool" "manual")
 
 echo "Branching config (from $CONFIG):"
 echo "  mode:               $MODE"
 echo "  agent_branch:       $AGENT_BRANCH"
 echo "  production_branch:  $PRODUCTION_BRANCH"
 [[ "$MODE" == "team" ]] && echo "  integration_branch: $INTEGRATION_BRANCH"
+[[ "$MODE" == "team" ]] && echo "  pr_tool:            $PR_TOOL"
 echo ""
 
-# Authentication note:
-# This script uses plain `git push` — git itself handles credentials via the
-# configured credential helper. For HTTPS remotes, recommended setup (v4.34.0+):
-#   git config credential.<remote-host>.helper \
-#     "!bash $(pwd)/scripts/git-credential-from-env.sh"
-# This way the GITHUB_PAT (or analog) is read from .env without the agent
-# ever seeing the value. See skills/secrets-management/SKILL.md for details.
+# ---------------------------------------------------------------------------
+# Auto-wire credential helper (S3 / closes G-079: orphaned helper).
+# For HTTPS remotes, configure git-credential-from-env.sh as the credential
+# helper BEFORE push, so `git push` authenticates via helper stdin — the token
+# NEVER appears in any command argv (the confirmed leak vector). Idempotent:
+# skips if already configured, if remote is SSH (no token needed), or if the
+# helper script is absent. This removes the agent's incentive to fall back to
+# `git remote set-url https://user:TOKEN@...` when auth is needed.
+# ---------------------------------------------------------------------------
+_wire_credential_helper() {
+  local remote_url helper_path host
+  remote_url=$(git remote get-url origin 2>/dev/null || true)
+  # SSH remote → no token, no helper needed.
+  case "$remote_url" in
+    https://*) : ;;                       # proceed
+    *) return 0 ;;                        # ssh/git/empty → nothing to wire
+  esac
+  # Locate the helper script relative to THIS script (works in code or doc repo).
+  helper_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/git-credential-from-env.sh"
+  [[ -f "$helper_path" ]] || return 0     # helper absent → leave git defaults
+  # Extract host: https://host/... → host
+  host="${remote_url#https://}"; host="${host%%/*}"; host="${host%%:*}"
+  [[ -n "$host" ]] || return 0
+  # Already configured for this host? (idempotent)
+  if git config --get "credential.https://${host}.helper" >/dev/null 2>&1; then
+    return 0
+  fi
+  git config "credential.https://${host}.helper" "!bash ${helper_path}"
+  echo "🔑 credential helper wired for ${host} (token via helper stdin, not argv)"
+}
+_wire_credential_helper
 
 if [[ "$MODE" == "team" ]]; then
   echo "▶ Team mode → git push origin ${AGENT_BRANCH}:${AGENT_BRANCH}"
   git push origin "${AGENT_BRANCH}:${AGENT_BRANCH}"
   echo ""
-  echo "✅ Pushed. Create PR: ${AGENT_BRANCH} → ${INTEGRATION_BRANCH}"
-  REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
-  if [[ -n "$REMOTE_URL" ]]; then
-    _base="${REMOTE_URL%.git}"
-    echo "   GitHub: ${_base}/compare/${INTEGRATION_BRANCH}...${AGENT_BRANCH}?expand=1"
+
+  if [[ "$PR_TOOL" == "auto-merge" ]]; then
+    PR_TITLE=$(git log -1 --format="%s")
+    echo "▶ auto-merge → gh pr create + merge"
+    PR_URL=$(gh pr create \
+      --base "$INTEGRATION_BRANCH" \
+      --head "$AGENT_BRANCH" \
+      --title "$PR_TITLE" \
+      --body "Auto-deploy via deploy-push.sh")
+    echo "  PR: $PR_URL"
+    gh pr merge "$PR_URL" --merge --delete-branch=false
+    echo "✅ Merged: ${AGENT_BRANCH} → ${INTEGRATION_BRANCH}"
+  else
+    echo "✅ Pushed. Create PR: ${AGENT_BRANCH} → ${INTEGRATION_BRANCH}"
+    REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
+    if [[ -n "$REMOTE_URL" ]]; then
+      _base="${REMOTE_URL%.git}"
+      echo "   GitHub: ${_base}/compare/${INTEGRATION_BRANCH}...${AGENT_BRANCH}?expand=1"
+    fi
   fi
 else
   echo "▶ Solo mode → git push origin ${AGENT_BRANCH}:${PRODUCTION_BRANCH}"

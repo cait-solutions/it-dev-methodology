@@ -58,6 +58,39 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-079
+Дата: 2026-06-01
+Контекст: /secrets security-аудит — credential helper orphaned
+Что пропустил: scripts/git-credential-from-env.sh (правильный механизм git-https auth без токена в argv) существует, но НЕ был auto-wired как git credential.helper. Агент при необходимости push делал fallback на token-in-URL. Helper «существовал но не подключён» = orphaned.
+Как обнаружено: security-аудит secrets-системы (пользователь: «агенты читают токены при git https»)
+Категория: completeness-gap
+Гипотеза: helper написан (v4.41.0) и задокументирован как MANUAL setup в SKILL.md, но deploy-push.sh не конфигурировал его автоматически — оставался декоративным. Industry (credential-helper protocol): helper должен быть ЕДИНСТВЕННЫМ auth-путём, иначе агент находит обход.
+Agent failure mode: scope-exceeded — механизм создан, но не сделан default/обязательным путём
+Potential fix: deploy-push.sh auto-wire credential helper перед push (idempotent: skip если уже настроен напр. gh, skip для SSH, skip если helper отсутствует)
+Статус: addressed (v4.57.0 — S3: _wire_credential_helper в deploy-push.sh)
+---
+Gap-ID: G-078
+Дата: 2026-06-01
+Контекст: /secrets security-аудит — .env reads не заблокированы + assumption-gap
+Что пропустил: bash_protect.py header (строка 30) заявлял «settings.json Bash(cat .env*) deny already catches the common cases» — но в actual .claude/settings.json методологии этих deny-правил НЕ БЫЛО (только в template). Methodology dogfood-нарушение: сама уязвима к grep/cat/sed .env хотя consumers защищены. assumption-vs-reality.
+Как обнаружено: security-аудит — subagent нашёл противоречие header vs actual settings.json
+Категория: assumption-gap
+Гипотеза: при добавлении .env denies в template (consumer protection) methodology own settings.json не синхронизировали — предположили что они там есть (как в template). Тот же класс что G-014 (methodology не применяет к себе свою защиту).
+Agent failure mode: context-missed — template ≠ actual, не проверено эмпирически
+Potential fix: (S1) bash_protect.py SECRET_EXFIL_PATTERNS блокирует .env reads на L4 для всех; (S2) добавить .env denies в methodology own .claude/settings.json (L5, dogfood)
+Статус: addressed (v4.57.0 — S1 bash_protect .env patterns + S2 settings.json denies)
+---
+Gap-ID: G-077
+Дата: 2026-06-01
+Контекст: /secrets security-аудит — ПОДТВЕРЖДЁННЫЙ git-https token leak (скриншот пользователя)
+Что пропустил: агент при git push https, когда with-secret.sh упал (non-TTY), сделал fallback: grep токен из .env → git remote set-url origin https://user:TOKEN@github.com/... → токен в bash argv → transcript → API. bash_protect.py НЕ блокировал token-in-URL (между категориями: не env-dump, не destructive). Это РЕАЛЬНАЯ утечка, не теория — пользователь показал скриншот.
+Как обнаружено: пользователь явно — скриншот где агент признал «читал токен из .env через grep, подставил в URL»
+Категория: completeness-gap
+Гипотеза: bash_protect ENV_DUMP_PATTERNS покрывал env/printenv/echo $VAR/source, но token-in-URL (https://user:pass@host) — ортогональный класс команд, не покрыт. Industry: prompt-rule «не клади токен в URL» недостаточно (GitGuardian: Claude-co-authored commits текут 2×) — нужен structural L5 block.
+Agent failure mode: prompt-ambiguous — правило было L1 (документация SKILL.md), обходится под давлением (non-TTY → manual fallback)
+Potential fix: (S1) bash_protect SECRET_EXFIL_PATTERNS — block https://user:pass@ в argv (token-in-URL) + .env reads; (S3) credential helper как safe-путь (агент делает plain git push, токен via helper stdin не argv); принцип «агент структурно не может назвать секрет»
+Статус: addressed (v4.57.0 — S1 token-in-URL block 11/11 adversarial tests + S3 credential helper auto-wire)
+---
 Gap-ID: G-076
 Дата: 2026-06-01
 Контекст: методологический аудит — эмпирическая проверка реального consumer (erp-documentantion, single-repo)
