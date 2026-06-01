@@ -175,7 +175,8 @@
 1. Grep по `docs/**/*.md` — найти Mermaid блоки (между ` ```mermaid ` и ` ``` `)
 2. Sample 3-5 blocks (если их > 5) или все (если ≤ 5):
    - Проверить labels nodes/edges на полностью EN content (кроме emoji / EN identifiers типа имён файлов)
-   - Antipattern: `"Hooks Layer"`, `"reads config"`, `"writes state"`, `"invokes if X"`
+   - Antipattern (EN-only): `"Hooks Layer"`, `"reads config"`, `"writes state"`, `"invokes if X"`
+   - Antipattern (транслитерация): `"Stanet"`, `"Zapuskaet"`, `"dobavlen"` — русские слова латиницей НЕ являются RU
 3. Output:
    - Найдены файлы с EN-only labels → 🟢 **Low severity** — N файлов могут требовать hybrid refactor (cosmetic, не блокирует)
    - Все labels hybrid → 🟢 OK

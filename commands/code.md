@@ -243,6 +243,7 @@
      - Имена файлов / команд / технических identifiers → EN (`CLAUDE.local.md`, `/plan`, `auto-update-watchdog.py`)
      - Названия слоёв / описания поведения / глаголы действий → RU (`Слой хуков`, `читает интервал`, `пишет last_pull`, `вызывает при bootstrap`)
      - ❌ Anti-pattern: `"Hooks Layer"`, `"reads to detect"`, `"writes last_pull"`, `"invokes if bootstrap"` — всё EN, нарушает hybrid правило
+     - ❌ Anti-pattern (транслитерация): `"Stanet"`, `"Zapuskaet skript"`, `"dobavlen hook"` — русские слова латиницей НЕ являются RU. Только настоящая кириллица. (НЕ относится к техническим identifiers: `hooks/`, `/plan`, `trigger`)
      - ✅ Pattern: `"🪝 Слой хуков"`, `"читает чтобы определить bootstrap"`, `"пишет last_pull"`, `"вызывает при bootstrap"`
      - Если хоть один label полностью на EN (кроме технических identifiers) → исправить **до** запуска `update-mermaid-links.sh` (закрывает G-049 класс «agent ignores hybrid language rule when generating Mermaid»)
   5. Запустить `bash scripts/update-mermaid-links.sh <file>` → ссылка обновится автоматически
