@@ -10,8 +10,7 @@ ARTIFACT-MAP отвечает на вопрос "кто владеет этим 
 
 ## Обзор: командные группы → артефакты
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/ARTIFACT-MAP.md` — извлекает первый mermaid-блок)_
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
 graph LR

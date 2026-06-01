@@ -61,8 +61,7 @@ actor → trigger → entity/flow → outcome
 
 ### Variant A — Simple
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/USER-MAP.md`)_
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
 graph TD
@@ -100,8 +99,7 @@ graph TD
 
 ### Variant B — Medium (несколько actors)
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/USER-MAP.md`)_
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
 graph TD
@@ -135,8 +133,7 @@ graph TD
 
 ### Variant C — Complex (multi-domain)
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py docs/product/USER-MAP.md`)_
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
 graph TD
@@ -193,8 +190,7 @@ Scenario 3 — [TODO: название]:
 
 > _(Переименуй секцию если продукт не использует slash-команды: "Quick Actions", "Key Operations" и т.п.)_
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py --all docs/product/USER-MAP.md` → второй URL)_
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
 graph LR

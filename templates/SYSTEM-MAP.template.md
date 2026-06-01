@@ -24,8 +24,7 @@
 
 ## Граф системы
 
-> 🔗 [Открыть в Mermaid Live](<url>)
-> _(обновить ссылку: `py scripts/mermaid-link.py docs/architecture/SYSTEM-MAP.md`)_
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
 graph TB

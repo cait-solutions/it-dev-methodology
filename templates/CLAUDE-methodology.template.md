@@ -136,7 +136,7 @@ Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 
 При каждой записи или обновлении ` ```mermaid ` блока в артефакте — обновить ссылку над блоком:
 ```
-> 🔗 [Открыть в Mermaid Live](<url>)
+_(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 > _(обновить ссылку: `py scripts/mermaid-link.py <file>`)_
 ```
 Сгенерировать URL: `py scripts/mermaid-link.py <file>` (скрипт в `scripts/`). Ссылка — дополнение к коду диаграммы, не замена. Self-hosted: изменить `BASE_URL` в `scripts/mermaid-link.py`.
