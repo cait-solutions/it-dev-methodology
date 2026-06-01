@@ -4,6 +4,31 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.45.0 — feat: 8 новых marketing skills (2026-06-01)
+
+**Что добавилось:** 8 новых skills в слой `skills/` вдохновлённых репозиторием coreyhaines31/marketingskills:
+- `product-marketing` — foundation skill: маркетинговый контекст продукта (читается всеми остальными)
+- `copywriting` — маркетинговые тексты для страниц
+- `content-strategy` — контент-стратегия и планирование
+- `pricing` — стратегия ценообразования и монетизации
+- `launch` — запуск продукта и фич (фреймворк ORB + 5 фаз)
+- `emails` — email-последовательности и lifecycle emails
+- `cro` — оптимизация конверсии
+- `seo-audit` — SEO аудит и диагностика
+
+Все скиллы адаптированы под нашу систему: читают `MARKETING.md` вместо `.agents/product-marketing.md`, документация на русском, artефакт — `MARKETING.md`. `MARKETING.template.md` расширен секцией `## Product Context`.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .   # получить новые skills
+```
+
+**Доступность:** Все проекты с `--with-marketing` или после `sync-methodology.sh` автоматически получают новые скиллы. `product-marketing` — новый foundation skill (запускать первым).
+
+**Priority:** 🟢 Optional (новые capabilities, не breaking)
+
+---
+
 ## v4.44.6 — G-062: закрыты два leak-вектора через bash_protect.py (2026-06-01)
 
 **Что добавилось:** два новых блокирующих паттерна в `bash_protect.py`:
