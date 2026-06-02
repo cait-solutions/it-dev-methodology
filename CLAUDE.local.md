@@ -18,9 +18,11 @@ agent_branch: ai-dev
 integration_branch: main
 pr_tool: auto-merge
 auto_deploy: true
+worktree_isolation: off             # single-owner — off; flip to auto if running concurrent sessions on this repo
+branch_namespace: ai-dev/<task>
 ```
 
-Dog-fooding: methodology itself uses team-mode to validate the branching contract. Since it is a single-owner project, `integration_branch: main` (no separate dev branch). `pr_tool: auto-merge` — `deploy-push.sh` creates PR and merges immediately via `gh`. `auto_deploy: true` — agent runs /deploy automatically after /code (Lite) or confirmed /review without separate prompt.
+Dog-fooding: methodology itself uses team-mode to validate the branching contract. Since it is a single-owner project, `integration_branch: main` (no separate dev branch). `pr_tool: auto-merge` — `deploy-push.sh` creates PR and merges immediately via `gh`. `auto_deploy: true` — agent runs /deploy automatically after /code (Lite) or confirmed /review without separate prompt. `worktree_isolation: off` — single-owner single-session; the field is present so methodology dog-foods the v4.59.0 isolation contract (deploy-push.sh reads it). The G-052 incident (parallel session collision) is exactly why `auto` exists for multi-session consumers.
 
 ---
 

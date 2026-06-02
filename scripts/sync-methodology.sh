@@ -578,6 +578,7 @@ else
   check_artifact_subst "HYPOTHESES.md"                    "templates/HYPOTHESES.template.md"          "$_pname"
   check_artifact_subst "OPEN-QUESTIONS.md"                "templates/OPEN-QUESTIONS.template.md"      "$_pname"
   check_artifact_subst "README.md"                        "templates/README.template.md"              "$_pname"
+  check_artifact_subst "AGENTS.md"                        "templates/AGENTS.md.template"              "$_pname"
   check_artifact_subst "AGENT-GAPS.md"                    "templates/AGENT-GAPS.md.template"          "$_pname"
   check_artifact_subst "docs/architecture/SYSTEM-MAP.md"  "templates/SYSTEM-MAP.template.md"          "$_pname"
   check_artifact_subst "docs/product/USER-MAP.md"         "templates/USER-MAP.template.md"            "$_pname"

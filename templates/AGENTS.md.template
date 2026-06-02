@@ -1,0 +1,85 @@
+# AGENTS.md — {{Project Name}}
+
+**Task-ownership coordination for concurrent AI sessions.** Read this at the start of every session **before editing any file**.
+
+> This file is the **coordination layer** for parallel work. It is *not* methodology canon (that's CLAUDE.md) and *not* a runtime artifact — it is an ephemeral, human-edited board of "who owns what right now." When a task is done and merged, remove its claim.
+
+> **When you need this:** only when `worktree_isolation: auto` (multiple sessions or multiple developers on this repo — see `CLAUDE.local.md ## Branching`). For a single developer running one session at a time, this file stays empty and can be ignored.
+
+---
+
+## Why (the collision class)
+
+When N developers × M sessions touch one repo, two things break:
+
+1. **Silent branch swap** — two sessions in the *same working directory*: one runs `git checkout`, the other's files change underneath it without warning. Fix attempts then corrupt state.
+2. **Same-file overwrite** — two sessions edit the same file on different branches → merge conflict on PR (industry measure: ~27.67% of AI-agent PRs conflict).
+
+This methodology solves it with **four layers** (see [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) § Concurrent-Session Isolation):
+
+| Layer | What | Prevents |
+|---|---|---|
+| 1. **Isolation** | git worktree per session (Claude Code `-w` / `isolation: worktree`) | *silent* overwrite |
+| 2. **Ownership** | this file — one file, one owner | the same-file conflict *before it happens* |
+| 3. **Staging** | worktree + branch + PR (nothing reaches main without merge) | uncorrected mutations landing |
+| 4. **Merge-gate** | `team`-mode PR review | whatever 1-3 missed — surfaces as a *visible* conflict |
+
+**Worktrees make conflicts honest** (visible on PR) instead of silent (lost work). **This file (encapsulation) is what actually prevents the conflict** by not handing overlapping file-scopes to concurrent sessions.
+
+---
+
+## How to start a concurrent session (the protocol)
+
+**Ordering invariant — claim BEFORE you edit:**
+
+```
+1. Create an isolated worktree on a namespaced branch:
+     git worktree add .claude/worktrees/<task> -b ai-dev/<task>
+     # or launch Claude Code with: claude -w <task>
+2. Read the Active claims table below.
+3. If your task's file-scope OVERLAPS an active claim → STOP. Coordinate
+   (pick a non-overlapping scope, or wait for that claim to clear). Do NOT edit.
+4. If no overlap → add YOUR claim row before the first edit.
+5. Work. On merge, REMOVE your claim row.
+```
+
+A session whose scope overlaps a claimed area and edits anyway = the collision this file exists to prevent.
+
+### Large repos — constrain the checkout (optional)
+
+Each worktree is a full checkout by default. For a large repo, scope it to the files your task touches:
+
+```bash
+git worktree add .claude/worktrees/<task> -b ai-dev/<task>
+cd .claude/worktrees/<task>
+git sparse-checkout set <module-dir-1> <module-dir-2>
+```
+
+---
+
+## Module boundaries (encapsulation)
+
+Decompose tasks along **module boundaries** so concurrent scopes don't overlap. If your project already declares boundaries in `.claude/rules/*.md`, reference them here rather than duplicating.
+
+| Module / area | Path(s) | Notes |
+|---|---|---|
+| `<module-a>` | `<path/to/a/**>` | |
+| `<module-b>` | `<path/to/b/**>` | |
+
+---
+
+## Active claims
+
+> One row per in-flight task. Remove the row when the task is merged. Empty table = no concurrent work in progress.
+
+| Task | Owner | Branch | File-scope (paths) | Claimed (date) |
+|---|---|---|---|---|
+| | | | | |
+
+---
+
+## Notes
+
+- **Shared state hazards** (not file-scoped): `VERSION`, lockfiles (`package-lock.json`, `poetry.lock`), `triggers.json`, migration sequence files. Two sessions bumping these race even in separate worktrees → `/deploy` guards `VERSION` with `git fetch && git diff origin/<branch>`. Coordinate other shared files via a claim row covering them.
+- **Platform:** `git worktree` needs git ≥ 2.5; verify on Git Bash/Windows before relying on `auto` (see `CLAUDE.local.md ## Branching`).
+- This file is **project-owned** — sync adds it if missing but never overwrites your claims.

@@ -50,13 +50,23 @@
      - `agent_branch` — единственный enforced source of truth для AI-ветки. Default: `ai-dev`. Универсально для всех типов репо (различение doc-репо vs code-репо обеспечивается изоляцией репозитория).
      - `production_branch` (default: `main`)
      - `integration_branch` (solo: = `production_branch`; team: из конфига)
+     - `worktree_isolation` (default: `off`) — если `auto`, допустимы namespaced ветки (см. ниже)
    - Текущая ветка = `agent_branch` → ✅ продолжить
+   - **Текущая ветка = `{agent_branch}/<...>` (namespaced, напр. `ai-dev/checkout-fix`)** → ✅ продолжить если `worktree_isolation: auto`. Это concurrent-session ветка из изолированного worktree. Если `worktree_isolation: off` а ветка namespaced → 🟡 warning "namespaced branch but worktree_isolation is off — set it to auto in CLAUDE.local.md if running concurrent sessions" + продолжить.
    - Текущая ветка = `production_branch`, `master`, `develop`, `staging`, `integration_branch` → ⛔ СТОП
-   - Сообщить: "AI-агенты коммитят только в `{agent_branch}`. Переключись: `git checkout {agent_branch}` или `git checkout -b {agent_branch}`"
+   - Сообщить: "AI-агенты коммитят только в `{agent_branch}` (или `{agent_branch}/<task>` при worktree_isolation: auto). Переключись: `git checkout {agent_branch}` или `git checkout -b {agent_branch}`"
    - `CLAUDE.local.md` отсутствует → ⛔ "CLAUDE.local.md not found — run new-project-init.sh first"
    - `agent_branch` отсутствует в `## Branching` → fallback на `ai-dev` + 🟡 warning "agent_branch missing in CLAUDE.local.md — add it (see CLAUDE_LOCAL.template.md)."
    - Явное разрешение разработчика → продолжить, записать `[branch-override]` в DEVLOG
    - Git не инициализирован → пропустить проверку
+5.5. **Concurrent-session ownership check** (только если `worktree_isolation: auto`) — closes P-001 Layer 2 (encapsulation):
+   - Если `worktree_isolation: off` → пропустить тихо (single-session проект, AGENTS.md не нужен).
+   - Если `auto` И `AGENTS.md` существует → прочитать секцию `## Active claims`:
+     - Определить file-scope текущей задачи (пути которые план будет менять — Шаг 1 Затронутые файлы).
+     - Сравнить с claimed file-scope других строк (другие активные сессии/разработчики).
+     - **Пересечение найдено** → ⛔ СТОП: "File-scope текущей задачи (`<paths>`) пересекается с активным claim '<task>' (owner: <owner>). Layer 2 (one-file-one-owner) нарушится. Варианты: (a) выбрать непересекающийся scope, (b) дождаться очистки claim, (c) скоординироваться с владельцем claim. НЕ редактировать до разрешения."
+     - **Нет пересечения** → добавить **свою** claim-строку в `## Active claims` (Task / Owner / Branch / File-scope / дата) **до первой правки файла** (ordering invariant: claim ДО edit). На merge — строка убирается (в /deploy).
+   - `auto` но `AGENTS.md` отсутствует → 🟡 warning "worktree_isolation: auto but AGENTS.md missing — run sync-methodology.sh to add it" + продолжить (не блок).
 6. **Repo ownership check:** перед каждым коммитом убедиться что текущий repo = target repo из задания (обычно it-dev-methodology). Консьюмер-репо (erp-*, ai-assistant-*, etc.) = **read-only** для анализа; их артефакты (AGENT-GAPS.md, DEVLOG.md) обновляет владелец проекта вручную — агент методологии туда не коммитит. (closes G-032)
 
 ---
