@@ -74,23 +74,31 @@
 
 ## Шаг 1 — Pre-flight check
 
-- [ ] Текущая ветка = `agent_branch` из `CLAUDE.local.md ## Branching` (default: `ai-dev`) — см. Шаг 1.5 для деталей и исключений
+- [ ] Текущая ветка = `agent_branch` ИЛИ `{agent_branch}/<task>` (namespaced при `worktree_isolation: auto`) из `CLAUDE.local.md ## Branching` (default: `ai-dev`) — см. Шаг 1.5 для деталей и исключений
 - [ ] Все изменения закоммичены
 - [ ] Self-review пройден
 - [ ] Tests зелёные
 - [ ] SYSTEM-MAP / data-map / ADR обновлены если применимо
 - [ ] Если коммит затрагивает ARTIFACT-MAP → `bash scripts/validate-artifact-map.sh` прошёл (или кандидаты рассмотрены вручную)
+- [ ] **Shared-state race guard** (closes G-052) — если деплой меняет файлы которые другие сессии тоже могут менять одновременно (`VERSION`, lockfiles, `triggers.json`, migration sequence): прежде чем финализировать bump/коммит —
+  ```bash
+  git fetch origin {current_branch}
+  git diff origin/{current_branch} -- VERSION   # и другие shared-state файлы
+  ```
+  Если diff ≠ 0 (remote опередил локальный) → ⛔ СТОП: другая сессия/разработчик изменил shared-state. `git rebase origin/{current_branch}`, перечитать значение (напр. VERSION), пересчитать bump, затем продолжить. Не перезаписывать чужой bump.
+- [ ] **Concurrent-session claim cleanup** (если `worktree_isolation: auto` И `AGENTS.md` существует): после merge этой задачи — убрать свою строку из `AGENTS.md ## Active claims` (claim жил от Шага 0 /code до merge; теперь scope свободен).
 - [ ] Remote URL: прочитать `origin_url` из `CLAUDE.local.md ## Remotes` (если секция есть) → сравнить с `git remote get-url origin` → если расходятся: `git remote set-url origin <origin_url>` до push
 
 ---
 
 ## Шаг 1.5 — Branch tracing (F5: AI-automated deploy clarity)
 
-**Принцип:** Deploy через команду `/deploy` выполняется на ветке `agent_branch` (default `ai-dev`) чтобы было явно видно что это agent-automated, не manual human work.
+**Принцип:** Deploy через команду `/deploy` выполняется на ветке `agent_branch` (default `ai-dev`) или namespaced `{agent_branch}/<task>` (при `worktree_isolation: auto`) чтобы было явно видно что это agent-automated, не manual human work.
 
-- [ ] Прочитать `branching.mode` из `CLAUDE.local.md` (default: `solo`)
-- [ ] Текущая ветка = `agent_branch` (из конфига или default `ai-dev`)?
-- [ ] Если нет → checkout: `git checkout {agent_branch}` или `git checkout -b {agent_branch} origin/{production_branch}`
+- [ ] Прочитать `branching.mode` (default: `solo`) и `worktree_isolation` (default: `off`) из `CLAUDE.local.md`
+- [ ] Определить текущую ветку: `BR=$(git branch --show-current)`. Деплоим **текущую** ветку, не хардкод `agent_branch`.
+  - `worktree_isolation: off` → ожидается `BR == agent_branch`. Если нет → checkout: `git checkout {agent_branch}` или `git checkout -b {agent_branch} origin/{production_branch}`
+  - `worktree_isolation: auto` → допустимо `BR == agent_branch` ИЛИ `BR == {agent_branch}/<task>`. Деплоить `BR` как есть (мы в изолированном worktree этой задачи). НЕ делать checkout на общий `agent_branch` — это другой worktree.
 - [ ] Если ветка diverged → rebase:
   - **solo:** `git rebase origin/{production_branch}`
   - **team:** `git rebase origin/{integration_branch}`
@@ -135,21 +143,21 @@ bash scripts/deploy-push.sh
 ```
 Скрипт читает mode из CLAUDE.local.md и запускает правильную команду. Вывод покажет mode, ветку и target.
 
-**Вручную (если скрипта нет) — используй значение mode из Шага 3.0:**
+**Вручную (если скрипта нет) — используй значение mode из Шага 3.0. `{branch}` = текущая ветка (`git branch --show-current`); при `worktree_isolation: auto` это namespaced `{agent_branch}/<task>`, иначе `{agent_branch}`:**
 
 `solo` → push напрямую в production:
 ```bash
-git push origin {agent_branch}:{production_branch}
+git push origin {branch}:{production_branch}
 ```
 
-`team` → опубликовать ветку и создать PR:
+`team` → опубликовать ветку и создать PR (PR из текущей ветки в integration):
 ```bash
-git push origin {agent_branch}:{agent_branch}
+git push origin {branch}:{branch}
 ```
-Затем создай PR (подставь значения из `git remote get-url origin`):
-- **GitHub:** `https://github.com/<owner>/<repo>/compare/{integration_branch}...{agent_branch}?expand=1`
-- **GitLab:** `https://<host>/<namespace>/<repo>/-/merge_requests/new?merge_request[source_branch]={agent_branch}&merge_request[target_branch]={integration_branch}`
-- Или через CLI: `gh pr create --base {integration_branch} --head {agent_branch} --title "[ai-dev] <DEVLOG summary>"`
+Затем создай PR (подставь значения из `git remote get-url origin`; `{branch}` = текущая ветка, при auto = `{agent_branch}/<task>`):
+- **GitHub:** `https://github.com/<owner>/<repo>/compare/{integration_branch}...{branch}?expand=1`
+- **GitLab:** `https://<host>/<namespace>/<repo>/-/merge_requests/new?merge_request[source_branch]={branch}&merge_request[target_branch]={integration_branch}`
+- Или через CLI: `gh pr create --base {integration_branch} --head {branch} --title "[ai-dev] <DEVLOG summary>"`
 
 PR title: взять последнюю строку DEVLOG (что: ...). Human reviews → merge в `integration_branch`.
 
@@ -230,7 +238,7 @@ push_token_owner (из CLAUDE.local.md): {push_token_owner или "не указ
 ### Подшаг 1 — Git push verification
 
 - **solo:** `git log -1 --oneline origin/{production_branch}` — последний коммит совпадает с вашим?
-- **team:** `git log -1 --oneline origin/{agent_branch}` — `agent_branch` опубликован?
+- **team:** `git log -1 --oneline origin/{branch}` — опубликована текущая ветка (`{agent_branch}` или namespaced `{agent_branch}/<task>` при auto)?
 
 Если ДА → ✅ push succeeded
 Если НЕТ → ⚠️ push не прошёл:

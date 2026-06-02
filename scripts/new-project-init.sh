@@ -16,6 +16,7 @@
 #   .claude/{commands,agents,rules,state,hooks}/, .claude/.version
 #   .claude/rules/README.md (template for tech stack rules)
 #   README.md (workspace setup + links to SYSTEM-MAP/USER-MAP)
+#   AGENTS.md (concurrent-session task-ownership coordination)
 #   CLAUDE.md, CLAUDE_LONG.md, PRODUCT.md, VISION.md
 #   docs/architecture/SYSTEM-MAP.md, docs/product/{USER-MAP,ARTIFACT-MAP}.md
 #   docs/vision/{AGENT_VISION,LONG_VISION_v1}.md
@@ -247,6 +248,7 @@ copy_with_subst() {
 # ---------------------------------------------------------------------------
 echo "→ core artifacts/"
 copy_with_subst "$METHODOLOGY_DIR/templates/README.template.md"          "$TARGET_DIR/README.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/AGENTS.md.template"          "$TARGET_DIR/AGENTS.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE.template.md"          "$TARGET_DIR/CLAUDE.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LOCAL.template.md"    "$TARGET_DIR/CLAUDE.local.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/CLAUDE_LONG.template.md"     "$TARGET_DIR/CLAUDE_LONG.md"

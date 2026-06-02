@@ -80,18 +80,26 @@ Details: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md#реальные-у
 ## Branching
 
 ```yaml
-mode: solo                          # solo | team
+mode: solo                          # solo | team  — merge-gate axis
 production_branch: main             # protected — agent never commits here directly
 agent_branch: ai-dev                # AI branch (single source of truth, enforced by /code and /deploy).
                                     # Applies to all repo types — doc-repos and code-repos use the same name.
                                     # Differentiation comes from repo isolation, not branch naming.
+worktree_isolation: off             # off (default) | auto  — isolation axis (orthogonal to mode)
+branch_namespace: ai-dev/<task>     # branch per concurrent session when worktree_isolation: auto
+                                    # collaborative (recommended); ai-dev/<username>/<task> for per-dev attribution
 ```
 
 - **solo** (default): agent pushes `{agent_branch} → production_branch` directly. For single-owner projects.
 - **team**: agent pushes `{agent_branch}` to remote, `/deploy` outputs PR creation URL. Human reviews and merges.
 
 Switch to `team` when the project has >1 developer or requires a review gate.
-See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) for rationale.
+
+**Concurrent sessions (isolation axis — orthogonal to mode):**
+- **`worktree_isolation: off`** (default): single working tree. Safe for one developer, one session at a time. No change vs prior behavior.
+- **`worktree_isolation: auto`**: enable when running **multiple Claude Code sessions** (one developer, M sessions) **or** **multiple developers** on the same repo. Each session runs in its own git worktree on a `{branch_namespace}` branch — sessions cannot silently overwrite each other. Coordinate file ownership via `AGENTS.md` (one file, one owner). **Before enabling:** run `git worktree add ../wt-test -b wt-test` once to confirm worktree works on your platform (Git Bash/Windows may need git ≥ 2.5), then `git worktree remove ../wt-test && git branch -D wt-test`.
+
+See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) § Concurrent-Session Isolation and `AGENTS.md` for the four-layer model.
 
 ---
 

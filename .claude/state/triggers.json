@@ -2,27 +2,27 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_retro": {
       "date": "2026-06-01",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 15
+      "plans_since": 16
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 9
+      "plans_since": 10
     },
     "last_product_vision": {
       "date": "2026-05-27",
-      "plans_since": 10
+      "plans_since": 11
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 13
+      "plans_since": 14
     },
     "last_architecture_audit": {
       "date": "2026-05-27",
@@ -111,8 +111,8 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-01T00:00:00Z",
-    "task_id": "migration-registry-sync-audit-single-point",
+    "completed_at": "2026-06-02T00:00:00Z",
+    "task_id": "concurrent-sessions-worktree-isolation-P001",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true

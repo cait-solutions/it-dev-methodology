@@ -23,9 +23,12 @@ _get_field() {
     return
   fi
   local value
+  # Extract value after 'field:', strip inline '# comment', then strip CR/whitespace.
+  # (Template yaml ships inline comments, e.g. `worktree_isolation: off  # ...` —
+  #  without comment-stripping the value would read as 'off#...'.)
   value=$(awk '/^## Branching/{f=1; next} /^## /{f=0} f{print}' "$CONFIG" \
           | grep -E "^[[:space:]]*${field}:" | head -1 \
-          | sed "s/.*${field}:[[:space:]]*//" | tr -d '\r[:space:]')
+          | sed "s/.*${field}:[[:space:]]*//" | sed 's/[[:space:]]*#.*$//' | tr -d '\r[:space:]')
   echo "${value:-$default}"
 }
 
@@ -34,10 +37,27 @@ AGENT_BRANCH=$(_get_field "agent_branch" "ai-dev")
 PRODUCTION_BRANCH=$(_get_field "production_branch" "main")
 INTEGRATION_BRANCH=$(_get_field "integration_branch" "$PRODUCTION_BRANCH")
 PR_TOOL=$(_get_field "pr_tool" "manual")
+WORKTREE_ISOLATION=$(_get_field "worktree_isolation" "off")
+
+# ---------------------------------------------------------------------------
+# Concurrent-session isolation (closes P-001): when worktree_isolation: auto,
+# the deploy branch is the CURRENT branch (a namespaced ai-dev/<task> from an
+# isolated worktree), NOT the shared agent_branch. Reading the current branch
+# avoids the class-bug where hardcoded agent_branch pushes the wrong worktree's
+# branch. When isolation is off, behavior is unchanged (current branch == agent_branch).
+# ---------------------------------------------------------------------------
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "$AGENT_BRANCH")
+if [[ "$WORKTREE_ISOLATION" == "auto" ]]; then
+  PUSH_BRANCH="$CURRENT_BRANCH"
+else
+  PUSH_BRANCH="$AGENT_BRANCH"
+fi
 
 echo "Branching config (from $CONFIG):"
 echo "  mode:               $MODE"
 echo "  agent_branch:       $AGENT_BRANCH"
+echo "  worktree_isolation: $WORKTREE_ISOLATION"
+echo "  push_branch:        $PUSH_BRANCH"
 echo "  production_branch:  $PRODUCTION_BRANCH"
 [[ "$MODE" == "team" ]] && echo "  integration_branch: $INTEGRATION_BRANCH"
 [[ "$MODE" == "team" ]] && echo "  pr_tool:            $PR_TOOL"
@@ -76,8 +96,8 @@ _wire_credential_helper() {
 _wire_credential_helper
 
 if [[ "$MODE" == "team" ]]; then
-  echo "▶ Team mode → git push origin ${AGENT_BRANCH}:${AGENT_BRANCH}"
-  git push origin "${AGENT_BRANCH}:${AGENT_BRANCH}"
+  echo "▶ Team mode → git push origin ${PUSH_BRANCH}:${PUSH_BRANCH}"
+  git push origin "${PUSH_BRANCH}:${PUSH_BRANCH}"
   echo ""
 
   if [[ "$PR_TOOL" == "auto-merge" ]]; then
@@ -85,23 +105,23 @@ if [[ "$MODE" == "team" ]]; then
     echo "▶ auto-merge → gh pr create + merge"
     PR_URL=$(gh pr create \
       --base "$INTEGRATION_BRANCH" \
-      --head "$AGENT_BRANCH" \
+      --head "$PUSH_BRANCH" \
       --title "$PR_TITLE" \
       --body "Auto-deploy via deploy-push.sh")
     echo "  PR: $PR_URL"
     gh pr merge "$PR_URL" --merge --delete-branch=false
-    echo "✅ Merged: ${AGENT_BRANCH} → ${INTEGRATION_BRANCH}"
+    echo "✅ Merged: ${PUSH_BRANCH} → ${INTEGRATION_BRANCH}"
   else
-    echo "✅ Pushed. Create PR: ${AGENT_BRANCH} → ${INTEGRATION_BRANCH}"
+    echo "✅ Pushed. Create PR: ${PUSH_BRANCH} → ${INTEGRATION_BRANCH}"
     REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
     if [[ -n "$REMOTE_URL" ]]; then
       _base="${REMOTE_URL%.git}"
-      echo "   GitHub: ${_base}/compare/${INTEGRATION_BRANCH}...${AGENT_BRANCH}?expand=1"
+      echo "   GitHub: ${_base}/compare/${INTEGRATION_BRANCH}...${PUSH_BRANCH}?expand=1"
     fi
   fi
 else
-  echo "▶ Solo mode → git push origin ${AGENT_BRANCH}:${PRODUCTION_BRANCH}"
-  git push origin "${AGENT_BRANCH}:${PRODUCTION_BRANCH}"
+  echo "▶ Solo mode → git push origin ${PUSH_BRANCH}:${PRODUCTION_BRANCH}"
+  git push origin "${PUSH_BRANCH}:${PRODUCTION_BRANCH}"
   echo ""
   echo "✅ Deployed to ${PRODUCTION_BRANCH}"
 fi

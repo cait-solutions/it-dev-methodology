@@ -38,9 +38,10 @@
 
 **Branching check:**
 - [ ] Открыть `CLAUDE.local.md` → секция `## Branching`
-  - Секция отсутствует → ⚠️ branching mode не задан, используются defaults (`mode: solo`, `agent_branch: ai-dev`). OK для solo-проектов.
+  - Секция отсутствует → ⚠️ branching mode не задан, используются defaults (`mode: solo`, `agent_branch: ai-dev`, `worktree_isolation: off`). OK для solo-проектов с одной сессией.
   - `mode: team` — убедись что `integration_branch` заполнен И branch protection настроен в GitHub/GitLab на `production_branch`
-  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `agent_branch` (default `ai-dev`); PR review — его задача
+  - Разъясни новому разработчику: он работает в `feature/*` ветках; AI-агент работает в `agent_branch` (default `ai-dev`), или в изолированном worktree на `{agent_branch}/<task>` при `worktree_isolation: auto`; PR review — его задача
+  - **Concurrent work:** если на репо работает >1 разработчик ИЛИ кто-то запускает несколько сессий Claude Code одновременно → объясни модель изоляции: `worktree_isolation: auto` + `AGENTS.md` (one file, one owner). Каждая сессия = свой `git worktree` на своей ветке; перед правкой файла — claim в `AGENTS.md ## Active claims`. См. [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) § Concurrent-Session Isolation.
 
 ---
 

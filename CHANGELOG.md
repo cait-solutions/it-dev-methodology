@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.59.0 — feat: concurrent-session isolation — worktree + AGENTS.md (multi-dev / multi-session safety, closes P-001) (2026-06-02)
+
+**Что (industry-стандартная 4-слойная модель безопасной параллельной работы):**
+- **Новая ось branching contract — isolation (ортогональна mode):** `worktree_isolation: off|auto` + `branch_namespace: ai-dev/<task>` в `CLAUDE.local.md ## Branching`. НЕ третий mode — все 4 комбинации (solo/team × off/auto) валидны.
+- **Новый артефакт `AGENTS.md`** (template + synced, project-owned) — task-ownership доска «one file, one owner» (encapsulation): claim file-scope перед правкой, cleanup после merge. Закрывает file-conflict *до* того как случится.
+- **`/code` Шаг 5.5** (новый, при `auto`): читает `AGENTS.md ## Active claims` → пересечение file-scope с активным claim → ⛔ СТОП. Branch check теперь принимает namespaced `{agent_branch}/<task>`.
+- **`/deploy`:** worktree-aware push (деплоит **текущую** ветку, не хардкод `agent_branch`) + **VERSION/shared-state race guard** (`git fetch && git diff origin/{branch}` перед bump — closes G-052) + claim cleanup после merge.
+- **`scripts/deploy-push.sh` (+ template copy):** читает `worktree_isolation` → при `auto` пушит current branch (`$PUSH_BRANCH`), не хардкод `agent_branch`.
+- **ADR-002 v2:** снят «multi-agent deferred», добавлена секция Concurrent-Session Isolation (4 слоя: isolation/ownership/staging/merge-gate) + temporal precondition (claim ДО edit).
+- **Back-compat:** `worktree_isolation: off` = default → существующие consumers без изменений. `auto` = opt-in после локальной проверки `git worktree add` (Git Bash/Windows: git ≥ 2.5).
+
+**Actions для consumers:**
+```bash
+bash /path/to/it-dev-methodology/scripts/sync-methodology.sh .   # добавит AGENTS.md, обновит code/deploy/deploy-push, CLAUDE.local fields
+# Для concurrent work: в CLAUDE.local.md ## Branching → worktree_isolation: auto (после git worktree add self-check)
+```
+
+**Priority:** 🟡 Medium — нужно только проектам с >1 разработчиком или несколькими параллельными сессиями. Solo-single-session не затронут (default off).
+
+---
+
 ## v4.58.0 — feat: migration registry — /sync-audit как единая точка обновления consumer'ов (2026-06-01)
 
 **Что (структурное решение, Flyway/Alembic pattern):**
