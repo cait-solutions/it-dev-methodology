@@ -1,118 +1,122 @@
-# IT Dev Methodology Platform
+# IT Dev Methodology
 
-Version: see [VERSION](VERSION) (currently **v3.0.0** — first major bump, breaking change in CLAUDE.md split convention)
+AI-assisted разработка: slash-команды, шаблоны, хуки, скрипты — единый источник правды для всех проектов.
 
-> ⚠️ **For consumers:** This repo is the _methodology canon_ (commands, templates, scripts). Do NOT clone directly. Instead, run:
-> ```bash
-> bash /path/to/methodology/scripts/new-project-init.sh my-project ~/my-project
-> ```
-> Files like DEVLOG.md, PRODUCT.md, VISION.md are _our project context_, not methodology templates.
+---
 
-Общая методология для AI-assisted разработки на проектах cait.solutions. Slash-команды, скелеты sub-agents, шаблоны артефактов, защитные хуки, bootstrap/sync скрипты — единый источник правды.
+## Для нового разработчика — начни здесь
 
-Методология развивалась из опыта как single-developer, так и multi-service проектов. Patterns из обоих подходов (хуки, IDEAS таксономия, ROADMAP структура, level-4 framework) влиты как универсальные дополнения.
+### Шаг 1. Структура папок
 
-С версии v2.4.0 методология применяется к самой себе (eats own dog food) — изменения идут через её собственный `/plan` → `/code` → `/review` → `/deploy` процесс. См. [CLAUDE.md](CLAUDE.md), [PRODUCT.md](../it-dev-methodology-documentation/PRODUCT.md), [VISION.md](../it-dev-methodology-documentation/VISION.md).
-
-## Structure
+Создай одну папку-контейнер для проекта. Внутри неё будут три репозитория:
 
 ```
-methodology-platform/
-├── commands/              ← Slash-command definitions (synced into project .claude/commands/)
-│   ├── plan.md            /plan — pre-flight checks, plan with risks
-│   ├── code.md            /code — implementation with self-review
-│   ├── review.md          /review — strict architectural review
-│   ├── deploy.md          /deploy — safety checks, smoke tests
-│   ├── retro.md           /retro — methodological retrospective
-│   ├── diagnose.md        /diagnose — deep root-cause investigation
-│   ├── onboard.md         /onboard — new developer / legacy domain handover
-│   ├── architecture-audit.md  /architecture-audit — map vs code drift
-│   ├── sync-vision.md     /sync-vision — vision ↔ reality reconciliation
-│   ├── product-check.md   /product-check — PRODUCT.md vs code freshness
-│   ├── product-review.md  /product-review — IDEAS signals → ROADMAP
-│   └── product-vision.md  /product-vision — strategic axes (quarterly)
-├── agents/                ← Agent skeletons (Claude Code sub-agent format) — Phase E
-├── rules/                 ← Tech-stack-specific rules guide — Phase E
-├── hooks/                 ← Universal protection hooks (Bash/Edit safety) — Phase E
-├── templates/             ← Artifact templates
-│   ├── triggers.json.template     ← canonical state schema
-│   ├── CLAUDE.template.md
-│   ├── PRODUCT.template.md
-│   ├── VISION.template.md
-│   └── SYSTEM-MAP.template.md
-├── scripts/
-│   ├── new-project-init.sh        ← bootstrap a fresh project
-│   └── sync-methodology.sh        ← update commands/hooks in existing project
-├── VERSION                ← semver of the methodology
-└── README.md
+my-project/                          ← папка-контейнер (не git-репо)
+├── it-dev-methodology/              ← этот репо (методология)
+├── my-project-documentation/        ← артефакты, команды, архитектура
+└── my-project-backend/              ← код проекта (если есть)
 ```
 
-## Quick Start — Bootstrap a new project
+Имена `my-project-documentation` и `my-project-backend` уточни у PM — они могут отличаться.
+
+---
+
+### Шаг 2. Клонируй репозитории
+
+Открой терминал в папке-контейнере и выполни:
 
 ```bash
-# From the methodology repo (works on any path):
-/path/to/methodology-platform/scripts/new-project-init.sh my-project /path/to/new/project
+git clone https://github.com/cait-solutions/it-dev-methodology
+git clone https://github.com/<org>/<my-project-documentation>
+git clone https://github.com/<org>/<my-project-backend>   # если есть
 ```
 
-This creates the target directory with:
-- `.claude/commands/` — all slash commands, banner-prefixed
-- `.claude/state/triggers.json` — initialized counters
-- `.claude/.version` — pointer to methodology version
-- Root artifacts: `CLAUDE.md`, `PRODUCT.md`, `VISION.md`, plus stubs for DEVLOG/IDEAS/ROADMAP/HYPOTHESES/RISKS
-- `docs/architecture/SYSTEM-MAP.md`
-- Git initialized if absent
+> Адреса репозиториев проекта узнай у PM или Team Lead.
+> `it-dev-methodology` — публичный, клонируется без токена.
+> Остальные — приватные, потребуют аутентификацию:
+> - Проще всего: установи [GitHub CLI](https://cli.github.com) и выполни `gh auth login` перед клоном.
+> - Или используй SSH-ключ если он уже настроен.
 
-## Sync — Update an existing project to latest methodology
+---
+
+### Шаг 3. Инициализация
+
+Есть два способа — выбери удобный:
+
+**Способ A — через терминал:**
 
 ```bash
-/path/to/methodology-platform/scripts/sync-methodology.sh /path/to/project
+cd my-project-documentation
+bash ../it-dev-methodology/scripts/sync-methodology.sh .
 ```
 
-- Overwrites `.claude/commands/*.md` (canonical source = methodology). Warns if local edits found.
-- Copies new agent skeletons (existing per-project content preserved).
-- Copies hooks (universal infrastructure — always overwrite).
-- Updates `.claude/.version`.
+**Способ B — через AI-агента (Claude Code):**
 
-Each synced command file starts with an AUTO-GENERATED banner. Local edits are allowed only as emergency overrides — open a PR to the methodology repo within 48h.
+Установи расширение Claude Code в свой IDE (VS Code или JetBrains).
+Открой папку `my-project-documentation/` как workspace.
+Напиши агенту:
 
-## Versioning
+> «Запусти sync-methodology.sh из папки it-dev-methodology чтобы инициализировать команды»
 
-Semver:
-- **MAJOR** — breaking changes to command contracts, triggers.json schema, or artifact format
-- **MINOR** — new commands, agents, templates, or non-breaking field additions
-- **PATCH** — fixes, wording, and content refinements
+Агент сам найдёт скрипт и выполнит его.
 
-## Roadmap
+---
 
-Initial build (Phases A-F) — **completed 2026-05-16, v2.4.0**:
+### Шаг 4. Запуск онбординга
 
-- ✅ **Phase A:** rename `product.vision.md`, canonical `triggers.json` template, real bootstrap and sync scripts.
-- ✅ **Phase B:** full templates for DEVLOG, IDEAS, ROADMAP, OPEN-QUESTIONS, HYPOTHESES, RISKS.
-- ✅ **Phase C:** rewrite CLAUDE/PRODUCT/SYSTEM-MAP/VISION templates with patterns from live projects.
-- ✅ **Phase D:** Tier-2 templates — two-tier vision (AGENT_VISION + LONG_VISION), ADR, data-map, glossary, BEHAVIOR, threat-model, SKILL, services-registry, inbox.
-- ✅ **Phase E:** agent skeletons (architect/qa/security), hooks (`bash_protect.py`, `protect.py`, `docs_reminder.template.py`), rules guide.
-- ✅ **Phase F:** apply methodology to this repo itself — real CLAUDE.md, PRODUCT.md, VISION.md, SYSTEM-MAP.md, DEVLOG.md with phase history. Future changes go through the methodology's own `/plan` → `/code` → `/review` → `/deploy` flow.
-- ✅ **Phase G1 (v2.5.0):** navigation maps in `/review`, `/deploy`, `/onboard`; model recommendation tier system (`templates/model-tiers.md`) with Pre-flight check and mid-task complexity reassessment.
-- ✅ **Phase G2 (v3.0.0, breaking):** CLAUDE.md split into short `CLAUDE.md` (WHAT — rules) + new `CLAUDE_LONG.md` (WHY — rationale, edge cases); Agent TL;DR convention in PRODUCT and SYSTEM-MAP templates; migration helper `scripts/migrate-claude-md.sh` for existing consumers; Pre-flight check now asks user (was auto-detect from system prompt — unreliable mid-session).
-- ✅ **Phase H1 (v3.1.0, breaking):** Bootstrap simplification — removed all flags from `new-project-init.sh` (`--multi-service`, `--with-adr`, `--with-inbox`, etc.). One universal init command for all project types. Full artifact structure created by default; solo-dev projects ignore/delete unused dirs, multi-service projects fill in the multi-tier sections. Consumer templates sanitized: removed project-specific names (PAI, ERP, nexchance), replaced with generic abstractions (single-dev, multi-service).
+После инициализации открой `my-project-documentation/` в Claude Code и запусти:
 
-**Breaking change migration for existing consumers:**
+```
+/onboard
+```
 
-*Phase G2 (CLAUDE.md split):*
+Команда проведёт тебя по архитектуре проекта, покажет что где лежит и что делать дальше.
+
+---
+
+## Для владельца — создание нового проекта
+
+Если проект ещё не существует и ты создаёшь его с нуля:
+
 ```bash
-# Run once per consumer:
-/path/to/methodology-platform/scripts/migrate-claude-md.sh /path/to/consumer
-# Then follow the 5-step manual extraction instructions.
+# Из папки-контейнера:
+bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name>-documentation/
 ```
 
-*Phase H1 (bootstrap flags):*
+Скрипт создаст полную структуру артефактов в `project-name-documentation/`:
+команды, шаблоны, триггеры, хуки, карты архитектуры.
+
+После этого открой `project-name-documentation/` в Claude Code и запусти `/onboard`.
+
+---
+
+## Обновление методологии в существующем проекте
+
+Когда вышла новая версия методологии — обнови команды у себя:
+
 ```bash
-# Old (v3.0.0):
-bash scripts/new-project-init.sh my-app ~/my-app --multi-service --with-adr --with-inbox
-
-# New (v3.1.0+):
-bash scripts/new-project-init.sh my-app ~/my-app
-# → creates full structure; ignore unused dirs or delete them
+cd my-project-documentation
+bash ../it-dev-methodology/scripts/sync-methodology.sh .
 ```
 
-Next planned work — see [ROADMAP.md](../it-dev-methodology-documentation/ROADMAP.md) for current priorities.
+Или попроси агента: «Запусти sync-methodology.sh для обновления команд».
+
+После sync агент автоматически предложит проверить что нового (`/sync-audit`).
+
+---
+
+## Что внутри этого репо
+
+| Папка | Назначение |
+|---|---|
+| `commands/` | Slash-команды (`/plan`, `/code`, `/review`, `/deploy`, `/retro` и др.) |
+| `templates/` | Шаблоны артефактов (CLAUDE.md, PRODUCT.md, триггеры, хуки) |
+| `scripts/` | Bootstrap и sync скрипты |
+| `skills/` | Agent Skills — knowledge-domain (secrets, marketing и др.) |
+| `VERSION` | Текущая версия методологии |
+
+Изменять файлы в этом репо не нужно — всё что тебе нужно уже скопируется в твой проект через `sync-methodology.sh`.
+
+---
+
+Версия методологии: см. [VERSION](VERSION)
