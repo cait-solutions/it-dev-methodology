@@ -56,7 +56,7 @@ bash ../it-dev-methodology/scripts/sync-methodology.sh .
 Открой папку `my-project-documentation/` как workspace.
 Напиши агенту:
 
-> «Запусти sync-methodology.sh из папки it-dev-methodology чтобы инициализировать команды»
+> «Запусти sync-methodology.sh из папки it-dev-methodology чтобы восстановить команды методологии в этом проекте»
 
 Агент сам найдёт скрипт и выполнит его.
 
