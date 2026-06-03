@@ -23,8 +23,6 @@ my-project/                          ← папка-контейнер (не git
 
 ### Шаг 2. Клонируй репозитории
 
-Открой терминал в папке-контейнере и выполни:
-
 ```bash
 git clone https://github.com/cait-solutions/it-dev-methodology
 git clone https://github.com/<org>/<my-project-documentation>
@@ -39,32 +37,25 @@ git clone https://github.com/<org>/<my-project-backend>   # если есть
 
 ---
 
-### Шаг 3. Инициализация
+### Шаг 3. Восстанови команды методологии
 
-Есть два способа — выбери удобный:
+Открой папку `my-project-documentation/` в Claude Code (расширение для [VS Code](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) или [JetBrains](https://plugins.jetbrains.com/plugin/24819-claude-code)).
 
-**Способ A — через терминал:**
-
-```bash
-cd my-project-documentation
-bash ../it-dev-methodology/scripts/sync-methodology.sh .
-```
-
-**Способ B — через AI-агента (Claude Code):**
-
-Установи расширение Claude Code в свой IDE (VS Code или JetBrains).
-Открой папку `my-project-documentation/` как workspace.
 Напиши агенту:
 
 > «Запусти sync-methodology.sh из папки it-dev-methodology чтобы восстановить команды методологии в этом проекте»
 
-Агент сам найдёт скрипт и выполнит его.
+Или через терминал из папки `my-project-documentation/`:
+
+```bash
+bash ../it-dev-methodology/scripts/sync-methodology.sh .
+```
 
 ---
 
 ### Шаг 4. Запуск онбординга
 
-После инициализации открой `my-project-documentation/` в Claude Code и запусти:
+В Claude Code с открытой папкой `my-project-documentation/` запусти:
 
 ```
 /onboard
@@ -74,12 +65,29 @@ bash ../it-dev-methodology/scripts/sync-methodology.sh .
 
 ---
 
-## Для владельца — создание нового проекта
+## Обновление методологии в существующем проекте
 
-Если проект ещё не существует и ты создаёшь его с нуля:
+Когда вышла новая версия — запусти в Claude Code:
+
+```
+/sync-audit
+```
+
+Команда покажет что изменилось и что нужно обновить в проекте.
+
+Или через терминал из папки `my-project-documentation/`:
 
 ```bash
-# Из папки-контейнера:
+bash ../it-dev-methodology/scripts/sync-methodology.sh .
+```
+
+---
+
+## Для владельца — создание нового проекта
+
+Если проект ещё не существует и ты создаёшь его с нуля, из папки-контейнера выполни:
+
+```bash
 bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name>-documentation/
 ```
 
@@ -87,21 +95,6 @@ bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name
 команды, шаблоны, триггеры, хуки, карты архитектуры.
 
 После этого открой `project-name-documentation/` в Claude Code и запусти `/onboard`.
-
----
-
-## Обновление методологии в существующем проекте
-
-Когда вышла новая версия методологии — обнови команды у себя:
-
-```bash
-cd my-project-documentation
-bash ../it-dev-methodology/scripts/sync-methodology.sh .
-```
-
-Или попроси агента: «Запусти sync-methodology.sh для обновления команд».
-
-После sync агент автоматически предложит проверить что нового (`/sync-audit`).
 
 ---
 
@@ -115,7 +108,7 @@ bash ../it-dev-methodology/scripts/sync-methodology.sh .
 | `skills/` | Agent Skills — knowledge-domain (secrets, marketing и др.) |
 | `VERSION` | Текущая версия методологии |
 
-Изменять файлы в этом репо не нужно — всё что тебе нужно уже скопируется в твой проект через `sync-methodology.sh`.
+Изменять файлы в этом репо не нужно — всё нужное скопируется в твой проект через sync.
 
 ---
 
