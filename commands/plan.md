@@ -210,6 +210,27 @@
 - Запрос описывает фичу не упомянутую в IDEAS.md/ROADMAP.md
 - → "Добавить в IDEAS.md перед планированием? (y/n)"
 
+**Триггер: RISKS.md HIGH severity (closes retro R1 — «долгий путь»):**
+
+Если `RISKS.md` существует в проекте — проверить перед переходом к анализу задачи:
+```bash
+grep -A3 "Severity.*HIGH\|severity.*high" RISKS.md | grep -B1 "planned.*false\|Статус.*Open\|status.*open"
+```
+Для каждого HIGH severity риска у которого нет связанного /plan (нет `planned: true` или нет записи в DEVLOG за последние 14 дней):
+```
+⚠️ HIGH severity риски без запланированного фикса:
+   R-18: Cache::tags() с database-драйвером — переводы не отдаются (найден 2026-05-13, 21 день без action)
+   R-20: API без аутентификации (найден 2026-05-13)
+
+Запланировать фикс сейчас (в этом /plan или отдельным /plan)? (y/skip)
+```
+- **y** → добавить HIGH risk задачу в текущий план ИЛИ запустить отдельный `/plan` до основной задачи
+- **skip** → продолжить, записать в triggers.json `skipped_risks: [{id, date_skipped}]`
+
+**Если `RISKS.md` отсутствует → пропустить тихо (graceful skip, не ошибка).**
+
+Rationale: HIGH severity баг может лежать в RISKS.md месяцами без action — это системная проблема «долгого пути» из erp-retro (R-18 `Cache::tags()` найден 2026-05-13, без фикса 21+ дней). Gate обнаруживает такие случаи в момент когда агент уже активен — стоимость action = 0.
+
 ### Подшаг 3 — Stale Open Questions (если есть OPEN-QUESTIONS.md)
 
 Для каждого OQ в области текущей задачи:
