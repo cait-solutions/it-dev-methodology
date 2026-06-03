@@ -6,20 +6,18 @@ AI-assisted разработка: slash-команды, шаблоны, хуки
 
 ## Для нового разработчика — начни здесь
 
+Проект уже создан. Тебе нужно развернуть его на своей машине.
+
 ### Шаг 1. Структура папок
 
-Создай одну папку-контейнер для проекта. Внутри неё будут три репозитория:
+Создай одну папку-контейнер. Внутри неё будут три репозитория — спроси у PM точные названия:
 
 ```
-my-project/                          ← папка-контейнер (не git-репо)
+my-project/                          ← папка-контейнер (создай вручную)
 ├── it-dev-methodology/              ← этот репо (методология)
 ├── my-project-documentation/        ← артефакты, команды, архитектура
 └── my-project-backend/              ← код проекта (если есть)
 ```
-
-Имена `my-project-documentation` и `my-project-backend` уточни у PM — они могут отличаться.
-
----
 
 ### Шаг 2. Клонируй репозитории
 
@@ -29,19 +27,14 @@ git clone https://github.com/<org>/<my-project-documentation>
 git clone https://github.com/<org>/<my-project-backend>   # если есть
 ```
 
-> Адреса репозиториев проекта узнай у PM или Team Lead.
 > `it-dev-methodology` — публичный, клонируется без токена.
-> Остальные — приватные, потребуют аутентификацию:
-> - Проще всего: установи [GitHub CLI](https://cli.github.com) и выполни `gh auth login` перед клоном.
-> - Или используй SSH-ключ если он уже настроен.
+> Остальные репо — приватные. Перед клоном установи [GitHub CLI](https://cli.github.com) и выполни `gh auth login`.
 
----
+### Шаг 3. Восстанови команды
 
-### Шаг 3. Инициализация проекта
+Команды методологии не хранятся в git — их нужно восстановить на своей машине.
 
-Открой папку `my-project-documentation/` в Claude Code (расширение для [VS Code](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) или [JetBrains](https://plugins.jetbrains.com/plugin/24819-claude-code)).
-
-**Если проект уже существует и ты присоединяешься к команде** — нужно восстановить команды на своей машине (они не хранятся в git). Напиши агенту:
+Открой папку `my-project-documentation/` в Claude Code (расширение для [VS Code](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) или [JetBrains](https://plugins.jetbrains.com/plugin/24819-claude-code)) и напиши агенту:
 
 > «Запусти sync-methodology.sh из папки it-dev-methodology чтобы восстановить команды методологии в этом проекте»
 
@@ -51,19 +44,7 @@ git clone https://github.com/<org>/<my-project-backend>   # если есть
 bash ../it-dev-methodology/scripts/sync-methodology.sh .
 ```
 
-**Если проект создаётся с нуля** — нужно создать всю структуру: команды, артефакты, скрипты, хуки. Напиши агенту:
-
-> «Запусти new-project-init.sh из папки it-dev-methodology чтобы инициализировать проект my-project-documentation»
-
-Или через терминал из папки-контейнера:
-
-```bash
-bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name>-documentation/
-```
-
----
-
-### Шаг 4. Запуск онбординга
+### Шаг 4. Онбординг
 
 В Claude Code с открытой папкой `my-project-documentation/` запусти:
 
@@ -71,39 +52,17 @@ bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name
 /onboard
 ```
 
-Команда проведёт тебя по архитектуре проекта, покажет что где лежит и что делать дальше.
+Команда покажет архитектуру проекта и что делать дальше.
 
 ---
 
-## Обновление методологии в существующем проекте
+## Обновление методологии
 
-Когда вышла новая версия — запусти в Claude Code:
+Когда PM сообщил что вышла новая версия — запусти в Claude Code:
 
 ```
 /sync-audit
 ```
-
-Команда покажет что изменилось и что нужно обновить в проекте.
-
-Или через терминал из папки `my-project-documentation/`:
-
-```bash
-bash ../it-dev-methodology/scripts/sync-methodology.sh .
-```
-
----
-
-## Что внутри этого репо
-
-| Папка | Назначение |
-|---|---|
-| `commands/` | Slash-команды (`/plan`, `/code`, `/review`, `/deploy`, `/retro` и др.) |
-| `templates/` | Шаблоны артефактов (CLAUDE.md, PRODUCT.md, триггеры, хуки) |
-| `scripts/` | Bootstrap и sync скрипты |
-| `skills/` | Agent Skills — knowledge-domain (secrets, marketing и др.) |
-| `VERSION` | Текущая версия методологии |
-
-Изменять файлы в этом репо не нужно — всё нужное скопируется в твой проект через sync.
 
 ---
 
