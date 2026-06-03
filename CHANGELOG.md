@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v4.60.0 — feat: S-026/S-027/S-028 structural gap fixes — template-format validator + few-shot examples + mandatory adjacent output (2026-06-03)
+
+**Что:**
+- **`scripts/validate-template-format.sh`** (новый, consumer-distributed) — L4 автопроверка формата templates/*.template.md: required sections, no stale mermaid link format, no unresolved placeholders. Запускается в `/code` Шаг 4 п.11 после любого изменения команд/templates. Закрывает [fix:template]×4 паттерн + G-068 recurrence.
+- **`/code` Шаг 1.7** — mandatory output table: агент обязан написать таблицу grep-результатов до первой строки кода (если grep нашёл ≥1 результат). Закрывает completeness-gap класс «adjacent output необязателен».
+- **`/plan` Шаг 99.54** — few-shot URL примеры: правильный (голый URL от скрипта) vs неправильный (markdown-link, subagent-generated). Закрывает logic-gap G-064 recurrence.
+- **`/sync-audit` Шаг 3** — few-shot финальная фраза: правильная (версия + счётчик gaps) vs неправильная («полностью применена» без данных). Закрывает G-057.
+
+**Что запустить:**
+```bash
+# 1. Синхронизировать новый скрипт:
+bash scripts/sync-methodology.sh .
+
+# 2. Проверить текущие templates:
+bash scripts/validate-template-format.sh
+```
+
+**Приоритет:** 🟡 Medium — structural improvements, не breaking changes.
+
+---
+
 ## v4.59.0 — feat: concurrent-session isolation — worktree + AGENTS.md (multi-dev / multi-session safety, closes P-001) (2026-06-02)
 
 **Что (industry-стандартная 4-слойная модель безопасной параллельной работы):**
