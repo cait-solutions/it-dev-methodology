@@ -19,25 +19,19 @@ AI-assisted разработка: slash-команды, шаблоны, хуки
 
 Точные названия репо узнай у PM.
 
-> Для клона приватных репозиториев проекта установи [GitHub CLI](https://cli.github.com) и выполни `gh auth login` — после этого клонирование пройдёт без дополнительных настроек.
+> Для клона приватных репозиториев установи [GitHub CLI](https://cli.github.com) и выполни `gh auth login` — после этого клонирование пройдёт без дополнительных настроек.
 
-### Шаг 2. Восстанови команды
+### Шаг 2. Настрой workspace в IDE
 
-Команды методологии не хранятся в git — их нужно восстановить на своей машине.
+Установи расширение Claude Code для [VS Code](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) или [JetBrains](https://plugins.jetbrains.com/plugin/24819-claude-code).
 
-Открой папку `my-project-documentation/` в Claude Code (расширение для [VS Code](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) или [JetBrains](https://plugins.jetbrains.com/plugin/24819-claude-code)) и напиши агенту:
+Открой папку `project-documentation/` как основную рабочую папку в IDE, затем добавь остальные репозитории через **Add Folder to Workspace** — так все репо будут видны агенту одновременно.
 
-> «Запусти sync-methodology.sh из папки it-dev-methodology чтобы восстановить команды методологии в этом проекте»
-
-Или через терминал из папки `my-project-documentation/`:
-
-```bash
-bash ../it-dev-methodology/scripts/sync-methodology.sh .
-```
+Сохрани настройки workspace в папку-контейнер (**Save Workspace As...**) — в следующий раз достаточно открыть этот файл и всё подключится автоматически.
 
 ### Шаг 3. Онбординг
 
-В Claude Code с открытой папкой `my-project-documentation/` запусти:
+В Claude Code запусти:
 
 ```
 /onboard
