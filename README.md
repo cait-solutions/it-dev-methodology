@@ -37,11 +37,11 @@ git clone https://github.com/<org>/<my-project-backend>   # если есть
 
 ---
 
-### Шаг 3. Восстанови команды методологии
+### Шаг 3. Инициализация проекта
 
 Открой папку `my-project-documentation/` в Claude Code (расширение для [VS Code](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code) или [JetBrains](https://plugins.jetbrains.com/plugin/24819-claude-code)).
 
-Напиши агенту:
+**Если проект уже существует и ты присоединяешься к команде** — нужно восстановить команды на своей машине (они не хранятся в git). Напиши агенту:
 
 > «Запусти sync-methodology.sh из папки it-dev-methodology чтобы восстановить команды методологии в этом проекте»
 
@@ -49,6 +49,16 @@ git clone https://github.com/<org>/<my-project-backend>   # если есть
 
 ```bash
 bash ../it-dev-methodology/scripts/sync-methodology.sh .
+```
+
+**Если проект создаётся с нуля** — нужно создать всю структуру: команды, артефакты, скрипты, хуки. Напиши агенту:
+
+> «Запусти new-project-init.sh из папки it-dev-methodology чтобы инициализировать проект my-project-documentation»
+
+Или через терминал из папки-контейнера:
+
+```bash
+bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name>-documentation/
 ```
 
 ---
@@ -80,21 +90,6 @@ bash ../it-dev-methodology/scripts/sync-methodology.sh .
 ```bash
 bash ../it-dev-methodology/scripts/sync-methodology.sh .
 ```
-
----
-
-## Для владельца — создание нового проекта
-
-Если проект ещё не существует и ты создаёшь его с нуля, из папки-контейнера выполни:
-
-```bash
-bash it-dev-methodology/scripts/new-project-init.sh <project-name> <project-name>-documentation/
-```
-
-Скрипт создаст полную структуру артефактов в `project-name-documentation/`:
-команды, шаблоны, триггеры, хуки, карты архитектуры.
-
-После этого открой `project-name-documentation/` в Claude Code и запусти `/onboard`.
 
 ---
 
