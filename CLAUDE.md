@@ -108,6 +108,10 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 - Почему эти gaps OK или требуют дополнительных шагов
 Без этого анализа → план не утверждён, код не merged, деплой не выполнен.
 
+**HIGH risks action rule:** Если `RISKS.md` существует — `/plan` pre-flight проверяет open HIGH severity риски без запланированного фикса. Любой HIGH риск старше 14 дней без связанного /plan → агент показывает его до начала анализа. Закрывает паттерн «долгого пути»: баг найден → записан в RISKS.md → лежит в backlog без action неделями. Если `RISKS.md` отсутствует → пропустить тихо.
+
+**Frontend DOM verification rule:** Любая задача затрагивающая файлы `.vue` / `.tsx` / `.jsx` / `.svelte` / `.css` / `.html` — верификация реального DOM обязательна до commit. Три допустимых пути: (1) Playwright E2E тест запуск, (2) screenshot через Claude Code + Read tool с явным описанием что видно в DOM, (3) explicit skip с письменной причиной. «Написал код → должно работать» без одного из трёх = шаг не завершён.
+
 Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
 
 ---
