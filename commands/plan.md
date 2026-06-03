@@ -1049,6 +1049,23 @@ py "<абсолютный-путь>/scripts/mermaid-link.py" _tmp_draft.mmd
 
 ⛔ **Subagent для pako/base64url encoding — ЗАПРЕЩЁН (closes G-064).** Subagent не выполняет реальную zlib deflate операцию — возвращает невалидный URL. Единственный допустимый fallback если скрипт недоступен — показать код диаграммы с инструкцией выше.
 
+**Few-shot: правильный vs неправильный URL (обновить при изменении формата):**
+
+✅ **Правильно** — голый URL на отдельной строке (генерируется `py scripts/mermaid-link.py`):
+```
+https://mermaid.live/edit#pako:eNqrVkrNTQEABY4B6A==
+```
+Тройной клик выделяет только URL. Ctrl+Click открывает в браузере.
+
+❌ **Неправильно** — markdown-link (старый формат до v4.37, mermaid.live не откроется кликом):
+```
+[Открыть в Mermaid Live](https://mermaid.live/edit#pako:...)
+```
+
+❌ **Неправильно** — URL сгенерирован вручную / через subagent (невалидный pako):
+URL выглядит правдоподобно но mermaid.live показывает «Loading URL failed».
+Признак: URL короче 50 символов или не начинается с `#pako:eN`.
+
 ⛔ **"Ссылка будет в /code" = нарушение шага.** Путь B всегда выполняется здесь, в /plan.
 
 *(read-only утилита — исключение из запрета на запуск команд в /plan)*
