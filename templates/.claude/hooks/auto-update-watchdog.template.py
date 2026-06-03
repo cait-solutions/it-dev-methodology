@@ -268,21 +268,24 @@ def main() -> int:
             return 0
 
         # Успех — печатать только если версия реально изменилась (anti-spam)
-        if version_before != version_after and version_after is not None:
-            print(f"✓ Methodology auto-synced: {version_before} → {version_after}")
-
-            # /sync-audit recommendation — если delta ≥ audit_threshold minor versions
+        # Guard: version_before=None означает bootstrap (первый sync) — не триггерим sync-audit
+        if version_before is not None and version_before != version_after and version_after is not None:
             delta = semver_minor_delta(version_before, version_after)
-            if delta is not None and delta >= config["audit_threshold"]:
-                delta_text = "major bump" if delta == 999 else f"{delta} minor versions"
-                print(
-                    f"\n🔔 Methodology version delta: {delta_text}. "
-                    f"Рекомендация: запусти `/sync-audit` — покажет что добавилось "
-                    f"(delta analysis + ordered action plan) и 5 gap-классов "
-                    f"(PRODUCT components, Sync validators, Mermaid hybrid, Skills frontmatter).\n"
-                    f"   Порог настраивается через `audit_threshold` в CLAUDE.local.md ## Auto-update "
-                    f"(текущий: {config['audit_threshold']})."
-                )
+            delta_text = "major bump" if delta == 999 else (f"{delta} minor" if delta else "patch")
+            print(f"✓ Methodology auto-synced: {version_before} → {version_after} ({delta_text})")
+
+            # Директивная инструкция агенту — выполнить /sync-audit в этой сессии.
+            # Не рекомендация: версия изменилась = adoption-gap возможен, аудит обязателен.
+            print(
+                f"\n🔄 SYNC-AUDIT REQUIRED — methodology обновилась ({version_before} → {version_after}).\n"
+                f"   Выполни /sync-audit прямо сейчас (до ответа на другие запросы):\n"
+                f"   1. Прочитай .claude/.version (текущая: {version_after})\n"
+                f"   2. Открой CHANGELOG.md в methodology repo — что добавилось\n"
+                f"   3. Выполни шаги /sync-audit: delta analysis, gap-проверки (Gaps 1-8), report\n"
+                f"   ⚠️ Если пользователь уже написал срочный запрос — выполни его сначала,\n"
+                f"      затем /sync-audit в этой же сессии.\n"
+                f"   (Настройка: methodology_path={config['methodology_path']} из CLAUDE.local.md)"
+            )
 
         return 0
 
