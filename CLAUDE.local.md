@@ -53,15 +53,20 @@ Auto-discovery параметры для `/pull-consumers` (см. [commands-loca
 ```yaml
 consumers_root: ..              # path relative to methodology repo
 marker_file: .claude/.version   # marker that a sibling folder is methodology consumer
+workspace_file: ../It dev methodology.code-workspace  # VSCode workspace file — primary discovery source
 ```
 
-`/pull-consumers` сканирует `<methodology-repo>/<consumers_root>/*/` и считает консьюмером любую sibling папку имеющую `.git/` И `<marker_file>`. Список **не ведётся вручную** — добавил папку в VSCode workspace (sibling к methodology) → следующий запуск её подхватит.
+`/pull-consumers` использует **два режима discovery** (приоритет: workspace > sibling):
+
+**Режим A — Workspace file (приоритет):** читает `workspace_file`, извлекает все `folders[].path`, резолвит пути относительно папки workspace-файла. Видит все репо добавленные в VSCode — включая `../URAI/`, `../Social Promo folder/` и другие за пределами sibling-дерева. Репо без `.claude/.version` включаются с пометкой `[no-marker]` (gap-checks пропускаются, DEVLOG/IDEAS читаются если есть).
+
+**Режим B — Sibling scan (fallback):** если `workspace_file` не найден — сканирует `consumers_root/*/` как раньше, требует `marker_file`.
 
 **Что НЕ нужно делать:**
 - ❌ Не вести явный список консьюмеров здесь — discovery автоматический
-- ❌ Не править `marker_file` без причины — `.claude/.version` создаётся `new-project-init.sh` и одинаков для всех консьюмеров
+- ❌ Не менять `workspace_file` без переноса workspace — путь должен указывать на актуальный `.code-workspace`
 
-**Когда менять `consumers_root`:** если methodology repo переместился в подпапку (например `tools/methodology/`) — обновить путь относительно нового положения.
+**Когда менять `workspace_file`:** если `.code-workspace` переименован или перемещён.
 
 ---
 
