@@ -49,20 +49,20 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "py .claude/hooks/protect.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh protect.py" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "py .claude/hooks/bash_protect.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh bash_protect.py" }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "py .claude/hooks/docs_reminder.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh docs_reminder.py" }
         ]
       }
     ],
@@ -70,14 +70,15 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "py .claude/hooks/post-edit-watchdog.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh post-edit-watchdog.py" },
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh iteration-watchdog.py" }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "py .claude/hooks/agent-gaps-watchdog.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh agent-gaps-watchdog.py" }
         ]
       }
     ]

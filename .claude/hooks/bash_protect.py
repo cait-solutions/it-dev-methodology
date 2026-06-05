@@ -1,3 +1,9 @@
+# AUTO-GENERATED from methodology-platform v4.69.0
+# Synced: 2026-06-05
+# DO NOT EDIT — changes will be overwritten on next sync
+# Modify via PR to https://github.com/cait-solutions/it-dev-methodology
+# Emergency override: edit locally + open PR within 48h
+
 """
 PreToolUse hook for Bash — blocks destructive commands and reliable secret-dump patterns.
 
