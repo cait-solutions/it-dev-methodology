@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.0.0 — BREAKING: plan→code→review traceability — commitments[] в triggers.json schema (2026-06-05)
+
+**Что (закрывает class «/plan обещал → /code забыл → /review не поймал», симптом: mermaid-ссылки в map-артефактах создаются/обновляются непоследовательно):**
+- **Schema change (BREAKING):** `templates/triggers.json.template` → `last_plan_session` получил поле `commitments: []`. Каждая запись: `{text, status, skip_reason, carried_over?}`. Durable контракт обязательств задачи.
+- **`/plan` Шаг 100** — финализирует список «📋 В /code будет реализовано» (Шаг 99.3) в `commitments[]` (status:pending). Под-шаг 0.5: carry-over `status:done` записей при re-plan (не теряем сделанное).
+- **`/code` Шаг 7** — отмечает каждый commitment `done` / `skipped`+`skip_reason` по факту реализации. `pending` без причины при завершённой работе запрещён.
+- **`/review` Шаг 3 Completeness** — новый класс: читает `commitments` (`.get('commitments') or []` — graceful на отсутствие), сверяет каждый против diff. `pending` без причины ИЛИ `done` без следа в diff → 🔴 fix now (блок merge, disposition за пользователем).
+
+**Почему MAJOR:** изменение схемы `triggers.json` — мажор bump по инварианту CLAUDE.md (структурное правило, не зависит от back-compat механики). **Фактически back-compat:** `deep_merge` в `sync-methodology.sh` авто-добавляет `commitments: []` в существующий `last_plan_session`, сохраняя текущие значения. Старые планы без поля → `/review` graceful skip (🔵, не 🔴).
+
+**Что запустить:**
+```bash
+# Подтянуть новую схему triggers.json (deep_merge добавит commitments[], значения сохранятся):
+bash scripts/sync-methodology.sh .
+```
+Ручных правок triggers.json не требуется — merge идемпотентен. До запуска sync `/review` работает в graceful-режиме (commitments не сверяются, 🔵 уведомление).
+
+**Приоритет:** 🟡 Medium — schema-breaking по правилу, но фактически back-compat через merge. Действие: один `sync-methodology.sh`.
+
+---
+
 ## v4.60.0 — feat: S-026/S-027/S-028 structural gap fixes — template-format validator + few-shot examples + mandatory adjacent output (2026-06-03)
 
 **Что:**

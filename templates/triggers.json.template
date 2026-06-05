@@ -31,7 +31,8 @@
     "task_id": null,
     "service": null,
     "mode": "Full",
-    "code_run": true
+    "code_run": true,
+    "commitments": []
   },
   "last_deploy": {
     "date": null,

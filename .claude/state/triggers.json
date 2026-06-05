@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 6
+      "plans_since": 7
     },
     "last_retro": {
-      "date": "2026-06-03",
-      "plans_since": 2
+      "date": "2026-06-04",
+      "plans_since": 1
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 18
+      "plans_since": 21
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 12
+      "plans_since": 15
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 16
+      "plans_since": 17
     },
     "last_architecture_audit": {
       "date": "2026-06-03",
-      "plans_since": 2,
+      "plans_since": 3,
       "recommendations": [
         {
           "id": "R-023",
@@ -135,11 +135,17 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-03T12:00:00Z",
-    "task_id": "auto-update-watchdog-sync-audit-directive",
+    "completed_at": "2026-06-05T00:00:00Z",
+    "task_id": "plan-code-review traceability (commitments[] L4)",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": true
+    "code_run": true,
+    "commitments": [
+      { "text": "graceful .get('commitments') or [] in /review (absent/null/empty)", "status": "done", "skip_reason": null },
+      { "text": "carry-over done commitments on re-plan in /plan Шаг 100", "status": "done", "skip_reason": null },
+      { "text": "commitments lineage in ARTIFACT-MAP", "status": "pending", "skip_reason": null },
+      { "text": "migration note in CHANGELOG for MAJOR bump", "status": "done", "skip_reason": null }
+    ]
   },
   "last_deploy": {
     "date": "2026-06-03",
