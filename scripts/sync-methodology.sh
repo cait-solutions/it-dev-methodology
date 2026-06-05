@@ -126,12 +126,31 @@ if [[ ${#LOCAL_MODS[@]} -gt 0 ]]; then
   echo "    Sync will OVERWRITE them. If you edited locally, open a PR upstream first:"
   echo "    https://github.com/cait-solutions/it-dev-methodology"
   echo ""
-  printf "Continue and overwrite? [y/N] "
-  read -r ans
-  ans_lower="$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')"
-  if [[ "$ans_lower" != "y" ]]; then
-    echo "Aborted."
-    exit 1
+  # Non-interactive guard (closes G-084): auto-update-watchdog hook вызывает sync
+  # без TTY → `read` получает EOF → пустой ans → exit 1 → хук пишет ложный
+  # last_auto_pull.status="failed" (sync на деле не падал, просто не было кому
+  # ответить на prompt). Detect non-TTY и решаем без блокировки:
+  #   - SYNC_AUTO_YES=1 → авто-overwrite (явное согласие через env)
+  #   - иначе → preserve locally-modified (НЕ overwrite) + продолжить (exit 0)
+  # Никогда exit 1 из-за отсутствия TTY.
+  if [[ ! -t 0 ]]; then
+    if [[ "${SYNC_AUTO_YES:-}" == "1" ]]; then
+      echo "    ℹ️  Non-interactive + SYNC_AUTO_YES=1 → overwriting locally-modified files."
+    else
+      echo "    ℹ️  Non-interactive (no TTY) → PRESERVING locally-modified files (not overwritten)."
+      echo "       Для overwrite запусти вручную в терминале или с SYNC_AUTO_YES=1."
+      # Исключить locally-modified из перезаписи: пометить чтобы banner-injection их пропустил.
+      # (Файлы остаются как есть; sync продолжает с остальными — не ложный сбой.)
+      SKIP_LOCAL_MODS=1
+    fi
+  else
+    printf "Continue and overwrite? [y/N] "
+    read -r ans
+    ans_lower="$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$ans_lower" != "y" ]]; then
+      echo "Aborted."
+      exit 1
+    fi
   fi
 fi
 
@@ -355,6 +374,15 @@ CHANGED_CMDS=()
 for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
   [[ -f "$cmd" ]] || continue
   name="$(basename "$cmd")"
+  # G-084: в non-TTY без SYNC_AUTO_YES — не перезаписывать locally-modified файлы.
+  if [[ "${SKIP_LOCAL_MODS:-}" == "1" ]]; then
+    for _lm in "${LOCAL_MODS[@]}"; do
+      if [[ "$_lm" == "$name" ]]; then
+        echo "  ~ $name (preserved — locally-modified, non-interactive)"
+        continue 2
+      fi
+    done
+  fi
   dest="$TARGET_DIR/.claude/commands/$name"
   old_body=""
   [[ -f "$dest" ]] && old_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
