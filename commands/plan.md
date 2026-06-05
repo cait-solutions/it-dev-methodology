@@ -1099,6 +1099,8 @@ URL выглядит правдоподобно но mermaid.live показыв
 
 `/code` Шаг 5 финализирует подтверждённые drafts **постоянных карт** (USER/SYSTEM/ARTIFACT): сохраняет Mermaid-код в файлы, запускает `bash scripts/update-mermaid-links.sh <file>` для финальных ссылок, убирает маркер `[DRAFT]`. Ad-hoc «было→станет» (вариант 4) — preview-only, не финализируется.
 
+**⚠️ Placeholder `_(ссылка: запусти bash scripts/update-mermaid-links.sh)_` — только для диаграмм с `TODO:` (незаполненных).** Заполненная диаграмма (без `TODO:`) обязана иметь реальный `https://mermaid.live/edit#pako:...` URL — не placeholder-текст. `/code` Шаг 4 пункт 9 проверяет это явно и блокирует коммит если placeholder найден над заполненным mermaid-блоком.
+
 ---
 
 ## Шаг 99.5 — Модель для /code и /review (ПЕРЕД финализацией)

@@ -227,6 +227,18 @@
    - Для каждого: явно описать "если это не true — что сломается?"
 8. **Adjacent impact актуален:** смежные зоны из /plan Шаг -1.3 проверены? Если был затронут методологический артефакт (ARTIFACT-MAP и т.п.) — полный аудит всех стрелок/секций, не только изменённых *(closes G-001)*
 9. **Mermaid изменён:** авто-обновить ссылки + валидировать. **Сначала определи структуру репо** (closes G-076):
+
+   **⛔ Placeholder-check (closes G-086):** перед запуском `update-mermaid-links.sh` — проверить нет ли строк-placeholder в map-файлах которые ты только что записал:
+   ```bash
+   grep -rn "_(ссылка: запусти" docs/architecture/ docs/product/ 2>/dev/null
+   ```
+   - Найдены строки → проверить каждый mermaid-блок под placeholder:
+     - Блок содержит `TODO:` → placeholder **корректен** (диаграмма не заполнена), пропустить
+     - Блок **не содержит** `TODO:` → ⛔ БЛОК: `update-mermaid-links.sh` заменит placeholder реальным URL — запусти его прямо сейчас и убедись что URL появился. Не оставлять `_(ссылка: запусти...)_` в committed файле с заполненной диаграммой.
+   - Нет hits → продолжить.
+
+   **Почему:** `post-edit-watchdog.py` автоматически запускает скрипт при Edit/Write с mermaid. Но если хук не сработал (старая methodology, ручное редактирование, Write без mermaid в `new_string`) — placeholder остаётся как текст. Этот check — fallback-защита.
+
    - Прочитать `CLAUDE.local.md ## Auto-update → doc_repo_path`.
    - **`doc_repo_path: null` (single-repo, default):** артефакты локальны:
      ```bash
