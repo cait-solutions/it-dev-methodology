@@ -143,6 +143,13 @@ git log <production_branch>..HEAD --oneline
 
 Для каждого класса — отметить ✅ проверено-чисто / 🔴 найдено-нарушение / `N/A — причина`. **Пустой ответ или «вроде всё» = аудит не выполнен.**
 
+- [ ] **Plan commitments verification (plan→code→review traceability):** прочитать `.claude/state/triggers.json` → `last_plan_session.commitments` (lookup как `.get('commitments') or []` — отсутствие ключа / `null` / `[]` НЕ ошибка). Для **каждой** записи сверить `status` против реального diff (Шаг 1):
+  - `status: "done"` — подтверждено ли изменением в diff? Если в diff нет следов выполнения → 🔴 (помечено done, но не сделано).
+  - `status: "skipped"` — есть ли `skip_reason`? Без причины → 🔴.
+  - `status: "pending"` без `skip_reason` → 🔴 **fix now**: «Обязательство плана не выполнено: "<text>"». Блокирует merge.
+  - `carried_over: true` — зачтено из прошлого re-plan, не требует следов в текущем diff.
+  - **Graceful:** `commitments` отсутствует / пустой → 🔵 «commitments не заданы (план на версии до schema-бампа, или Lite без обязательств) — sync-methodology.sh подтянет поле; сверка пропущена», НЕ 🔴. `triggers.json` невалидный JSON → 🔵 «commitments не прочитаны — triggers.json повреждён, проверь вручную», НЕ блок.
+  - *Закрывает класс «/plan обещал X → /code забыл → /review не поймал» (mermaid-ссылки, обновление артефакта, etc).*
 - [ ] **CRUD-симметрия:** добавлен `add`/`create`/`set` → есть ли парный `delete`/`undo`/`rollback`? Если нет — это design decision или пропуск? *(класс G-061: secrets имел add/show/edit но не delete)*
 - [ ] **Downstream consumers:** изменён формат/контракт артефакта A → `grep` кто читает A? Получили ли они обновление? *(класс G-066/G-068: формат ссылок изменён, consumers/templates не обновлены)*
 - [ ] **Content vs existence:** валидируется **наличие** файла/поля, но не его **содержимое/актуальность**? Валидатор скажет OK на stale-контенте? *(класс G-073: FMEA D=9 тихий провал)*
@@ -152,7 +159,7 @@ git log <production_branch>..HEAD --oneline
 - [ ] **Что ещё специфично для этого изменения** (open-ended — список выше не исчерпывающий): какой класс пропуска уникален для этой задачи?
 
 **Disposition:**
-- Любой 🔴 в CRUD / downstream / content-vs-existence / template-sync → 🔴 **fix now** (это классы с историей реальных провалов, не cosmetic).
+- Любой 🔴 в **plan commitments** / CRUD / downstream / content-vs-existence / template-sync → 🔴 **fix now** (это классы с историей реальных провалов, не cosmetic). Невыполненное plan-обязательство (`pending` без причины) блокирует merge — но финальное merge/no-merge остаётся явным выбором пользователя (Disposition обязательна, не авто-abort).
 - Trigger-chain 🔴 → минимум 🔵 Recommendation «механизм требует ручного запуска — встроить в <команда>?».
 - Если ни один класс не проверен явно (агент написал общее «completeness OK») → 🔵 Recommendation "Completeness audit не выполнен по классам — пройти 7 пунктов".
 
