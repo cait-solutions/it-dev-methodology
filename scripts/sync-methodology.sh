@@ -256,7 +256,10 @@ sync_claude_canonical() {
 
 # merge_triggers_json: add new fields from template to existing triggers.json.
 # Existing values are preserved; only new keys from template are added.
-# Requires python3 (available on all platforms that have hooks enabled).
+# Interpreter-agnostic (closes G-081): резолвит python3|py|python — на Windows
+# доступен только `py`, хардкод python3 → merge молча пропускался (новые поля
+# triggers.json не подтягивались). Читает с utf-8-sig — BOM от PowerShell-операций
+# больше не ломает json.load.
 merge_triggers_json() {
   local existing="$TARGET_DIR/.claude/state/triggers.json"
   local template="$METHODOLOGY_DIR/templates/triggers.json.template"
@@ -269,13 +272,19 @@ merge_triggers_json() {
     return
   fi
 
-  if command -v python3 >/dev/null 2>&1; then
-    TJ_EXISTING="$existing" TJ_TEMPLATE="$template" python3 - <<'PYEOF' || true
+  local _py=""
+  for _cmd in python3 py python; do
+    command -v "$_cmd" >/dev/null 2>&1 && _py="$_cmd" && break
+  done
+
+  if [[ -n "$_py" ]]; then
+    TJ_EXISTING="$existing" TJ_TEMPLATE="$template" "$_py" - <<'PYEOF' || true
 import json, os, sys
 try:
-    with open(os.environ['TJ_EXISTING']) as f:
+    # utf-8-sig: BOM-tolerant (PowerShell-written triggers.json carries EF BB BF)
+    with open(os.environ['TJ_EXISTING'], encoding='utf-8-sig') as f:
         existing = json.load(f)
-    with open(os.environ['TJ_TEMPLATE']) as f:
+    with open(os.environ['TJ_TEMPLATE'], encoding='utf-8-sig') as f:
         template = json.load(f)
     def deep_merge(t, e):
         if isinstance(t, dict) and isinstance(e, dict):
@@ -285,7 +294,8 @@ try:
             return result
         return e
     merged = deep_merge(template, existing)
-    with open(os.environ['TJ_EXISTING'], 'w') as f:
+    # encoding='utf-8' (без BOM) на запись — нормализуем файл
+    with open(os.environ['TJ_EXISTING'], 'w', encoding='utf-8') as f:
         json.dump(merged, f, indent=2, ensure_ascii=False)
         f.write('\n')
     print("  ↻ triggers.json (merged new fields from template)")
@@ -293,7 +303,7 @@ except Exception as ex:
     print("  ! triggers.json (merge failed: {} — preserved)".format(ex))
 PYEOF
   else
-    echo "  - triggers.json (python3 not available — preserved; merge new fields manually)"
+    echo "  - triggers.json (Python не найден: tried python3, py, python — preserved; merge new fields manually)"
   fi
 }
 
@@ -439,27 +449,48 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
     case "$name" in
       *.py) inject_py_banner "$hook" "$dest" ;;
       *.md) inject_md_banner "$hook" "$dest" ;;
+      *.sh) cp "$hook" "$dest"; chmod +x "$dest" 2>/dev/null || true ;;
       *)    cp "$hook" "$dest" ;;
     esac
     echo "  ✓ $dest_name"
   done
 
-  # Hook-consistency check (closes G-075): каждый hook упомянутый в settings.json
-  # ДОЛЖЕН реально присутствовать в .claude/hooks/. Иначе SessionStart/PreToolUse
-  # hook падает молча → auto-update никогда не срабатывает, consumer застревает на
-  # stale версии без предупреждения. Fail loud, не silent.
+  # Hook-consistency check (closes G-075 + G-081): каждый hook упомянутый в
+  # settings.json ДОЛЖЕН реально присутствовать в .claude/hooks/, И интерпретатор
+  # которым он запускается должен быть доступен. Иначе hook падает молча →
+  # auto-update/security-хуки мертвы, consumer застревает без предупреждения.
   settings_json="$TARGET_DIR/.claude/settings.json"
   if [[ -f "$settings_json" ]]; then
-    # извлечь имена hook-файлов из settings.json (.claude/hooks/<name>.py)
+    # извлечь имена hook-файлов: и прямой вызов (.claude/hooks/X.py), и через
+    # wrapper (run-hook.sh X.py) — берём оба паттерна.
     missing_hooks=""
     while IFS= read -r hookfile; do
       [[ -z "$hookfile" ]] && continue
       [[ -f "$TARGET_DIR/.claude/hooks/$hookfile" ]] || missing_hooks="$missing_hooks $hookfile"
-    done < <(grep -oE '\.claude/hooks/[A-Za-z0-9_-]+\.py' "$settings_json" 2>/dev/null | sed 's#.claude/hooks/##' | sort -u)
+    done < <( {
+      grep -oE '\.claude/hooks/[A-Za-z0-9_-]+\.py' "$settings_json" 2>/dev/null | sed 's#.claude/hooks/##'
+      grep -oE 'run-hook\.sh [A-Za-z0-9_-]+\.py' "$settings_json" 2>/dev/null | sed 's#run-hook\.sh ##'
+    } | sort -u )
     if [[ -n "$missing_hooks" ]]; then
       echo "  ⚠️  HOOK-MISMATCH: settings.json ссылается на отсутствующие hooks:$missing_hooks"
       echo "      → эти hooks упадут молча при запуске. Проверь templates/.claude/hooks/ содержит их,"
       echo "        либо убери ссылку из settings.json. (closes G-075)"
+    fi
+    # G-081: если settings.json использует run-hook.sh — он сам резолвит интерпретатор.
+    # Но если остался прямой хардкод python3/py/python — предупредить о platform-риске.
+    if grep -qE '"command": "(python3|py|python) \.claude/hooks/' "$settings_json" 2>/dev/null; then
+      echo "  ⚠️  INTERPRETER-HARDCODE: settings.json вызывает hooks напрямую (python3/py/python)."
+      echo "      → на платформе без этого интерпретатора hook упадёт молча. Запусти /sync-audit —"
+      echo "        миграция settings-interpreter переведёт на run-hook.sh резолвер. (closes G-081)"
+    fi
+    # Проверка доступности интерпретатора на текущей платформе:
+    _hook_py=""
+    for _cmd in python3 py python; do
+      command -v "$_cmd" >/dev/null 2>&1 && _hook_py="$_cmd" && break
+    done
+    if [[ -z "$_hook_py" ]]; then
+      echo "  ⚠️  NO-PYTHON: ни python3/py/python не найдены в PATH — ВСЕ хуки методологии"
+      echo "      не будут работать. Установи Python 3.10+ (методология требует). (closes G-081)"
     fi
   fi
 fi

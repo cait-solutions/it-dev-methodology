@@ -57,7 +57,7 @@ def parse_rules_from_claude_local() -> list:
         if not os.path.exists(candidate):
             continue
         try:
-            text = open(candidate, encoding="utf-8").read()
+            text = open(candidate, encoding="utf-8-sig").read()  # BOM-tolerant (G-081)
         except Exception:
             continue
 

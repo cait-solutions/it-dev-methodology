@@ -51,7 +51,7 @@ def parse_config(claude_local_path: Path) -> dict:
     if not claude_local_path.is_file():
         return config
     try:
-        text = claude_local_path.read_text(encoding="utf-8", errors="replace")
+        text = claude_local_path.read_text(encoding="utf-8-sig", errors="replace")
     except OSError:
         return config
 
@@ -88,7 +88,8 @@ def read_last_pull(triggers_path: Path) -> str | None:
     if not triggers_path.is_file():
         return None
     try:
-        data = json.loads(triggers_path.read_text(encoding="utf-8"))
+        # utf-8-sig: BOM-tolerant (PowerShell-written triggers.json carries EF BB BF) — closes G-081
+        data = json.loads(triggers_path.read_text(encoding="utf-8-sig"))
         return data.get("last_auto_pull", {}).get("at")
     except (json.JSONDecodeError, OSError):
         return None
@@ -98,7 +99,7 @@ def write_last_pull(triggers_path: Path, version_before: str | None,
                     version_after: str | None, status: str) -> None:
     """Обновляет last_auto_pull в triggers.json. Создаёт если нет."""
     try:
-        data = json.loads(triggers_path.read_text(encoding="utf-8")) if triggers_path.is_file() else {}
+        data = json.loads(triggers_path.read_text(encoding="utf-8-sig")) if triggers_path.is_file() else {}
     except (json.JSONDecodeError, OSError):
         data = {}
     data["last_auto_pull"] = {
@@ -126,7 +127,7 @@ def read_version(version_path: Path) -> str | None:
     if not version_path.is_file():
         return None
     try:
-        text = version_path.read_text(encoding="utf-8")
+        text = version_path.read_text(encoding="utf-8-sig")
         # Формат: "methodology: v4.18.0" или просто "v4.18.0"
         m = re.search(r"v?\d+\.\d+\.\d+", text)
         return m.group(0) if m else None
