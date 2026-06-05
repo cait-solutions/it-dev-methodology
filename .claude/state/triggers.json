@@ -144,7 +144,7 @@
       { "text": "graceful .get('commitments') or [] in /review (absent/null/empty)", "status": "done", "skip_reason": null },
       { "text": "carry-over done commitments on re-plan in /plan Шаг 100", "status": "done", "skip_reason": null },
       { "text": "commitments lineage in ARTIFACT-MAP", "status": "pending", "skip_reason": null },
-      { "text": "migration note in CHANGELOG for MAJOR bump", "status": "pending", "skip_reason": null }
+      { "text": "migration note in CHANGELOG for MAJOR bump", "status": "done", "skip_reason": null }
     ]
   },
   "last_deploy": {
