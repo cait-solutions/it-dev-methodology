@@ -131,3 +131,19 @@ origin_url: https://github.com/cait-solutions/it-dev-methodology.git
 
 Used by `sync-methodology.sh` (auto-corrects `git remote set-url origin` if mismatch) and `/deploy` (validates before push).
 **Tokens:** stored in OS credential manager (`gh auth login`). Never put tokens in this file.
+
+### Push auth — multi-account (closes G-083)
+
+> **Push доступ есть через `gh` credential helper — НЕ через `GITHUB_PAT` в `.env`.** `check-secret.sh GITHUB_PAT` возвращает exit 1, но это **не** значит что push невозможен: `gh auth` залогинен. Не приравнивай «нет GITHUB_PAT» к «нет доступа» — это два разных механизма.
+
+Машина имеет **несколько `gh` аккаунтов** (`IDK-IDK`, `cait-solutions`, `cait-deployer`). Push в `cait-solutions/*` репо требует активного аккаунта **`cait-solutions`**.
+
+**При push-failure (403 / "Permission denied") — ПЕРЕД любым выводом «нужен PAT»:**
+```bash
+gh api user -q .login                  # кто активен сейчас
+gh auth switch --user cait-solutions   # переключить если не cait-solutions
+git push origin <branch>               # повторить
+```
+403 под `IDK-IDK` = **wrong active account**, лечится `gh auth switch`, НЕ настройкой PAT.
+
+> Для doc-repo (`it-dev-methodology-documentation`) — тот же аккаунт `cait-solutions`.

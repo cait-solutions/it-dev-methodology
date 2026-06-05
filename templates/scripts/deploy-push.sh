@@ -95,6 +95,39 @@ _wire_credential_helper() {
 }
 _wire_credential_helper
 
+# ---------------------------------------------------------------------------
+# Ensure correct gh account before push (closes G-083).
+# Машина может иметь несколько gh-аккаунтов (gh auth login --user X). Push в
+# github.com/<owner>/<repo> требует активного аккаунта с доступом к <owner>.
+# 403 при push под чужим активным аккаунтом — НЕ "нет токена", а wrong account.
+# Деривируем требуемый аккаунт из owner remote-а и переключаем если есть среди
+# залогиненных. Это L4: deploy сам восстанавливается, не полагаясь на память агента.
+# Только github.com (gh не управляет gitlab/self-hosted).
+# ---------------------------------------------------------------------------
+_ensure_gh_account() {
+  command -v gh >/dev/null 2>&1 || return 0
+  local remote_url owner
+  remote_url=$(git remote get-url origin 2>/dev/null || true)
+  case "$remote_url" in
+    https://github.com/*) : ;;
+    *) return 0 ;;                          # не github.com → gh не применим
+  esac
+  owner="${remote_url#https://github.com/}"; owner="${owner%%/*}"
+  [[ -n "$owner" ]] || return 0
+  local active
+  active=$(gh api user -q .login 2>/dev/null || echo "")
+  [[ "$active" == "$owner" ]] && return 0   # уже правильный
+  if gh auth status 2>/dev/null | grep -q "account ${owner} "; then
+    if gh auth switch --user "$owner" >/dev/null 2>&1; then
+      echo "🔄 gh account: ${active:-none} → ${owner} (для push в ${owner}/*)"
+    fi
+  else
+    echo "⚠️  gh: аккаунт '${owner}' не залогинен (активен: ${active:-none})."
+    echo "    Push может вернуть 403. Залогинься: gh auth login --user ${owner}"
+  fi
+}
+_ensure_gh_account
+
 if [[ "$MODE" == "team" ]]; then
   echo "▶ Team mode → git push origin ${PUSH_BRANCH}:${PUSH_BRANCH}"
   git push origin "${PUSH_BRANCH}:${PUSH_BRANCH}"
