@@ -639,6 +639,7 @@ else
   check_artifact_subst "README.md"                        "templates/README.template.md"              "$_pname"
   check_artifact_subst "AGENTS.md"                        "templates/AGENTS.md.template"              "$_pname"
   check_artifact_subst "AGENT-GAPS.md"                    "templates/AGENT-GAPS.md.template"          "$_pname"
+  check_artifact_subst "CODE-GAPS.md"                     "templates/CODE-GAPS.md.template"           "$_pname"
   check_artifact_subst "docs/architecture/SYSTEM-MAP.md"  "templates/SYSTEM-MAP.template.md"          "$_pname"
   check_artifact_subst "docs/product/USER-MAP.md"         "templates/USER-MAP.template.md"            "$_pname"
   check_artifact_subst "docs/product/ARTIFACT-MAP.md"     "templates/ARTIFACT-MAP.template.md"        "$_pname"

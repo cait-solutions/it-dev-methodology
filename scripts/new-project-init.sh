@@ -327,6 +327,7 @@ copy_with_subst "$METHODOLOGY_DIR/templates/glossary.template.md"  "$TARGET_DIR/
 echo "→ agent-gaps/"
 copy_with_subst "$METHODOLOGY_DIR/templates/AGENT-GAPS.md.template"  "$TARGET_DIR/AGENT-GAPS.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/PRODUCT-GAPS.md.template" "$TARGET_DIR/PRODUCT-GAPS.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/CODE-GAPS.md.template"    "$TARGET_DIR/CODE-GAPS.md"
 
 echo "→ behavior/"
 copy_with_subst "$METHODOLOGY_DIR/templates/BEHAVIOR.template.md"  "$TARGET_DIR/docs/BEHAVIOR.md"
