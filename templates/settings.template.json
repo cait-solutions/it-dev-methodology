@@ -108,7 +108,8 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "sh .claude/hooks/run-hook.sh post-edit-watchdog.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh post-edit-watchdog.py" },
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh iteration-watchdog.py" }
         ]
       }
     ],
