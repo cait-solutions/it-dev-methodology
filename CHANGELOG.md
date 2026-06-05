@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.1.0 — feat: testing layer Phase 1 — /test + testing-strategy skill + CODE-GAPS (2026-06-05)
+
+**Что (методология начинает ВЕСТИ тестирование разрабатываемых приложений — обнаружение FE/BE багов: технических, логических, визуальных):**
+- **`skills/testing-strategy/SKILL.md`** (новый knowledge-domain) — tiered pyramid (L0 verify / L1 focused / L2 regression «тяжёлая артиллерия»), инструменты per стек (Playwright/Cypress + visual diff, Schemathesis/Pact contract+API, property-based для логики), как ловить логические+визуальные баги не только краши.
+- **`/test`** (новая команда) — оркестратор-навигатор (по запросу, как `/marketing`): выбирает уровень по project_type, генерирует+запускает тесты **в консьюмер-проекте**, найденное → CODE-GAPS.md. **Advisory** — вердикт о корректности кода за разработчиком (Граница 12: методология ведёт тестирование, не исполняет движок и не судит код).
+- **`templates/CODE-GAPS.md.template`** (новый consumer-owned артефакт) — регистр product-багов со статусом open/fixed/regression-guard; категории открытым списком (frontend-visual/logic, backend-contract/crash, regression, perf). Не агрегируется методологией (G-032).
+- **DEVLOG-тег `[test-found:category]`** — указатель на CODE-GAPS; fix-событие остаётся `[fix:X]` (QB3).
+- Bootstrap создаёт `CODE-GAPS.md`; sync добавляет если отсутствует; `/pull-consumers` читает read-only для cross-domain pattern detection.
+
+**Что запустить:**
+```bash
+# Получить новый skill + команду /test + CODE-GAPS.md:
+bash scripts/sync-methodology.sh .
+```
+
+**Что отложено (Phase 2-4, named re-trigger):** блокирующий L2 regression gate в `/deploy`, test-watchdog hook, `--with-testing` bootstrap флаг, VISION QB11 + Граница 12 (фиксация через `/product-vision`). Разблокировать при: консьюмер пропустил regression-баг в prod который L1 поймал бы, ИЛИ ≥2 AGENT-GAPS completeness-gap по test-coverage.
+
+**Приоритет:** 🟢 Low — additive (новый skill/команда/template), не breaking. Действие: один `sync-methodology.sh`.
+
+---
+
 ## v5.0.0 — BREAKING: plan→code→review traceability — commitments[] в triggers.json schema (2026-06-05)
 
 **Что (закрывает class «/plan обещал → /code забыл → /review не поймал», симптом: mermaid-ссылки в map-артефактах создаются/обновляются непоследовательно):**
