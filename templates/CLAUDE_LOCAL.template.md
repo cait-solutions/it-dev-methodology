@@ -297,6 +297,26 @@ rules:
 
 ---
 
+## Iteration watchdog
+
+Config для `iteration-watchdog.py` (PostToolUse hook, L4 reasoning-escalation). Считает
+повторные Edit/Write одного frontend-файла без commit; на пороге выводит сигнал что
+проблема reasoning-depth (нужен pattern-comparison с эталоном + DOM-измерение + возможно
+upgrade модели), а не очередной локальный патч. (closes G-082)
+
+```yaml
+threshold: 3
+extensions: .vue .css .scss .tsx .jsx .svelte .html
+```
+
+- `threshold` — на скольки итерациях правки одного файла без commit сработает сигнал
+- `extensions` — какие расширения считать (visual/CSS файлы где reasoning-depth острее)
+
+> Сброс счётчика — при смене git HEAD (commit = итерация завершилась успешно).
+> Если секция отсутствует — дефолты (threshold=3, frontend-расширения).
+
+---
+
 ## External links
 
 - Runbooks: `<link>`

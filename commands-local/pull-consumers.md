@@ -46,41 +46,81 @@ bash scripts/clone-consumer.sh <name>
 
 ## Шаг 0 — Discovery консьюмеров (auto)
 
-1. Прочитать `CLAUDE.local.md` секцию `## Consumers`:
-   ```yaml
-   consumers_root: ..              # path relative to methodology repo (default ..)
-   marker_file: .claude/.version   # marker that folder is methodology consumer
-   ```
-   Defaults если секция отсутствует: `consumers_root=..`, `marker_file=.claude/.version`.
+**Два режима — приоритет: Режим A (workspace file) > Режим B (sibling scan).**
 
-2. Resolve absolute path: `<methodology-repo>/<consumers_root>` → workspace root.
+### Подшаг 0.1 — Читать конфиг
 
-3. Сканировать sibling папки workspace root:
+Прочитать `CLAUDE.local.md` секцию `## Consumers`:
+```yaml
+consumers_root: ..                                        # default ..
+marker_file: .claude/.version                             # default .claude/.version
+workspace_file: ../It dev methodology.code-workspace      # путь к .code-workspace, относительно methodology repo
+```
+Defaults если секция отсутствует: `consumers_root=..`, `marker_file=.claude/.version`, `workspace_file=` (не задан → автопоиск).
+
+### Подшаг 0.2 — Режим A: Workspace file discovery (приоритет)
+
+1. **Найти workspace file:**
+   - Если `workspace_file` задан в конфиге → resolve абсолютный путь относительно methodology repo
+   - Если не задан → автопоиск: `ls "<consumers_root>"/*.code-workspace 2>/dev/null | head -1`
+   - Если файл не найден → перейти к Режиму B, показать предупреждение:
+     `⚠️ .code-workspace не найден — fallback к sibling scan`
+
+2. **Парсить JSON** (Python, избегать bash-only JSON parsing):
    ```bash
-   for dir in "$WORKSPACE_ROOT"/*/; do
-     name=$(basename "$dir")
-     # Skip self (methodology repo)
-     [[ "$dir" == "$METHODOLOGY_DIR/" ]] && continue
-     # Skip if not a git repo
-     [[ ! -d "$dir/.git" ]] && continue
-     # Skip if no methodology marker
-     [[ ! -f "$dir/$MARKER_FILE" ]] && continue
-     # This is a methodology consumer — discover branch
-     ...
-   done
+   python3 -c "
+   import json, sys, pathlib
+   ws = pathlib.Path(sys.argv[1])
+   ws_dir = ws.parent
+   data = json.loads(ws.read_text(encoding='utf-8'))
+   for f in data.get('folders', []):
+       p = (ws_dir / f['path']).resolve()
+       print(p)
+   " "<workspace_file_path>"
    ```
 
-4. Для каждого консьюмера определить branch:
-   - Прочитать `<consumer>/CLAUDE.local.md` секцию `## Branching` → `agent_branch`
-   - Default `ai-dev` если не указан (методологический инвариант — все консьюмеры используют `ai-dev` для AI-агента)
+3. **Для каждого resolved path:**
+   - Пропустить если не существует или не директория
+   - Пропустить если `resolved_path == methodology_repo_path` (self)
+   - Пропустить если нет `.git/` (не git repo)
+   - Определить тип: `[marker]` если есть `<path>/<marker_file>`, иначе `[no-marker]`
+   - Добавить в список consumers с флагом типа
 
-5. Вывести inventory:
-   ```
-   Discovered consumers in <workspace-root>:
-   - erp-documentantion         (branch: ai-dev, remote: gitlab)
-   - ai-assistant-documentation (branch: ai-dev, remote: github)
-   - it-dev-methodology-documentation (branch: ai-dev, remote: github)
-   ```
+4. **Для каждого consumer определить branch:**
+   - Прочитать `<consumer>/CLAUDE.local.md` → `## Branching` → `agent_branch`
+   - Default `ai-dev` если не найден
+
+5. **`[no-marker]` consumers:** включаются в discovery и report, но в Шаге 3 (diff artifacts) — только читать DEVLOG/IDEAS если файлы существуют; gap-checks (`.claude/.version` version comparison) пропускаются. В report помечать: `⚪ [no-marker] — методология не инициализирована`.
+
+### Подшаг 0.3 — Режим B: Sibling scan (fallback)
+
+Если workspace file не найден — использовать sibling scan (поведение до v4.62.0):
+```bash
+WORKSPACE_ROOT="<methodology_repo>/<consumers_root>"
+for dir in "$WORKSPACE_ROOT"/*/; do
+  [[ "$dir" == "$METHODOLOGY_DIR/" ]] && continue   # skip self
+  [[ ! -d "$dir/.git" ]] && continue                # skip non-git
+  [[ ! -f "$dir/$MARKER_FILE" ]] && continue        # skip no-marker (sibling mode: strict)
+  # discovered consumer
+done
+```
+
+> **Отличие от Режима A:** sibling scan в Режиме B требует marker_file (строгий фильтр). Режим A включает `[no-marker]` repos — потому что workspace = явный список выбранных разработчиком.
+
+### Подшаг 0.4 — Вывести inventory
+
+```
+Discovery mode: workspace file (<path>) — 8 folders found
+Discovered consumers:
+  ✅ erp-documentantion              (branch: ai-dev, remote: gitlab)        [marker v4.47.5]
+  ✅ ai-assistant-documentation      (branch: ai-dev, remote: github)        [marker v4.10.6]
+  ✅ it-dev-methodology-documentation(branch: main,   remote: github)        [marker v4.45.0]
+  ⚪ legal-ai-assistant-documentation(branch: ai-dev, remote: github)        [no-marker]
+  ⚪ social-promo-documentation      (branch: ai-dev, remote: github)        [no-marker]
+  ⚪ ebay-template-documentation     (branch: ai-dev, remote: github)        [no-marker]
+  ⚪ lead-gen-documentation          (branch: ai-dev, remote: github)        [no-marker]
+  — it-dev-methodology (self — skipped)
+```
 
 ---
 
@@ -157,7 +197,8 @@ git -C "$consumer_path" merge --ff-only "origin/$branch" 2>&1
 
 ## Шаг 3 — Diff methodology artifacts
 
-Для каждого pulled консьюмера: собрать новые записи в methodology-tracked артефактах.
+**`[marker]` consumers:** полный diff по git (prev_sha..head_sha).
+**`[no-marker]` consumers:** нет prev_sha — читать файлы напрямую и показать последние 5 entries каждого артефакта (snapshot, не diff). Пометить секцию: `⚪ [no-marker] — показан snapshot (нет baseline для diff)`.
 
 **Методология-tracked файлы** (искать в **корне И в `docs/`**):
 - `AGENT-GAPS.md`
@@ -169,20 +210,25 @@ git -C "$consumer_path" merge --ff-only "origin/$branch" 2>&1
 - `RISKS.md`
 - `OPEN-QUESTIONS.md`
 
-Для каждого файла который существует:
-
+Для **`[marker]` consumers** (diff mode):
 ```bash
 git -C "$consumer_path" diff "$prev_sha..$head_sha" -- "$file"
 ```
 
-Парсить diff:
-- **GAPS файлы:** новые блоки между разделителями `---` с полем `Gap-ID:` → извлечь ID + first 60 chars описания
-- **DEVLOG:** новые строки начинающиеся с `## ` или с timestamp pattern `[YYYY-MM-DD]` → извлечь tag + первая строка
-- **IDEAS / ROADMAP:** новые строки начинающиеся с `- [ ]` или `## ` → извлечь
-- **HYPOTHESES / RISKS / OPEN-QUESTIONS:** новые секции по заголовкам `## ` → извлечь заголовок
+Для **`[no-marker]` consumers** (snapshot mode):
+```bash
+# Читать файл напрямую — последние N записей
+grep -E "^## 20|^## G-|^## P-|^- \[|^Gap-ID:" "$consumer_path/$file" | tail -5
+```
+
+Парсить diff/snapshot:
+- **GAPS файлы:** блоки с `Gap-ID:` → извлечь ID + first 60 chars описания
+- **DEVLOG:** строки начинающиеся с `## 20` → извлечь tag + первая строка
+- **IDEAS / ROADMAP:** строки начинающиеся с `- [ ]` или `## 20` → извлечь
+- **HYPOTHESES / RISKS / OPEN-QUESTIONS:** заголовки `## ` → извлечь
 
 Edge cases:
-- Файл существует в **обоих** местах (`./IDEAS.md` И `docs/IDEAS.md`) — показать оба отдельно (drift между двумя копиями — сигнал для отдельной диагностики, не дедуплицируем)
+- Файл существует в **обоих** местах (`./IDEAS.md` И `docs/IDEAS.md`) — показать оба отдельно
 - Файл пустой / нет diff → «no new entries»
 - Файл не существует в консьюмере → пропустить тихо
 
@@ -194,8 +240,9 @@ Edge cases:
 
 ```
 ## Pull Consumers Report — <ISO date>
+Discovery: workspace file (It dev methodology.code-workspace) — 8 repos, 4 with marker, 4 no-marker
 
-### erp-documentantion (gitlab/ai-dev)
+### [marker] erp-documentantion (gitlab/ai-dev) — v4.47.5
 ✓ Pulled abc123 → def456 (12 commits since 2026-05-25)
 
 **AGENT-GAPS** (root): +2 new
@@ -205,28 +252,47 @@ Edge cases:
 **DEVLOG** (root): +5 entries (2026-05-27..28)
 - [feat:command] /pull-consumers v4.28.0
 - [fix:hook] auto-update-watchdog interval
-- ... (2 more)
 
 **PRODUCT-GAPS** (root): no new
 **IDEAS** (root): +1 new
 - «cross-repo gap pattern analysis tool»
 
-**docs/HYPOTHESES**: +1 (drift с root/HYPOTHESES — оба обновлены, проверь синхронизацию)
-
-### ai-assistant-documentation (github/ai-dev)
+### [marker] ai-assistant-documentation (github/ai-dev) — v4.10.6
 ✗ SKIPPED — fetch failed: remote repository not found (404)
 
-### it-dev-methodology-documentation (github/ai-dev)
-✓ Pulled (up to date — no new commits)
+### [marker] it-dev-methodology-documentation (github/main) — v4.45.0
+✓ up to date — no new commits
+
+---
+
+### [no-marker] legal-ai-assistant-documentation (github/ai-dev)
+⚪ Методология не инициализирована — snapshot последних записей
+
+✓ Pulled (up to date)
+**DEVLOG** (snapshot, последние 5): нет файла
+**IDEAS** (snapshot, последние 5): нет файла
+
+### [no-marker] social-promo-documentation (github/ai-dev)
+⚪ Методология не инициализирована — snapshot последних записей
+✓ Pulled def789 → abc012 (3 commits)
+**DEVLOG** (snapshot): no file
+**IDEAS** (snapshot): no file
+
+### [no-marker] ebay-template-documentation (github/ai-dev)
+⚪ up to date — no new commits
+
+### [no-marker] lead-gen-documentation (github/ai-dev)
+⚪ up to date — no new commits
 
 ---
 
 ## Summary
-- 2/3 consumers updated successfully, 1 skipped
-- 5 new gap-class entries across all repos (3 AGENT-GAPS, 0 PRODUCT-GAPS, 2 IDEAS)
-- Recommendation: 
-  • 3+ new AGENT-GAPS → consider /retro --consumers для cross-repo pattern analysis
-  • Drift detected: erp-documentantion docs/HYPOTHESES.md vs ./HYPOTHESES.md — оба обновлены
+Discovery: workspace file — 8 repos (4 marker / 4 no-marker)
+Pulled: 6 ok, 1 skipped (fetch failed), 1 skipped (uncommitted changes)
+New gap entries [marker repos]: 2 AGENT-GAPS, 0 PRODUCT-GAPS, 1 IDEAS
+Recommendations:
+  • 2+ new AGENT-GAPS → consider /retro --consumers
+  • 4 repos [no-marker] — рассмотри bootstrap через new-project-init.sh если нужен gap-tracking
 ```
 
 **Brevity rules:**
@@ -277,8 +343,12 @@ marker_file: .claude/.version
 
 **Pull failed «non-ff»:** консьюмер local diverged от origin. Решение: вручную `cd <consumer> && git rebase origin/<branch>` или `git reset --hard origin/<branch>` (если local изменения не нужны).
 
-**Все консьюмеры SKIPPED «no marker_file»:** консьюмеры не bootstrap'нуты через `new-project-init.sh` (нет `.claude/.version`). Либо запусти bootstrap, либо вручную: `mkdir <consumer>/.claude && echo v4.28.0 > <consumer>/.claude/.version`.
+**`[no-marker]` repos видны но нет gap-tracking:** ожидаемо — методология не инициализирована. Bootstrap: `bash scripts/new-project-init.sh <path>`. После этого репо получит `.claude/.version` и появится как `[marker]` в следующем запуске.
 
-**404 на одном консьюмере (как ai-assistant сейчас):** repo private/удалён/wrong URL. Проверь `git -C <consumer> remote get-url origin`. Исправь через `git remote set-url origin <correct-url>`.
+**`[no-marker]` repos НЕ должны быть в /pull-consumers:** добавь путь в `exclude_paths` (опционально). Сейчас нет такого поля — удали папку из `.code-workspace` в VSCode как workaround.
 
-**Discovery не находит консьюмеров:** проверь `pwd` методологии и `consumers_root` в `CLAUDE.local.md` — путь должен резолвиться к директории содержащей sibling папки с `.claude/.version`.
+**404 на одном консьюмере:** repo private/удалён/wrong URL. Проверь `git -C <consumer> remote get-url origin`. Исправь через `git remote set-url origin <correct-url>`.
+
+**Discovery не находит консьюмеров (Режим A):** проверь что `workspace_file` в `CLAUDE.local.md ## Consumers` указывает на актуальный `.code-workspace`. Путь относительно methodology repo. Открой файл — убедись что JSON корректный.
+
+**Discovery не находит консьюмеров (Режим B / fallback):** проверь `consumers_root` в `CLAUDE.local.md` — путь должен резолвиться к директории содержащей sibling папки с `.claude/.version`.

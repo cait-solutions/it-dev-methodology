@@ -101,7 +101,7 @@ def _get_threshold():
     if not os.path.exists(manifest):
         return 4.5
     try:
-        with open(manifest, encoding="utf-8") as f:
+        with open(manifest, encoding="utf-8-sig") as f:  # BOM-tolerant (G-081)
             for line in f:
                 m = re.match(r'^\s*entropy_threshold:\s*([0-9.]+)', line)
                 if m:

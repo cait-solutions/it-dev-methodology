@@ -2,36 +2,36 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 4
+      "plans_since": 6
     },
     "last_retro": {
-      "date": "2026-06-01",
-      "plans_since": 4
+      "date": "2026-06-03",
+      "plans_since": 2
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 16
+      "plans_since": 18
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 10
+      "plans_since": 12
     },
     "last_product_vision": {
-      "date": "2026-05-27",
-      "plans_since": 11
+      "date": "2026-06-03",
+      "plans_since": 1
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 14
+      "plans_since": 16
     },
     "last_architecture_audit": {
-      "date": "2026-05-27",
-      "plans_since": 9,
+      "date": "2026-06-03",
+      "plans_since": 2,
       "recommendations": [
         {
           "id": "R-023",
           "type": "drift",
-          "summary": "S-3 SYSTEM-MAP scripts/ — добавить update-mermaid-links.sh + validate-doc-freshness.sh (добавлены v4.11.1 и v4.9.17, не отражены)",
+          "summary": "S-3 SYSTEM-MAP scripts/",
           "status": "implemented",
           "scope": "documentation",
           "implementation_pr": "v4.11.2"
@@ -39,7 +39,7 @@
         {
           "id": "R-024",
           "type": "gap-structural",
-          "summary": "S-1 completeness-gap partial-check: усилить /code Шаг 1.7 явным вопросом 'N из M однотипных → grep всех M'",
+          "summary": "S-1 completeness-gap partial-check usilen",
           "status": "implemented",
           "scope": "methodology",
           "implementation_pr": "v4.11.2"
@@ -47,7 +47,7 @@
         {
           "id": "R-025",
           "type": "gap-structural",
-          "summary": "S-2 logic-gap memory-vs-read: добавить антипример в /plan Шаг -1.5 'при вопросе о поведении команды — читать файл'",
+          "summary": "S-2 logic-gap memory-vs-read antipример",
           "status": "implemented",
           "scope": "methodology",
           "implementation_pr": "v4.11.2"
@@ -55,7 +55,7 @@
         {
           "id": "R-004",
           "type": "decommission",
-          "summary": "merge /plan Шаг 0.1 + 98 Pre-Mortem — defer 3rd cycle: нет SILENT данных из /retro 4.5",
+          "summary": "merge /plan Шаг 0.1 + 98 Pre-Mortem",
           "status": "proposed-deferred",
           "scope": "methodology",
           "implementation_pr": null
@@ -63,7 +63,7 @@
         {
           "id": "R-005",
           "type": "decommission",
-          "summary": "cut /review Шаг 3.5 — defer 3rd cycle: нет HIT/SILENT данных",
+          "summary": "cut /review Шаг 3.5",
           "status": "proposed-deferred",
           "scope": "methodology",
           "implementation_pr": null
@@ -71,7 +71,7 @@
         {
           "id": "R-006",
           "type": "gap-structural",
-          "summary": "Complexity budget rule в CLAUDE.md — defer (ждать 2+ retro циклов)",
+          "summary": "Complexity budget rule в CLAUDE.md",
           "status": "proposed-deferred",
           "scope": "methodology",
           "implementation_pr": null
@@ -79,8 +79,32 @@
         {
           "id": "R-007",
           "type": "gap-structural",
-          "summary": "Deploy-time consumer instruction generator — defer (G-019 без повтора)",
+          "summary": "Deploy-time consumer instruction generator",
           "status": "proposed-deferred",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-026",
+          "type": "gap-structural",
+          "summary": "S-026: template-pair validator расширение validate-methodology.sh",
+          "status": "proposed",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-027",
+          "type": "gap-structural",
+          "summary": "S-027: logic-gap few-shot mermaid+sync-audit",
+          "status": "proposed",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-028",
+          "type": "gap-structural",
+          "summary": "S-028: completeness-gap Adjacent mandatory output в /code Шаг 1.7",
+          "status": "proposed",
           "scope": "methodology",
           "implementation_pr": null
         }
@@ -111,15 +135,15 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-02T00:00:00Z",
-    "task_id": "concurrent-sessions-worktree-isolation-P001",
+    "completed_at": "2026-06-03T12:00:00Z",
+    "task_id": "auto-update-watchdog-sync-audit-directive",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true
   },
   "last_deploy": {
-    "date": "2026-06-01",
+    "date": "2026-06-03",
     "status": "ok",
-    "phase": "migration-registry-v4.58.0"
+    "phase": "S026-S027-S028-structural-gaps-v4.60.0"
   }
 }
