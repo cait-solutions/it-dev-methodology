@@ -299,6 +299,12 @@ merge_triggers_json() {
   if [[ -n "$_py" ]]; then
     TJ_EXISTING="$existing" TJ_TEMPLATE="$template" "$_py" - <<'PYEOF' || true
 import json, os, sys
+# Windows cp1252 stdout не кодирует ↻/— → print крашится (тот же класс что в
+# merge_settings_json). Форсим utf-8 stdout до любого print.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 try:
     # utf-8-sig: BOM-tolerant (PowerShell-written triggers.json carries EF BB BF)
     with open(os.environ['TJ_EXISTING'], encoding='utf-8-sig') as f:
@@ -367,7 +373,14 @@ merge_settings_json() {
 
   if [[ -n "$_py" ]]; then
     SJ_EXISTING="$existing" SJ_TEMPLATE="$template" "$_py" - <<'PYEOF' || true
-import json, os, re
+import json, os, re, sys
+# Windows cp1252 stdout не кодирует ↻/✓/— → print крашится, exception ловится в
+# except как «merge failed» (ложно: merge мог УСПЕТЬ записать, упал только print).
+# Форсим utf-8 stdout. Py3.7+ reconfigure; guard на случай не-reconfigurable стрима.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 def hook_name(command):
     """Имя hook-файла из command-строки: и run-hook.sh X.py, и прямой .claude/hooks/X.py.
@@ -743,6 +756,16 @@ if [[ "$IS_SELF_APPLY" == "true" ]]; then
         "$METHODOLOGY_DIR/templates/CLAUDE_LONG-methodology.template.md" > "$TARGET_DIR/CLAUDE_LONG.md"
     echo "  ✓ CLAUDE_LONG.md (restored from methodology template)"
   fi
+
+  # Dogfood own hook-wiring (closes mechanism #3 «watchdog не запускался»):
+  # self-apply раньше НЕ вызывал merge_settings_json (он жил только в consumer-ветке) →
+  # own .claude/settings.json методологии оставался без SessionStart wiring →
+  # auto-update-watchdog.py НИКОГДА не запускался у самой методологии (sync/sync-audit/
+  # check_hook_health спали; last_auto_pull отсутствовал). Методология должна dog-food'ить
+  # own delivery: применяем тот же merge к себе. НЕ merge_triggers_json — own triggers.json
+  # это runtime state (gitignored), его merge при self-apply конфликтует с активными сессиями.
+  echo "  [self-apply — dogfood hook-wiring]"
+  merge_settings_json
 else
   # Consumer project: overwrite canonical artifacts, add missing project-owned artifacts.
   _pname="$(basename "$TARGET_DIR")"
