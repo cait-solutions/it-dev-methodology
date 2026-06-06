@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 7
+      "plans_since": 8
     },
     "last_retro": {
       "date": "2026-06-04",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 21
+      "plans_since": 22
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 15
+      "plans_since": 16
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 2
+      "plans_since": 3
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 17
+      "plans_since": 18
     },
     "last_architecture_audit": {
       "date": "2026-06-03",
-      "plans_since": 3,
+      "plans_since": 4,
       "recommendations": [
         {
           "id": "R-023",
@@ -135,21 +135,22 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-05T00:00:00Z",
-    "task_id": "plan-code-review traceability (commitments[] L4)",
+    "completed_at": "2026-06-06T00:00:00Z",
+    "task_id": "consumer-push-merge command (GitHub+GitLab aware, develop→main fallback, --main flag)",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": true,
+    "code_run": false,
     "commitments": [
-      { "text": "graceful .get('commitments') or [] in /review (absent/null/empty)", "status": "done", "skip_reason": null },
-      { "text": "carry-over done commitments on re-plan in /plan Шаг 100", "status": "done", "skip_reason": null },
-      { "text": "commitments lineage in ARTIFACT-MAP", "status": "pending", "skip_reason": null },
-      { "text": "migration note in CHANGELOG for MAJOR bump", "status": "done", "skip_reason": null }
+      { "text": "SSH remote hostname detection в consumer-push.sh (git@ URL паттерн)", "status": "pending", "skip_reason": null },
+      { "text": "$ARGUMENTS passthrough как $EXTRA_ARGS в consumer-push.sh", "status": "pending", "skip_reason": null },
+      { "text": "PRODUCT.md + USER-MAP.md обновить с новой capability /push-merge", "status": "pending", "skip_reason": null },
+      { "text": "Whitelist validation для $ARGUMENTS (только --main допускается)", "status": "pending", "skip_reason": null },
+      { "text": "Обновление last_deploy.date в triggers.json после успешного push в consumer-push.sh", "status": "pending", "skip_reason": null }
     ]
   },
   "last_deploy": {
-    "date": "2026-06-03",
+    "date": "2026-06-05",
     "status": "ok",
-    "phase": "S026-S027-S028-structural-gaps-v4.60.0"
+    "phase": "plan-code-review traceability commitments[] v5.0.0 (PR #141)"
   }
 }
