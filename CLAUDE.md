@@ -240,6 +240,14 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 **Типы стрелок (единообразно):** `-->` W · `-.->` R · `===` RW · `--o` git · `--x` C · `==>` agent-write
 
+**Класс `affordance` — навигационные узлы (НЕ модельные компоненты):** карта = «что ЕСТЬ» (arc42 viewpoint). Узел, который говорит о **месте карты в workflow** (а не утверждает что компонент существует в системе) — навигационный affordance, а не scope-claim. Примеры: `📋 Отложенный scope → /scope-out`, Workflow-Cycle, Legend, repo/setup-контекст. Помечать стилем:
+```
+classDef affordance fill:#3b0764,stroke:#a855f7,color:#f3e8ff,stroke-dasharray:4 3
+NodeID["📋 Отложенный scope → /scope-out"]:::affordance
+```
+- **Зачем класс, не просто стиль:** `/architecture-audit` Шаг 3 исключает узлы класса `affordance` из phantom/drift-сравнения по **классу** (не по ID — ID-whitelist = slope). Affordance не имеет code-counterpart by design → без класса аудит ложно флагует его как phantom.
+- **Граница:** affordance ≠ deferred-компонент. ❌ НЕ добавлять в living maps узлы «planned/deferred component» (ломает «карта = что ЕСТЬ», даёт ложный drift). Отложенный scope визуализируется **отдельно** через `/scope-out` (эфемерно), а в карте присутствует только **навигационный anchor** к нему. Closes P-002.
+
 ### 4. Правила таблиц
 
 Таблицы = полный реестр (каждый компонент — отдельная строка).
