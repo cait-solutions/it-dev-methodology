@@ -4,6 +4,41 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.3.0 — feat: /review hook-wiring parity gate — dev-side «hook доехал, но не активировался» (2026-06-06)
+
+**Что (закрывает класс тихого провала: fix есть в методологии, но hook мёртв у консьюмера):**
+- **`/review` Шаг 3 (methodology-platform)** — новый hard-check **Hook-wiring parity**: PR трогает `templates/.claude/hooks/` → каждый entry-point hook ОБЯЗАН быть wired через `run-hook.sh <name>.py` в `templates/settings.template.json`, иначе 🔴 блок merge. Прямое направление (file→no wiring); комплементарно runtime `check_hook_health` (settings→missing file).
+- Helper-исключение через маркер `# NOT-WIRED:`; detection-guard на 0 совпадений (closes G-073-класс).
+
+**Что запустить (получить обновлённый /review):**
+```bash
+bash scripts/sync-methodology.sh .
+```
+Поведение для консьюмеров не меняется автоматически — gate применяется при разработке самой методологии. Консьюмеры получают обновлённый текст команды `/review`.
+
+---
+
+## v5.1.0 — feat: testing layer Phase 1 — /test + testing-strategy skill + CODE-GAPS (2026-06-05)
+
+**Что (методология начинает ВЕСТИ тестирование разрабатываемых приложений — обнаружение FE/BE багов: технических, логических, визуальных):**
+- **`skills/testing-strategy/SKILL.md`** (новый knowledge-domain) — tiered pyramid (L0 verify / L1 focused / L2 regression «тяжёлая артиллерия»), инструменты per стек (Playwright/Cypress + visual diff, Schemathesis/Pact contract+API, property-based для логики), как ловить логические+визуальные баги не только краши.
+- **`/test`** (новая команда) — оркестратор-навигатор (по запросу, как `/marketing`): выбирает уровень по project_type, генерирует+запускает тесты **в консьюмер-проекте**, найденное → CODE-GAPS.md. **Advisory** — вердикт о корректности кода за разработчиком (Граница 12: методология ведёт тестирование, не исполняет движок и не судит код).
+- **`templates/CODE-GAPS.md.template`** (новый consumer-owned артефакт) — регистр product-багов со статусом open/fixed/regression-guard; категории открытым списком (frontend-visual/logic, backend-contract/crash, regression, perf). Не агрегируется методологией (G-032).
+- **DEVLOG-тег `[test-found:category]`** — указатель на CODE-GAPS; fix-событие остаётся `[fix:X]` (QB3).
+- Bootstrap создаёт `CODE-GAPS.md`; sync добавляет если отсутствует; `/pull-consumers` читает read-only для cross-domain pattern detection.
+
+**Что запустить:**
+```bash
+# Получить новый skill + команду /test + CODE-GAPS.md:
+bash scripts/sync-methodology.sh .
+```
+
+**Что отложено (Phase 2-4, named re-trigger):** блокирующий L2 regression gate в `/deploy`, test-watchdog hook, `--with-testing` bootstrap флаг, VISION QB11 + Граница 12 (фиксация через `/product-vision`). Разблокировать при: консьюмер пропустил regression-баг в prod который L1 поймал бы, ИЛИ ≥2 AGENT-GAPS completeness-gap по test-coverage.
+
+**Приоритет:** 🟢 Low — additive (новый skill/команда/template), не breaking. Действие: один `sync-methodology.sh`.
+
+---
+
 ## v5.0.0 — BREAKING: plan→code→review traceability — commitments[] в triggers.json schema (2026-06-05)
 
 **Что (закрывает class «/plan обещал → /code забыл → /review не поймал», симптом: mermaid-ссылки в map-артефактах создаются/обновляются непоследовательно):**

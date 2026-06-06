@@ -2,7 +2,7 @@
 
 > **LOCAL-ONLY command — NEVER syncs to consumer projects.**
 > Lives in `commands-local/` (excluded from `sync-methodology.sh` glob `commands/*.md`).
-> Цель: одной командой подтянуть все consumer repos в workspace + показать diff новых записей в methodology-tracked артефактах (AGENT-GAPS, PRODUCT-GAPS, DEVLOG, IDEAS, ROADMAP, HYPOTHESES, RISKS, OPEN-QUESTIONS).
+> Цель: одной командой подтянуть все consumer repos в workspace + показать diff новых записей в methodology-tracked артефактах (AGENT-GAPS, PRODUCT-GAPS, CODE-GAPS, DEVLOG, IDEAS, ROADMAP, HYPOTHESES, RISKS, OPEN-QUESTIONS).
 >
 > **Заменяет ручной workflow:** `cd <repo1> && git pull && cat AGENT-GAPS.md` × N repos.
 
@@ -203,6 +203,7 @@ git -C "$consumer_path" merge --ff-only "origin/$branch" 2>&1
 **Методология-tracked файлы** (искать в **корне И в `docs/`**):
 - `AGENT-GAPS.md`
 - `PRODUCT-GAPS.md`
+- `CODE-GAPS.md` *(read-only diff для cross-domain pattern detection — какие классы product-багов повторяются у консьюмеров; НЕ копировать баги в methodology-артефакты, G-032)*
 - `DEVLOG.md`
 - `IDEAS.md`
 - `ROADMAP.md`

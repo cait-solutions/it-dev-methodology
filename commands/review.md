@@ -289,6 +289,22 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - [ ] Изменён bootstrap: новый файл создаётся? → хотя бы одна команда на него ссылается?
 - Несоответствие → 🔴 CRITICAL (команда сломана на свежем проекте)
 
+**Hook-wiring parity** (только для methodology-platform tasks; PR трогает `templates/.claude/hooks/`):
+
+> **Класс** «fix есть в методологии, но не активировался у консьюмера — тихий fail» (erp 2026-06-06: hook-файл добавлен, но не wired в settings → hook мёртв у всех консьюмеров, ничто не ловило на dev-стороне). **Прямое направление:** file → нет wiring. Комплементарно `check_hook_health` в `auto-update-watchdog.py` (runtime у консьюмера, обратное направление settings→missing file) и sync G-075 — здесь dev-time gate на источнике.
+
+- PR трогает `templates/.claude/hooks/*` (`git diff main..HEAD --name-only | grep "templates/.claude/hooks/"`)? Нет → `N/A — хуки не тронуты`.
+- Если да: каждый hook-файл (`templates/.claude/hooks/*.py`, **после strip `.template`** — напр. `auto-update-watchdog.template.py` → `auto-update-watchdog.py`) ОБЯЗАН вызываться через `run-hook.sh <name>.py` в `templates/settings.template.json`:
+  ```bash
+  # список entry-point хуков (strip .template):
+  for f in templates/.claude/hooks/*.py; do basename "$f" | sed 's/\.template//'; done | sort -u
+  # список wired в settings:
+  grep -oE 'run-hook\.sh [A-Za-z0-9_-]+\.py' templates/settings.template.json | sed 's/run-hook\.sh //' | sort -u
+  ```
+- Hook-файл присутствует, но НЕ в списке wired → 🔴 **CRITICAL fix now**: «`<name>.py` не wired в settings.template.json → hook мёртв у всех консьюмеров (тихий fail)». Блокирует merge. Disposition: добавить wiring в settings.template.json в этом PR.
+- **Helper-исключение:** hook не самостоятельный entry-point (импортируется другим хуком) → допускается отсутствие wiring ТОЛЬКО при маркере `# NOT-WIRED: <причина>` в первых 5 строках файла. Без маркера — 🔴.
+- ⛔ **Detection-guard (closes класс G-073):** если `grep run-hook.sh` вернул **0 совпадений** в settings.template.json (формат сменился на multiline / файл пуст) → check **невалиден, НЕ PASS**: 🔵 «hook-wiring parity не проверен — 0 run-hook.sh совпадений, проверь settings.template.json формат вручную».
+
 **Cut-not-add — net-zero gate** (только methodology-platform; PR меняет `commands/*.md`) *(VISION Ось 5 Enforcement):*
 - Сигнал направления: `git diff --stat HEAD commands/` — на сколько ±строк выросла/уменьшилась команда этим PR.
 - `validate-artifact-size.sh` → `SIZE_EXCEEDED` на `commands/*.md` = команда раздута (агент скимит, ценные шаги тонут).

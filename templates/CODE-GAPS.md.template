@@ -1,0 +1,71 @@
+# CODE-GAPS — {{Project Name}}
+
+Регистр **product-багов приложения** — найденных тестами (`/test`, Playwright, Schemathesis, ручная проверка) или в проде. Ведёт статус каждого бага: open → fixed → regression-guard. Цель — разработчик видит баги **отдельным регистром со статусом**, а не археологией в длинном DEVLOG.
+
+> **Scope:** только product-баги приложения которое разрабатывается (frontend/backend/логика/визуал/perf).
+>
+> - ✅ **В этот файл:** «кнопка считает неверную сумму», «layout поехал на mobile», «API вернул 500 на пустой вход», «контракт FE↔BE разошёлся», «регрессия в чекауте».
+> - ❌ **НЕ в этот файл:** сбой AI-агента → [AGENT-GAPS.md](AGENT-GAPS.md); незакрытая угроза без бага → [RISKS.md](RISKS.md); гипотеза диагностики → [HYPOTHESES.md](HYPOTHESES.md); пробел покрытия продукта (фича отсутствует) → [PRODUCT-GAPS.md](PRODUCT-GAPS.md).
+
+**Отличия (куда писать):**
+- **CODE-GAPS** — баг приложения **есть** (реализованное поведение неверно), со статусом.
+- **DEVLOG** — событие «починили баг X»: `[fix:component]` + `[test-found:category]`. CODE-GAPS ссылается на DEVLOG-запись фикса. Разные роли: DEVLOG = когда починили (событие), CODE-GAPS = список багов и текущий статус (регистр).
+- **RISKS** — угроза/баг **без** плана фикса (потенциальный). CODE-GAPS — найденный конкретный баг.
+- **PRODUCT-GAPS** — продукт **не умеет** X (фича отсутствует). CODE-GAPS — продукт **умеет, но неверно**.
+
+> **Consumer-owned:** этот файл ведёт **консьюмер у себя**. Методология не копирует баги в свои артефакты (G-032), но может читать read-only для cross-domain pattern detection (`/pull-consumers`, `/architecture-audit` Capability C).
+
+---
+
+## Категории (открытый список — добавляй свои по домену)
+
+| Код | Класс бага | Чем ловится |
+|---|---|---|
+| `frontend-visual` | Вёрстка/цвет/layout поехали | visual regression (Playwright snapshot / Applitools) |
+| `frontend-logic` | UI работает, но делает не то | E2E по acceptance criteria |
+| `backend-logic` | Неверный расчёт/бизнес-правило | property-based / integration |
+| `backend-contract` | Расхождение контракта FE↔BE | contract testing (Pact) |
+| `backend-crash` | 500 / исключение / необработанный вход | Schemathesis / fuzzing |
+| `regression` | Сломалось то что работало | regression suite (L2) |
+| `perf` | Деградация скорости/нагрузки | профилирование / load test |
+
+> Категория — открытый список (QB10): домен добавляет свои (`data-pipeline`, `mobile-gesture`, …). Один semantic indicator на баг (D6 semantic tagging).
+
+---
+
+## Статусы
+
+| Статус | Значение |
+|---|---|
+| `open` | Баг найден, не исправлен |
+| `in-progress` | Фикс в работе (есть /plan или активный /code) |
+| `fixed` | Исправлен, есть DEVLOG `[fix:X]` запись |
+| `regression-guard` | Исправлен + добавлен regression-тест, предотвращающий рецидив |
+
+---
+
+## Формат записи
+
+```
+---
+Bug-ID: C-NNN
+Дата найден: YYYY-MM-DD
+Категория: [код из таблицы выше]
+Severity: 🔴 High | 🟡 Medium | 🟢 Low
+Где: [компонент / endpoint / страница — конкретно]
+Симптом: [одна строка — что наблюдается, не предполагается]
+Как найден: /test | Playwright | Schemathesis | прод | ручная проверка | пользователь
+Ожидалось / Получилось: [expected vs actual — одна строка]
+Статус: open | in-progress | fixed | regression-guard
+Фикс: [ссылка на DEVLOG [fix:X] / PR — заполняется при fixed]
+Regression-тест: [путь к тесту — заполняется при regression-guard]
+---
+```
+
+---
+
+## Записи
+
+<!-- Новые — сверху. /test пишет сюда найденное (status: open). /code обновляет статус при фиксе. -->
+
+---

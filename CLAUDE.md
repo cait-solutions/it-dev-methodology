@@ -263,6 +263,8 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 `[fix:component]` `[feat:command]` `[feat:template]` `[feat:hook]` `[feat:script]` `[methodology]` `[process:X]` `[milestone]`
 
+`[test-found:category]` — баг найден тестированием (`/test`, Playwright, Schemathesis, прод). `category` = `frontend-visual` / `frontend-logic` / `backend-contract` / `backend-crash` / `regression` / `perf` / … (открытый список, см. `skills/testing-strategy`). **Указатель**, не замена: сам баг + статус ведутся в `CODE-GAPS.md` (регистр), fix-событие дублируется `[fix:component]` (сохраняет QB3 regression-grep `/review`). Closes testing layer Phase 1.
+
 Phase-теги: `[phase-a]` … — milestone history.
 
 Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`

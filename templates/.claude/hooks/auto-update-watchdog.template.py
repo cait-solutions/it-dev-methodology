@@ -185,6 +185,44 @@ def semver_minor_delta(before: str | None, after: str | None) -> int | None:
     return a[1] - b[1]
 
 
+def check_hook_health(project_root: Path) -> None:
+    """Детектор drift: settings.json ссылается на hook-файл которого НЕТ на диске.
+
+    WHY (closes class «settings→missing hook → тихий fail», erp 2026-06-06):
+    fix может быть в методологии, но если consumer не сделал full sync — hook-файл
+    отсутствует, а settings.json уже на него ссылается → каждый hook молча падает
+    (sh: run-hook.sh: No such file). Ничто это не детектило. Реальный пример: erp
+    iteration-watchdog.py + run-hook.sh отсутствовали, settings ссылался → G-082 fix
+    был мёртв у консьюмера, повтор reasoning-depth залипания.
+
+    Печатает warning в контекст агента если найдены missing-хуки. Non-blocking.
+    """
+    settings_file = project_root / ".claude" / "settings.json"
+    hooks_dir = project_root / ".claude" / "hooks"
+    if not settings_file.is_file():
+        return
+    try:
+        text = settings_file.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return
+    # Извлечь имена hook-файлов: и прямой вызов (.claude/hooks/X.py), и через
+    # run-hook.sh обёртку (sh .claude/hooks/run-hook.sh X.py → нужны ОБА: run-hook.sh И X.py).
+    referenced: set[str] = set()
+    for m in re.finditer(r'\.claude/hooks/([A-Za-z0-9._-]+)', text):
+        referenced.add(m.group(1))
+    for m in re.finditer(r'run-hook\.sh\s+([A-Za-z0-9._-]+)', text):
+        referenced.add(m.group(1))
+    missing = sorted(h for h in referenced if not (hooks_dir / h).is_file())
+    if missing:
+        print(
+            "⚠️ HOOK DRIFT detected — settings.json ссылается на отсутствующие hook-файлы:\n"
+            + "".join(f"   • .claude/hooks/{h} — НЕ найден на диске\n" for h in missing)
+            + "   Следствие: эти хуки молча падают (sh: No such file) → защита/детекторы не работают.\n"
+            "   Причина: методология обновилась, но full sync не прогонялся в этом проекте.\n"
+            "   Рекомендация: предложи пользователю `bash <methodology>/scripts/sync-methodology.sh .`"
+        )
+
+
 def main() -> int:
     project_root = Path.cwd()
     claude_local = project_root / "CLAUDE.local.md"
@@ -195,6 +233,10 @@ def main() -> int:
     config = parse_config(claude_local)
     if not config["enabled"]:
         return 0
+
+    # Drift detector — независим от update-cadence (запускается каждый SessionStart).
+    # Ловит «settings→missing hook» даже если auto-update interval ещё не наступил.
+    check_hook_health(project_root)
 
     # BOOTSTRAP mode — нет .claude/.version, методология не инициализирована
     if not version_file.is_file():
