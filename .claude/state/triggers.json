@@ -135,18 +135,22 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-06T01:00:00Z",
-    "task_id": "consumer-push-only command — push ai-dev without merge",
+    "completed_at": "2026-06-06T02:00:00Z",
+    "task_id": "scope-out — visual deferred/out-of-scope surface (/scope-out + anchor + draft cluster)",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": false,
+    "code_run": true,
     "commitments": [
-      { "text": "Detached HEAD guard в consumer-push-only.sh (warning + exit 1)", "status": "pending", "skip_reason": null }
+      { "text": "Write-path для out-of-scope/deferred — /plan Шаг 99.3 persist-таргет + /review out-of-scope findings (capture перед discovery — anti empty-room)", "status": "done", "skip_reason": null },
+      { "text": "class `affordance` exclusion в /architecture-audit Шаг 3 phantom-node сравнении (class-rule, НЕ ID-whitelist)", "status": "done", "skip_reason": null },
+      { "text": "Дефолт-фильтр severity:high+status:open в scope-view.sh + флаг --all (anti node-explosion)", "status": "done", "skip_reason": null },
+      { "text": "Graceful parse-skip непарсящегося фрагмента (3 формата: triggers.json/status-regex/ROADMAP-заголовки) — не падать", "status": "done", "skip_reason": null },
+      { "text": "Consumer ROADMAP-формат может отличаться — парсер graceful-skip, не assume methodology формат — закрыто copy в templates/scripts/ + probe fallback на '.'", "status": "done", "skip_reason": null }
     ]
   },
   "last_deploy": {
-    "date": "2026-06-05",
+    "date": "2026-06-06",
     "status": "ok",
-    "phase": "plan-code-review traceability commitments[] v5.0.0 (PR #141)"
+    "phase": "/scope-out v5.6.0 — visual deferred/out-of-scope surface (P-002)"
   }
 }

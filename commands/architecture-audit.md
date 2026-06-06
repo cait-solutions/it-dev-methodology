@@ -97,6 +97,14 @@ Detected capabilities:
 - В карте active, не в registry → **phantom service**
 - В registry active, не в карте → **missing service**
 
+**⛔ Исключение: узлы класса `affordance` (closes P-002 false-drift).**
+
+Узлы со стилем `classDef affordance` (навигационные/контекстные anchor'ы — например `📋 Отложенный scope → /scope-out`, Workflow-Cycle, Legend, repo-context) — это **не модельные компоненты системы**, а навигационные affordance: они говорят о месте карты в workflow, не утверждают что компонент существует в коде. По определению у них нет code-counterpart.
+
+- При phantom/stale сравнении **исключай все узлы класса `affordance`** — у них нет и не должно быть кода. Флаг их как «phantom» = ложный позитив, который приучает владельца игнорировать вывод аудита.
+- Это **class-правило, НЕ ID-whitelist**: не перечисляй конкретные node-ID (`scopeOutAnchor` и т.п.) — это slope (каждый новый affordance потребует своего литерала). Исключай **по классу** `affordance` — одно правило закрывает весь класс non-architectural узлов.
+- Узел без `classDef affordance`, но фактически навигационный → это сигнал что карта нарушает конвенцию: рекомендовать пометить его `:::affordance` (см. CLAUDE.md Maps Standard §3), не молча игнорировать.
+
 ---
 
 ## Шаг 4 — Gap inventory (Способность B)

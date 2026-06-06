@@ -4,6 +4,26 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.6.0 — feat: /scope-out — визуальный обзор отложенного / out-of-scope scope (2026-06-06)
+
+**Что:** новая команда `/scope-out` + `scripts/scope-view.sh` — показывают **одной Mermaid-диаграммой** весь отложенный / непокрытый / out-of-scope scope проекта (PRODUCT-GAPS open/in-roadmap + AGENT-GAPS open + ROADMAP Considered/On-hold/Arch-review + triggers.json recommendations[] proposed*). Диаграмма **эфемерна** — генерируется из текстовых источников при каждом запуске, не сохраняется в файл → не дрейфит. Дефолт-фильтр High+in-roadmap (anti node-explosion), `--all` для полного backlog, `--print-only` для offline.
+
+Сопутствующее:
+- **Anchor-узел** `📋 Отложенный scope → /scope-out` (класс `affordance`) добавлен в living USER-MAP + ARTIFACT-MAP — навигация туда, куда владелец и так смотрит (карты).
+- **Capture write-path:** `/plan` Шаг 99.3 + `/review` теперь пишут product-значимый out-of-scope в PRODUCT-GAPS (иначе `/scope-out` показывает пустую комнату).
+- **`/architecture-audit` Шаг 3:** узлы класса `affordance` исключены из phantom-node сравнения (class-rule, не ID-whitelist) — anchor не флагается как ложный drift.
+- **CLAUDE.md Maps Standard §3:** конвенция `classDef affordance` (навигационный узел ≠ scope-claim).
+
+**Зачем:** отложенный scope жил только текстом в 5+ файлах; владелец, глядя на карты, его пропускал — «нет визуальности». Closes P-002.
+
+**Что запустить:**
+```bash
+bash scripts/sync-methodology.sh .
+```
+После sync доступна команда `/scope-out`. Для two-repo проектов передавай `--root <doc_repo_path>` (команда читает его из CLAUDE.local.md автоматически).
+
+---
+
 ## v5.5.1 — fix: FMEA glossary inline — раздел понятен без внешнего контекста (2026-06-06)
 
 **Что:** добавлена врезка-глоссарий прямо в `/plan` Шаг 1.5 блок A. Расшифровка FMEA / S / O / D / RPN на русском; явное предупреждение что D — обратная шкала (высокий = тихий провал). Заголовок таблицы обновлён (RU-суффиксы). Механика не менялась: шкалы 1-10, формула S×O×D, пороги RPN>200 и D≥7 — без изменений.
