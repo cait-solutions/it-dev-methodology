@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## (unreleased — version aligned at merge) — feat: sync settings.json hooks merge — consumer wiring drift (2026-06-06)
+
+**Что (закрывает mechanism #2 silent-fail: новое hook-wiring не доезжало до существующих консьюмеров):**
+- **`sync-methodology.sh` — `merge_settings_json()`** заменяет add-only-if-missing для `settings.json`. При sync дозаливает отсутствующие `run-hook.sh X.py` из `settings.template.json` в существующий consumer `settings.json`. permissions и существующие matcher-группы не трогаются. Идемпотентно (presence-check), graceful (невалидный JSON / нет Python → preserve).
+- Дополняет hook-wiring parity gate (/review, v5.3.0): parity ловит на dev-стороне, merge доставляет к консьюмеру. Теперь settings.json = MERGE как triggers.json.
+
+**Что запустить:**
+```bash
+bash scripts/sync-methodology.sh .
+```
+Существующие консьюмеры впервые получат недостающее hook-wiring (напр. iteration-watchdog, secrets-guard если их settings отстал). Намеренно удалённые хуки вернутся — methodology-хуки обязательны.
+
+> ⚠️ VERSION bump выравнивается при финальном мерже (изменение делалось параллельно с v5.5.0).
+
+---
+
 ## v5.5.0 — feat: commit-discipline + verify-gate — unplanned parallelism at isolation:off (2026-06-06)
 
 **Что (закрывает index-capture класс: 2 сессии при `worktree_isolation: off` → `git commit` захватывает чужой staged-индекс; инцидент a17ecc1):**

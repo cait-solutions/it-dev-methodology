@@ -23,7 +23,7 @@
 #
 # Artifact taxonomy:
 #   OVERWRITE (methodology-owned): commands/, hooks/, model-tiers.md, CLAUDE.md, adr/_TEMPLATE.md
-#   MERGE (special):               triggers.json (add new keys), settings.json (add if missing)
+#   MERGE (special):               triggers.json (add new keys), settings.json (wire missing hooks)
 #   PRESERVE (project-owned):      everything else — CLAUDE.local.md, PRODUCT.md, VISION.md, etc.
 
 set -euo pipefail
@@ -326,6 +326,144 @@ PYEOF
   fi
 }
 
+# merge_settings_json: дозалить ОТСУТСТВУЮЩИЕ hook-вызовы из settings.template.json
+# в существующий consumer .claude/settings.json.
+#
+# WHY (closes mechanism #2 «settings→нет wiring → тихий fail», erp 2026-06-06):
+# settings.json синхронизировался как add-only-if-missing (check_artifact) — у живых
+# консьюмеров файл уже существует → новое hook-wiring из template НИКОГДА не доезжало
+# → методология добавляла hook-файл + wiring в template, consumer получал только ФАЙЛ,
+# а его settings.json оставался со старым wiring → hook молча мёртв. Это ПРЯМОЕ
+# направление (template→consumer drift); check_hook_health (auto-update-watchdog) ловит
+# обратное (settings→missing file). Теперь settings.json = MERGE, как triggers.json.
+#
+# Merge HOOKS-AWARE, НЕ generic deep_merge: hooks-блок — это массивы matcher-групп;
+# concat массивов дублировал бы хуки. Стратегия: presence-check по имени hook-файла
+# (run-hook.sh X.py ИЛИ .claude/hooks/X.py) per-event. Отсутствует в consumer → добавить.
+# permissions и существующие matcher-группы НЕ трогаются (consumer-кастомизации сохранны).
+# Намеренно удалённый консьюмером hook вернётся (accepted risk: methodology-хуки =
+# обязательная инфраструктура, settings = MERGE-special в taxonomy).
+merge_settings_json() {
+  local existing="$TARGET_DIR/.claude/settings.json"
+  local template="$METHODOLOGY_DIR/templates/settings.template.json"
+
+  mkdir -p "$TARGET_DIR/.claude"
+
+  if [[ ! -f "$existing" ]]; then
+    cp "$template" "$existing"
+    echo "  ✓ settings.json (initialized with hooks wiring)"
+    return
+  fi
+
+  if [[ ! -f "$template" ]]; then
+    echo "  - settings.json (template missing — preserved)"
+    return
+  fi
+
+  local _py=""
+  for _cmd in python3 py python; do
+    command -v "$_cmd" >/dev/null 2>&1 && _py="$_cmd" && break
+  done
+
+  if [[ -n "$_py" ]]; then
+    SJ_EXISTING="$existing" SJ_TEMPLATE="$template" "$_py" - <<'PYEOF' || true
+import json, os, re
+
+def hook_name(command):
+    """Имя hook-файла из command-строки: и run-hook.sh X.py, и прямой .claude/hooks/X.py.
+    Dual-pattern — тот же что в hook-consistency check (G-075/G-081). None если не hook."""
+    if not isinstance(command, str):
+        return None
+    m = re.search(r'run-hook\.sh\s+([A-Za-z0-9._-]+)', command)
+    if m:
+        return m.group(1)
+    m = re.search(r'\.claude/hooks/([A-Za-z0-9._-]+\.py)', command)
+    if m:
+        return m.group(1)
+    return None
+
+def event_hook_names(event_groups):
+    """Множество имён hook-файлов уже присутствующих в consumer-событии."""
+    names = set()
+    if not isinstance(event_groups, list):
+        return names
+    for group in event_groups:
+        if not isinstance(group, dict):
+            continue
+        for h in group.get('hooks', []):
+            n = hook_name(h.get('command') if isinstance(h, dict) else None)
+            if n:
+                names.add(n)
+    return names
+
+try:
+    # utf-8-sig: BOM-tolerant (PowerShell-written settings.json carries EF BB BF)
+    with open(os.environ['SJ_EXISTING'], encoding='utf-8-sig') as f:
+        existing = json.load(f)
+    with open(os.environ['SJ_TEMPLATE'], encoding='utf-8-sig') as f:
+        template = json.load(f)
+
+    t_hooks = template.get('hooks', {})
+    if not isinstance(t_hooks, dict):
+        raise ValueError("template.hooks не объект")
+
+    # Гарантировать наличие hooks-блока в consumer (старый формат без него — edge).
+    e_hooks = existing.setdefault('hooks', {})
+    if not isinstance(e_hooks, dict):
+        raise ValueError("consumer settings.hooks не объект — не трогаю")
+
+    added = []
+    for event, t_groups in t_hooks.items():
+        if not isinstance(t_groups, list):
+            continue
+        e_groups = e_hooks.setdefault(event, [])
+        if not isinstance(e_groups, list):
+            continue
+        present = event_hook_names(e_groups)
+        # Собрать недостающие hook-команды из template для этого события.
+        for t_group in t_groups:
+            if not isinstance(t_group, dict):
+                continue
+            missing_hooks = []
+            for h in t_group.get('hooks', []):
+                n = hook_name(h.get('command') if isinstance(h, dict) else None)
+                if n and n not in present:
+                    missing_hooks.append(h)
+                    present.add(n)  # анти-дубль в пределах одного прогона
+                    added.append("{}:{}".format(event, n))
+            if missing_hooks:
+                # Найти existing-группу с тем же matcher → дописать туда; иначе новая группа.
+                t_matcher = t_group.get('matcher')
+                target = None
+                for g in e_groups:
+                    if isinstance(g, dict) and g.get('matcher') == t_matcher:
+                        target = g
+                        break
+                if target is None:
+                    new_group = {}
+                    if t_matcher is not None:
+                        new_group['matcher'] = t_matcher
+                    new_group['hooks'] = list(missing_hooks)
+                    e_groups.append(new_group)
+                else:
+                    target.setdefault('hooks', []).extend(missing_hooks)
+
+    if added:
+        # encoding='utf-8' (без BOM) на запись — нормализуем файл
+        with open(os.environ['SJ_EXISTING'], 'w', encoding='utf-8') as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
+            f.write('\n')
+        print("  ↻ settings.json (wired {} hook(s): {})".format(len(added), ", ".join(added)))
+    else:
+        print("  - settings.json (hooks wiring актуально — нет изменений)")
+except Exception as ex:
+    print("  ! settings.json (merge failed: {} — preserved)".format(ex))
+PYEOF
+  else
+    echo "  - settings.json (Python не найден: tried python3, py, python — preserved; wire hooks manually)"
+  fi
+}
+
 # check_artifact: add file from template if missing; never overwrite.
 check_artifact() {
   local dest_rel="$1"
@@ -622,7 +760,7 @@ else
   # --- MERGE: special handling ---
   echo "  [special — merge]"
   merge_triggers_json
-  check_artifact       ".claude/settings.json"            "templates/settings.template.json"
+  merge_settings_json
 
   # --- PRESERVE: project-owned (add-only, never overwrite) ---
   echo "  [project-owned — add if missing]"
