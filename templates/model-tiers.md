@@ -42,6 +42,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/marketing` | **Fast** | Первый запуск (нет MARKETING.md) → Default (autodraft требует чтения PRODUCT/VISION + генерацию) | Навигация + прогресс state — no reasoning. Только если объясняет skill → Default |
 | `/test` | **Default** | Логический/visual баг не сходится (reasoning-depth, N≥3 итераций); property-based для нетривиальной логики; L2 regression на большом приложении | Генерация E2E/contract/visual тестов требует понимания acceptance criteria. Fast допустим только для запуска готового suite без генерации |
 | `/push-merge` | **Fast** | (никогда — это git-операция + чек-листы) | Consumer-only команда. Push ai-dev → develop/main с platform detection (GitHub/GitLab). Solo = push напрямую; team = URL для MR/PR |
+| `/push` | **Fast** | (никогда — это git push без merge) | Consumer-only команда. Push ai-dev → origin/ai-dev без merge, без MR/PR, без вопросов |
 
 ---
 

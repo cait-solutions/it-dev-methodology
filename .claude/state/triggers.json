@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 8
+      "plans_since": 9
     },
     "last_retro": {
       "date": "2026-06-04",
-      "plans_since": 2
+      "plans_since": 3
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 22
+      "plans_since": 23
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 16
+      "plans_since": 17
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 18
+      "plans_since": 19
     },
     "last_architecture_audit": {
       "date": "2026-06-03",
-      "plans_since": 4,
+      "plans_since": 5,
       "recommendations": [
         {
           "id": "R-023",
@@ -135,17 +135,13 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-06T00:00:00Z",
-    "task_id": "consumer-push-merge command (GitHub+GitLab aware, develop→main fallback, --main flag)",
+    "completed_at": "2026-06-06T01:00:00Z",
+    "task_id": "consumer-push-only command — push ai-dev without merge",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": false,
     "commitments": [
-      { "text": "SSH remote hostname detection в consumer-push.sh (git@ URL паттерн)", "status": "pending", "skip_reason": null },
-      { "text": "$ARGUMENTS passthrough как $EXTRA_ARGS в consumer-push.sh", "status": "pending", "skip_reason": null },
-      { "text": "PRODUCT.md + USER-MAP.md обновить с новой capability /push-merge", "status": "pending", "skip_reason": null },
-      { "text": "Whitelist validation для $ARGUMENTS (только --main допускается)", "status": "pending", "skip_reason": null },
-      { "text": "Обновление last_deploy.date в triggers.json после успешного push в consumer-push.sh", "status": "pending", "skip_reason": null }
+      { "text": "Detached HEAD guard в consumer-push-only.sh (warning + exit 1)", "status": "pending", "skip_reason": null }
     ]
   },
   "last_deploy": {
