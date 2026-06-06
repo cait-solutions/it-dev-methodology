@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## (unreleased — version aligned at merge) — feat: sync self-apply hook-wiring + watchdog liveness — mechanism #3 (2026-06-06)
+
+**Что (закрывает «watchdog не запускался → sync/sync-audit спят»):**
+- **`sync-methodology.sh` self-apply ветка** теперь вызывает `merge_settings_json` — методология dog-food'ит own hook-wiring (раньше merge был только в consumer-ветке → own settings без SessionStart → auto-update-watchdog мёртв).
+- **`/plan` Шаг -3 liveness check** — детектит отсутствие SessionStart/auto-update-watchdog wiring → 🔵 предложить sync. Гарантированно-читаемое место (slash-команда), не рекурсивно-уязвимый рантайм-хук.
+- **Bug fix:** `sys.stdout.reconfigure(utf-8)` в merge_settings_json + merge_triggers_json — Windows cp1252 крашил print на `↻`/`—`, маскируя успешный merge как «failed».
+
+**Что запустить:**
+```bash
+bash scripts/sync-methodology.sh .
+```
+Консьюмеры: liveness-check в /plan подскажет если SessionStart не wired. NB: первый merge переформатирует settings.json (inline→multi-line, функционально-нейтрально, единожды).
+
+> ⚠️ VERSION выравнивается при финальном мерже (параллельно с v5.5.0).
+
+---
+
 ## (unreleased — version aligned at merge) — feat: sync settings.json hooks merge — consumer wiring drift (2026-06-06)
 
 **Что (закрывает mechanism #2 silent-fail: новое hook-wiring не доезжало до существующих консьюмеров):**
