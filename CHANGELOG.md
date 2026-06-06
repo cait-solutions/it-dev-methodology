@@ -4,6 +4,26 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.5.0 — feat: commit-discipline + verify-gate — unplanned parallelism at isolation:off (2026-06-06)
+
+**Что (закрывает index-capture класс: 2 сессии при `worktree_isolation: off` → `git commit` захватывает чужой staged-индекс; инцидент a17ecc1):**
+- **`/code` Шаг 2 — commit-discipline:** коммить через explicit pathspec (`git commit <пути> -m`), НЕ `git add`+bare `git commit` (последний коммитит весь индекс, включая staged другой сессией). + **verify-before-commit gate:** `git diff --cached --name-only` → staged ⊆ `/plan` Шаг 1 file-scope. Few-shot антипример a17ecc1.
+- **`CLAUDE.md` Workflow rules** — короткое правило commit-discipline (discoverability).
+- **ADR-002** — субсекция «Index-capture at isolation:off»: документирует что `off` шарит один индекс, регулятор там = commit-discipline (не worktrees), rejected детектор, deferred L4 hook с измеримым trigger.
+
+**Чем дополняет v4.59.0:** v4.59.0 закрывал ЗАПЛАНИРОВАННЫЙ параллелизм (`auto`+AGENTS.md+worktree). Это — НЕЗапланированный (`off` default + фактически 2 сессии). При `auto` баг невозможен (отдельный индекс per worktree); при `off` pathspec — единственная защита.
+
+**Что запустить:**
+```bash
+bash scripts/sync-methodology.sh .   # получить обновлённый /code + CLAUDE.md
+```
+
+**Что отложено:** L4 PreToolUse commit-scope hook (warn если staged вне scope) — trigger: следующий index-capture инцидент ИЛИ /retro ≥1 [git-failure] scope-capture.
+
+**Приоритет:** 🟡 Medium — поведенческое правило коммита (не breaking), но предотвращает потерю чужой работы. Действие: один `sync-methodology.sh`.
+
+---
+
 ## v5.3.0 — feat: /review hook-wiring parity gate — dev-side «hook доехал, но не активировался» (2026-06-06)
 
 **Что (закрывает класс тихого провала: fix есть в методологии, но hook мёртв у консьюмера):**

@@ -195,6 +195,24 @@
 
 **Не выходи за рамки плана** — только согласованные изменения.
 
+**⛔ Commit-discipline (parallel-safe — closes index-capture класс, инцидент a17ecc1):**
+
+Коммить через **explicit pathspec**, НЕ через `git add <file>` + bare `git commit`:
+```bash
+git commit <конкретные-пути> -m "..."     # ✅ коммитит ТОЛЬКО указанные файлы
+```
+⛔ **НЕ** делать `git add <file>` затем `git commit` (без путей) — `git commit` без pathspec коммитит **весь staging-индекс**, включая файлы которые застейджила **другая параллельная сессия** → захват чужой незакоммиченной работы.
+
+**Verify-before-commit gate (один проход перед каждым commit):**
+1. `git diff --cached --name-only` — что реально застейджено?
+2. Сверить: staged-set ⊆ «Затронутые файлы» из `/plan` Шаг 1 (твой declared scope).
+3. Если в staged есть файл **вне** твоего scope → ⛔ СТОП: это либо твоя ошибка scope, либо staged другой сессией. Коммить через pathspec только свои файлы, чужие оставить.
+   - `git diff --cached` пуст / git недоступен → graceful skip (нет staged — нечего проверять).
+
+**Few-shot (антипример a17ecc1, 2026-06-06):** агент сделал `git add iteration-watchdog.py` + `git commit` — но параллельная сессия уже застейджила `push-merge.md` + `consumer-push.sh` + VERSION → `git commit` (без pathspec) захватил **весь** индекс → чужая работа смешалась в один коммит. Правильно было: `git commit templates/.claude/hooks/iteration-watchdog.py -m "..."` (только свой файл).
+
+> **NB:** работает при любом `worktree_isolation`. При `auto` отдельный индекс per worktree уже изолирует; при `off` (default) — pathspec единственная защита от index-capture.
+
 ---
 
 ## Шаг 3 — Анализ первопричины (при баге)

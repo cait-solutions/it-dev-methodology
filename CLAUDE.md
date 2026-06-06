@@ -88,6 +88,8 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
 
+**Commit-discipline (parallel-safe):** коммить через explicit pathspec — `git commit <пути> -m`, НЕ `git add <file>` + bare `git commit`. Bare commit коммитит **весь staging-индекс**, включая файлы застейдженные параллельной сессией → захват чужой работы (инцидент a17ecc1). Перед commit: `git diff --cached --name-only` → staged ⊆ `/plan` Шаг 1 scope. Деталь: [/code Шаг 2](commands/code.md), [ADR-002 § Index-capture](../it-dev-methodology-documentation/docs/adr/ADR-002-branching-mode-contract.md).
+
 **Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
 
 **Deploy rule:** "деплой" = `git push origin main`. Перед каждым push:
