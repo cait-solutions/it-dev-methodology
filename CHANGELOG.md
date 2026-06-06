@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.3.0 — feat: /review hook-wiring parity gate — dev-side «hook доехал, но не активировался» (2026-06-06)
+
+**Что (закрывает класс тихого провала: fix есть в методологии, но hook мёртв у консьюмера):**
+- **`/review` Шаг 3 (methodology-platform)** — новый hard-check **Hook-wiring parity**: PR трогает `templates/.claude/hooks/` → каждый entry-point hook ОБЯЗАН быть wired через `run-hook.sh <name>.py` в `templates/settings.template.json`, иначе 🔴 блок merge. Прямое направление (file→no wiring); комплементарно runtime `check_hook_health` (settings→missing file).
+- Helper-исключение через маркер `# NOT-WIRED:`; detection-guard на 0 совпадений (closes G-073-класс).
+
+**Что запустить (получить обновлённый /review):**
+```bash
+bash scripts/sync-methodology.sh .
+```
+Поведение для консьюмеров не меняется автоматически — gate применяется при разработке самой методологии. Консьюмеры получают обновлённый текст команды `/review`.
+
+---
+
 ## v5.1.0 — feat: testing layer Phase 1 — /test + testing-strategy skill + CODE-GAPS (2026-06-05)
 
 **Что (методология начинает ВЕСТИ тестирование разрабатываемых приложений — обнаружение FE/BE багов: технических, логических, визуальных):**
