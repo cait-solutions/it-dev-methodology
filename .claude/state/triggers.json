@@ -32,9 +32,9 @@
           "id": "R-029",
           "type": "gap-structural",
           "summary": "S-1 mandatory dogfood-delivery gate в /review (L4) — закрывает review-blindness + command-churn",
-          "status": "proposed",
+          "status": "implemented",
           "scope": "methodology",
-          "implementation_pr": null
+          "implementation_pr": "v5.14.0"
         }
       ],
       "previous_cycle_implementation_rate": "7/10 (70%) — R-008/009/013/020/021/022 implemented; R-010 wont-fix; R-004/005/006/007 deferred"
@@ -67,24 +67,29 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T15:00:00Z",
-    "task_id": "G-088 — /sync-audit live upstream check (ls-remote, no false актуальна on stale clone)",
+    "completed_at": "2026-06-08T16:00:00Z",
+    "task_id": "R-029 — delivery-consistency gate в /review (структурный фикс review-blindness)",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "sync-audit.md Шаг -0.5: fetch --dry-run → ls-remote, 3 verdict (up-to-date/stale/unverified)",
+        "text": "scripts/validate-delivery.sh — статический delivery-consistency validator (template↔sync-parser); зеркалит дуальный regex",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "sync-audit.md Шаг 1b: consumer_version=current_version гейтится verdict'ом -0.5 (не авто-актуальна)",
+        "text": "validate-template-format.sh Check 6 вызывает validate-delivery (L4 enforcement через mandatory прогон) — own + templates/scripts dogfood pair",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "VERSION patch bump + CHANGELOG + DEVLOG + G-088 в AGENT-GAPS",
+        "text": "/review Шаг 3 delivery-gate + N/A escape запрещён для hook/settings-template/sync класса; /code Шаг 11 note",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION v5.14.0 + CHANGELOG + DEVLOG + R-029 status",
         "status": "done",
         "skip_reason": null
       }
