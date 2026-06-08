@@ -122,21 +122,29 @@ grep -i "<2-3 ключевых слова>" PRODUCT-GAPS.md                    #
 
 Если `AGENT-GAPS.md` отсутствует → пропустить тихо.
 
-### Подшаг -0.4 — Hook liveness check (closes mechanism #3 «watchdog не запускался»)
+### Подшаг -0.4 — Hook liveness check (closes mechanism #3 «watchdog не запускался» + G-087 рекурсивная дыра)
 
-Прочитать `.claude/settings.json` → проверить наличие блока `hooks.SessionStart` с вызовом `auto-update-watchdog`.
+Прочитать `.claude/settings.json`. Проверка — **физическое наличие на диске** каждого hook-файла на который ссылается settings.json (не просто «wired в конфиге»). Это closes G-087: settings может корректно ссылаться на хуки, но сами файлы (включая `run-hook.sh`) отсутствуют → все хуки молча падают.
 
-- **Нет `hooks` ключа ИЛИ нет `SessionStart` ИЛИ нет `auto-update-watchdog` в SessionStart** → 🔵 предупреждение (graceful, не hard-block):
+**Извлечь имена hook-файлов — ДВА паттерна** (зеркало canon `auto-update-watchdog.template.py:211-215` — менять синхронно, иначе drift между детекторами):
+1. прямой вызов: `.claude/hooks/X` (ловит `run-hook.sh`, `hook-liveness.sh`, любой `.py`/`.sh`)
+2. через wrapper: `run-hook.sh X` (ловит `X.py` запускаемые раннером)
+
+Для каждого извлечённого имени — проверить `test -f .claude/hooks/<имя>`. **Обязательно включить `run-hook.sh`** в проверяемый набор (он попадает через паттерн 1 из строки `.claude/hooks/run-hook.sh`).
+
+- **Любой referenced hook-файл (включая `run-hook.sh`) отсутствует на диске** → 🔵 предупреждение (graceful, не hard-block):
   ```
-  ⚠️ SessionStart hook не wired в .claude/settings.json — auto-update-watchdog
-     НЕ запускается. Следствие: sync не авто-обновляется, check_hook_health и
-     sync-audit trigger спят, обновления методологии не доезжают молча.
-     Рекомендация: запусти `bash <methodology>/scripts/sync-methodology.sh .`
-     (merge_settings_json дозальёт SessionStart wiring). Затем перезапусти сессию.
+  ⚠️ HOOK DRIFT — settings.json ссылается на отсутствующие hook-файлы:
+     • .claude/hooks/run-hook.sh — НЕ найден  (← раннер ВСЕХ хуков: если его нет, все хуки мертвы)
+     • .claude/hooks/iteration-watchdog.py — НЕ найден
+     Следствие: эти хуки молча падают (sh: No such file) → защита/детекторы/escalation мертвы.
+     Причина: методология обновилась, но full sync не прогонялся в этом проекте.
+     Рекомендация: запусти `bash <methodology>/scripts/sync-methodology.sh .` затем перезапусти сессию.
   ```
-- **SessionStart с auto-update-watchdog присутствует** → тихо продолжить.
+- **Дополнительно — нет `SessionStart` блока ИЛИ нет `auto-update-watchdog` в нём** → та же graceful-рекомендация про sync (auto-update не запустится).
+- **Все referenced хуки на диске И SessionStart присутствует** → тихо продолжить.
 
-**Почему здесь, а не в `check_hook_health` (рантайм-хук):** рекурсия — `check_hook_health` живёт ВНУТРИ auto-update-watchdog (SessionStart). Если SessionStart сам не wired — хук не запустится и о проблеме не сообщит. Slash-команда `/plan` читается агентом гарантированно (Lite И Full) → единственное надёжное место для liveness-детектора. Комплементарно: parity-gate (/review, dev-side) → merge_settings_json (delivery) → этот liveness-check (рантайм-сигнал что доставка реально применена).
+**Почему здесь, а не только в `check_hook_health` (рантайм-хук) — рекурсия:** `check_hook_health` живёт ВНУТРИ `auto-update-watchdog.py`, который запускается через `run-hook.sh`. Если отсутствует САМ `run-hook.sh` — watchdog не стартует → `check_hook_health` не вызывается → дыру некому детектить (детектор отсутствующих хуков сам недоступен). Slash-команда `/plan` читается агентом гарантированно (Lite И Full), независимо от hook-подсистемы → надёжный floor когда подсистема мертва целиком. Комплементарно три fate-independent детектора: **`hook-liveness.sh`** (SessionStart, pure-sh, БЕЗ run-hook.sh — ловит missing-files когда run-hook.sh мёртв) → **`check_hook_health`** (runtime — ловит когда хуки живы) → **этот /plan check** (always-read — ловит когда подсистема не запущена вовсе). Плюс delivery-слой: parity-gate (/review) → merge_settings_json (sync).
 
 Если `.claude/settings.json` отсутствует → пропустить тихо (bootstrap-ситуация, её ловит сам watchdog при появлении).
 

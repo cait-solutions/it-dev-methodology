@@ -135,31 +135,46 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T12:00:00Z",
-    "task_id": "auto-gap-capture — remove friction from /plan step-4 and /diagnose step-6",
+    "completed_at": "2026-06-08T13:00:00Z",
+    "task_id": "G-087 recursive hook-delivery hole — layer-1 fate-independent liveness detectors",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "Fallback в /plan Шаг -4 и /diagnose 6.3 если секция ## Записи не найдена",
-        "status": "skipped",
-        "skip_reason": "Graceful skip уже реализован через существующий check файла; fallback на append не добавляет ценности при правильно инициализированном AGENT-GAPS.md"
-      },
-      {
-        "text": "Аналогичное изменение в PRODUCT-GAPS.md template (предложить -> записывает автоматически)",
-        "status": "done",
+        "text": "Создать templates/.claude/hooks/hook-liveness.sh — pure-sh L4 SessionStart детектор, дуальный regex canon, -f тест каждого hook + явно run-hook.sh, БЕЗ зависимости от run-hook.sh",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "Дедуп-grep в /plan Шаг -4 перед auto-write",
-        "status": "done",
+        "text": "templates/.claude/settings.json.template — добавить SessionStart entry прямой вызов sh .claude/hooks/hook-liveness.sh (НЕ через run-hook.sh)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "USER-MAP — добавить capability auto-capture gap (Шаг 5 карт)",
-        "status": "skipped",
-        "skip_reason": "USER-MAP update (capability auto-capture) — deferred: ad-hoc plan did not touch USER-MAP nodes, будет в следующем /code при retro"
+        "text": "commands/plan.md Подшаг -0.4 — сменить предикат с 'SessionStart wired?' на физическое наличие каждого referenced hook + run-hook.sh на диске, зеркалить canon-regex",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "scripts/sync-methodology.sh — verify hook-liveness.sh доставляется (*.sh cp+chmod) + входит в missing_hooks detection",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "doc-repo: DEVLOG [fix:hook] + CHANGELOG + reopen G-087 (почему addressed-фикс v5.2.0 не сработал) + OPEN-QUESTIONS sync-атомарность",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "/pull-consumers — добавить проверку partial-hook-state у всех консьюмеров (из Confidence #6)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION minor bump (additive: новый hook + settings wiring; схема triggers.json НЕ меняется — слой 3 отложен)",
+        "status": "pending",
+        "skip_reason": null
       }
     ]
   },

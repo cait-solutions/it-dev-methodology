@@ -123,6 +123,7 @@
     "SessionStart": [
       {
         "hooks": [
+          { "type": "command", "command": "sh .claude/hooks/hook-liveness.sh" },
           { "type": "command", "command": "sh .claude/hooks/run-hook.sh auto-update-watchdog.py" }
         ]
       }

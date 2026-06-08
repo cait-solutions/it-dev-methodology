@@ -4,6 +4,31 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.12.0 — fix: hook-liveness detector — разрыв рекурсивной дыры доставки хуков (2026-06-08)
+
+**Что:** закрыта рекурсивная дыра G-087 (повтор 3-й раз). Если у консьюмера `settings.json` ссылается на хуки, но сами файлы (в т.ч. `run-hook.sh` — раннер ВСЕХ хуков) отсутствуют на диске → все хуки молча падают, а детектор этой проблемы (`check_hook_health`) сам недоступен, потому что запускается через отсутствующий `run-hook.sh`. Детектор отсутствующих хуков сам отсутствовал.
+
+Изменения:
+- **`templates/.claude/hooks/hook-liveness.sh` (новый):** pure-POSIX-sh детектор, вызывается из SessionStart **напрямую** (`sh .claude/hooks/hook-liveness.sh`), БЕЗ `run-hook.sh`. Проверяет физическое наличие каждого hook из settings.json — включая `run-hook.sh`. Способен сообщить об отсутствии `run-hook.sh` не используя его. Рекурсия разорвана.
+- **`settings.template.json`:** `hook-liveness.sh` добавлен первым в SessionStart (перед `auto-update-watchdog`).
+- **`/plan` Подшаг -0.4:** предикат сменён с «SessionStart wired?» на физическое наличие каждого referenced hook-файла + `run-hook.sh` на диске (always-read floor, ловит когда hook-подсистема мертва целиком).
+- **`sync-methodology.sh`:** missing_hooks detection расширен на direct `.sh` вызовы (был только `.py`) — чтобы `hook-liveness.sh` сам верифицировался при доставке.
+- **`/pull-consumers` Шаг 3.5 (новый):** cross-consumer детект HOOK-DRIFT после pull — видит все репо разом.
+
+Три fate-independent детектора: `hook-liveness.sh` (SessionStart, без run-hook.sh) → `check_hook_health` (runtime, когда хуки живы) → `/plan` -0.4 (always-read, когда подсистема мертва). Разные failure modes.
+
+**Priority:** 🔴 High — без этого фикса escalation-механизм + защитные хуки могут быть молча мертвы у консьюмера.
+
+**Actions (для консьюмеров — особенно если хуки не срабатывали):**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+После sync: `hook-liveness.sh` появится в `.claude/hooks/`, settings.json получит SessionStart wiring. Перезапусти сессию Claude Code. Если видишь `⚠️ HOOK DRIFT` при старте — значит хуки были мертвы, sync их восстановил.
+
+**Проверка:** `grep -c hook-liveness .claude/settings.json` (должно быть ≥1) и `ls .claude/hooks/run-hook.sh .claude/hooks/hook-liveness.sh` (оба должны существовать).
+
+---
+
 ## v5.11.0 — feat: auto-gap-capture — gap'ы записываются без подтверждения (2026-06-08)
 
 **Что:** убран friction при захвате gap'ов в `/plan` Шаг -4 и `/diagnose` Шаг 6. Ранее агент спрашивал `(a/p/n)` — gap'ы терялись на практике. Теперь auto-write + opt-out.
