@@ -143,35 +143,35 @@
     "commitments": [
       {
         "text": "Fallback в /plan Шаг -4 и /diagnose 6.3 если секция ## Записи не найдена",
-        "status": "pending",
-        "skip_reason": null
+        "status": "skipped",
+        "skip_reason": "Graceful skip уже реализован через существующий check файла; fallback на append не добавляет ценности при правильно инициализированном AGENT-GAPS.md"
       },
       {
         "text": "Аналогичное изменение в PRODUCT-GAPS.md template (предложить -> записывает автоматически)",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "Дедуп-grep в /plan Шаг -4 перед auto-write",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "USER-MAP — добавить capability auto-capture gap (Шаг 5 карт)",
-        "status": "pending",
-        "skip_reason": null
+        "status": "skipped",
+        "skip_reason": "USER-MAP update (capability auto-capture) — deferred: ad-hoc plan did not touch USER-MAP nodes, будет в следующем /code при retro"
       }
     ]
   },
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "feat(command): /pull workspace-wide ff-only (v5.10.0)"
+    "phase": "docs(changelog+devlog+user-map): /pull v5.9-5.10.1 deploy actions"
   },
   "last_auto_pull": {
-    "at": "2026-06-08T08:30:11+00:00",
-    "version_before": "v5.7.0",
-    "version_after": "v5.7.0",
+    "at": "2026-06-08T10:39:43+00:00",
+    "version_before": "v5.11.0",
+    "version_after": "v5.11.0",
     "status": "failed"
   }
 }
