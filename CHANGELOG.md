@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.12.1 — fix: merge_settings_json wires direct .sh hooks (hook-liveness delivery) (2026-06-08)
+
+**Что:** критический follow-up к v5.12.0. `merge_settings_json` `hook_name()` распознавал только `.py` хуки в прямых вызовах (`.claude/hooks/X.py`) — новый `hook-liveness.sh` (прямой вызов без run-hook.sh) не распознавался → его SessionStart wiring **не доезжал** до консьюмера при sync (файл копировался, но не wired). Без этого фикса весь v5.12.0 inert на delivery-пути.
+
+Изменения:
+- **`sync-methodology.sh` `hook_name()`:** regex `\.py` → `\.(?:py|sh)` — распознаёт прямые `.sh` вызовы. Зеркалит уже-изменённый missing_hooks detection (консистентность всех detection-sites).
+
+**Priority:** 🔴 High — без этого hook-liveness.sh копируется но не активируется у консьюмера.
+
+**Actions:** уже включено в `sync-methodology.sh .` — консьюмеры получат wiring при следующем sync.
+
+**Обнаружено:** dogfood-верификацией в /deploy — own settings.json не получил wiring после self-sync v5.12.0.
+
+---
+
 ## v5.12.0 — fix: hook-liveness detector — разрыв рекурсивной дыры доставки хуков (2026-06-08)
 
 **Что:** закрыта рекурсивная дыра G-087 (повтор 3-й раз). Если у консьюмера `settings.json` ссылается на хуки, но сами файлы (в т.ч. `run-hook.sh` — раннер ВСЕХ хуков) отсутствуют на диске → все хуки молча падают, а детектор этой проблемы (`check_hook_health`) сам недоступен, потому что запускается через отсутствующий `run-hook.sh`. Детектор отсутствующих хуков сам отсутствовал.
