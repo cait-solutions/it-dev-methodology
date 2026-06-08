@@ -135,12 +135,33 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T09:00:00Z",
-    "task_id": "consumer-pull command — git pull ai-dev from remote without terminal",
+    "completed_at": "2026-06-08T12:00:00Z",
+    "task_id": "auto-gap-capture — remove friction from /plan step-4 and /diagnose step-6",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
-    "commitments": []
+    "commitments": [
+      {
+        "text": "Fallback в /plan Шаг -4 и /diagnose 6.3 если секция ## Записи не найдена",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "Аналогичное изменение в PRODUCT-GAPS.md template (предложить -> записывает автоматически)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "Дедуп-grep в /plan Шаг -4 перед auto-write",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "USER-MAP — добавить capability auto-capture gap (Шаг 5 карт)",
+        "status": "pending",
+        "skip_reason": null
+      }
+    ]
   },
   "last_deploy": {
     "date": "2026-06-08",
