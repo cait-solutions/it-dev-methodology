@@ -25,85 +25,13 @@
       "plans_since": 21
     },
     "last_architecture_audit": {
-      "date": "2026-06-03",
-      "plans_since": 7,
+      "date": "2026-06-08",
+      "plans_since": 0,
       "recommendations": [
         {
-          "id": "R-023",
-          "type": "drift",
-          "summary": "S-3 SYSTEM-MAP scripts/",
-          "status": "implemented",
-          "scope": "documentation",
-          "implementation_pr": "v4.11.2"
-        },
-        {
-          "id": "R-024",
+          "id": "R-029",
           "type": "gap-structural",
-          "summary": "S-1 completeness-gap partial-check usilen",
-          "status": "implemented",
-          "scope": "methodology",
-          "implementation_pr": "v4.11.2"
-        },
-        {
-          "id": "R-025",
-          "type": "gap-structural",
-          "summary": "S-2 logic-gap memory-vs-read antipример",
-          "status": "implemented",
-          "scope": "methodology",
-          "implementation_pr": "v4.11.2"
-        },
-        {
-          "id": "R-004",
-          "type": "decommission",
-          "summary": "merge /plan Шаг 0.1 + 98 Pre-Mortem",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-005",
-          "type": "decommission",
-          "summary": "cut /review Шаг 3.5",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-006",
-          "type": "gap-structural",
-          "summary": "Complexity budget rule в CLAUDE.md",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-007",
-          "type": "gap-structural",
-          "summary": "Deploy-time consumer instruction generator",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-026",
-          "type": "gap-structural",
-          "summary": "S-026: template-pair validator расширение validate-methodology.sh",
-          "status": "proposed",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-027",
-          "type": "gap-structural",
-          "summary": "S-027: logic-gap few-shot mermaid+sync-audit",
-          "status": "proposed",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-028",
-          "type": "gap-structural",
-          "summary": "S-028: completeness-gap Adjacent mandatory output в /code Шаг 1.7",
+          "summary": "S-1 mandatory dogfood-delivery gate в /review (L4) — закрывает review-blindness + command-churn",
           "status": "proposed",
           "scope": "methodology",
           "implementation_pr": null

@@ -125,6 +125,24 @@ fi
 
 echo ""
 
+# ---- Check 6: delivery-consistency (template ↔ sync-parser) — closes R-029 ----
+# Riding the mandatory validator-run (/code Шаг 11 + /review) makes delivery-check L4
+# enforcement, not L3 prose. Catches v5.12.0 class: hook wired in template but
+# sync-parser doesn't recognize it → wiring never reaches consumer.
+echo "Check 6: delivery-consistency (validate-delivery.sh)"
+DELIV="$ROOT/scripts/validate-delivery.sh"
+if [ -f "$DELIV" ]; then
+  if bash "$DELIV" --root "$ROOT" >/dev/null 2>&1; then
+    ok "delivery-consistency: template ↔ sync-parser consistent"
+  else
+    warn "delivery-consistency FAILED — run 'bash scripts/validate-delivery.sh' for details (hook-ref не доедет до консьюмера)"
+  fi
+else
+  ok "validate-delivery.sh не найден — пропущено (старая версия methodology)"
+fi
+
+echo ""
+
 # ---- Summary ----
 if [ "$VIOLATIONS" -eq 0 ]; then
   echo "PASS: validate-template-format: all checks passed (0 violations)"

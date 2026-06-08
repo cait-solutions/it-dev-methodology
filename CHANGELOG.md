@@ -4,6 +4,28 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.14.0 — feat: delivery-consistency gate в /review — структурный фикс review-blindness (2026-06-08, R-029)
+
+**Что:** `/review` был на 100% статическим — проверял что НАПИСАНО (hook wired в template), не что РАБОТАЕТ (sync доставит). v5.12.0 прошёл review «0 critical», но `merge_settings_json` не доставлял `.sh`-wiring → поймал только /deploy dogfood post-merge → re-release v5.12.1. Класс «фикс не доезжает молча» (G-087→G-088) ×3, review ни разу не ловил доставку. `[fix:command]×17` за период — command-churn как производное.
+
+Структурный фикс (architecture-audit R-029, L4 не L3 — prose-защита провалилась 3 раза):
+- **`scripts/validate-delivery.sh` (новый):** статический delivery-consistency validator. Для каждого hook-ref в `settings.template.json` проверяет (а) файл есть в `templates/.claude/hooks/` (б) `sync-methodology.sh hook_name()` его распознаёт → реально доедет до консьюмера. Рассогласование template↔sync-parser = FAIL. Зеркалит дуальный regex sync (менять синхронно).
+- **`validate-template-format.sh` Check 6:** вызывает validate-delivery — **L4 enforcement** через уже-обязательный validator-прогон (/code Шаг 11), не новая prose-инструкция.
+- **`/review` Шаг 3 delivery-gate:** PR трогает hooks/settings-template/sync → `validate-delivery.sh` обязателен, FAIL = 🔴 fix now. **N/A escape запрещён** для этого класса.
+- **`/code` Шаг 11:** документирован Check 6 delivery-consistency.
+
+Верификация: validator PASS на текущем состоянии; negative-test (sync regex .py-only = v5.12.0 баг) → корректно FAIL «wiring не доедет, ровно v5.12.0 баг». Поймал бы v5.12.0 pre-merge.
+
+**Priority:** 🟡 Medium — усиление review-gate, не ломает существующее.
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+Для большинства consumers validate-delivery — no-op (нет methodology-internal delivery-поверхности, graceful skip exit 0).
+
+---
+
 ## v5.13.1 — fix: /sync-audit live upstream check — больше не врёт "актуальна" на stale клоне (2026-06-08)
 
 **Что:** `/sync-audit` Шаг -0.5 молча рапортовал «версия актуальна» когда локальный клон методологии отставал от upstream (реальный инцидент: ERP-клон v4.68.0, upstream v5.13.0 → «актуальна»). Причина: `git fetch --dry-run` мог тихо упасть/быть пропущен → Шаг 1b сравнивал локальный stale VERSION с `.claude/.version` (оба совпадали т.к. оба stale) → ложное «актуальна».
