@@ -640,14 +640,15 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
   # auto-update/security-хуки мертвы, consumer застревает без предупреждения.
   settings_json="$TARGET_DIR/.claude/settings.json"
   if [[ -f "$settings_json" ]]; then
-    # извлечь имена hook-файлов: и прямой вызов (.claude/hooks/X.py), и через
-    # wrapper (run-hook.sh X.py) — берём оба паттерна.
+    # извлечь имена hook-файлов: прямой вызов (.claude/hooks/X — .py И .sh, ловит
+    # run-hook.sh + hook-liveness.sh), и через wrapper (run-hook.sh X.py). Зеркало
+    # canon auto-update-watchdog.template.py:211-215 — менять синхронно (closes G-087).
     missing_hooks=""
     while IFS= read -r hookfile; do
       [[ -z "$hookfile" ]] && continue
       [[ -f "$TARGET_DIR/.claude/hooks/$hookfile" ]] || missing_hooks="$missing_hooks $hookfile"
     done < <( {
-      grep -oE '\.claude/hooks/[A-Za-z0-9_-]+\.py' "$settings_json" 2>/dev/null | sed 's#.claude/hooks/##'
+      grep -oE '\.claude/hooks/[A-Za-z0-9_-]+\.(py|sh)' "$settings_json" 2>/dev/null | sed 's#.claude/hooks/##'
       grep -oE 'run-hook\.sh [A-Za-z0-9_-]+\.py' "$settings_json" 2>/dev/null | sed 's#run-hook\.sh ##'
     } | sort -u )
     if [[ -n "$missing_hooks" ]]; then

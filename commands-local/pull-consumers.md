@@ -235,6 +235,36 @@ Edge cases:
 
 ---
 
+## Шаг 3.5 — Partial-hook-state check (closes G-087 — детект рекурсивной дыры доставки)
+
+**Зачем:** G-087 повторялся трижды — у консьюмера `settings.json` ссылается на хуки, но сами файлы (в т.ч. `run-hook.sh`) отсутствуют на диске → все хуки молча падают, escalation/защита мертвы, и runtime-детектор (`check_hook_health` внутри `auto-update-watchdog`) сам недоступен потому что его раннер `run-hook.sh` отсутствует. `/pull-consumers` видит все репо разом — идеальное место для cross-consumer детекта этого driftّа ПОСЛЕ pull (свежее состояние).
+
+**Только для `[marker]` consumers** (у `[no-marker]` нет инициализированной методологии — пропустить тихо).
+
+Для каждого `[marker]` консьюмера, у которого есть `.claude/settings.json`:
+
+```bash
+SETTINGS="$consumer_path/.claude/settings.json"
+HOOKS_DIR="$consumer_path/.claude/hooks"
+[[ -f "$SETTINGS" ]] || continue   # нет settings — пропустить
+# Зеркало canon (auto-update-watchdog.template.py:211-215): два паттерна.
+referenced=$( {
+  grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.(py|sh)' "$SETTINGS" 2>/dev/null | sed 's#.*\.claude/hooks/##'
+  grep -oE 'run-hook\.sh [A-Za-z0-9_.-]+\.py' "$SETTINGS" 2>/dev/null | sed 's#run-hook\.sh ##'
+} | sort -u )
+missing=""
+for h in $referenced; do
+  [[ -f "$HOOKS_DIR/$h" ]] || missing="$missing $h"
+done
+```
+
+- **`missing` непусто** → пометить консьюмера в Report флагом `⚠️ HOOK-DRIFT` с перечнем отсутствующих файлов. Если в `missing` есть `run-hook.sh` — **критично** (раннер всех хуков): отдельно отметить `🔴 run-hook.sh отсутствует → ВСЕ хуки мертвы`.
+- **`missing` пусто** → тихо (хуки целы).
+
+⛔ Read-only: команда **только сообщает** drift в Report, не чинит (консьюмер чинит сам через `sync-methodology.sh`). Рекомендация в Report: «консьюмер должен запустить `bash <methodology>/scripts/sync-methodology.sh .`».
+
+---
+
 ## Шаг 4 — Report
 
 Вывести структурированный отчёт пользователю:
@@ -245,6 +275,8 @@ Discovery: workspace file (It dev methodology.code-workspace) — 8 repos, 4 wit
 
 ### [marker] erp-documentantion (gitlab/ai-dev) — v4.47.5
 ✓ Pulled abc123 → def456 (12 commits since 2026-05-25)
+⚠️ HOOK-DRIFT: 🔴 run-hook.sh отсутствует → ВСЕ хуки мертвы; iteration-watchdog.py отсутствует
+   → консьюмер должен запустить `bash <methodology>/scripts/sync-methodology.sh .`
 
 **AGENT-GAPS** (root): +2 new
 - G-010: «Не сгенерировал ссылку для USER-MAP, gitignored файл выпал из diff»

@@ -135,30 +135,45 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T12:00:00Z",
-    "task_id": "auto-gap-capture — remove friction from /plan step-4 and /diagnose step-6",
+    "completed_at": "2026-06-08T13:00:00Z",
+    "task_id": "G-087 recursive hook-delivery hole — layer-1 fate-independent liveness detectors",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "Fallback в /plan Шаг -4 и /diagnose 6.3 если секция ## Записи не найдена",
-        "status": "pending",
+        "text": "Создать templates/.claude/hooks/hook-liveness.sh — pure-sh L4 SessionStart детектор, дуальный regex canon, -f тест каждого hook + явно run-hook.sh, БЕЗ зависимости от run-hook.sh",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "Аналогичное изменение в PRODUCT-GAPS.md template (предложить -> записывает автоматически)",
-        "status": "pending",
+        "text": "templates/settings.template.json — добавить SessionStart entry прямой вызов sh .claude/hooks/hook-liveness.sh (НЕ через run-hook.sh)",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "Дедуп-grep в /plan Шаг -4 перед auto-write",
-        "status": "pending",
+        "text": "commands/plan.md Подшаг -0.4 — сменить предикат с 'SessionStart wired?' на физическое наличие каждого referenced hook + run-hook.sh на диске, зеркалить canon-regex",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "USER-MAP — добавить capability auto-capture gap (Шаг 5 карт)",
-        "status": "pending",
+        "text": "scripts/sync-methodology.sh — verify hook-liveness.sh доставляется (*.sh cp+chmod) + входит в missing_hooks detection (расширен .py->.py|.sh)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "doc-repo: DEVLOG [fix:hook] + CHANGELOG + reopen G-087 (почему addressed-фикс v5.2.0 не сработал) + OPEN-QUESTIONS OQ-006 sync-атомарность",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "/pull-consumers — добавить проверку partial-hook-state у всех консьюмеров (Шаг 3.5)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION minor bump v5.12.0 (additive: новый hook + settings wiring; схема triggers.json НЕ меняется — слой 3 отложен)",
+        "status": "done",
         "skip_reason": null
       }
     ]
@@ -166,12 +181,12 @@
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "feat(command): /pull workspace-wide ff-only (v5.10.0)"
+    "phase": "docs(changelog+devlog+user-map): /pull v5.9-5.10.1 deploy actions"
   },
   "last_auto_pull": {
-    "at": "2026-06-08T08:30:11+00:00",
-    "version_before": "v5.7.0",
-    "version_after": "v5.7.0",
+    "at": "2026-06-08T10:39:43+00:00",
+    "version_before": "v5.11.0",
+    "version_after": "v5.11.0",
     "status": "failed"
   }
 }
