@@ -1,6 +1,6 @@
-# /pull — Pull ai-dev с remote (ff-only)
+# /pull — Pull всех workspace repos с remote (ff-only)
 
-> **Цель:** подтянуть последние коммиты из remote в локальную ветку `ai-dev` — безопасно, без auto-merge.
+> **Цель:** одной командой подтянуть все repos из `.code-workspace` с remote — без merge, ff-only, с preview входящих коммитов.
 
 **Только для консьюмеров.** Methodology-platform использует `git pull` напрямую.
 
@@ -17,26 +17,34 @@
 ## Использование
 
 ```
-/pull   — pull origin/<agent_branch> → локальная ветка (нет аргументов)
+/pull   — pull всех workspace repos (нет аргументов)
 ```
+
+---
+
+## Что тянется
+
+Все repos из `.code-workspace` **кроме** `it-dev-methodology` (methodology source — тянется отдельно через `sync-methodology.sh`).
+
+Включая `*-documentation` repos и любые другие repos добавленные в workspace.
 
 ---
 
 ## ⚠️ Важно: запускать из этого репо
 
-`/pull` работает только в сессии **этого проекта** — не из соседнего репо.
+`/pull` работает только в сессии **этого проекта** (там где есть `.claude/hooks/`).
 
-Claude Code hooks используют относительные пути (`py .claude/hooks/...`). Если CWD сессии находится в директории без `.claude/hooks/` — все Bash-команды включая `cd`, `git`, `echo` завершаются ошибкой. Переключись в нужную сессию перед запуском.
+Claude Code hooks используют относительные пути. Если CWD сессии в директории без `.claude/hooks/` — все Bash-команды включая `git` завершаются ошибкой. Переключись в правильную сессию.
 
 ---
 
 ## Шаг 1 — Pre-flight
 
-- [ ] Нет незакоммиченных изменений: `git status --short` = пусто (или `git stash`)
-- [ ] Текущая ветка = `agent_branch` из `CLAUDE.local.md ## Branching` (default: `ai-dev`)
+- [ ] Нет незакоммиченных изменений в текущем репо: `git status --short` = пусто
+- [ ] `.code-workspace` указан в `CLAUDE.local.md ## Consumers → workspace_file`
 
 ```bash
-grep -A5 '## Branching' CLAUDE.local.md | grep 'agent_branch:'
+grep -A3 '## Consumers' CLAUDE.local.md | grep 'workspace_file:'
 ```
 
 ---
@@ -47,32 +55,34 @@ grep -A5 '## Branching' CLAUDE.local.md | grep 'agent_branch:'
 bash scripts/consumer-pull.sh
 ```
 
-Скрипт:
-1. Проверяет наличие `.claude/` (hook-safety guard)
-2. Читает `agent_branch` из `CLAUDE.local.md`
-3. Проверяет uncommitted changes — блокирует если есть
-4. Выполняет `git fetch origin <agent_branch>`
-5. Показывает входящие коммиты (preview)
-6. `git pull --ff-only origin <agent_branch>` — без merge, без rebase-сюрпризов
+Скрипт для каждого repo из workspace:
+1. Проверяет uncommitted changes — skip если есть
+2. Читает `agent_branch` из `CLAUDE.local.md ## Branching` репо (default: `ai-dev`)
+3. `git fetch origin <agent_branch>`
+4. Показывает входящие коммиты
+5. `git pull --ff-only origin <agent_branch>` — без merge-сюрпризов
 
-**Если уже актуально** — скрипт скажет "✅ Уже актуально" и выйдет без изменений.
+**Если repo уже актуален** — одна строка «✓ up to date».
 
 **Если история разошлась (ff-only не прошёл):**
 
 ```
-❌ Pull --ff-only не прошёл: история разошлась.
+✗ SKIP — ff-only failed (история разошлась)
+   git log --oneline --graph origin/<branch>...<branch>
 ```
 
-Варианты:
-- Посмотреть расхождение: `git log --oneline --graph origin/ai-dev...ai-dev`
-- Принять remote: `git reset --hard origin/ai-dev` ⚠️ деструктивно — спроси пользователя
-- Rebase: `git rebase origin/ai-dev`
+Разрешить вручную: `git rebase origin/<branch>` или спросить пользователя.
+
+**Если fetch вернул 403 / auth error:**
+- GitHub: `gh auth login` → повторить `/pull`
+- GitLab: проверь Personal Access Token
 
 ---
 
 ## Шаг 3 — После pull
 
-- [ ] `git log -1 --oneline` совпадает с `git log -1 --oneline origin/<agent_branch>`?
+- [ ] Все нужные repos показали «✓ pulled» или «✓ up to date»?
+- [ ] Есть repos с ошибками? Проверь вывод — типичные причины указаны там
 - [ ] Если нужно запушить локальные изменения → `/push` или `/push-merge`
 
 ---

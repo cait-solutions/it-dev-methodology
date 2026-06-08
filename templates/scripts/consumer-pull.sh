@@ -1,187 +1,214 @@
 #!/usr/bin/env bash
 #
-# consumer-pull.sh — pull agent branch from remote (ff-only).
+# consumer-pull.sh — pull all workspace repos from remote (ff-only).
 #
-# Safe pull: git pull --ff-only origin <agent_branch>
-# Shows preview of incoming commits before applying. Fails explicitly on
-# diverged history (no auto-merge, no rebase surprises).
+# Reads .code-workspace to discover all repos, then for each:
+#   git fetch origin <agent_branch>
+#   git pull --ff-only origin <agent_branch>
+#
+# Skips: it-dev-methodology (methodology source — pulled separately via sync-methodology.sh)
+# Includes: all other repos including *-documentation repos
 #
 # Usage:
 #   bash scripts/consumer-pull.sh
 #
-# Config read from CLAUDE.local.md ## Branching:
-#   agent_branch:  ai-dev  (default: ai-dev)
+# Config read from CLAUDE.local.md:
+#   ## Consumers → workspace_file  (path to .code-workspace, relative to repo root)
+#   ## Branching → agent_branch    (default branch per repo from its CLAUDE.local.md)
 #
-# ⚠️  MUST be run from WITHIN this repo's session (where .claude/hooks/ exists).
+# ⚠️  MUST be run from WITHIN a repo that has .claude/hooks/ present.
 #    Claude Code hooks use relative paths — if CWD lacks .claude/, ALL Bash
 #    commands fail including cd, echo, git. Run /pull from your project's own
 #    session, not from another repo's session context.
 
 set -euo pipefail
 
-CONFIG="${CONSUMER_PULL_CONFIG:-CLAUDE.local.md}"
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SELF_DIR/../.." && pwd)"
+CONFIG="${CONSUMER_PULL_CONFIG:-${REPO_ROOT}/CLAUDE.local.md}"
 
 # ---------------------------------------------------------------------------
-# Hook-safety guard: verify we are inside a repo with .claude/ present.
-# This prevents the "hook CWD crash" where Claude Code hooks resolve relative
-# to CWD — if .claude/hooks/ is missing, every Bash call (including cd) fails.
+# Hook-safety guard
 # ---------------------------------------------------------------------------
-if [[ ! -d ".claude" ]]; then
-  echo "❌ Нет .claude/ в текущей директории."
-  echo "   Этот скрипт должен запускаться из корня проекта со .claude/ (не из соседнего репо)."
-  echo "   CWD сейчас: $(pwd)"
-  echo "   Переключи сессию или CD в корень своего проекта."
+if [[ ! -d "${REPO_ROOT}/.claude" ]]; then
+  echo "❌ Нет .claude/ в корне репо: ${REPO_ROOT}"
+  echo "   Запускай /pull из сессии своего проекта, не из соседнего репо."
   exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# Read config from CLAUDE.local.md ## Branching section
+# Helpers
 # ---------------------------------------------------------------------------
 _get_field() {
-  local field="$1" default="$2"
-  if [[ ! -f "$CONFIG" ]]; then echo "$default"; return; fi
+  local file="$1" section="$2" field="$3" default="$4"
+  if [[ ! -f "$file" ]]; then echo "$default"; return; fi
   local value
-  value=$(awk '/^## Branching/{f=1; next} /^## /{f=0} f{print}' "$CONFIG" \
+  value=$(awk "/^## ${section}/{f=1; next} /^## /{f=0} f{print}" "$file" \
           | grep -E "^[[:space:]]*${field}:" | head -1 \
           | sed "s/.*${field}:[[:space:]]*//" | sed 's/[[:space:]]*#.*$//' | tr -d '\r[:space:]')
   echo "${value:-$default}"
 }
 
-AGENT_BRANCH=$(_get_field "agent_branch" "ai-dev")
+_sanitize() {
+  sed 's/x-access-token:[^@]*@/x-access-token:***@/g' \
+  | sed 's/oauth2:[^@]*@/oauth2:***@/g' \
+  | sed 's|https://[^:]*:[^@]*@|https://***:***@|g'
+}
 
 # ---------------------------------------------------------------------------
-# Checks
+# Discover workspace file
 # ---------------------------------------------------------------------------
-REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
-if [[ -z "$REMOTE_URL" ]]; then
-  echo "❌ git remote 'origin' не настроен. Добавь: git remote add origin <url>"
+WORKSPACE_FILE_REL=$(_get_field "$CONFIG" "Consumers" "workspace_file" "")
+if [[ -n "$WORKSPACE_FILE_REL" ]]; then
+  WORKSPACE_FILE="$(cd "$REPO_ROOT" && cd "$(dirname "$WORKSPACE_FILE_REL")" 2>/dev/null && pwd)/$(basename "$WORKSPACE_FILE_REL")"
+else
+  WORKSPACE_FILE=$(ls "$REPO_ROOT"/../*.code-workspace 2>/dev/null | head -1 || true)
+fi
+
+if [[ -z "$WORKSPACE_FILE" || ! -f "$WORKSPACE_FILE" ]]; then
+  echo "❌ .code-workspace не найден."
+  echo "   Укажи workspace_file в CLAUDE.local.md ## Consumers"
+  echo "   или добавь .code-workspace в родительскую директорию."
   exit 1
 fi
 
-# Detached HEAD guard
-HEAD_REF=$(git symbolic-ref HEAD 2>/dev/null || echo "")
-if [[ -z "$HEAD_REF" ]]; then
-  echo "⚠️  Detached HEAD — репо не на ветке."
-  echo "   Переключись: git checkout ${AGENT_BRANCH}"
-  exit 1
-fi
-
-CURRENT_BRANCH="${HEAD_REF#refs/heads/}"
-if [[ "$CURRENT_BRANCH" != "$AGENT_BRANCH" ]]; then
-  echo "⚠️  Текущая ветка: ${CURRENT_BRANCH}"
-  echo "   Pull настроен для: ${AGENT_BRANCH}"
-  echo "   Переключись: git checkout ${AGENT_BRANCH}"
-  exit 1
-fi
-
-# Uncommitted changes guard
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "⚠️  Есть незакоммиченные изменения."
-  echo "   Закоммить или stash перед pull:"
-  echo "     git stash   — временно убрать"
-  echo "     git status  — посмотреть что"
-  exit 1
-fi
+echo "Workspace: ${WORKSPACE_FILE}"
 
 # ---------------------------------------------------------------------------
-# Wire credential helper for HTTPS (same pattern as consumer-push-only.sh)
+# Parse workspace repos via Python (avoid bash JSON parsing)
 # ---------------------------------------------------------------------------
-_wire_credential_helper() {
-  local helper_path host
-  case "$REMOTE_URL" in
-    https://*) : ;;
-    *) return 0 ;;
-  esac
-  helper_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/git-credential-from-env.sh"
-  [[ -f "$helper_path" ]] || return 0
-  host="${REMOTE_URL#https://}"; host="${host%%/*}"; host="${host%%:*}"
-  [[ -n "$host" ]] || return 0
-  if git config --get "credential.https://${host}.helper" >/dev/null 2>&1; then
-    return 0
+REPOS_RAW=$(python3 -c "
+import json, sys, pathlib
+ws = pathlib.Path(sys.argv[1])
+ws_dir = ws.parent
+try:
+    data = json.loads(ws.read_text(encoding='utf-8'))
+except Exception as e:
+    print('ERROR:' + str(e), file=sys.stderr)
+    sys.exit(1)
+for f in data.get('folders', []):
+    p = (ws_dir / f['path']).resolve()
+    print(p)
+" "$WORKSPACE_FILE" 2>&1) || {
+  echo "❌ Не удалось распарсить workspace: $REPOS_RAW"
+  exit 1
+}
+
+# ---------------------------------------------------------------------------
+# Methodology repo name — skip it
+# ---------------------------------------------------------------------------
+METHODOLOGY_REPO_NAME="it-dev-methodology"
+
+# ---------------------------------------------------------------------------
+# Pull loop
+# ---------------------------------------------------------------------------
+PULLED=0
+UP_TO_DATE=0
+SKIPPED=0
+ERRORS=0
+TOTAL=0
+
+echo ""
+
+while IFS= read -r repo_path; do
+  [[ -z "$repo_path" ]] && continue
+  [[ ! -d "$repo_path" ]] && continue
+  [[ ! -d "${repo_path}/.git" ]] && continue
+
+  repo_name="$(basename "$repo_path")"
+
+  # Skip methodology source repo
+  if [[ "$repo_name" == "$METHODOLOGY_REPO_NAME" ]]; then
+    echo "⏭  ${repo_name} — пропущен (methodology source)"
+    continue
   fi
-  git config "credential.https://${host}.helper" "!bash ${helper_path}"
-  echo "🔑 credential helper настроен для ${host}"
-}
-_wire_credential_helper
 
-# Ensure correct gh account for GitHub
-_detect_github() {
-  case "$REMOTE_URL" in
-    https://github.com/*|git@github.com:*) echo "github" ;;
-    *) echo "other" ;;
-  esac
-}
-_ensure_gh_account() {
-  command -v gh >/dev/null 2>&1 || return 0
-  [[ "$(_detect_github)" == "github" ]] || return 0
-  local owner active
-  case "$REMOTE_URL" in
-    https://github.com/*) owner="${REMOTE_URL#https://github.com/}"; owner="${owner%%/*}" ;;
-    git@github.com:*)     owner="${REMOTE_URL#git@github.com:}"; owner="${owner%%/*}" ;;
-    *) return 0 ;;
-  esac
-  [[ -n "$owner" ]] || return 0
-  active=$(gh api user -q .login 2>/dev/null || echo "")
-  [[ "$active" == "$owner" ]] && return 0
-  if gh auth status 2>/dev/null | grep -q "account ${owner} "; then
-    gh auth switch --user "$owner" >/dev/null 2>&1 && \
-      echo "🔄 gh account: ${active:-none} → ${owner}"
-  else
-    echo "⚠️  gh: аккаунт '${owner}' не залогинен (активен: ${active:-none})."
-    echo "    Pull может вернуть 403. Залогинься: gh auth login"
+  TOTAL=$((TOTAL + 1))
+
+  # Read agent_branch from this repo's CLAUDE.local.md
+  branch=$(_get_field "${repo_path}/CLAUDE.local.md" "Branching" "agent_branch" "ai-dev")
+
+  echo "── ${repo_name} (branch: ${branch})"
+
+  # Check remote exists
+  remote_url=$(git -C "$repo_path" remote get-url origin 2>/dev/null || true)
+  if [[ -z "$remote_url" ]]; then
+    echo "   ✗ SKIP — no origin remote"
+    SKIPPED=$((SKIPPED + 1))
+    continue
   fi
-}
-_ensure_gh_account
+
+  # Check uncommitted changes
+  if ! git -C "$repo_path" diff --quiet 2>/dev/null || \
+     ! git -C "$repo_path" diff --cached --quiet 2>/dev/null; then
+    echo "   ✗ SKIP — незакоммиченные изменения (stash и повтори)"
+    SKIPPED=$((SKIPPED + 1))
+    continue
+  fi
+
+  # Check we're on the right branch (or branch exists)
+  current_branch=$(git -C "$repo_path" symbolic-ref --short HEAD 2>/dev/null || echo "")
+  if [[ -z "$current_branch" ]]; then
+    echo "   ✗ SKIP — detached HEAD"
+    SKIPPED=$((SKIPPED + 1))
+    continue
+  fi
+  if [[ "$current_branch" != "$branch" ]]; then
+    echo "   ⚠  текущая ветка: ${current_branch}, ожидалась: ${branch} — переключаюсь"
+    git -C "$repo_path" checkout "$branch" 2>/dev/null || {
+      echo "   ✗ SKIP — не удалось переключиться на ${branch}"
+      SKIPPED=$((SKIPPED + 1))
+      continue
+    }
+  fi
+
+  prev_sha=$(git -C "$repo_path" rev-parse HEAD 2>/dev/null || true)
+
+  # Fetch
+  fetch_out=$(git -C "$repo_path" fetch origin "$branch" 2>&1 | _sanitize || true)
+  fetch_exit=$?
+  if [[ $fetch_exit -ne 0 ]]; then
+    echo "   ✗ SKIP — fetch failed: $(echo "$fetch_out" | head -2)"
+    ERRORS=$((ERRORS + 1))
+    continue
+  fi
+
+  # Check incoming
+  incoming=$(git -C "$repo_path" log --oneline "${branch}..origin/${branch}" 2>/dev/null || true)
+  if [[ -z "$incoming" ]]; then
+    echo "   ✓ up to date"
+    UP_TO_DATE=$((UP_TO_DATE + 1))
+    continue
+  fi
+
+  # Pull --ff-only
+  pull_out=$(git -C "$repo_path" pull --ff-only origin "$branch" 2>&1 | _sanitize || true)
+  pull_exit=$?
+  if [[ $pull_exit -ne 0 ]]; then
+    echo "   ✗ SKIP — ff-only failed (история разошлась)"
+    echo "      git log --oneline --graph origin/${branch}...${branch}"
+    ERRORS=$((ERRORS + 1))
+    continue
+  fi
+
+  head_sha=$(git -C "$repo_path" rev-parse HEAD 2>/dev/null || true)
+  n_commits=$(git -C "$repo_path" log --oneline "${prev_sha}..${head_sha}" 2>/dev/null | wc -l | tr -d ' ')
+  echo "   ✓ pulled ${n_commits} коммит(ов)"
+  echo "$incoming" | head -5 | sed 's/^/      /'
+  PULLED=$((PULLED + 1))
+
+done <<< "$REPOS_RAW"
 
 # ---------------------------------------------------------------------------
-# Fetch + preview incoming commits
+# Summary
 # ---------------------------------------------------------------------------
 echo ""
-echo "Fetch origin/${AGENT_BRANCH} ..."
-git fetch origin "${AGENT_BRANCH}" 2>&1 || {
-  echo "❌ Fetch не прошёл."
-  echo "   Проверь подключение и права доступа к ${REMOTE_URL}"
-  exit 1
-}
-
-INCOMING=$(git log --oneline "${AGENT_BRANCH}..origin/${AGENT_BRANCH}" 2>/dev/null || true)
-if [[ -z "$INCOMING" ]]; then
+echo "────────────────────────────────"
+echo "✅ /pull done"
+echo "   Repos: ${TOTAL} обработано"
+echo "   Pulled: ${PULLED}  |  Up to date: ${UP_TO_DATE}  |  Skipped: ${SKIPPED}  |  Errors: ${ERRORS}"
+if [[ $ERRORS -gt 0 ]]; then
   echo ""
-  echo "✅ Уже актуально — новых коммитов нет."
-  echo "   branch: ${AGENT_BRANCH}"
-  echo "   remote: ${REMOTE_URL}"
-  exit 0
+  echo "   ⚠  ${ERRORS} репо с ошибками — проверь вывод выше."
+  echo "      Типичные причины: ff-only failed (rebase нужен), fetch auth error."
 fi
-
-echo ""
-echo "Входящие коммиты:"
-echo "$INCOMING"
-echo ""
-echo "branch: ${AGENT_BRANCH}"
-echo "remote: ${REMOTE_URL}"
-echo ""
-
-# ---------------------------------------------------------------------------
-# Pull --ff-only (safe: fails explicitly on diverged history)
-# ---------------------------------------------------------------------------
-if ! git pull --ff-only origin "${AGENT_BRANCH}"; then
-  echo ""
-  echo "❌ Pull --ff-only не прошёл: история разошлась."
-  echo ""
-  echo "Это значит что локальная ветка содержит коммиты которых нет на remote,"
-  echo "а remote содержит коммиты которых нет локально."
-  echo ""
-  echo "Варианты:"
-  echo "  a) Посмотреть расхождение:"
-  echo "       git log --oneline --graph origin/${AGENT_BRANCH}...${AGENT_BRANCH}"
-  echo "  b) Принять remote-версию (потерять локальные коммиты):"
-  echo "       git reset --hard origin/${AGENT_BRANCH}   # ⚠️ деструктивно — уточни у пользователя"
-  echo "  c) Rebase поверх remote:"
-  echo "       git rebase origin/${AGENT_BRANCH}         # может потребовать разрешения конфликтов"
-  echo "  d) Попросить пользователя разрешить вручную в терминале"
-  exit 1
-fi
-
-echo ""
-echo "✅ Pulled: ${AGENT_BRANCH} (ff-only)"
-echo "   Local теперь совпадает с origin/${AGENT_BRANCH}"
