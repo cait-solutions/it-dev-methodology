@@ -4,6 +4,28 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.11.0 — feat: auto-gap-capture — gap'ы записываются без подтверждения (2026-06-08)
+
+**Что:** убран friction при захвате gap'ов в `/plan` Шаг -4 и `/diagnose` Шаг 6. Ранее агент спрашивал `(a/p/n)` — gap'ы терялись на практике. Теперь auto-write + opt-out.
+
+Изменения:
+- **`/plan` Шаг -4:** при обнаружении коррекции — дедуп-grep → auto-write → одна строка: `📝 Записано: G-NNN — ... Отменить: 'нет'`
+- **`/diagnose` Шаг 6.3-6.4:** reinforced "без подтверждения", добавлен opt-out в Шаге 6.4
+- **`AGENT-GAPS.md.template` правило захвата:** обновлено — "записывает автоматически"
+- **`CLAUDE.template.md` Agent self-reporting rule:** переписан — auto-write flow с примерами
+
+**Priority:** 🟡 Medium — поведенческое изменение, backward compatible.
+
+**Actions (для консьюмеров на v5.10.x и ниже):**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh
+```
+После sync: `/plan` Шаг -4 и `/diagnose` Шаг 6 автоматически пишут gap без вопроса.
+
+**Примечание:** если в вашем `AGENT-GAPS.md` нет секции `## Записи` с маркером `<!-- новые — сверху -->` — агент не сможет вставить запись (упадёт gracefully). Проверить: `grep "новые" AGENT-GAPS.md`.
+
+---
+
 ## v5.8.0 — fix: SYSTEM-MAP шаблон — продуктовые компоненты первичны (2026-06-08)
 
 **Что:** исправлен концептуальный дефект в `templates/SYSTEM-MAP.template.md` (P-004). Шаблон содержал только безликие `<service-1>` / `<service-2>` без примеров — консьюмер не понимал что в диаграмму должны идти компоненты его продукта (`OrderService`, `PartyService`, `CatalogService`), а не dev-инструменты.
