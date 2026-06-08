@@ -67,38 +67,38 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T17:30:00Z",
-    "task_id": "G-089 — pre-fix baseline measurement (превентивный слой против visual iterative-thrash)",
+    "completed_at": "2026-06-08T18:30:00Z",
+    "task_id": "visual-parity pre-fix protocol — достройка G-089 + стек-агностичность (closes G-090)",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "/code Frontend DOM verification rule — pre-fix baseline блок: visual-alignment + >=2 элемента → один runtime-замер всех осей в таблицу до первого фикса",
+        "text": "/code visual-parity pre-fix protocol — три измерения: эталон-как-артефакт + полный чеклист под-элементов (surface×под-элемент×ось) + component-source check",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "templates/CLAUDE_LOCAL.template.md ## Iteration watchdog — рекомендация reset_on_commit:false для frontend-heavy (default не менять)",
+        "text": "Очистить блок от framework/проект-частностей (Vuetify-имена + parties → абстрактные); stack-agnosticism gate grep = 0",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "VERSION v5.15.0 + CHANGELOG + DEVLOG [feat:command] + AGENT-GAPS G-089 → addressed",
+        "text": "VERSION v5.16.0 + CHANGELOG + DEVLOG [feat:command] + AGENT-GAPS G-090 → addressed",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "runtime-verification что pre-fix правило работает (войдёт в /review-наблюдение на следующей multi-source visual задаче в консьюмере)",
+        "text": "runtime-verification следования visual-parity protocol (войдёт в /review-наблюдение на следующей visual-parity задаче консьюмера)",
         "status": "skipped",
-        "skip_reason": "requires runtime test — prose-правило нельзя проверить статически, наблюдается на реальной frontend-задаче"
+        "skip_reason": "requires runtime test — prose-правило, наблюдается на реальной frontend-parity задаче"
       }
     ]
   },
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "feat: pre-fix baseline measurement — visual iterative-thrash prevention (v5.15.0, G-089)"
+    "phase": "feat: visual-parity pre-fix protocol — completeness + стек-агностичность (v5.16.0, G-090)"
   },
   "last_auto_pull": {
     "at": "2026-06-08T13:21:25+00:00",
