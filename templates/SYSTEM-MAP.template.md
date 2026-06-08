@@ -10,6 +10,29 @@
 
 ---
 
+> ⛔ **Важно: эта карта описывает архитектуру ТВОЕГО ПРОДУКТА, а не инструменты разработки.**
+>
+> Компоненты в диаграмме — это **сервисы и модули твоего продукта**: то что пользователи используют, то что обрабатывает их данные.
+>
+> - **ERP:** `OrderService`, `PartyService`, `InvoiceService`, `WarehouseService`
+> - **Маркетплейс:** `CatalogService`, `OrderService`, `PaymentService`, `SearchService`
+> - **Бот / AI-ассистент:** `DialogService`, `KnowledgeBase`, `LLM API`, `UserProfileService`
+> - **API-сервис:** `AuthService`, `CoreAPI`, `WebhookService`, `QueueWorker`
+> - **Инструмент / CLI:** `CLI Core`, `Plugin System`, `ConfigService`, `OutputFormatter`
+>
+> `<service-1>`, `<service-2>` — заглушки. Замени их на реальные компоненты **своего продукта**.
+>
+> Если в карте остались только `<service-1>` и `<service-2>` без замены — **карта не заполнена**.
+
+---
+
+## Bootstrap checklist
+
+- [ ] Продуктовые компоненты заполнены: `<service-1>` / `<service-2>` заменены на реальные сервисы/модули твоего продукта
+- [ ] У каждого компонента указано назначение в секции **Компоненты** ниже
+
+---
+
 ## Agent TL;DR
 
 <!-- 5-15 строк scan-friendly резюме. Что в графе, основные подсистемы, критичные edges, известные gap-ы. Агент читает эту секцию первой при анализе архитектурных задач. -->
