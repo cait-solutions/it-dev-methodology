@@ -4,6 +4,33 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.8.0 — fix: SYSTEM-MAP шаблон — продуктовые компоненты первичны (2026-06-08)
+
+**Что:** исправлен концептуальный дефект в `templates/SYSTEM-MAP.template.md` (P-004). Шаблон содержал только безликие `<service-1>` / `<service-2>` без примеров — консьюмер не понимал что в диаграмму должны идти компоненты его продукта (`OrderService`, `PartyService`, `CatalogService`), а не dev-инструменты.
+
+Изменения:
+- **Callout в начале:** «Это архитектура ТВОЕГО ПРОДУКТА» с примерами по 5 типам проектов (ERP, маркетплейс, бот, API-сервис, инструмент)
+- **Bootstrap checklist:** 2 обязательных чекбокса (product components заполнены + у каждого есть назначение)
+- **CLAUDE.md Maps Standard Rule:** уточнено что SYSTEM-MAP описывает продуктовые сервисы как первичный слой
+- **methodology-platform SYSTEM-MAP:** добавлена note о special case (продукт = методология = слои репо)
+- **PRODUCT-GAPS:** закрыт P-004 (resolved in v5.8.0)
+
+**Migration note для консьюмеров bootstrap'нутых до v5.8.0:**
+
+Если `docs/architecture/SYSTEM-MAP.md` в вашем проекте содержит только `<service-1>` / `<service-2>` без замены — карта не заполнена. Для исправления:
+
+1. Открой `PRODUCT.md` → выпиши ключевые сервисы/модули продукта
+2. Замени `<service-1>` / `<service-2>` на реальные компоненты (`OrderService`, `PartyService` и т.д.)
+3. Заполни Bootstrap checklist в начале файла
+
+**Что запустить:**
+```bash
+# Ничего — bootstrap-only артефакт, sync-methodology.sh его не трогает
+# Изменения нужно внести вручную в docs/architecture/SYSTEM-MAP.md
+```
+
+---
+
 ## v5.7.0 — fix: ARTIFACT-MAP шаблон — продуктовые артефакты первичны (2026-06-08)
 
 **Что:** исправлен концептуальный дефект в `templates/ARTIFACT-MAP.template.md`. Шаблон раньше направлял консьюмера описывать dev-артефакты (команды `/plan`, `/code`, DEVLOG) как центральный контент карты — вместо документов продукта (`orders.md`, `parties.md`, `invoice-flow.md`).

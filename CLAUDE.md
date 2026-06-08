@@ -192,7 +192,7 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 | Карта | Viewpoint (4+1/arc42) | Отвечает на вопрос | Читает | Пишет |
 |---|---|---|---|---|
-| **SYSTEM-MAP** | Logical + Development | Как устроена система? | Developer, /architecture-audit | Developer + /code при структурных изменениях |
+| **SYSTEM-MAP** | Logical + Development | Как устроена система продукта? Первичны продуктовые сервисы/модули (OrderService, PartyService, CatalogService и т.п.); инфраструктура — вторичный слой. | Developer, /architecture-audit | Developer + /code при структурных изменениях |
 | **USER-MAP** | Scenarios | Что умеет пользователь? | Developer, /product-check, /onboard | Developer + /code при новых capabilities |
 | **ARTIFACT-MAP** | Data-lineage | Какой документ описывает эту часть продукта, кто его владелец и когда он устаревает? Первичны продуктовые артефакты (orders.md, parties.md, flows.md); методологические (DEVLOG, triggers.json) — вторичный слой. | /review, /retro, Developer | Developer при добавлении продуктового или методологического артефакта |
 

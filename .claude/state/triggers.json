@@ -141,16 +141,42 @@
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "Write-path для out-of-scope/deferred — /plan Шаг 99.3 persist-таргет + /review out-of-scope findings (capture перед discovery — anti empty-room)", "status": "done", "skip_reason": null },
-      { "text": "class `affordance` exclusion в /architecture-audit Шаг 3 phantom-node сравнении (class-rule, НЕ ID-whitelist)", "status": "done", "skip_reason": null },
-      { "text": "Дефолт-фильтр severity:high+status:open в scope-view.sh + флаг --all (anti node-explosion)", "status": "done", "skip_reason": null },
-      { "text": "Graceful parse-skip непарсящегося фрагмента (3 формата: triggers.json/status-regex/ROADMAP-заголовки) — не падать", "status": "done", "skip_reason": null },
-      { "text": "Consumer ROADMAP-формат может отличаться — парсер graceful-skip, не assume methodology формат — закрыто copy в templates/scripts/ + probe fallback на '.'", "status": "done", "skip_reason": null }
+      {
+        "text": "Write-path для out-of-scope/deferred — /plan Шаг 99.3 persist-таргет + /review out-of-scope findings (capture перед discovery — anti empty-room)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "class `affordance` exclusion в /architecture-audit Шаг 3 phantom-node сравнении (class-rule, НЕ ID-whitelist)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "Дефолт-фильтр severity:high+status:open в scope-view.sh + флаг --all (anti node-explosion)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "Graceful parse-skip непарсящегося фрагмента (3 формата: triggers.json/status-regex/ROADMAP-заголовки) — не падать",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "Consumer ROADMAP-формат может отличаться — парсер graceful-skip, не assume methodology формат — закрыто copy в templates/scripts/ + probe fallback на '.'",
+        "status": "done",
+        "skip_reason": null
+      }
     ]
   },
   "last_deploy": {
-    "date": "2026-06-06",
+    "date": "2026-06-08",
     "status": "ok",
-    "phase": "/scope-out v5.6.0 — visual deferred/out-of-scope surface (P-002)"
+    "phase": "fix(template): ARTIFACT-MAP продуктовые артефакты первичны (P-003, v5.7.0)"
+  },
+  "last_auto_pull": {
+    "at": "2026-06-08T06:07:45+00:00",
+    "version_before": "v5.6.0",
+    "version_after": "v5.6.0",
+    "status": "failed"
   }
 }
