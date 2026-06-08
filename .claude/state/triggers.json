@@ -191,7 +191,7 @@
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "fix(hook): hook-liveness detector + merge_settings_json .sh wiring (v5.12.0+v5.12.1, PR #154+#155)"
+    "phase": "feat(hook,command): escalation layers 2+3 — reset_on_commit + session_gap_counter (v5.13.0, PR #156)"
   },
   "last_auto_pull": {
     "at": "2026-06-08T10:39:43+00:00",
