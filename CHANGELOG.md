@@ -4,6 +4,26 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.13.1 — fix: /sync-audit live upstream check — больше не врёт "актуальна" на stale клоне (2026-06-08)
+
+**Что:** `/sync-audit` Шаг -0.5 молча рапортовал «версия актуальна» когда локальный клон методологии отставал от upstream (реальный инцидент: ERP-клон v4.68.0, upstream v5.13.0 → «актуальна»). Причина: `git fetch --dry-run` мог тихо упасть/быть пропущен → Шаг 1b сравнивал локальный stale VERSION с `.claude/.version` (оба совпадали т.к. оба stale) → ложное «актуальна».
+
+Изменения (`commands/sync-audit.md` Шаг -0.5 + Шаг 1b):
+- `git fetch --dry-run` → **`git ls-remote origin -h refs/heads/main`** — живой upstream HEAD, не зависит от того когда последний раз делали fetch, работает на shallow-клонах.
+- Три явных verdict: `up-to-date` (HEAD совпал) / `stale` (upstream впереди) / `unverified` (ls-remote failed). **Только `up-to-date` даёт право написать «актуальна».**
+- fetch-fail → «НЕ смог проверить upstream» (не тихий фолбэк на «актуальна»).
+- Шаг 1b: `consumer_version = current_version` больше не значит «актуальна» автоматически — гейтится verdict'ом Шага -0.5 (это значит лишь что consumer синхронен СО СВОИМ клоном, не что клон актуален vs upstream).
+
+**Priority:** 🟡 Medium — поведенческий фикс детектора, не ломает существующее.
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+**NB (мета-парадокс):** этот фикс доедет до консьюнера только ПОСЛЕ обновления его клона методологии. Если консьюмер на сильно старой версии (как ERP v4.68) — сначала **один раз вручную**: `git -C <methodology_clone> pull origin main`, затем `sync-methodology.sh .`. Дальше Шаг -0.5 будет ловить устаревание сам.
+
+---
+
 ## v5.13.0 — feat: escalation layers 2+3 — reset_on_commit flag + session gap counter (2026-06-08)
 
 **Что:** завершение escalation-механизма (слой 1 = v5.12.0/1 hook-liveness). Два слоя real-time эскалации на reasoning-залипание.

@@ -139,51 +139,25 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T14:00:00Z",
-    "task_id": "escalation layers 2+3 — reset_on_commit flag + session_gap_counter",
+    "completed_at": "2026-06-08T15:00:00Z",
+    "task_id": "G-088 — /sync-audit live upstream check (ls-remote, no false актуальна on stale clone)",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "Слой 2: reset_on_commit flag в iteration-watchdog.py (parse_config + обернуть reset logic 152-155); default true (RPN-150-safe), false opt-in",
+        "text": "sync-audit.md Шаг -0.5: fetch --dry-run → ls-remote, 3 verdict (up-to-date/stale/unverified)",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "Слой 3: session_gap_counter + session_marker в triggers.json.template; timestamp-прокси session-boundary (разрыв > N часов = сброс)",
+        "text": "sync-audit.md Шаг 1b: consumer_version=current_version гейтится verdict'ом -0.5 (не авто-актуальна)",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "Слой 3: инкремент session_gap_counter + порог-эскалация (one-shot per category) в /plan Шаг -4 И /diagnose Шаг 6 (обе gap-write точки)",
+        "text": "VERSION patch bump + CHANGELOG + DEVLOG + G-088 в AGENT-GAPS",
         "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "Defensive read нового поля (.get('session_gap_counter') or {}) в командах; sync merge_triggers_json уже аддитивен",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "CLAUDE.md уточнить schema-change rule: мажор для BREAKING (удаление/переименование полей), minor для аддитивных (новое опциональное поле с graceful read)",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "Документировать reset_on_commit + gap_escalation_threshold в CLAUDE.local.template.md + own CLAUDE.local.md (dogfood)",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "VERSION minor bump + DEVLOG + CHANGELOG",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "Layer 1 (v5.12.0/1) уже задеплоен — context, не часть этого PR",
-        "status": "done",
-        "carried_over": true,
         "skip_reason": null
       }
     ]
@@ -191,7 +165,7 @@
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "fix(hook): hook-liveness detector + merge_settings_json .sh wiring (v5.12.0+v5.12.1, PR #154+#155)"
+    "phase": "feat(hook,command): escalation layers 2+3 — reset_on_commit + session_gap_counter (v5.13.0, PR #156)"
   },
   "last_auto_pull": {
     "at": "2026-06-08T10:39:43+00:00",
