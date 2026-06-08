@@ -4,6 +4,36 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.7.0 — fix: ARTIFACT-MAP шаблон — продуктовые артефакты первичны (2026-06-08)
+
+**Что:** исправлен концептуальный дефект в `templates/ARTIFACT-MAP.template.md`. Шаблон раньше направлял консьюмера описывать dev-артефакты (команды `/plan`, `/code`, DEVLOG) как центральный контент карты — вместо документов продукта (`orders.md`, `parties.md`, `invoice-flow.md`).
+
+Изменения:
+- **Два явных слоя:** "Продуктовые артефакты (заполнить!)" — новый subgraph первичен в диаграмме; "Методологические артефакты (стандартные)" — вторичный слой, не нужно изобретать
+- **Callout в начале:** явное предупреждение "карта описывает артефакты ПРОДУКТА, не процесса разработки"
+- **Bootstrap checklist:** 2 обязательных чекбокса при первом заполнении (product artifacts заполнены + у каждого есть триггер)
+- **Секция "Продуктовые артефакты"** поднята выше "Методологических" — консьюмер видит что заполнять в первую очередь
+- **CLAUDE.md Maps Standard Rule:** убрано `(methodology-specific)` из описания ARTIFACT-MAP viewpoint; уточнено что продуктовые артефакты первичны
+- **methodology-platform ARTIFACT-MAP:** добавлена note о special case (продукт = методология = команды)
+- **PRODUCT-GAPS:** закрыт P-003 (resolved in v5.7.0)
+
+**Migration note для консьюмеров bootstrap'нутых до v5.7.0:**
+
+Если `docs/product/ARTIFACT-MAP.md` в вашем проекте содержит только `/plan`, `/code`, DEVLOG и другие dev-артефакты без документов специфичных для вашего продукта — карта не заполнена правильно. Для исправления:
+
+1. Открой `PRODUCT.md` → выпиши ключевые сущности продукта (orders, parties, invoices, contracts и т.д.)
+2. Для каждой сущности создай или найди `docs/product/<entity>.md`
+3. Добавь эти артефакты в секцию "Продуктовые артефакты" в ARTIFACT-MAP (таблица + ноды в диаграмме)
+4. Заполни Bootstrap checklist в начале файла
+
+**Что запустить:**
+```bash
+bash scripts/sync-methodology.sh .
+```
+Шаблон `templates/ARTIFACT-MAP.template.md` обновлён — но уже bootstrap'нутые файлы не перезаписываются автоматически (bootstrap-only артефакт). Исправь вручную по migration note выше.
+
+---
+
 ## v5.6.0 — feat: /scope-out — визуальный обзор отложенного / out-of-scope scope (2026-06-06)
 
 **Что:** новая команда `/scope-out` + `scripts/scope-view.sh` — показывают **одной Mermaid-диаграммой** весь отложенный / непокрытый / out-of-scope scope проекта (PRODUCT-GAPS open/in-roadmap + AGENT-GAPS open + ROADMAP Considered/On-hold/Arch-review + triggers.json recommendations[] proposed*). Диаграмма **эфемерна** — генерируется из текстовых источников при каждом запуске, не сохраняется в файл → не дрейфит. Дефолт-фильтр High+in-roadmap (anti node-explosion), `--all` для полного backlog, `--print-only` для offline.
