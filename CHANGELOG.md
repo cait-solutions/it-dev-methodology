@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.13.0 — feat: escalation layers 2+3 — reset_on_commit flag + session gap counter (2026-06-08)
+
+**Что:** завершение escalation-механизма (слой 1 = v5.12.0/1 hook-liveness). Два слоя real-time эскалации на reasoning-залипание.
+
+Изменения:
+- **Слой 2 — `reset_on_commit` флаг** в `iteration-watchdog.py` (config в `CLAUDE.local.md ## Iteration watchdog`). Default `true` = текущее поведение (счётчик обнуляется на commit, RPN-150-safe). `false` (opt-in) = счётчик переживает коммиты в пределах сессии → ловит **commit-per-iteration** reasoning-залипание (агент коммитит после каждого фикса одного бага → при `true` ступень-1 N=3 недостижима — ровно CSS-placeholder инцидент).
+- **Слой 3 — `session_gap_counter`** в `triggers.json` (новое поле: `session_marker` + `counts`). `/plan` Шаг D + `/diagnose` 6.3.5 инкрементируют счётчик однотипных gap'ов; на пороге (`gap_escalation_threshold`, default 3) — one-shot real-time эскалация «SESSION GAP PATTERN: 3-й <категория> gap за сессию — смени подход». Session-boundary через timestamp-прокси (`gap_session_window_hours`, default 6ч — нет явного session-id в Claude Code). Ловит серию в моменте, в отличие от `recurrence_rate` пост-фактум в `/architecture-audit`.
+
+**Priority:** 🟡 Medium — поведенческое улучшение escalation, backward compatible. `session_gap_counter` — аддитивное поле (merge_triggers_json дозаливает, graceful read), не breaking → minor bump (CLAUDE.md schema-rule уточнён: major только для breaking).
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+После sync: `triggers.json` получит `session_gap_counter`; `iteration-watchdog.py` поддержит `reset_on_commit`. Опционально настрой пороги в `CLAUDE.local.md ## Iteration watchdog` (см. template). `reset_on_commit: false` рекомендуется для frontend-тяжёлых проектов где commit-per-iteration частый паттерн.
+
+---
+
 ## v5.12.1 — fix: merge_settings_json wires direct .sh hooks (hook-liveness delivery) (2026-06-08)
 
 **Что:** критический follow-up к v5.12.0. `merge_settings_json` `hook_name()` распознавал только `.py` хуки в прямых вызовах (`.claude/hooks/X.py`) — новый `hook-liveness.sh` (прямой вызов без run-hook.sh) не распознавался → его SessionStart wiring **не доезжал** до консьюмера при sync (файл копировался, но не wired). Без этого фикса весь v5.12.0 inert на delivery-пути.

@@ -41,9 +41,19 @@ Config: CLAUDE.local.md секция "## Iteration watchdog":
     ## Iteration watchdog
     threshold: 3
     threshold_escalate: 5
+    reset_on_commit: true
     extensions: .vue .css .tsx .jsx .svelte .html .scss
 
-Дефолты используются если секция отсутствует (threshold_escalate default = threshold + 2).
+Дефолты используются если секция отсутствует (threshold_escalate default = threshold + 2,
+reset_on_commit default true).
+
+reset_on_commit (closes слой-2 G-082-follow-up): по умолчанию `true` — счётчик файла
+обнуляется при смене git HEAD (commit = итерация завершилась, RPN-150-safe между задачами).
+НО: при commit-per-iteration цикле (агент коммитит ПОСЛЕ КАЖДОГО фикса одного бага — ровно
+CSS-placeholder инцидент) reset обнуляет счётчик каждый коммит → ступень-1 (N=3) недостижима.
+`reset_on_commit: false` — счётчик переживает коммиты в пределах сессии (считает по basename,
+игнорируя HEAD) → ловит commit-happy reasoning-залипание. Trade-off: счётчик может врать между
+РАЗНЫМИ задачами на одном файле (RPN-150) — opt-in осознанный выбор для frontend-тяжёлых сессий.
 """
 import json
 import os
@@ -58,10 +68,11 @@ STATE_REL = os.path.join(".claude", "state", "edit-iterations.json")
 
 
 def parse_config():
-    """Читает ## Iteration watchdog из CLAUDE.local.md. Возвращает (threshold, threshold_escalate, extensions)."""
+    """Читает ## Iteration watchdog из CLAUDE.local.md. Возвращает (threshold, threshold_escalate, extensions, reset_on_commit)."""
     threshold = DEFAULT_THRESHOLD
     threshold_escalate = None  # default = threshold + 2 (вычисляется после парсинга)
     extensions = DEFAULT_EXTENSIONS
+    reset_on_commit = True  # default: обнулять на commit (RPN-150-safe между задачами)
     for candidate in ("CLAUDE.local.md", "../CLAUDE.local.md"):
         if not os.path.exists(candidate):
             continue
@@ -79,6 +90,9 @@ def parse_config():
         em2 = re.search(r'^\s*threshold_escalate:\s*(\d+)', section, re.MULTILINE)
         if em2:
             threshold_escalate = int(em2.group(1))
+        rm = re.search(r'^\s*reset_on_commit:\s*(true|false)', section, re.MULTILINE | re.IGNORECASE)
+        if rm:
+            reset_on_commit = rm.group(1).lower() == "true"
         em = re.search(r'^\s*extensions:\s*(.+)$', section, re.MULTILINE)
         if em:
             exts = tuple(e if e.startswith(".") else "." + e
@@ -88,7 +102,7 @@ def parse_config():
         break
     if threshold_escalate is None or threshold_escalate <= threshold:
         threshold_escalate = threshold + 2
-    return threshold, threshold_escalate, extensions
+    return threshold, threshold_escalate, extensions, reset_on_commit
 
 
 def git_head():
@@ -135,7 +149,7 @@ def main():
     if not file_path:
         sys.exit(0)
 
-    threshold, threshold_escalate, extensions = parse_config()
+    threshold, threshold_escalate, extensions, reset_on_commit = parse_config()
 
     # Только frontend/visual файлы — reasoning-depth проблема острее всего там
     # (CSS/DOM рендеринг не выводится из source, нужно измерение — урок G-039/G-047).
@@ -151,7 +165,9 @@ def main():
 
     # Reset-on-commit: если HEAD сменился с прошлой итерации → предыдущий цикл
     # завершился (закоммичен), счётчик обнуляется. (RPN-150 mitigation)
-    if entry.get("head") != head:
+    # reset_on_commit: false (opt-in) → счётчик НЕ обнуляется на смене HEAD — переживает
+    # коммиты в пределах сессии (ловит commit-per-iteration reasoning-залипание, слой-2).
+    if reset_on_commit and entry.get("head") != head:
         entry = {"count": 0, "head": head, "stage2_shown": False}
 
     entry["count"] = entry.get("count", 0) + 1

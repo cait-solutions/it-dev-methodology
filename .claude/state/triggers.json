@@ -118,6 +118,10 @@
     "gaps_found": 3,
     "gaps_high_severity": 0
   },
+  "session_gap_counter": {
+    "session_marker": null,
+    "counts": {}
+  },
   "per_service": {},
   "queues": {
     "inbox_unprocessed_count": 0,
@@ -135,45 +139,51 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T13:00:00Z",
-    "task_id": "G-087 recursive hook-delivery hole — layer-1 fate-independent liveness detectors",
+    "completed_at": "2026-06-08T14:00:00Z",
+    "task_id": "escalation layers 2+3 — reset_on_commit flag + session_gap_counter",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "Создать templates/.claude/hooks/hook-liveness.sh — pure-sh L4 SessionStart детектор, дуальный regex canon, -f тест каждого hook + явно run-hook.sh, БЕЗ зависимости от run-hook.sh",
-        "status": "done",
+        "text": "Слой 2: reset_on_commit flag в iteration-watchdog.py (parse_config + обернуть reset logic 152-155); default true (RPN-150-safe), false opt-in",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "templates/settings.template.json — добавить SessionStart entry прямой вызов sh .claude/hooks/hook-liveness.sh (НЕ через run-hook.sh)",
-        "status": "done",
+        "text": "Слой 3: session_gap_counter + session_marker в triggers.json.template; timestamp-прокси session-boundary (разрыв > N часов = сброс)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "commands/plan.md Подшаг -0.4 — сменить предикат с 'SessionStart wired?' на физическое наличие каждого referenced hook + run-hook.sh на диске, зеркалить canon-regex",
-        "status": "done",
+        "text": "Слой 3: инкремент session_gap_counter + порог-эскалация (one-shot per category) в /plan Шаг -4 И /diagnose Шаг 6 (обе gap-write точки)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "scripts/sync-methodology.sh — verify hook-liveness.sh доставляется (*.sh cp+chmod) + входит в missing_hooks detection (расширен .py->.py|.sh)",
-        "status": "done",
+        "text": "Defensive read нового поля (.get('session_gap_counter') or {}) в командах; sync merge_triggers_json уже аддитивен",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "doc-repo: DEVLOG [fix:hook] + CHANGELOG + reopen G-087 (почему addressed-фикс v5.2.0 не сработал) + OPEN-QUESTIONS OQ-006 sync-атомарность",
-        "status": "done",
+        "text": "CLAUDE.md уточнить schema-change rule: мажор для BREAKING (удаление/переименование полей), minor для аддитивных (новое опциональное поле с graceful read)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "/pull-consumers — добавить проверку partial-hook-state у всех консьюмеров (Шаг 3.5)",
-        "status": "done",
+        "text": "Документировать reset_on_commit + gap_escalation_threshold в CLAUDE.local.template.md + own CLAUDE.local.md (dogfood)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "VERSION minor bump v5.12.0 (additive: новый hook + settings wiring; схема triggers.json НЕ меняется — слой 3 отложен)",
+        "text": "VERSION minor bump + DEVLOG + CHANGELOG",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "Layer 1 (v5.12.0/1) уже задеплоен — context, не часть этого PR",
         "status": "done",
+        "carried_over": true,
         "skip_reason": null
       }
     ]

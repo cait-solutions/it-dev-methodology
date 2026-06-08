@@ -306,14 +306,23 @@ upgrade модели), а не очередной локальный патч. (
 
 ```yaml
 threshold: 3
+threshold_escalate: 5
+reset_on_commit: true
 extensions: .vue .css .scss .tsx .jsx .svelte .html
+gap_escalation_threshold: 3
+gap_session_window_hours: 6
 ```
 
-- `threshold` — на скольки итерациях правки одного файла без commit сработает сигнал
+- `threshold` — на скольки итерациях правки одного файла без commit сработает ступень-1 сигнал
+- `threshold_escalate` — итерация для ступени-2 (рекомендация сменить модель/сессию); default = threshold + 2
+- `reset_on_commit` — обнулять ли счётчик файла при commit. `true` (default) = да, RPN-150-safe между задачами. `false` = счётчик переживает коммиты в пределах сессии — **ловит commit-per-iteration reasoning-залипание** (агент коммитит после каждого фикса одного бага → при `true` ступень-1 недостижима). Trade-off: при `false` счётчик может врать между разными задачами на одном файле.
 - `extensions` — какие расширения считать (visual/CSS файлы где reasoning-depth острее)
+- `gap_escalation_threshold` — слой-3 session gap counter: сколько однотипных gap'ов за сессию до real-time эскалации (default 3). Ловит серию однотипных провалов в моменте (`/plan` Шаг D + `/diagnose` 6.3.5), в отличие от `recurrence_rate` пост-фактум в `/architecture-audit`.
+- `gap_session_window_hours` — окно session-boundary для gap counter (default 6ч). Разрыв > N часов между gap'ами = новая сессия (счётчик сбрасывается). Timestamp-прокси т.к. в Claude Code нет явного session-id команде.
 
-> Сброс счётчика — при смене git HEAD (commit = итерация завершилась успешно).
-> Если секция отсутствует — дефолты (threshold=3, frontend-расширения).
+> Сброс счётчика итераций — при смене git HEAD если `reset_on_commit: true` (commit = итерация завершилась).
+> Сброс session gap counter — по timestamp-окну (`gap_session_window_hours`).
+> Если секция отсутствует — дефолты (threshold=3, reset_on_commit=true, gap_escalation_threshold=3, window=6ч, frontend-расширения).
 
 ---
 

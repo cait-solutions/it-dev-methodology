@@ -83,6 +83,23 @@ Dogfood: methodology platform использует тот же hook что и co
 
 ---
 
+## Iteration watchdog
+
+Config для `iteration-watchdog.py` (PostToolUse, L4) + session gap counter (слой-3, `/plan` Шаг D + `/diagnose` 6.3.5).
+
+```yaml
+threshold: 3
+threshold_escalate: 5
+reset_on_commit: true
+extensions: .vue .css .scss .tsx .jsx .svelte .html
+gap_escalation_threshold: 3
+gap_session_window_hours: 6
+```
+
+Dogfood: methodology platform применяет тот же escalation-config что и consumers. `reset_on_commit: true` — этот репо редко commit-per-iteration на одном frontend-файле (методология = markdown/python, не Vue); flip to `false` если frontend-тяжёлая сессия. Полное описание полей — `templates/CLAUDE_LOCAL.template.md ## Iteration watchdog`.
+
+---
+
 ## Auto-update
 
 Конфиг для `auto-update-watchdog.py` SessionStart hook.

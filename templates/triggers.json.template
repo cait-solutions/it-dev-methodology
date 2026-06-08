@@ -49,5 +49,9 @@
     "methodology_version": null,
     "gaps_found": 0,
     "gaps_high_severity": 0
+  },
+  "session_gap_counter": {
+    "session_marker": null,
+    "counts": {}
   }
 }
