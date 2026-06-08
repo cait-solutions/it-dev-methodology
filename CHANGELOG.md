@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.15.0 — feat: pre-fix baseline measurement — превентивный слой против visual iterative-thrash (2026-06-08, closes G-089)
+
+**Что:** при visual-задаче «выровнять/сделать одинаковым» (CSS/Vue) агент чинил по ОДНОЙ оси различия за итерацию (letter-spacing → font-weight → background), коммитя после каждой — 3-4 итерации с «готово»/«ничего не изменилось» вместо одной. Проблема multi-source: несколько компонентов, у каждого своя ось. Существующие слои (iteration-watchdog, reasoning-ось) — реактивные, ловят ПОСЛЕ залипания; `reset_on_commit: true` делает watchdog слеп к commit-per-iteration.
+
+Превентивный фикс (L3, встроен в существующий Frontend DOM verification ⛔-gate):
+- **`/code` Frontend DOM verification rule:** новый **pre-fix baseline** блок — при visual-alignment задаче с ≥2 элементами ОБЯЗАТЕЛЕН один runtime-замер ВСЕХ осей (font-size/weight/letter-spacing/color/background/height/padding) у ВСЕХ элементов в таблицу → все расхождения видны до первого фикса → один фикс закрывает все. Ordering: measure → fix → verify.
+- **CLAUDE.local.md `## Iteration watchdog`:** рекомендация frontend-heavy проектам ставить `reset_on_commit: false` (восстанавливает reactive backstop для commit-per-iteration). Default `true` не меняется.
+
+**Priority:** 🟢 Low — поведенческое правило агента для frontend, не ломает существующее, не требует config-изменений.
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+Frontend-heavy проекты дополнительно: рассмотреть `reset_on_commit: false` в `CLAUDE.local.md ## Iteration watchdog` (опционально, см. секцию). Non-frontend проекты — правило не срабатывает (триггер по visual-alignment + ≥2 элемента).
+
+---
+
 ## v5.14.0 — feat: delivery-consistency gate в /review — структурный фикс review-blindness (2026-06-08, R-029)
 
 **Что:** `/review` был на 100% статическим — проверял что НАПИСАНО (hook wired в template), не что РАБОТАЕТ (sync доставит). v5.12.0 прошёл review «0 critical», но `merge_settings_json` не доставлял `.sh`-wiring → поймал только /deploy dogfood post-merge → re-release v5.12.1. Класс «фикс не доезжает молча» (G-087→G-088) ×3, review ни разу не ловил доставку. `[fix:command]×17` за период — command-churn как производное.
