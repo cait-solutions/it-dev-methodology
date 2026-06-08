@@ -383,14 +383,16 @@ except Exception:
     pass
 
 def hook_name(command):
-    """Имя hook-файла из command-строки: и run-hook.sh X.py, и прямой .claude/hooks/X.py.
-    Dual-pattern — тот же что в hook-consistency check (G-075/G-081). None если не hook."""
+    """Имя hook-файла из command-строки: run-hook.sh X.py, и прямой .claude/hooks/X.(py|sh).
+    Dual-pattern + direct .sh — тот же что в hook-consistency check (G-075/G-081/G-087).
+    .sh нужен для прямых вызовов без run-hook.sh (напр. hook-liveness.sh — L4 детектор,
+    который НЕ может идти через run-hook.sh by design). None если не hook."""
     if not isinstance(command, str):
         return None
     m = re.search(r'run-hook\.sh\s+([A-Za-z0-9._-]+)', command)
     if m:
         return m.group(1)
-    m = re.search(r'\.claude/hooks/([A-Za-z0-9._-]+\.py)', command)
+    m = re.search(r'\.claude/hooks/([A-Za-z0-9._-]+\.(?:py|sh))', command)
     if m:
         return m.group(1)
     return None
