@@ -26,6 +26,50 @@ bash <methodology-path>/scripts/sync-methodology.sh
 
 ---
 
+## v5.10.1 — fix: consumer-pull.sh REPO_ROOT path (2026-06-08)
+
+**Что:** исправлен баг в `templates/scripts/consumer-pull.sh` — `REPO_ROOT` вычислялся некорректно при запуске из `scripts/`. Теперь `cd "$SELF_DIR/.." && pwd` — детерминировано независимо от CWD.
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+Скрипт перезапишется автоматически.
+
+---
+
+## v5.10.0 — feat: /pull workspace-wide — все repos кроме it-dev-methodology (2026-06-08)
+
+**Что:** `/pull` расширен до workspace-wide режима — тянет все repos из `.code-workspace` кроме `it-dev-methodology`.
+
+Изменения:
+- `commands/pull.md` — уточнён scope (все workspace repos кроме methodology source)
+- `templates/scripts/consumer-pull.sh` — discovery через `.code-workspace` (тот же механизм что `/pull-consumers`)
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+
+---
+
+## v5.9.0 — feat: /pull — consumer pull всех workspace repos (ff-only) (2026-06-08)
+
+**Что:** новая consumer команда `/pull` — одной командой подтянуть все repos workspace с remote, без merge, ff-only, с preview входящих коммитов.
+
+Изменения:
+- **`commands/pull.md`** — новая команда (синхронизируется консьюмерам)
+- **`templates/scripts/consumer-pull.sh`** — новый скрипт: fetch → preview incoming commits → `git pull --ff-only`. Skip при uncommitted changes или diverged history. Hook-safety guard.
+- **`templates/model-tiers.md`** — строка `/pull` (Fast tier)
+
+**Actions:**
+```bash
+bash <methodology-path>/scripts/sync-methodology.sh .
+```
+После sync: `bash scripts/consumer-pull.sh` доступен. Команда `/pull` появится в `.claude/commands/`.
+
+---
+
 ## v5.8.0 — fix: SYSTEM-MAP шаблон — продуктовые компоненты первичны (2026-06-08)
 
 **Что:** исправлен концептуальный дефект в `templates/SYSTEM-MAP.template.md` (P-004). Шаблон содержал только безликие `<service-1>` / `<service-2>` без примеров — консьюмер не понимал что в диаграмму должны идти компоненты его продукта (`OrderService`, `PartyService`, `CatalogService`), а не dev-инструменты.
