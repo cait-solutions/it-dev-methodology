@@ -29,33 +29,39 @@
 
 **Цель:** убедиться что локальная копия `it-dev-methodology/` актуальна **до** delta analysis. Без этого шага delta analysis сравнивает с потенциально stale версией.
 
+> **⛔ Живой upstream HEAD, не stale local ref (closes G-088 — класс «фикс не доезжает молча»).** Реальный инцидент: ERP-клон v4.68.0, upstream v5.13.0, `/sync-audit` сказал «актуальна». Причина: `git fetch --dry-run` мог тихо упасть (auth) или быть пропущен → дальше Шаг 1b сравнивал **локальный** stale VERSION с `.claude/.version` (оба v4.68) → ложное «актуальна». Фикс: сравнивать против **живого** `git ls-remote` (читает upstream HEAD напрямую, без обновления локального ref, работает на shallow-клонах). fetch-fail → verdict «**НЕ смог проверить**», НЕ «актуальна».
+
 1. Определить путь к methodology: читать `CLAUDE.local.md ## Auto-update → methodology_path` (default: `../it-dev-methodology`)
 2. Проверить что папка существует: если нет → показать инструкцию и перейти к Шагу 0
-3. Проверить наличие новых commits на remote:
+3. Получить **живой upstream HEAD** и сравнить с локальным:
    ```
-   git -C <methodology_path> fetch origin main --dry-run
+   remote_head=$(git -C <methodology_path> ls-remote origin -h refs/heads/main | cut -f1)
+   local_head=$(git -C <methodology_path> rev-parse HEAD)
    ```
+   `ls-remote` — read-only сетевой вызов, читает HEAD ветки **на remote сейчас** (не обновляет локальный `origin/main` ref → не зависит от того когда последний раз делали fetch; работает на shallow-клонах).
 4. По результату:
 
-**Если fetch failed (exit ≠ 0, network error, auth error):**
+**Если `ls-remote` failed (exit ≠ 0 / пустой `remote_head` — network/auth):**
 ```
-⚠️ Не удалось проверить обновления methodology (сеть недоступна или нет credentials).
-   Продолжаю с текущей локальной версией — delta analysis может быть неполным.
-   Для ручного обновления: git -C <path> pull origin main
+⚠️ НЕ смог проверить upstream methodology (сеть недоступна или нет credentials).
+   ⛔ Версионная актуальность НЕ подтверждена — это НЕ «актуальна».
+   Delta analysis ниже основан на ЛОКАЛЬНОЙ версии и может быть неполным/устаревшим.
+   Проверь вручную: git -C <path> ls-remote origin -h refs/heads/main  (сравни с git -C <path> rev-parse HEAD)
+   Обновить: git -C <path> pull origin main
 ```
-→ продолжить с локальной версией
+→ продолжить с локальной версией, **но пометить verdict как `unverified`** (Шаг 1b обязан показать «версия не подтверждена», не «актуальна»).
 
-**Если локальная версия актуальна (no new commits):**
+**Если `remote_head == local_head` (upstream HEAD совпадает с локальным):**
 ```
-✅ it-dev-methodology актуальна (нет новых commits на remote).
+✅ it-dev-methodology актуальна (upstream HEAD = локальный, проверено через ls-remote).
 ```
 → продолжить к Шагу 0
 
-**Если есть новые commits:**
+**Если `remote_head != local_head` (upstream впереди):**
 ```
 📦 Обнаружены обновления it-dev-methodology!
-   Локальная: <local HEAD short>
-   Remote:    <FETCH_HEAD short>
+   Локальная: <local_head short>
+   Remote:    <remote_head short>
 
 Рекомендую обновить перед анализом чтобы видеть актуальный delta.
 
@@ -73,11 +79,13 @@
 
 **Если выбрано (a):** выполнить pull через with-secret.sh. При ошибке (non-ff, auth) → fallback к инструкции (b).
 **Если выбрано (b):** показать точную команду и ждать подтверждения "готово".
-**Если выбрано (c):** продолжить с предупреждением.
+**Если выбрано (c) ИЛИ `auto_pull: false` и пользователь не обновил:** продолжить, **но пометить verdict `stale` (upstream впереди на N версий)** — Шаг 1b ОБЯЗАН показать «📦 устарел на N, обновись», НЕ «актуальна». Тихий фолбэк на «актуальна» при known-stale = нарушение (это и есть G-088).
 
 **После успешного pull:** перечитать `CHANGELOG.md` с диска (обновлённый файл) перед Шагом 1b.
 
 **Если `auto_pull: true` в `CLAUDE.local.md ## Auto-update`:** автоматически выбрать вариант (a) без вопроса. Показать только результат.
+
+> **⛔ Verdict propagation в Шаг 1b (closes G-088):** результат Шага -0.5 — один из трёх: `up-to-date` (HEAD совпал) / `stale` (upstream впереди, обновление пропущено/не сделано) / `unverified` (ls-remote failed). Шаг 1b и финальный Итог обязаны отразить ИМЕННО этот verdict. `stale` → «устарел на N версий, обновись». `unverified` → «актуальность НЕ подтверждена». **Только `up-to-date` даёт право написать «актуальна».** Сравнение локального VERSION с `.claude/.version` (оба могут быть stale синхронно) НЕ является подтверждением актуальности относительно upstream.
 
 ---
 
@@ -128,7 +136,10 @@
    Затем повтори /sync-audit.
 ```
 
-**Если consumer_version = current_version:** пропустить, написать "✅ Версия актуальна".
+**Если consumer_version = current_version:**
+- **И verdict Шага -0.5 = `up-to-date`** → "✅ Версия актуальна (подтверждено живым ls-remote)".
+- **И verdict = `stale`** → ⛔ НЕ «актуальна»: "📦 Локальный клон совпадает с consumer (оба `<version>`), НО upstream впереди (`<remote_head>`). Клон устарел — `git -C <methodology_path> pull origin main`, затем повтори /sync-audit для актуального delta." *(closes G-088: consumer_version = current_version значит только что consumer синхронен СО СВОИМ клоном — НЕ что клон актуален относительно upstream.)*
+- **И verdict = `unverified`** → "🟡 Локально consumer = клон (`<version>`), но upstream НЕ проверен (ls-remote failed). Актуальность относительно GitHub не подтверждена."
 
 ---
 
