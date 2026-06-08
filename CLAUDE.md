@@ -28,7 +28,7 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 - `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/`, `skills/` — единственный источник правды (синхронизируются консьюмерам)
 - `commands-local/` — methodology-only команды (НЕ синхронизируются консьюмерам; пример: `/pull-consumers`)
 - Любая правка синхронизируемого артефакта → bump VERSION
-- При изменении схемы `triggers.json.template` → мажор bump
+- При **breaking** изменении схемы `triggers.json.template` (удаление / переименование поля, смена типа) → мажор bump + migration инструкция. **Аддитивное** изменение (новое опциональное поле, читаемое через `.get(...) or default`) → minor bump — `merge_triggers_json` дозаливает поле, existing values preserved, старый consumer не падает (graceful read). Критерий: «сломается ли consumer с pre-change triggers.json?» да → major, нет → minor.
 - `skills/*/SKILL.md` — YAML frontmatter MUST быть на строке 1; banner идёт в `metadata:` блок, НЕ как HTML-комментарий сверху (Agent Skills spec: frontmatter на line 1 обязательно)
 
 **MUST NOT:**
