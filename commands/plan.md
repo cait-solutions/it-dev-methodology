@@ -1096,6 +1096,8 @@ py scripts/mermaid-link.py _tmp_draft.mmd
 ```
 Содержимое `_tmp_draft.mmd`:
 ````
+https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyyU0tyk3MTNG9sOvCvgtbFC5sv7DhYtPFBiBn78Xmi01AevOFfQrFyfkFqXZKOkpQ5UCd1TFKJRmpuakxSlYxSimpaYmlOSUxSrVANYmlJfnBlXnJSlYlRaWpOkqlBSmJJakumYnpRYm5EMFaACIjNy8
+
 ```mermaid
 <mermaid-код затронутого scope>
 ```

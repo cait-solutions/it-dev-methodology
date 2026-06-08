@@ -194,7 +194,7 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 |---|---|---|---|---|
 | **SYSTEM-MAP** | Logical + Development | Как устроена система? | Developer, /architecture-audit | Developer + /code при структурных изменениях |
 | **USER-MAP** | Scenarios | Что умеет пользователь? | Developer, /product-check, /onboard | Developer + /code при новых capabilities |
-| **ARTIFACT-MAP** | Data-lineage (methodology-specific) | Кто что обновляет и когда? | /review, /retro, Developer | Developer при добавлении команд/артефактов |
+| **ARTIFACT-MAP** | Data-lineage | Какой документ описывает эту часть продукта, кто его владелец и когда он устаревает? Первичны продуктовые артефакты (orders.md, parties.md, flows.md); методологические (DEVLOG, triggers.json) — вторичный слой. | /review, /retro, Developer | Developer при добавлении продуктового или методологического артефакта |
 
 **Supporting views (3 — существуют, обновляются по событию, НЕ living maps):**
 
