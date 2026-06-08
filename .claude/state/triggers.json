@@ -147,37 +147,37 @@
     "commitments": [
       {
         "text": "Слой 2: reset_on_commit flag в iteration-watchdog.py (parse_config + обернуть reset logic 152-155); default true (RPN-150-safe), false opt-in",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "Слой 3: session_gap_counter + session_marker в triggers.json.template; timestamp-прокси session-boundary (разрыв > N часов = сброс)",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "Слой 3: инкремент session_gap_counter + порог-эскалация (one-shot per category) в /plan Шаг -4 И /diagnose Шаг 6 (обе gap-write точки)",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "Defensive read нового поля (.get('session_gap_counter') or {}) в командах; sync merge_triggers_json уже аддитивен",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "CLAUDE.md уточнить schema-change rule: мажор для BREAKING (удаление/переименование полей), minor для аддитивных (новое опциональное поле с graceful read)",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "Документировать reset_on_commit + gap_escalation_threshold в CLAUDE.local.template.md + own CLAUDE.local.md (dogfood)",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "VERSION minor bump + DEVLOG + CHANGELOG",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
