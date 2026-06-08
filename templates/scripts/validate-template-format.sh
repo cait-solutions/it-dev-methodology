@@ -125,6 +125,23 @@ fi
 
 echo ""
 
+# ---- Check 6: delivery-consistency (template ↔ sync-parser) — closes R-029 ----
+# No-op для большинства consumers (нет settings.template.json/sync — validate-delivery skip exit 0).
+# Активен если consumer имеет methodology-internal delivery-поверхность.
+echo "Check 6: delivery-consistency (validate-delivery.sh)"
+DELIV="$ROOT/scripts/validate-delivery.sh"
+if [ -f "$DELIV" ]; then
+  if bash "$DELIV" --root "$ROOT" >/dev/null 2>&1; then
+    ok "delivery-consistency: consistent (or N/A — no delivery surface)"
+  else
+    warn "delivery-consistency FAILED — run 'bash scripts/validate-delivery.sh' for details"
+  fi
+else
+  ok "validate-delivery.sh не найден — пропущено"
+fi
+
+echo ""
+
 # ---- Summary ----
 if [ "$VIOLATIONS" -eq 0 ]; then
   echo "PASS: validate-template-format: all checks passed (0 violations)"

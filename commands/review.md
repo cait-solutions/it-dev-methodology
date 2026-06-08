@@ -309,6 +309,20 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - **Helper-исключение:** hook не самостоятельный entry-point (импортируется другим хуком) → допускается отсутствие wiring ТОЛЬКО при маркере `# NOT-WIRED: <причина>` в первых 5 строках файла. Без маркера — 🔴.
 - ⛔ **Detection-guard (closes класс G-073):** если `grep run-hook.sh` вернул **0 совпадений** в settings.template.json (формат сменился на multiline / файл пуст) → check **невалиден, НЕ PASS**: 🔵 «hook-wiring parity не проверен — 0 run-hook.sh совпадений, проверь settings.template.json формат вручную».
 
+**Delivery-consistency gate (только methodology-platform; PR трогает `templates/.claude/hooks/`, `templates/settings.template.json`, или `scripts/sync-methodology.sh`) — closes R-029 / review-blindness:**
+
+> **Класс «фикс не доезжает молча» (G-087→G-088→v5.12.0 ×3).** Hook-wiring parity (выше) проверяет «hook wired в template». Этот gate проверяет следующий слой — **доставит ли `sync-methodology.sh` это wiring консьюмеру**. v5.12.0: `hook-liveness.sh` был wired в template, но `merge_settings_json hook_name()` распознавал только `.py` → `.sh`-вызов НЕ доставлялся. /review дал «0 critical», delivery-баг поймал только /deploy dogfood (post-merge) → re-release v5.12.1. Этот gate ловит тот класс **pre-merge**.
+
+- PR трогает `templates/.claude/hooks/*`, `templates/settings.template.json`, или `scripts/sync-methodology.sh`? Нет → `N/A — delivery-поверхность не тронута`.
+- Если да → **ОБЯЗАТЕЛЬНО исполнить** (не prose-проверка, реальный запуск):
+  ```bash
+  bash scripts/validate-delivery.sh
+  ```
+  Это сверяет: каждый hook-ref в settings.template.json (а) существует в `templates/.claude/hooks/` (б) распознаётся sync-парсером (`hook_name()` дуальный regex) → значит реально доедет до консьюмера.
+- `FAIL` (exit 1) → 🔴 **CRITICAL fix now**: «hook-ref не доедет до консьюмера через sync — рассогласование template↔sync-parser (класс v5.12.0)». Блокирует merge.
+- ⛔ **N/A escape ЗАПРЕЩЁН для этого класса.** Для изменений hooks/settings-template/sync — нельзя писать `N/A — prompt-rule, верифицируется применением`. Delivery — исполнимая проверка, не «верится на слово» (L3-escape провалился 3 раза, поэтому L4-gate). Verification-секция выше (Тесты/верификация) допускает N/A только для **prose-команд**, не для delivery-класса.
+- **NB:** `validate-delivery.sh` уже встроен в `validate-template-format.sh` Check 6 (который /code Шаг 11 запускает обязательно) — этот /review gate — вторичный явный сигнал на случай если /code-прогон был пропущен.
+
 **Cut-not-add — net-zero gate** (только methodology-platform; PR меняет `commands/*.md`) *(VISION Ось 5 Enforcement):*
 - Сигнал направления: `git diff --stat HEAD commands/` — на сколько ±строк выросла/уменьшилась команда этим PR.
 - `validate-artifact-size.sh` → `SIZE_EXCEEDED` на `commands/*.md` = команда раздута (агент скимит, ценные шаги тонут).

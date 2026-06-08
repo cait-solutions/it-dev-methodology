@@ -25,88 +25,16 @@
       "plans_since": 21
     },
     "last_architecture_audit": {
-      "date": "2026-06-03",
-      "plans_since": 7,
+      "date": "2026-06-08",
+      "plans_since": 0,
       "recommendations": [
         {
-          "id": "R-023",
-          "type": "drift",
-          "summary": "S-3 SYSTEM-MAP scripts/",
-          "status": "implemented",
-          "scope": "documentation",
-          "implementation_pr": "v4.11.2"
-        },
-        {
-          "id": "R-024",
+          "id": "R-029",
           "type": "gap-structural",
-          "summary": "S-1 completeness-gap partial-check usilen",
+          "summary": "S-1 mandatory dogfood-delivery gate в /review (L4) — закрывает review-blindness + command-churn",
           "status": "implemented",
           "scope": "methodology",
-          "implementation_pr": "v4.11.2"
-        },
-        {
-          "id": "R-025",
-          "type": "gap-structural",
-          "summary": "S-2 logic-gap memory-vs-read antipример",
-          "status": "implemented",
-          "scope": "methodology",
-          "implementation_pr": "v4.11.2"
-        },
-        {
-          "id": "R-004",
-          "type": "decommission",
-          "summary": "merge /plan Шаг 0.1 + 98 Pre-Mortem",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-005",
-          "type": "decommission",
-          "summary": "cut /review Шаг 3.5",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-006",
-          "type": "gap-structural",
-          "summary": "Complexity budget rule в CLAUDE.md",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-007",
-          "type": "gap-structural",
-          "summary": "Deploy-time consumer instruction generator",
-          "status": "proposed-deferred",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-026",
-          "type": "gap-structural",
-          "summary": "S-026: template-pair validator расширение validate-methodology.sh",
-          "status": "proposed",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-027",
-          "type": "gap-structural",
-          "summary": "S-027: logic-gap few-shot mermaid+sync-audit",
-          "status": "proposed",
-          "scope": "methodology",
-          "implementation_pr": null
-        },
-        {
-          "id": "R-028",
-          "type": "gap-structural",
-          "summary": "S-028: completeness-gap Adjacent mandatory output в /code Шаг 1.7",
-          "status": "proposed",
-          "scope": "methodology",
-          "implementation_pr": null
+          "implementation_pr": "v5.14.0"
         }
       ],
       "previous_cycle_implementation_rate": "7/10 (70%) — R-008/009/013/020/021/022 implemented; R-010 wont-fix; R-004/005/006/007 deferred"
@@ -139,24 +67,29 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-08T15:00:00Z",
-    "task_id": "G-088 — /sync-audit live upstream check (ls-remote, no false актуальна on stale clone)",
+    "completed_at": "2026-06-08T16:00:00Z",
+    "task_id": "R-029 — delivery-consistency gate в /review (структурный фикс review-blindness)",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "sync-audit.md Шаг -0.5: fetch --dry-run → ls-remote, 3 verdict (up-to-date/stale/unverified)",
+        "text": "scripts/validate-delivery.sh — статический delivery-consistency validator (template↔sync-parser); зеркалит дуальный regex",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "sync-audit.md Шаг 1b: consumer_version=current_version гейтится verdict'ом -0.5 (не авто-актуальна)",
+        "text": "validate-template-format.sh Check 6 вызывает validate-delivery (L4 enforcement через mandatory прогон) — own + templates/scripts dogfood pair",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "VERSION patch bump + CHANGELOG + DEVLOG + G-088 в AGENT-GAPS",
+        "text": "/review Шаг 3 delivery-gate + N/A escape запрещён для hook/settings-template/sync класса; /code Шаг 11 note",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION v5.14.0 + CHANGELOG + DEVLOG + R-029 status",
         "status": "done",
         "skip_reason": null
       }
@@ -165,7 +98,7 @@
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "feat(hook,command): escalation layers 2+3 — reset_on_commit + session_gap_counter (v5.13.0, PR #156)"
+    "phase": "fix(command): /sync-audit live ls-remote upstream check (v5.13.1, PR #157, closes G-088)"
   },
   "last_auto_pull": {
     "at": "2026-06-08T10:39:43+00:00",
