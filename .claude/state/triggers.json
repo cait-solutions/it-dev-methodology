@@ -143,37 +143,37 @@
     "commitments": [
       {
         "text": "Создать templates/.claude/hooks/hook-liveness.sh — pure-sh L4 SessionStart детектор, дуальный regex canon, -f тест каждого hook + явно run-hook.sh, БЕЗ зависимости от run-hook.sh",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "templates/.claude/settings.json.template — добавить SessionStart entry прямой вызов sh .claude/hooks/hook-liveness.sh (НЕ через run-hook.sh)",
-        "status": "pending",
+        "text": "templates/settings.template.json — добавить SessionStart entry прямой вызов sh .claude/hooks/hook-liveness.sh (НЕ через run-hook.sh)",
+        "status": "done",
         "skip_reason": null
       },
       {
         "text": "commands/plan.md Подшаг -0.4 — сменить предикат с 'SessionStart wired?' на физическое наличие каждого referenced hook + run-hook.sh на диске, зеркалить canon-regex",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "scripts/sync-methodology.sh — verify hook-liveness.sh доставляется (*.sh cp+chmod) + входит в missing_hooks detection",
-        "status": "pending",
+        "text": "scripts/sync-methodology.sh — verify hook-liveness.sh доставляется (*.sh cp+chmod) + входит в missing_hooks detection (расширен .py->.py|.sh)",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "doc-repo: DEVLOG [fix:hook] + CHANGELOG + reopen G-087 (почему addressed-фикс v5.2.0 не сработал) + OPEN-QUESTIONS sync-атомарность",
-        "status": "pending",
+        "text": "doc-repo: DEVLOG [fix:hook] + CHANGELOG + reopen G-087 (почему addressed-фикс v5.2.0 не сработал) + OPEN-QUESTIONS OQ-006 sync-атомарность",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "/pull-consumers — добавить проверку partial-hook-state у всех консьюмеров (из Confidence #6)",
-        "status": "pending",
+        "text": "/pull-consumers — добавить проверку partial-hook-state у всех консьюмеров (Шаг 3.5)",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "VERSION minor bump (additive: новый hook + settings wiring; схема triggers.json НЕ меняется — слой 3 отложен)",
-        "status": "pending",
+        "text": "VERSION minor bump v5.12.0 (additive: новый hook + settings wiring; схема triggers.json НЕ меняется — слой 3 отложен)",
+        "status": "done",
         "skip_reason": null
       }
     ]
