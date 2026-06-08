@@ -24,7 +24,7 @@
 set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SELF_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SELF_DIR/.." && pwd)"
 CONFIG="${CONSUMER_PULL_CONFIG:-${REPO_ROOT}/CLAUDE.local.md}"
 
 # ---------------------------------------------------------------------------

@@ -145,7 +145,7 @@
   "last_deploy": {
     "date": "2026-06-08",
     "status": "ok",
-    "phase": "fix(template): SYSTEM-MAP продуктовые компоненты первичны (P-004, v5.8.0)"
+    "phase": "feat(command): /pull workspace-wide ff-only (v5.10.0)"
   },
   "last_auto_pull": {
     "at": "2026-06-08T08:30:11+00:00",
