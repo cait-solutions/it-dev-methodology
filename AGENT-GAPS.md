@@ -58,6 +58,32 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-093
+Дата: 2026-06-09
+Контекст: /review — G-092 PR review
+Что пропустил: В /review предложил добавить напоминание "запусти sync-methodology.sh . в варианте (c)" — но вариант (c) это явный skip pull, и sync-apply там не нужен по определению. Рекомендация противоречила логике фичи которую сам же реализовал.
+Как обнаружено: разработчик указал
+Категория: logic-gap
+Гипотеза: /review генерировал suggestions механически ("что ещё можно улучшить") не проверив что suggestion противоречит invariant'у изменения
+Agent failure mode: model-error
+Potential fix: В /review перед добавлением suggestion проверять — не противоречит ли он core invariant'у изменения (особенно для prompt-rule changes). "Suggestion что-то сделать в ветке X" требует проверки "возможно ли это состояние в ветке X?"
+Статус: open
+---
+
+---
+Gap-ID: G-092
+Дата: 2026-06-09
+Контекст: /plan — анализ UX /sync-audit у консьюмера
+Что пропустил: /sync-audit Шаг -0.5 делает `git pull` но НЕ запускает `sync-methodology.sh` после него — консьюмер стягивает новые commits в methodology repo, но `.claude/commands/` остаются старыми. Нужны две команды (pull + sync) вместо одной.
+Как обнаружено: разработчик указал
+Категория: completeness-gap
+Гипотеза: Шаг -0.5 проектировался только как "проверить актуальность + обновить репо" — следующий шаг sync-apply не был добавлен
+Agent failure mode: prompt-ambiguous
+Potential fix: После успешного pull в Шаге -0.5 — автоматически запустить `bash scripts/sync-methodology.sh .` (self-apply) без вопроса (детерминированный self-heal класс). Это закрывает цикл: pull → apply → перечитать команды.
+Статус: addressed (v5.18.0 — auto-apply sync-methodology.sh после pull)
+---
+
+---
 Gap-ID: G-091
 Дата: 2026-06-09
 Контекст: /diagnose — анализ поведения /sync-audit у консьюмера
