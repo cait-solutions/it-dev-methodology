@@ -241,7 +241,9 @@ on_failure: notify
 methodology_path: ../it-dev-methodology
 doc_repo_path: null
 audit_threshold: 3
-auto_pull: false
+# auto_pull не задан → /sync-audit обновляет автоматически (дефолт с v5.20.0).
+# Раскомментируй `auto_pull: false` ниже ТОЛЬКО если хочешь подтверждать pull вручную.
+# auto_pull: false
 ```
 
 **Поля:**
@@ -254,20 +256,15 @@ auto_pull: false
 - `methodology_path` — путь к склонированному `it-dev-methodology` относительно корня проекта. Default `../it-dev-methodology`.
 - `doc_repo_path` — **(two-repo проекты)** путь к sibling documentation-репо (где живут DEVLOG/карты/ADR) относительно корня проекта. `null` (default) = **single-repo** проект: артефакты и код в одном репо, команды работают с локальными путями. Задать (например `../my-project-documentation`) только если проект использует two-repo pattern (код + отдельный doc-репо). ⛔ Команды (`/code`, `/review`, `/retro`) читают это значение: если `null` → артефакты ищутся локально; если задан → также проверяется doc-репо. Closes G-076 (раньше путь был hardcoded `../it-dev-methodology-documentation` — ломал single-repo consumers).
 - `audit_threshold` — minor version delta после auto-pull при котором hook рекомендует запустить `/sync-audit` (default `3`). Например, sync с `v4.18.0` на `v4.22.0` = delta 4 ≥ 3 → recommendation. Major bump (`v4.X.Y` → `v5.X.Y`) → forced trigger независимо от threshold.
-- `auto_pull` — `false` (default) / `true`. Если `true`, `/sync-audit` Шаг -0.5 автоматически делает `git pull` в локальной `it-dev-methodology/` без вопроса — при условии что GITHUB_PAT (или аналог) доступен через `with-secret.sh`. Используй `true` если credential helper настроен и хочешь полностью автоматический flow. Default `false` = показывает инструкцию и ждёт подтверждения.
+- `auto_pull` — **семантика инвертирована в v5.20.0 (closes G-094):** поле **отсутствует / `true`** (default) → `/sync-audit` Шаг -0.5 обновляет `it-dev-methodology/` **автоматически без вопроса** (`git pull --ff-only` + `sync-methodology.sh .`). `--ff-only` неразрушающий, поэтому подтверждение не нужно. Установи **`auto_pull: false`** ТОЛЬКО если хочешь подтверждать каждый pull вручную (opt-out для осторожных — вернёт вопрос y/n).
+  - **Pre-pull safety:** перед авто-pull `/sync-audit` проверяет `git status --porcelain` в клоне методологии. Если есть незакоммиченные изменения — pull **откладывается** с инструкцией закоммитить/stash (не трогает твои правки). Diverged (non-ff) коммиты → явное сообщение, не молчит.
 
-> **⚠️ Важно для полностью автоматического flow:**
+> **⚠️ Почему авто-pull — правильный дефолт:**
 > Watchdog каждые 2 часа обновляет `.claude/commands/` и `.claude/hooks/` (что агент выполняет),
 > но **НЕ обновляет** `it-dev-methodology/` (source-шаблоны для `sync-methodology.sh`).
-> Если `auto_pull: false` (default) и пользователь пропускает предложение обновить в Шаг -0.5 —
-> `it-dev-methodology/` source остаётся stale и `sync-methodology.sh` берёт старые шаблоны.
->
-> **Для полностью автоматического flow установи:**
-> ```yaml
-> auto_pull: true
-> ```
-> Тогда при каждом запуске `/sync-audit` source `it-dev-methodology/` обновляется автоматически,
-> и delta analysis всегда показывает актуальную картину.
+> При `auto_pull: false` и пропуске обновления в Шаг -0.5 — `it-dev-methodology/` source
+> остаётся stale и `sync-methodology.sh` берёт старые шаблоны. Дефолт (авто) этого избегает:
+> source обновляется автоматически при каждом `/sync-audit`, delta всегда актуален.
 
 **Bootstrap mode:** если `.claude/.version` отсутствует — методология не была инициализирована в этом проекте. Hook печатает рекомендацию для агента, агент в первом ответе предложит запустить `new-project-init.sh`.
 

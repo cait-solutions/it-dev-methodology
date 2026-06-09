@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.20.0 — fix: /sync-audit обновляется автоматически без вопроса (2026-06-09, closes G-094)
+
+**Что:** `/sync-audit` Шаг -0.5 при обнаружении обновлений methodology больше **не спрашивает** «a/b/c» — делает `git pull --ff-only` + `sync-methodology.sh .` **автоматически по умолчанию**. Раньше pull был за вопросом (половинчатая автоматизация — G-092 авто-applied sync ПОСЛЕ pull, но pull оставался ручным). Pre-pull safety: проверяется `git status --porcelain` — если в клоне методологии есть незакоммиченные изменения, pull откладывается с инструкцией commit/stash (не трогает правки); diverged (non-ff) → явное сообщение; network/auth → verdict unverified.
+
+**Семантика `auto_pull` инвертирована (⚠️ migration):** раньше `false` (default) спрашивал, `true` = авто. Теперь **не задан / `true`** = авто (default), **`false`** = вернуть вопрос y/n (opt-out для осторожных). Эффект для большинства: обновление стало автоматическим. Кто хочет ручной контроль — ставит `auto_pull: false`.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .   # подтянуть обновлённую /sync-audit
+# Хочешь подтверждать pull вручную? Добавь в CLAUDE.local.md ## Auto-update:
+#   auto_pull: false
+```
+
+**Priority:** 🟡 Medium — UX: `/sync-audit` обновляет методологию одной командой без подтверждения.
+
+---
+
 ## v5.19.0 — fix: push-диагностика различает 404/403/network + GITHUB_PAT не навязывается GitLab-проектам (2026-06-09, closes G-083 L4 + P-005)
 
 **Что:** push-скрипты (`consumer-push.sh`, `consumer-push-only.sh`, `deploy-push.sh`) больше не печатают «403 / нужен PAT» при ЛЮБОМ провале. Теперь захватывают stderr (LC_ALL=C → детерминированные англ. маркеры), классифицируют причину — **404** (repo не существует → «создать?» или «remote указывает не на ту платформу» если remote-host ≠ secrets-manifest service_url), **403** (не тот gh-аккаунт → `gh auth switch`, а не PAT), **network** (хост недоступен — не credential). stderr sanitize маскирует `://user:token@`. В `deploy-push.sh` push был голым (без проверки exit) → шёл в `gh pr create` на непушнутой ветке — теперь прерывается. `secrets-manifest.yaml.template` больше не объявляет `GITHUB_PAT required:true` всем; `new-project-init.sh` определяет платформу из git remote и подсказывает нужный секрет.
