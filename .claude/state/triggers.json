@@ -74,24 +74,14 @@
     "code_run": true,
     "commitments": [
       {
-        "text": "/code visual-parity pre-fix protocol — три измерения: эталон-как-артефакт + полный чеклист под-элементов (surface×под-элемент×ось) + component-source check",
+        "text": "grep GITHUB_PAT.*pull в commands/ — class-bug check",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "Очистить блок от framework/проект-частностей (Vuetify-имена + parties → абстрактные); stack-agnosticism gate grep = 0",
+        "text": "Обновить строку auto_pull: true консистентно — fallback при ошибке",
         "status": "done",
         "skip_reason": null
-      },
-      {
-        "text": "VERSION v5.16.0 + CHANGELOG + DEVLOG [feat:command] + AGENT-GAPS G-090 → addressed",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "runtime-verification следования visual-parity protocol (войдёт в /review-наблюдение на следующей visual-parity задаче консьюмера)",
-        "status": "skipped",
-        "skip_reason": "requires runtime test — prose-правило, наблюдается на реальной frontend-parity задаче"
       }
     ]
   },
