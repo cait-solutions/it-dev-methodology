@@ -153,6 +153,55 @@ _manifest_hosts() {
 }
 _sanitize() { sed -E 's#://[^@/[:space:]]+@#://***@#g'; }
 
+# SSOT для git-remote (closes P-006) — см. consumer-push.sh для полного описания.
+_manifest_git_url() {
+  local manifest=".claude/secrets-manifest.yaml"
+  [[ -f "$manifest" ]] || return 0
+  local flagged
+  flagged=$(awk '
+    /^[[:space:]]*-[[:space:]]*key:/ { url=""; flag=0 }
+    /^[[:space:]]*service_url:/ { u=$0; sub(/.*service_url:[[:space:]]*/,"",u); gsub(/^"|"$/,"",u); url=u }
+    /^[[:space:]]*git_remote:[[:space:]]*true/ { flag=1 }
+    flag && url != "" { print url; exit }
+  ' "$manifest" 2>/dev/null)
+  if [[ -n "$flagged" ]]; then echo "$flagged"; return 0; fi
+  local git_urls count
+  git_urls=$(grep -E '^[[:space:]]*service_url:' "$manifest" 2>/dev/null \
+    | sed -E 's/.*service_url:[[:space:]]*"?([^"]*)"?.*/\1/' \
+    | grep -E '\.git$' | grep -v '^$' | sort -u)
+  count=$(echo "$git_urls" | grep -c . )
+  if [[ "$count" == "1" ]]; then echo "$git_urls"; return 0; fi
+  return 0
+}
+
+_check_remote_alignment() {
+  local manifest_url; manifest_url="$(_manifest_git_url)"
+  [[ -z "$manifest_url" ]] && return 0
+  local cur norm_cur norm_manifest
+  cur="$(_dp_remote_url)"
+  norm_cur=$(echo "$cur" | sed -E 's#\.git/?$##; s#/$##')
+  norm_manifest=$(echo "$manifest_url" | sed -E 's#\.git/?$##; s#/$##')
+  [[ "$norm_cur" == "$norm_manifest" ]] && return 0
+  echo ""
+  echo "⚠️  git remote ≠ secrets-manifest (manifest — источник правды о git-remote):"
+  echo "    git remote origin : ${cur}"
+  echo "    manifest service_url: ${manifest_url}  (ты вводил его при добавлении git-секрета)"
+  echo ""
+  printf "    Выровнять? git remote set-url origin %s (y/n): " "$manifest_url"
+  local _ans; read -r _ans
+  case "$_ans" in
+    y|Y|yes|YES)
+      if git remote set-url origin "$manifest_url"; then
+        _wire_credential_helper
+        _ensure_gh_account
+        echo "    ✅ remote выровнен под manifest → ${manifest_url}"
+      else
+        echo "    ❌ git remote set-url не прошёл — продолжаю с текущим remote."
+      fi ;;
+    *) echo "    Оставлен текущий remote. Push пойдёт в ${cur}." ;;
+  esac
+}
+
 _classify_push_failure() {
   local err="$1" rc="$2"
   local host; host="$(_remote_host)"
@@ -212,6 +261,9 @@ _push() {
   rm -f "$errfile" 2>/dev/null || true
   return $rc
 }
+
+# Pre-push: SSOT alignment (closes P-006) — сверить remote с manifest ДО push.
+_check_remote_alignment
 
 if [[ "$MODE" == "team" ]]; then
   echo "▶ Team mode → git push origin ${PUSH_BRANCH}:${PUSH_BRANCH}"

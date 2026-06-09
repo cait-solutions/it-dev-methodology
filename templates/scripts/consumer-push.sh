@@ -204,6 +204,80 @@ _manifest_hosts() {
 # чтобы случайный токен в stderr не попал в transcript.
 _sanitize() { sed -E 's#://[^@/[:space:]]+@#://***@#g'; }
 
+# ---------------------------------------------------------------------------
+# SSOT для git-remote (closes P-006): secrets-manifest — источник правды о том
+# КУДА пушить. Пользователь вводит service_url когда добавляет git-секрет (тот же
+# URL что использовался для clone/добавления в workspace) — он авторитетнее чем
+# `git remote`, который мог быть выставлен дефолтным паттерном при bootstrap.
+#
+# _manifest_git_url: вернуть канонический git-URL из manifest.
+#   Приоритет выбора секрета:
+#     1. секрет помеченный `git_remote: true` (явная разметка)
+#     2. если ровно один service_url оканчивается на .git → он
+#     3. иначе пусто (неоднозначно / нет git-секрета) — graceful
+# ---------------------------------------------------------------------------
+_manifest_git_url() {
+  local manifest=".claude/secrets-manifest.yaml"
+  [[ -f "$manifest" ]] || return 0
+  # (1) секрет с git_remote: true — взять service_url из того же блока секрета.
+  #     awk: внутри блока (от "- key:" до следующего "- key:") ищем обе строки.
+  local flagged
+  flagged=$(awk '
+    /^[[:space:]]*-[[:space:]]*key:/ { url=""; flag=0 }
+    /^[[:space:]]*service_url:/ { u=$0; sub(/.*service_url:[[:space:]]*/,"",u); gsub(/^"|"$/,"",u); url=u }
+    /^[[:space:]]*git_remote:[[:space:]]*true/ { flag=1 }
+    flag && url != "" { print url; exit }
+  ' "$manifest" 2>/dev/null)
+  if [[ -n "$flagged" ]]; then echo "$flagged"; return 0; fi
+  # (2) ровно один service_url, оканчивающийся на .git → он.
+  local git_urls count
+  git_urls=$(grep -E '^[[:space:]]*service_url:' "$manifest" 2>/dev/null \
+    | sed -E 's/.*service_url:[[:space:]]*"?([^"]*)"?.*/\1/' \
+    | grep -E '\.git$' | grep -v '^$' | sort -u)
+  count=$(echo "$git_urls" | grep -c . )
+  if [[ "$count" == "1" ]]; then echo "$git_urls"; return 0; fi
+  # (3) неоднозначно / нет — пусто.
+  return 0
+}
+
+# Pre-push alignment (closes P-006): сверить git remote с manifest SSOT.
+# manifest ведущий — при расхождении ПРЕДЛОЖИТЬ выровнять remote (с подтверждением,
+# не молча менять git config). Вызывается ДО push.
+_check_remote_alignment() {
+  local manifest_url; manifest_url="$(_manifest_git_url)"
+  # Нет git-секрета в manifest (старый/неразмеченный) → graceful: оставить git remote как есть.
+  [[ -z "$manifest_url" ]] && return 0
+  # Нормализовать оба для сравнения (убрать trailing .git и слэши).
+  local norm_remote norm_manifest
+  norm_remote=$(echo "$REMOTE_URL" | sed -E 's#\.git/?$##; s#/$##')
+  norm_manifest=$(echo "$manifest_url" | sed -E 's#\.git/?$##; s#/$##')
+  [[ "$norm_remote" == "$norm_manifest" ]] && return 0   # совпадают — ничего не делаем
+  # Расхождение: manifest ведущий.
+  echo ""
+  echo "⚠️  git remote ≠ secrets-manifest (manifest — источник правды о git-remote):"
+  echo "    git remote origin : ${REMOTE_URL}"
+  echo "    manifest service_url: ${manifest_url}  (ты вводил его при добавлении git-секрета)"
+  echo ""
+  echo "    Скорее всего push должен идти по manifest-URL. Выровнять remote под manifest?"
+  printf "    git remote set-url origin %s  — выполнить? (y/n): " "$manifest_url"
+  local _ans; read -r _ans
+  case "$_ans" in
+    y|Y|yes|YES)
+      if git remote set-url origin "$manifest_url"; then
+        REMOTE_URL="$manifest_url"
+        PLATFORM=$(_detect_platform "$REMOTE_URL")
+        # Перевыполнить wiring под новый remote (helper+gh-аккаунт были для старого host).
+        _wire_credential_helper
+        _ensure_gh_account
+        echo "    ✅ remote выровнен под manifest → ${REMOTE_URL} (платформа: $PLATFORM)"
+      else
+        echo "    ❌ git remote set-url не прошёл — продолжаю с текущим remote."
+      fi ;;
+    *)
+      echo "    Оставлен текущий remote. Push пойдёт в ${REMOTE_URL} (может не туда)." ;;
+  esac
+}
+
 # $1 = захваченный stderr push, $2 = exit code
 _classify_push_failure() {
   local err="$1" rc="$2"
@@ -272,6 +346,11 @@ _push() {
   rm -f "$errfile" 2>/dev/null || true
   return $rc
 }
+
+# ---------------------------------------------------------------------------
+# Pre-push: SSOT alignment (closes P-006) — сверить remote с manifest ДО push.
+# ---------------------------------------------------------------------------
+_check_remote_alignment
 
 # ---------------------------------------------------------------------------
 # Push

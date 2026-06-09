@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.22.0 — feat: secrets-manifest = single source of truth для git-remote (2026-06-09, closes P-006)
+
+**Что:** методология теперь имеет SSOT для «куда пушить». Git-секрит в `secrets-manifest.yaml` можно пометить `git_remote: true` — его `service_url` становится каноническим адресом push/pull. Push-команды (`/push-merge`, `/deploy`) перед push сверяют `git remote origin` с manifest и при расхождении **предлагают выровнять** remote под manifest (`git remote set-url`, с подтверждением — не молча). Закрывает корень push-инцидентов (G-083/P-005/G-094 — все были симптомами «нет SSOT для remote»): агент теперь определяет target+auth из secrets детерминированно, не из возможно-неверного git remote.
+
+**Авто-определение:** без флага, если ровно один `service_url` оканчивается на `.git` — он считается git-remote. Несколько → fallback на git remote (graceful). Старые manifest без поля работают без изменений.
+
+**Actions:**
+```
+/sync-audit   # подтянуть обновлённые push-скрипты
+# Пометь git-секрет в .claude/secrets-manifest.yaml:  git_remote: true
+# (если используешь GitLab/иной хост — service_url должен быть ПОЛНЫМ repo URL с .git)
+```
+
+**Priority:** 🟡 Medium — устраняет класс «push стучится не туда»; агент определяет remote из secrets.
+
+---
+
 ## v5.21.0 — feat: command-first позиционирование — AI engineer как первичная персона (2026-06-09, closes G-095)
 
 **Что:** зафиксирована первичная персона методологии — **AI engineer** (оркеструет AI через команды/skills, не запускает скрипты руками). PRODUCT.md «Целевые пользователи» переписан (AI engineer 🥇 первичный, developer/team lead вторичные). CLAUDE.md ## Workflow rules — новый **Command-first invariant**: агент не рекомендует пользователю `bash scripts/...`, направляет на команду; новая consumer-операция обязана иметь command/skill точку входа. Скрипты **не скрыты** — остаются доступны как внутренняя реализация, просто не рекомендуются как пользовательский путь.
