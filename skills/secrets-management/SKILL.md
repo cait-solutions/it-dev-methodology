@@ -92,6 +92,27 @@ secrets:
 - Используй distinct hostnames через `~/.ssh/config` или `/etc/hosts` aliases (e.g. `github-work.com`)
 - ИЛИ wait для schema v3 с `account_filter` field (future)
 
+### `git_remote: true` — SSOT для git-remote (v5.22.0, closes P-006)
+
+**Проблема:** `git remote origin` и manifest — два источника правды о том «куда пушить». При bootstrap remote мог быть выставлен дефолтным github-паттерном, а реальный repo — на другом хосте (GitLab). Push стучался по неверному remote (404), хотя manifest содержал правильный `service_url`.
+
+**Решение:** пометить git-секрет `git_remote: true` — он становится **источником правды** для git-remote:
+```yaml
+  - key: GITLAB_NEXCHANCE
+    service_url: "https://code.nexchance.de/team/repo.git"  # полный repo URL
+    git_remote: true                                         # ← SSOT для push/pull
+    login: "you@org.com"
+```
+
+**Как работает:**
+- Push-команды (`/push-merge`, `/deploy`) перед push сверяют `git remote origin` с `service_url` секрета у которого `git_remote: true`.
+- Расхождение → команда **предлагает выровнять** remote под manifest (`git remote set-url`, с подтверждением — не молча меняет git config).
+- `service_url` авторитетнее `git remote`: его ввёл пользователь осознанно при добавлении секрета (тот же URL что для clone/workspace).
+
+**Авто-определение без флага:** если `git_remote: true` не стоит ни у одного секрета, но ровно один `service_url` оканчивается на `.git` — он считается git-remote автоматически. Несколько `.git` без флага → неоднозначно, fallback на текущий `git remote` (graceful). Ставь флаг у ОДНОГО секрета (того что для push).
+
+**Актуальность источника:** manifest ведущий, remote выравнивается под него при каждом push-расхождении → SSOT не устаревает (рассинхрон ловится в момент push, предлагается фикс).
+
 ---
 
 ## Configurable values (v4.41.0+)
