@@ -86,6 +86,11 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 ## Workflow rules
 
+**Command-first invariant (первичная персона = AI engineer):** целевой пользователь методологии — **AI engineer**, который оркеструет AI через **команды и skills** (PRODUCT.md «Целевые пользователи»). Скрипты **не скрыты и доступны** — но это **внутренняя реализация**, не пользовательский путь. Правило:
+- ❌ НЕ рекомендовать пользователю «запусти `bash scripts/...`» как действие. Направлять на **команду** (`/sync-audit`, `/deploy`, `/secrets`, …). Скрипт упоминать только как «что команда делает внутри».
+- ✅ **Архитектуру взаимодействия выстраивать через команды:** новая операция доступная консьюмеру ОБЯЗАНА иметь command/skill точку входа. Если операция требует ручного `bash scripts/X.sh` от пользователя → это gap, обернуть в команду. Скрипт = как, команда = интерфейс.
+- ✅ Исключение: **владелец методологии** (this repo) при разработке самой методологии запускает скрипты напрямую (сопровождение, не consumer-path). Внутри команд агент тоже вызывает скрипты — это реализация. Запрет узкий: не инструктировать **консьюмера** запускать скрипт вместо команды.
+
 **Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
 
 **Commit-discipline (parallel-safe):** коммить через explicit pathspec — `git commit <пути> -m`, НЕ `git add <file>` + bare `git commit`. Bare commit коммитит **весь staging-индекс**, включая файлы застейдженные параллельной сессией → захват чужой работы (инцидент a17ecc1). Перед commit: `git diff --cached --name-only` → staged ⊆ `/plan` Шаг 1 scope. Деталь: [/code Шаг 2](commands/code.md), [ADR-002 § Index-capture](../it-dev-methodology-documentation/docs/adr/ADR-002-branching-mode-contract.md).
