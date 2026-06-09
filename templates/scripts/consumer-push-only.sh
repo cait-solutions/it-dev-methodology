@@ -101,6 +101,83 @@ _ensure_gh_account() {
 _ensure_gh_account
 
 # ---------------------------------------------------------------------------
+# Push-failure classification (closes G-083 level-4 + P-005)
+# Не приравнивать любой провал push к «403 / нет PAT» — см. consumer-push.sh.
+# ---------------------------------------------------------------------------
+_remote_host() {
+  case "$REMOTE_URL" in
+    https://*) local h="${REMOTE_URL#https://}"; h="${h%%/*}"; echo "${h%%:*}" ;;
+    git@*)     local h="${REMOTE_URL#git@}"; echo "${h%%:*}" ;;
+    *)         echo "" ;;
+  esac
+}
+_manifest_hosts() {
+  local manifest=".claude/secrets-manifest.yaml"
+  [[ -f "$manifest" ]] || return 0
+  grep -E '^[[:space:]]*service_url:' "$manifest" 2>/dev/null \
+    | sed -E 's/.*service_url:[[:space:]]*"?([^"]*)"?.*/\1/' \
+    | sed -E 's#^https?://##; s#/.*$##; s#:.*$##' \
+    | grep -v '^$' | sort -u
+}
+_sanitize() { sed -E 's#://[^@/[:space:]]+@#://***@#g'; }
+
+_classify_push_failure() {
+  local err="$1" rc="$2"
+  local host; host="$(_remote_host)"
+  echo ""
+  echo "❌ Push не прошёл (git exit $rc). Причина:"
+  if echo "$err" | grep -qiE 'repository not found|not found|does not exist|404'; then
+    echo "   📦 Репозиторий не существует на remote: ${REMOTE_URL}"
+    local mhosts; mhosts="$(_manifest_hosts)"
+    if [[ -n "$mhosts" && -n "$host" ]] && ! echo "$mhosts" | grep -qx "$host"; then
+      echo ""
+      echo "   ⚠️  remote указывает на '${host}', но настроенные секреты — для:"
+      echo "$mhosts" | sed 's/^/        • /'
+      echo "      Вероятно remote указывает НЕ НА ТУ платформу."
+      echo "        git remote -v"
+      echo "        git remote set-url origin <правильный-url-из-manifest>"
+    else
+      echo "   a) Создать репозиторий: gh repo create <owner>/<repo> --private --source=. --push"
+      echo "   b) Исправить remote если опечатка: git remote set-url origin <url>"
+    fi
+  elif echo "$err" | grep -qiE '403|permission|denied|forbidden|access denied'; then
+    echo "   🔒 Доступ запрещён (403)."
+    if [[ "$(_detect_github)" == "github" ]] && command -v gh >/dev/null 2>&1; then
+      local owner active
+      owner="${REMOTE_URL#https://github.com/}"; owner="${owner%%/*}"
+      active=$(gh api user -q .login 2>/dev/null || echo "")
+      echo "      Активный gh-аккаунт: ${active:-none}, нужен: ${owner}"
+      echo "      Скорее всего НЕ ТОТ активный аккаунт (не отсутствие PAT):"
+      echo "        gh auth switch --user ${owner}"
+      echo "        git push origin <branch>"
+      echo "      Если ${owner} не залогинен: gh auth login --user ${owner}"
+    else
+      echo "   a) gh auth login → повторить"
+      echo "   b) Настрой credential helper / PAT для ${host:-этого хоста}"
+    fi
+  elif echo "$err" | grep -qiE 'could not resolve|unable to access|connection|timed out|network'; then
+    echo "   🌐 Сеть/хост недоступен — это НЕ проблема прав или токена."
+    echo "      Проверь подключение и доступность ${host:-remote}, затем повтори."
+  else
+    echo "   ❓ Причина не распознана автоматически. Вывод git:"
+    echo "$err" | _sanitize | sed 's/^/      /'
+  fi
+}
+
+_push() {
+  local errfile rc
+  errfile="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/push_err.$$")"
+  LC_ALL=C git push "$@" 2>"$errfile"
+  rc=$?
+  cat "$errfile" >&2
+  if [[ $rc -ne 0 ]]; then
+    _classify_push_failure "$(cat "$errfile" 2>/dev/null)" "$rc"
+  fi
+  rm -f "$errfile" 2>/dev/null || true
+  return $rc
+}
+
+# ---------------------------------------------------------------------------
 # Show what will be pushed
 # ---------------------------------------------------------------------------
 echo ""
@@ -116,13 +193,7 @@ echo ""
 # ---------------------------------------------------------------------------
 # Push
 # ---------------------------------------------------------------------------
-if ! git push origin "${AGENT_BRANCH}:${AGENT_BRANCH}"; then
-  echo ""
-  echo "❌ Push не прошёл (403 / permission denied)."
-  echo "   Варианты:"
-  echo "   a) gh auth login → повторить /push"
-  echo "   b) git remote set-url origin https://<user>:<pat>@<host>/<ns>/<repo>.git"
-  echo "   c) Для GitLab: настрой SSH-ключ или Personal Access Token"
+if ! _push origin "${AGENT_BRANCH}:${AGENT_BRANCH}"; then
   exit 1
 fi
 

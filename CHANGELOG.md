@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.19.0 — fix: push-диагностика различает 404/403/network + GITHUB_PAT не навязывается GitLab-проектам (2026-06-09, closes G-083 L4 + P-005)
+
+**Что:** push-скрипты (`consumer-push.sh`, `consumer-push-only.sh`, `deploy-push.sh`) больше не печатают «403 / нужен PAT» при ЛЮБОМ провале. Теперь захватывают stderr (LC_ALL=C → детерминированные англ. маркеры), классифицируют причину — **404** (repo не существует → «создать?» или «remote указывает не на ту платформу» если remote-host ≠ secrets-manifest service_url), **403** (не тот gh-аккаунт → `gh auth switch`, а не PAT), **network** (хост недоступен — не credential). stderr sanitize маскирует `://user:token@`. В `deploy-push.sh` push был голым (без проверки exit) → шёл в `gh pr create` на непушнутой ветке — теперь прерывается. `secrets-manifest.yaml.template` больше не объявляет `GITHUB_PAT required:true` всем; `new-project-init.sh` определяет платформу из git remote и подсказывает нужный секрет.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .   # подтянуть обновлённые push-скрипты
+# Если у тебя GitLab/иной remote и в .claude/secrets-manifest.yaml висит лишний
+# GITHUB_PAT — удали его (он давал ложный "MISSING" в secrets-show).
+```
+
+**Priority:** 🟡 Medium — устраняет хроническую путаницу «нужен GitHub PAT» на не-GitHub remote; push-диагностика теперь self-explaining.
+
+---
+
 ## v5.18.0 — feat: /sync-audit auto-apply после pull — одна команда вместо двух (2026-06-09, closes G-092)
 
 **Что:** `/sync-audit` Шаг -0.5 делал `git pull` но не запускал `sync-methodology.sh` — консьюмер стягивал новые commits в methodology repo, но `.claude/commands/` оставались старыми. Теперь после успешного pull (варианты a и b, включая `auto_pull: true`) автоматически выполняется `bash scripts/sync-methodology.sh .` (self-heal, без вопроса). При ошибке sync-apply — показывает явное сообщение вместо молчания.

@@ -128,9 +128,94 @@ _ensure_gh_account() {
 }
 _ensure_gh_account
 
+# ---------------------------------------------------------------------------
+# Push-failure classification (closes G-083 level-4 + P-005).
+# Раньше git push был ГОЛЫЙ (без проверки exit) → при провале скрипт продолжал
+# в gh pr create на непушнутой ветке (каскад ошибок). Теперь _push прерывает
+# до gh-pr-create и классифицирует причину (404/403/network) вместо «нужен PAT».
+# ---------------------------------------------------------------------------
+_dp_remote_url() { git remote get-url origin 2>/dev/null || true; }
+_remote_host() {
+  local u; u="$(_dp_remote_url)"
+  case "$u" in
+    https://*) local h="${u#https://}"; h="${h%%/*}"; echo "${h%%:*}" ;;
+    git@*)     local h="${u#git@}"; echo "${h%%:*}" ;;
+    *)         echo "" ;;
+  esac
+}
+_manifest_hosts() {
+  local manifest=".claude/secrets-manifest.yaml"
+  [[ -f "$manifest" ]] || return 0
+  grep -E '^[[:space:]]*service_url:' "$manifest" 2>/dev/null \
+    | sed -E 's/.*service_url:[[:space:]]*"?([^"]*)"?.*/\1/' \
+    | sed -E 's#^https?://##; s#/.*$##; s#:.*$##' \
+    | grep -v '^$' | sort -u
+}
+_sanitize() { sed -E 's#://[^@/[:space:]]+@#://***@#g'; }
+
+_classify_push_failure() {
+  local err="$1" rc="$2"
+  local host; host="$(_remote_host)"
+  local url; url="$(_dp_remote_url)"
+  echo ""
+  echo "❌ Push не прошёл (git exit $rc). Причина:"
+  if echo "$err" | grep -qiE 'repository not found|not found|does not exist|404'; then
+    echo "   📦 Репозиторий не существует на remote: ${url}"
+    local mhosts; mhosts="$(_manifest_hosts)"
+    if [[ -n "$mhosts" && -n "$host" ]] && ! echo "$mhosts" | grep -qx "$host"; then
+      echo ""
+      echo "   ⚠️  remote указывает на '${host}', но настроенные секреты — для:"
+      echo "$mhosts" | sed 's/^/        • /'
+      echo "      Вероятно remote указывает НЕ НА ТУ платформу."
+      echo "        git remote -v"
+      echo "        git remote set-url origin <правильный-url-из-manifest>"
+    else
+      echo "   a) Создать репозиторий: gh repo create <owner>/<repo> --private --source=. --push"
+      echo "   b) Исправить remote если опечатка: git remote set-url origin <url>"
+    fi
+  elif echo "$err" | grep -qiE '403|permission|denied|forbidden|access denied'; then
+    echo "   🔒 Доступ запрещён (403)."
+    case "$url" in
+      https://github.com/*)
+        if command -v gh >/dev/null 2>&1; then
+          local owner active
+          owner="${url#https://github.com/}"; owner="${owner%%/*}"
+          active=$(gh api user -q .login 2>/dev/null || echo "")
+          echo "      Активный gh-аккаунт: ${active:-none}, нужен: ${owner}"
+          echo "      Скорее всего НЕ ТОТ активный аккаунт (не отсутствие PAT):"
+          echo "        gh auth switch --user ${owner}"
+          echo "        повторить deploy"
+          echo "      Если ${owner} не залогинен: gh auth login --user ${owner}"
+        fi ;;
+      *)
+        echo "   a) gh auth login → повторить"
+        echo "   b) Настрой credential helper / PAT для ${host:-этого хоста}" ;;
+    esac
+  elif echo "$err" | grep -qiE 'could not resolve|unable to access|connection|timed out|network'; then
+    echo "   🌐 Сеть/хост недоступен — это НЕ проблема прав или токена."
+    echo "      Проверь подключение и доступность ${host:-remote}, затем повтори."
+  else
+    echo "   ❓ Причина не распознана автоматически. Вывод git:"
+    echo "$err" | _sanitize | sed 's/^/      /'
+  fi
+}
+
+_push() {
+  local errfile rc
+  errfile="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/push_err.$$")"
+  LC_ALL=C git push "$@" 2>"$errfile"
+  rc=$?
+  cat "$errfile" >&2
+  if [[ $rc -ne 0 ]]; then
+    _classify_push_failure "$(cat "$errfile" 2>/dev/null)" "$rc"
+  fi
+  rm -f "$errfile" 2>/dev/null || true
+  return $rc
+}
+
 if [[ "$MODE" == "team" ]]; then
   echo "▶ Team mode → git push origin ${PUSH_BRANCH}:${PUSH_BRANCH}"
-  git push origin "${PUSH_BRANCH}:${PUSH_BRANCH}"
+  _push origin "${PUSH_BRANCH}:${PUSH_BRANCH}" || exit 1
   echo ""
 
   if [[ "$PR_TOOL" == "auto-merge" ]]; then
@@ -154,7 +239,7 @@ if [[ "$MODE" == "team" ]]; then
   fi
 else
   echo "▶ Solo mode → git push origin ${PUSH_BRANCH}:${PRODUCTION_BRANCH}"
-  git push origin "${PUSH_BRANCH}:${PRODUCTION_BRANCH}"
+  _push origin "${PUSH_BRANCH}:${PRODUCTION_BRANCH}" || exit 1
   echo ""
   echo "✅ Deployed to ${PRODUCTION_BRANCH}"
 fi

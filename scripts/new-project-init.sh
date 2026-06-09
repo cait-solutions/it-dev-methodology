@@ -279,6 +279,19 @@ if [[ -f "$METHODOLOGY_DIR/templates/secrets-manifest.yaml.template" ]]; then
     echo "  - .claude/secrets-manifest.yaml (exists — preserved; manual review for new manifest_version)"
   else
     copy_with_subst "$METHODOLOGY_DIR/templates/secrets-manifest.yaml.template" "$TARGET_DIR/.claude/secrets-manifest.yaml"
+    # Platform-detect (P-005): не навязывать GITHUB_PAT GitLab-проектам.
+    # Определить платформу из remote origin и подсказать какой git-секрит
+    # объявить. Шаблон поставляет git-секреты закомментированными → агент/юзер
+    # раскомментирует подходящий. init только сообщает рекомендацию (не правит
+    # YAML автоматически — раскомментирование per-host оставляем явным шагом,
+    # чтобы не ломать manifest парсером).
+    _init_remote=$(cd "$TARGET_DIR" 2>/dev/null && git remote get-url origin 2>/dev/null || true)
+    case "$_init_remote" in
+      "")                  echo "  - secrets-manifest: remote origin не настроен → git-секрет не объявлен (настрой remote, затем раскомментируй нужный в manifest)" ;;
+      *github.com*)        echo "  - secrets-manifest: remote = GitHub → push обычно через gh credential helper (gh auth login). GITHUB_PAT в .env НЕ обязателен (раскомментируй в manifest только если используешь PAT)." ;;
+      *gitlab*|*code.*)    echo "  - secrets-manifest: remote = GitLab-подобный ($_init_remote) → объяви GITLAB_* секрет (см. закомментированный пример GITLAB_NEXCHANCE в manifest). НЕ объявляй GITHUB_PAT." ;;
+      *)                   echo "  - secrets-manifest: remote = $_init_remote (платформа не распознана) → объяви секрет соответствующий хосту вручную в manifest." ;;
+    esac
   fi
 fi
 
