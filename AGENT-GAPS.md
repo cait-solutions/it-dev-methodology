@@ -58,6 +58,19 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-091
+Дата: 2026-06-09
+Контекст: /diagnose — анализ поведения /sync-audit у консьюмера
+Что пропустил: /sync-audit Шаг -0.5 предлагает вариант (a) с `with-secret.sh GITHUB_PAT` как `(рекомендуется)` для git pull, хотя правильный механизм — `gh auth` credential helper (как в deploy-push.sh и CLAUDE.local.md push-auth секции)
+Как обнаружено: /diagnose root cause confirmed
+Категория: assumption-gap
+Гипотеза: Команда написана в период до унификации `gh auth` как primary механизма — PAT паттерн был ранним дизайном, не обновлён при введении credential helper
+Agent failure mode: state-stale
+Potential fix: В /sync-audit Шаг -0.5 вариант (a): убрать `with-secret.sh GITHUB_PAT --` prefix, заменить на прямой `git pull` через gh credential helper; убрать `(рекомендуется)` от PAT-варианта или сделать `gh auth status` check перед показом вариантов
+Статус: addressed (v5.17.0 — прямой git pull, gh auth login как fallback)
+---
+
+---
 Gap-ID: G-080
 Дата: 2026-06-03
 Контекст: /plan — планирование двух методологических правил (RISKS gate + Playwright rule)
