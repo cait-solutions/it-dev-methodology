@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.18.0 — feat: /sync-audit auto-apply после pull — одна команда вместо двух (2026-06-09, closes G-092)
+
+**Что:** `/sync-audit` Шаг -0.5 делал `git pull` но не запускал `sync-methodology.sh` — консьюмер стягивал новые commits в methodology repo, но `.claude/commands/` оставались старыми. Теперь после успешного pull (варианты a и b, включая `auto_pull: true`) автоматически выполняется `bash scripts/sync-methodology.sh .` (self-heal, без вопроса). При ошибке sync-apply — показывает явное сообщение вместо молчания.
+
+**Priority:** 🟡 Medium — UX: консьюмер получает актуальные команды сразу после `/sync-audit`, без второй команды.
+
+**Actions:**
+```bash
+bash scripts/sync-methodology.sh .
+```
+
+---
+
 ## v5.17.0 — fix: /sync-audit pull без PAT — прямой git pull для публичного репо (2026-06-09, closes G-091)
 
 **Что:** `/sync-audit` Шаг -0.5 предлагал `with-secret.sh GITHUB_PAT` как рекомендуемый вариант для pull обновлений methodology. Для публичного репо PAT не нужен — `git pull` работает анонимно с любым git-хостингом (GitHub, GitLab и др.). Новый вариант (a): прямой `git pull origin main --ff-only`; при auth-ошибке (прокси) — вариант (b) с `gh auth login`.

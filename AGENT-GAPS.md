@@ -58,6 +58,19 @@ Potential fix: [конкретный checklist item или изменение ш
 ## Записи
 
 ---
+Gap-ID: G-092
+Дата: 2026-06-09
+Контекст: /plan — анализ UX /sync-audit у консьюмера
+Что пропустил: /sync-audit Шаг -0.5 делает `git pull` но НЕ запускает `sync-methodology.sh` после него — консьюмер стягивает новые commits в methodology repo, но `.claude/commands/` остаются старыми. Нужны две команды (pull + sync) вместо одной.
+Как обнаружено: разработчик указал
+Категория: completeness-gap
+Гипотеза: Шаг -0.5 проектировался только как "проверить актуальность + обновить репо" — следующий шаг sync-apply не был добавлен
+Agent failure mode: prompt-ambiguous
+Potential fix: После успешного pull в Шаге -0.5 — автоматически запустить `bash scripts/sync-methodology.sh .` (self-apply) без вопроса (детерминированный self-heal класс). Это закрывает цикл: pull → apply → перечитать команды.
+Статус: addressed (v5.18.0 — auto-apply sync-methodology.sh после pull)
+---
+
+---
 Gap-ID: G-091
 Дата: 2026-06-09
 Контекст: /diagnose — анализ поведения /sync-audit у консьюмера
