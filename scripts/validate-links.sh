@@ -129,17 +129,25 @@ def check_file(path, root):
             resolved = resolve_target(path, target)
             if resolved is None:
                 continue
-            # cross-repo sibling path (../<other>/) that doesn't exist → SKIP, not broken
+            # cross-repo sibling path (../<other-repo>/) that doesn't exist → SKIP, not broken
             # (single-repo consumer legitimately lacks sibling repos)
+            # Pattern: ../sibling-repo/... — check if sibling-repo dir itself exists.
+            # If sibling root absent → not our concern (consumer without that repo).
+            # If sibling root present but file within missing → real broken link → flag.
             if target.strip().startswith('..') and not os.path.exists(resolved):
-                # only flag if the FIRST path segment (sibling repo root) exists but
-                # the file within is missing; if whole sibling absent → skip
-                sibling_root = os.path.normpath(os.path.join(os.path.dirname(path), target.split('/', 1)[0] if '/' in target else target))
-                # climb to the repo-level dir (..)
-                top = os.path.normpath(os.path.join(os.path.dirname(path), target.split('/')[0]))
-                # find first existing ancestor under root
-                if not os.path.exists(top):
-                    continue  # entire sibling tree absent → not our concern
+                parts = target.replace('\\', '/').split('/')
+                # Find sibling repo root: skip leading '..' segments, take first real name
+                sibling_name = None
+                for p in parts:
+                    if p and p != '..':
+                        sibling_name = p
+                        break
+                if sibling_name is not None:
+                    sibling_root = os.path.normpath(
+                        os.path.join(os.path.dirname(path),
+                                     '/'.join(seg for seg in parts[:parts.index(sibling_name) + 1])))
+                    if not os.path.exists(sibling_root):
+                        continue  # entire sibling tree absent → not our concern
             if not os.path.exists(resolved):
                 print("ERROR    BROKEN_LINK   {}:{}".format(path, lineno))
                 print("         [...]({}) -> {} does not exist".format(target, resolved))

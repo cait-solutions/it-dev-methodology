@@ -1209,7 +1209,7 @@ end
 bash scripts/update-mermaid-links.sh _tmp_draft-maps.md
 # 3. Линковать строку в чате:
 ```
-В чат вывести: `[_tmp_draft-maps.md:LINE](_tmp_draft-maps.md#LLINE)` — Ctrl+Click откроет файл, тройной клик на URL внутри файла скопирует ссылку в mermaid.live.
+В чат вывести ссылку на временный файл: `_tmp_draft-maps.md` — Ctrl+Click откроет файл в VSCode, тройной клик на URL внутри файла скопирует ссылку в mermaid.live.
 
 Содержимое `_tmp_draft-maps.md` (создаётся Write tool):
 ````
