@@ -335,6 +335,26 @@ Output:
    - `BROKEN_LINK` найдены → 🔴 **High severity**: список битых ссылок (file:line). **Report, не auto-fix** — выбор правильного пути неоднозначен (typo? перемещён? two-repo `../<doc_repo_path>/...`?), нужно решение человека → рекомендация `/plan` или точечная правка.
    - `OK` → 🟢 OK
 
+### Gap 9: ROADMAP.md «Визуальный roadmap» секция (v5.26.0)
+
+**Цель:** проверить что ROADMAP.md содержит секцию `## Визуальный roadmap` с mermaid-блоком. Применимо если ROADMAP.md существует (без него N/A).
+
+1. Проверить наличие `ROADMAP.md` (или `<doc_repo_path>/ROADMAP.md` в two-repo):
+   - Не существует → 🟢 N/A
+2. Grep на секцию:
+   ```bash
+   grep -q "## Визуальный roadmap" ROADMAP.md && echo PRESENT || echo MISSING
+   ```
+3. Если секция есть — проверить наличие mermaid-блока внутри неё:
+   ```bash
+   grep -A 5 "## Визуальный roadmap" ROADMAP.md | grep -q '```mermaid' && echo HAS_MERMAID || echo NO_MERMAID
+   ```
+4. Output:
+   - Секция отсутствует → 🟡 **Medium** — ROADMAP.md без визуализации: добавить по шаблону из `templates/ROADMAP.template.md ## Визуальный roadmap`; автоматически добавить нельзя (контент project-owned). **Report**, не self-heal.
+   - Секция есть, mermaid-блок есть, URL валиден (Gap 7 уже проверяет) → 🟢 OK
+   - Секция есть, mermaid-блок есть, URL stale → покрывается Gap 7 (STALE_LINK)
+   - Секция есть, mermaid-блок отсутствует → 🟡 **Medium** — секция-заглушка без диаграммы (добавить код по шаблону)
+
 ---
 
 ## Шаг 2 — Severity assessment

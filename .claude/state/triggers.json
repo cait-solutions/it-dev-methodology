@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 14
+      "plans_since": 16
     },
     "last_retro": {
       "date": "2026-06-09",
-      "plans_since": 1
+      "plans_since": 3
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 28
+      "plans_since": 30
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 22
+      "plans_since": 24
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 9
+      "plans_since": 11
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 24
+      "plans_since": 26
     },
     "last_architecture_audit": {
       "date": "2026-06-09",
-      "plans_since": 1,
+      "plans_since": 3,
       "recommendations": [
         {
           "id": "R-030",
@@ -65,15 +65,16 @@
     }
   },
   "last_sync_audit": {
-    "date": "2026-06-01",
-    "methodology_version": "v4.49.0",
+    "date": "2026-06-10",
+    "methodology_version": "v5.25.0",
     "gaps_found": 3,
-    "gaps_high_severity": 0
+    "gaps_high_severity": 1
   },
   "session_gap_counter": {
-    "session_marker": "2026-06-10T09:14:42+00:00",
+    "session_marker": "2026-06-10T12:30:00+00:00",
     "counts": {
-      "completeness-gap": 1
+      "completeness-gap": 1,
+      "assumption-gap": 1
     }
   },
   "per_service": {},
@@ -94,28 +95,27 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-10",
-    "task_id": "sustainment-declaration",
+    "task_id": "roadmap-visualization",
     "service": "methodology",
     "mode": "Full",
-    "code_run": false,
-    "commitments": [
+    "code_run": true,
+    "commitments": [],
+    "sustainment": [
       {
-        "text": "production-config тест триады: тестовый /plan «добавить hook» → секция «Жизнеобеспечение» выводится + sustainment[] пишется + /review gate читает",
-        "status": "pending",
-        "skip_reason": null
+        "artifact": "it-dev-methodology-documentation/ROADMAP.md § Визуальный roadmap (mermaid-диаграмма)",
+        "trigger": "после /product-review, /product-vision, /plan при добавлении/закрытии узлов",
+        "refresh": "edit mermaid-block + bash scripts/update-mermaid-links.sh <roadmap-path>",
+        "detection": "validate-mermaid-links.sh → STALE_LINK; post-edit-watchdog.py авто-триггер при Edit",
+        "owner": "методология"
       },
       {
-        "text": "graceful read sustainment[] в /review gate: отсутствие поля → 🔵 info, не 🔴",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "derivation-правило в Self-Lint: строки таблицы выводятся из «Затрагиваемые файлы», не свободным ответом",
-        "status": "pending",
-        "skip_reason": null
+        "artifact": "templates/ROADMAP.template.md § Визуальный roadmap (skeleton + classDefs)",
+        "trigger": "при изменении Maps Standard (новые классы, collapse-политика)",
+        "refresh": "правка template + VERSION bump + sync-methodology.sh",
+        "detection": "/sync-audit Gap 9; pair-parity /review",
+        "owner": "методология"
       }
-    ],
-    "sustainment": []
+    ]
   },
   "last_deploy": {
     "date": "2026-06-10",
@@ -127,5 +127,39 @@
     "version_before": "v5.23.0",
     "version_after": "v5.23.0",
     "status": "failed"
+  },
+  "last_retro": {
+    "date": "2026-06-10",
+    "plans_since": 1
+  },
+  "last_architecture_audit": {
+    "date": "2026-06-10",
+    "plans_since": 1,
+    "recommendations": [
+      {
+        "id": "S-1",
+        "type": "gap-structural",
+        "summary": "domain-aware /diagnose trigger — 3 фикса одного домена = /diagnose (не точный тег)",
+        "status": "proposed",
+        "scope": "methodology",
+        "implementation_pr": null
+      },
+      {
+        "id": "S-2",
+        "type": "gap-structural",
+        "summary": "completeness-gap L3 reinforcement — domain-grep checkpoint в /code Шаг 1.7",
+        "status": "proposed",
+        "scope": "methodology",
+        "implementation_pr": null
+      },
+      {
+        "id": "S-3",
+        "type": "drift",
+        "summary": "SYSTEM-MAP: добавить consumer-push/pull/credential-helper в secrets слой",
+        "status": "proposed",
+        "scope": "methodology",
+        "implementation_pr": null
+      }
+    ]
   }
 }

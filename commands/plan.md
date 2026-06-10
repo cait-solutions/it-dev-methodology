@@ -1200,29 +1200,39 @@ end
 
 **⛔ Генерация URL — ОБЯЗАТЕЛЬНО. Оба пути дают URL прямо сейчас, без отсрочки на /code.**
 
-**Путь A — если `scripts/mermaid-link.py` доступен** (methodology repo):
+**⛔ G-100 (fidelity fix): pako-URL НЕ проходит через чат — ни целиком, ни частично.** Модель транскрибирует 1200+ символов base64 токен-за-токеном → один искажённый символ рушит zlib-поток (доказано: index 71, `X`→`W`). G-085 cite-gate проверяет происхождение URL, G-100 закрывает второй вектор — копирование из stdout в чат. Единственный валидный путь: скрипт пишет URL **прямо в файл** → агент выводит **markdown-ссылку на строку файла** → пользователь Ctrl+Click по URL внутри файла.
+
+**Путь A — если `scripts/update-mermaid-links.sh` доступен** (methodology repo / consumer repo):
 ```bash
-# Записать диаграмму в temp-файл и сгенерировать URL:
-# (heredoc stdin ломает кириллицу на Windows/Git Bash — используем файловый режим)
-py scripts/mermaid-link.py _tmp_draft.mmd
-# После получения URL — удалить: rm _tmp_draft.mmd (или через Edit tool)
+# 1. Записать все draft-диаграммы в _tmp_draft-maps.md (Write tool)
+# 2. Вставить URL скриптом прямо в файл:
+bash scripts/update-mermaid-links.sh _tmp_draft-maps.md
+# 3. Линковать строку в чате:
 ```
-Содержимое `_tmp_draft.mmd`:
+В чат вывести: `[_tmp_draft-maps.md:LINE](_tmp_draft-maps.md#LLINE)` — Ctrl+Click откроет файл, тройной клик на URL внутри файла скопирует ссылку в mermaid.live.
+
+Содержимое `_tmp_draft-maps.md` (создаётся Write tool):
 ````
-https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyyU0tyk3MTNG9sOvCvgtbFC5sv7DhYtPFBiBn78Xmi01AevOFfQrFyfkFqXZKOkpQ5UCd1TFKJRmpuakxSlYxSimpaYmlOSUxSrVANYmlJfnBlXnJSlYlRaWpOkqlBSmJJakumYnpRYm5EMFaACIjNy8
+# [DRAFT] Draft Maps — /plan <task> (<date>)
+
+Эфемерный файл превью. `/code` финализирует постоянные карты и удаляет этот файл.
+
+## Draft 1 — <описание>
+
+<!-- mermaid-link-placeholder -->
 
 ```mermaid
-<mermaid-код затронутого scope>
+<mermaid-код>
 ```
 ````
 
-**Путь B — если скрипт не найден или заблокирован** (consumer repo, offline, или Bash permission denied):
+**Путь B — если `update-mermaid-links.sh` не найден или заблокирован:**
 
-Попробовать запустить скрипт с абсолютным путём без `cd`:
+Попробовать `mermaid-link.py` (генерирует URL в stdout → **записать в файл через Write tool**, не копировать в чат):
 ```bash
-py "<абсолютный-путь>/scripts/mermaid-link.py" _tmp_draft.mmd
+py scripts/mermaid-link.py _tmp_draft.mmd > _tmp_url.txt
+# Затем Write tool создаёт _tmp_draft-maps.md с содержимым _tmp_url.txt + диаграммой
 ```
-
 Если и это заблокировано — показать код диаграммы с явной инструкцией:
 ```
 ⚠️ mermaid-link.py недоступен — URL не сгенерирован автоматически.
@@ -1233,35 +1243,13 @@ py "<абсолютный-путь>/scripts/mermaid-link.py" _tmp_draft.mmd
 
 ⛔ **Subagent для pako/base64url encoding — ЗАПРЕЩЁН (closes G-064).** Subagent не выполняет реальную zlib deflate операцию — возвращает невалидный URL. Единственный допустимый fallback если скрипт недоступен — показать код диаграммы с инструкцией выше.
 
-⛔ **pako-URL ТОЛЬКО из stdout `mermaid-link.py`. Самостоятельная генерация ЗАПРЕЩЕНА (closes G-085 — обобщает G-064).**
-LLM физически НЕ может выполнить zlib deflate — любая «сочинённая» pako-строка невалидна, даже если выглядит правильно (начинается `#pako:eN`, длинная). Это относится к ЛЮБОМУ способу кроме реального запуска скрипта: из памяти, по аналогии с прошлым URL, ручной конструкцией, subagent'ом.
+⛔ **pako-URL ТОЛЬКО из скрипта `mermaid-link.py` / `update-mermaid-links.sh`. Самостоятельная генерация ЗАПРЕЩЕНА (closes G-085 + G-100).**
+LLM физически НЕ может выполнить zlib deflate — любая «сочинённая» pako-строка невалидна, даже если выглядит правильно (начинается `#pako:eN`, длинная). Это относится к ЛЮБОМУ способу кроме реального запуска скрипта: из памяти, по аналогии с прошлым URL, ручной конструкцией, subagent'ом. И даже скрипт-валидный URL нельзя **перепечатывать** — только передавать через файл.
 
-**L3 cite-gate (процедурная проверка перед выводом URL):**
-- Прежде чем вывести pako-URL — ответь себе: «Я видел этот URL в stdout tool-вызова `mermaid-link.py` в ЭТОЙ сессии для ЭТОЙ диаграммы?»
-- Если **нет** (скрипт не запускался / запускался для другой диаграммы / URL из памяти) → ⛔ НЕ выводить URL. Перейти на Путь B (код + инструкция).
-- Признак самосочинённого URL: ты не можешь указать конкретный Bash tool-вызов из текущей сессии, чей output = этот URL.
-
-**Few-shot G-085:**
-✅ Запустил `py scripts/mermaid-link.py _tmp_draft.mmd` → скопировал URL ровно из его stdout → вывел.
-❌ «Адаптировал» URL из прошлого draft в этой же сессии (другая диаграмма = другой pako) → битый.
+**Few-shot G-085 + G-100:**
+✅ Запустил `update-mermaid-links.sh _tmp_draft-maps.md` → скрипт вписал URL в файл → вывел ссылку `[_tmp_draft-maps.md:10]`.
+❌ Запустил скрипт → скопировал URL из stdout в чат → «Loading URL failed» (транскрипция искажает).
 ❌ Сгенерировал правдоподобный `#pako:eNq...` не запуская скрипт → «Loading URL failed».
-
-**Few-shot: правильный vs неправильный URL (обновить при изменении формата):**
-
-✅ **Правильно** — голый URL на отдельной строке (генерируется `py scripts/mermaid-link.py`):
-```
-https://mermaid.live/edit#pako:eNqrVkrNTQEABY4B6A==
-```
-Тройной клик выделяет только URL. Ctrl+Click открывает в браузере.
-
-❌ **Неправильно** — markdown-link (старый формат до v4.37, mermaid.live не откроется кликом):
-```
-[Открыть в Mermaid Live](https://mermaid.live/edit#pako:...)
-```
-
-❌ **Неправильно** — URL сгенерирован вручную / через subagent (невалидный pako):
-URL выглядит правдоподобно но mermaid.live показывает «Loading URL failed».
-Признак: URL короче 50 символов или не начинается с `#pako:eN`.
 
 ⛔ **"Ссылка будет в /code" = нарушение шага.** Путь B всегда выполняется здесь, в /plan.
 

@@ -129,6 +129,8 @@
 Спросить: "Перенести предложенные оси в VISION.md → Активные? (y/n/selective)"
 Ждать ответа. Не переносить самостоятельно.
 
+**ROADMAP Mermaid sync:** если подтверждены новые оси → VISION.md + ROADMAP.md получают новые Considered-записи → обновить mermaid-блок в секции `## Визуальный roadmap` + `bash scripts/update-mermaid-links.sh <roadmap-path>`. Если mermaid-блока нет — добавить по шаблону из `templates/ROADMAP.template.md`.
+
 Обновить triggers.json: `last_product_vision = { date: today, plans_since: 0 }`
 
 ---
