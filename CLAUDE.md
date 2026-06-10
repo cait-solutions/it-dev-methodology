@@ -178,6 +178,8 @@ https://mermaid.live/edit#pako:...
 
 **Одна диаграмма — одна ссылка.** Разбивать на mini + full запрещено: дублирование и путаница.
 
+**⛔ pako-URL НЕ проходит через генерацию модели (G-100):** модель не выводит pako-строки в чат — ни целиком, ни частично. Причина: токен-за-токеном транскрипция 1200+ символов base64 не гарантирует точность — один искажённый символ рушит zlib-поток (доказано: index 71, `X`→`W`). Единственный валидный путь: `update-mermaid-links.sh` пишет URL прямо в файл → агент даёт в чат `[filename:line](path#Lline)` ссылку → пользователь Ctrl+Click по URL внутри файла. Это дополняет G-085 cite-gate (origin) осью fidelity.
+
 **Авто-обновление (two-repo):** для methodology-platform — выполни ОБЕ команды:
 - `bash scripts/update-mermaid-links.sh` — methodology repo
 - `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation` — documentation repo
@@ -207,6 +209,7 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 | View | Viewpoint | Когда обновляется | Файл |
 |---|---|---|---|
+| **roadmap-view** | Temporal/Priorities | Что и в каком порядке строить? Status-карта: Now/Next/Considered/Hold | Developer, /product-review, /product-vision | Developer после /product-review, /product-vision, /plan (при добавлении/закрытии узлов) |
 | **data-map** | Process/data flow | при изменении хранилищ/схемы данных | `docs/data-map.md` (если есть runtime-данные) |
 | **ADR catalog** | Decisions (arc42 §9) | при принятии/superseding решения | `docs/adr/` + `README.md` каталог |
 | **threat-model** | Trust-boundary | на `[security]` планах | `docs/threat-model-*.md` (instantiate из template) |
@@ -266,6 +269,8 @@ NodeID["📋 Отложенный scope → /scope-out"]:::affordance
 ### 5. Governance
 
 **PR-coupling:** обновить карту в том же PR что и изменение. Рефакторинг без поведенческих изменений, performance-fix, typo — не обновлять.
+
+**In-progress signal (closes assumption-gap класс «тихое перетирание»):** незакоммиченные изменения в файлах связанных с блоком карты (SYSTEM-MAP, USER-MAP, ROADMAP.md и т.п.) — сигнал что над этим блоком активно работают. Перед правкой карты → `git status` + `git diff --name-only`. Если обнаружены незакоммиченные файлы связанного блока — не перезаписывать, спросить пользователя (merge или сначала закоммить текущие?). Иначе риск потери незавершённой работы параллельной сессии.
 
 **Audit schedule:** SYSTEM-MAP `/architecture-audit` ≥5 планов · USER-MAP `/product-check` ≥5 · ARTIFACT-MAP `/retro` ≥15.
 

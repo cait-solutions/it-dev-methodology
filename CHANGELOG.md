@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.26.0 — feat: Roadmap visualization + G-100 pako-fidelity fix (2026-06-10, closes G-100)
+
+**Что:** ROADMAP.md получил секцию `## Визуальный roadmap` — mermaid-диаграмма с цветовым кодом статусов (Done/Now/High/Med/Low/Hold), двухстрочными «зачем:»-labels, collapse-политикой Done и affordance-узлом `/scope-out`. Шаблон `templates/ROADMAP.template.md` обновлён. Структурный фикс G-100: pako-URL теперь **никогда не проходит через генерацию модели** — `update-mermaid-links.sh` пишет URL прямо в файл, агент линкует строку файла. `/plan` Шаг 99.54 обновлён: Путь A = `update-mermaid-links.sh _tmp_draft-maps.md` + ссылка на файл. CLAUDE.md: roadmap-view строка в Maps Standard supporting views, pako-prohibition правило в Mermaid link rule, in-progress signal (незакоммиченные файлы = сигнал активной работы). `/sync-audit` получил Gap 9. `/product-review` и `/product-vision` получили шаг PR-coupling roadmap.
+
+**Actions:**
+```
+/sync-audit         # подтянуть обновлённые templates/ROADMAP.template.md, /plan, /sync-audit, /product-review, /product-vision
+```
+
+**Consumer impact:** Если ROADMAP.md существует — `/sync-audit` Gap 9 покажет 🟡 Medium (нет секции). Добавить вручную по шаблону (контент project-owned). Шаблон в `templates/ROADMAP.template.md ## Визуальный roadmap`.
+
+**Priority:** 🟢 Low — additive feature. Структурный фикс G-100 — 🟡 Medium (предотвращает класс bitURL).
+
+---
+
 ## v5.25.0 — feat: Sustainment Declaration — жизнеобеспечение механизмов в /plan + /review gate (2026-06-10, closes G-099)
 
 **Что:** `/plan` получил Шаг 97 «Sustainment Declaration» — обязательный per-артефакт анализ для каждого механизма, создаваемого или изменяемого планом: Trigger · Refresh · Detection · Owner. Результат выводится пользователю как отдельная секция «## Жизнеобеспечение». `/review` получил Sustainment gate в Completeness check: новый механизм в diff без декларации → 🔴 блок. Закрывает класс G-099 (≥10 инстансов: hooks/mermaid-links/sync-audit/workspace-list/etc. создавались без lifecycle-дизайна → умирали тихо). Добавлен `last_plan_session.sustainment[]` в `triggers.json` — аддитивное поле, старые consumers читают gracefully.
