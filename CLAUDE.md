@@ -300,6 +300,16 @@ Phase-теги: `[phase-a]` … — milestone history.
 
 **Reason:** Regex-based detection fails когда люди называют одно разными именами. Semantic category stays stable.
 
+**Domain-indicator для `[fix:X]` (D6-enforcement, closes S-1 / push-кластер урок):** surface-тег `[fix:X]` именует **компонент** (`[fix:consumer-push]`, `[fix:deploy-push]`) — этого мало для кластер-детекта. При каждом `[fix:X]` в DEVLOG **добавляй рядом domain-indicator** `[domain:<семантический-домен>]` — общий для всех фиксов одного корня, независимо от того какой компонент чинился:
+- `[fix:consumer-push] [domain:git-push]` · `[fix:deploy-push] [domain:git-push]` · `[fix:command] [domain:git-push]` — три разных компонента, ОДИН домен.
+- Домены гранулярны по корню, не по слою: `git-push` / `git-remote` / `secrets` / `sync` / `mermaid` / `hooks-delivery` — НЕ `methodology` (слишком широко → ложные группировки).
+
+**Зачем:** `/plan` Шаг -1.3 п.3 (N-й фикс) и `/diagnose` grep'ают DEVLOG **по `[domain:X]`**, не только по точному `[fix:X]`. Кластер симптомов одного корня детектится на 3-м фиксе домена даже при разных surface-тегах → /diagnose предлагается рано, не на 9-м симптоме (урок push-кластера v5.19-5.24: первые 3 фикса имели разные теги → grep не сгруппировал → корень P-006 назван поздно). Старые `[fix:X]` без `[domain:X]` → grep fallback на точный тег (graceful).
+
+**Few-shot:**
+✅ `## 2026-06-09 — [fix:consumer-push][domain:git-push] классификация push-failure` → 3-й [domain:git-push] за период → /plan предложит /diagnose.
+❌ `[fix:consumer-push]` без domain → grep по domain пуст → кластер невидим (старое поведение, fallback на точный тег).
+
 ---
 
 ## Security: real threats
