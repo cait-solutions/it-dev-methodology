@@ -17,16 +17,19 @@
 ## Использование
 
 ```
-/pull   — pull всех workspace repos (нет аргументов)
+/pull             — pull всех workspace repos (multi-repo, дефолт)
+/pull --current   — pull ТОЛЬКО текущего репо (быстро, без workspace-парсинга)
 ```
+
+> **Какой режим когда:** `/pull` тянет ВЕСЬ workspace (все repos из `.code-workspace`) — для cross-repo обновления. Нужен pull **только текущего** проекта? → **`/pull --current`** (git pull --ff-only текущего репо, не трогает остальные, не требует `.code-workspace`). Closes G-091: раньше простого pull одного репо не было — приходилось в терминал (против command-first).
 
 ---
 
 ## Что тянется
 
-Все repos из `.code-workspace` **кроме** `it-dev-methodology` (methodology source — тянется отдельно через `sync-methodology.sh`).
+**Дефолт (`/pull`):** все repos из `.code-workspace` **кроме** `it-dev-methodology` (methodology source — тянется отдельно через `sync-methodology.sh`). Включая `*-documentation` repos и любые другие repos добавленные в workspace.
 
-Включая `*-documentation` repos и любые другие repos добавленные в workspace.
+**`/pull --current`:** только текущий репо (тот в чьей сессии запущено). `.code-workspace` не читается, `consumer-pull.sh` не вызывается — прямой `git pull --ff-only` текущей ветки.
 
 ---
 
@@ -50,6 +53,28 @@ grep -A3 '## Consumers' CLAUDE.local.md | grep 'workspace_file:'
 ---
 
 ## Шаг 2 — Pull
+
+### Режим `--current` (один репо)
+
+Если запущено `/pull --current` — pull ТОЛЬКО текущего репо, без workspace-парсинга:
+
+1. **Pre-pull чистота:** `git status --porcelain` — если непусто → СТОП «есть незакоммиченные изменения, закоммить/stash сначала» (не pull вслепую).
+2. Определить ветку: `git symbolic-ref --short HEAD` (detached HEAD → СТОП «репо не на ветке»).
+3. `git pull --ff-only origin <ветка>` — показать входящие коммиты + результат.
+4. **Нет origin** → «git remote 'origin' не настроен» (не падать сырой ошибкой).
+5. **ff-only не прошёл** (история разошлась) → «✗ ff-only failed — git rebase origin/<ветка> или разреши вручную».
+
+```bash
+# текущий режим (без скрипта — это один репо, прямой git):
+git -C . status --porcelain   # должно быть пусто
+git -C . pull --ff-only origin "$(git symbolic-ref --short HEAD)"
+```
+
+→ это всё, дальше Шаг 3 не нужен (один репо). Закончить отчётом «✓ pulled / ✓ up to date / ✗ skip».
+
+### Дефолтный режим (весь workspace)
+
+`/pull` без аргументов:
 
 ```bash
 bash scripts/consumer-pull.sh
