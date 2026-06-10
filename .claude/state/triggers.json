@@ -66,9 +66,10 @@
   },
   "last_sync_audit": {
     "date": "2026-06-10",
-    "methodology_version": "v5.25.0",
-    "gaps_found": 3,
-    "gaps_high_severity": 1
+    "methodology_version": "v5.26.1",
+    "gaps_found": 0,
+    "gaps_high_severity": 0,
+    "gap8_closed": "2026-06-10"
   },
   "session_gap_counter": {
     "session_marker": "2026-06-10T12:30:00+00:00",
@@ -95,7 +96,7 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-10",
-    "task_id": "roadmap-visualization",
+    "task_id": "design-spec-artifact-type",
     "service": "methodology",
     "mode": "Full",
     "code_run": true,
@@ -123,9 +124,9 @@
     "phase": "v5.24.0 /pull --current (PR #169)"
   },
   "last_auto_pull": {
-    "at": "2026-06-10T08:54:58+00:00",
-    "version_before": "v5.23.0",
-    "version_after": "v5.23.0",
+    "at": "2026-06-10T13:14:17+00:00",
+    "version_before": "v5.27.0",
+    "version_after": "v5.27.0",
     "status": "failed"
   },
   "last_retro": {
@@ -140,15 +141,15 @@
         "id": "S-1",
         "type": "gap-structural",
         "summary": "domain-aware /diagnose trigger — 3 фикса одного домена = /diagnose (не точный тег)",
-        "status": "proposed",
+        "status": "implemented",
         "scope": "methodology",
-        "implementation_pr": null
+        "implementation_pr": "v5.27.0"
       },
       {
         "id": "S-2",
         "type": "gap-structural",
-        "summary": "completeness-gap L3 reinforcement — domain-grep checkpoint в /code Шаг 1.7",
-        "status": "proposed",
+        "summary": "completeness-gap L3 reinforcement — domain-grep checkpoint в /code Шаг 1.7 [SUPERSEDED by G-099 Sustainment Declaration v5.25.0 — re-check выявил дубль]",
+        "status": "superseded",
         "scope": "methodology",
         "implementation_pr": null
       },
