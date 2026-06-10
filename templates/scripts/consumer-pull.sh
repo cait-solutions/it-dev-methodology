@@ -76,8 +76,20 @@ echo "Workspace: ${WORKSPACE_FILE}"
 
 # ---------------------------------------------------------------------------
 # Parse workspace repos via Python (avoid bash JSON parsing)
+# Interpreter-резолвер (closes G-097, рецидив G-081): на Windows доступен только
+# `py` (Python Launcher), python3 отсутствует. Пробуем py → python3 → python.
+# Без резолвера скрипт падал на голом `python3` → деградировал в «пуллю вручную».
 # ---------------------------------------------------------------------------
-REPOS_RAW=$(python3 -c "
+PYTHON_BIN=""
+for _cmd in py python3 python; do
+  if command -v "$_cmd" >/dev/null 2>&1; then PYTHON_BIN="$_cmd"; break; fi
+done
+if [[ -z "$PYTHON_BIN" ]]; then
+  echo "❌ Python не найден (пробовал: py, python3, python). Установи Python или добавь в PATH."
+  exit 1
+fi
+
+REPOS_RAW=$("$PYTHON_BIN" -c "
 import json, sys, pathlib
 ws = pathlib.Path(sys.argv[1])
 ws_dir = ws.parent
