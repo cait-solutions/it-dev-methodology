@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.27.0 — feat: domain-aware /diagnose trigger — кластер симптомов одного корня детектится рано (2026-06-10, closes S-1)
+
+**Что:** `/diagnose` триггер «N-й фикс» grep'ал DEVLOG по **точному** `[fix:X]` тегу → кластер симптомов одного корня с разными surface-тегами (`consumer-push`/`deploy-push`/`command`) не группировался → /diagnose не срабатывал, корень назывался поздно (push-кластер v5.19-5.24: 9 симптомов до того как P-006 назван). Фикс: CLAUDE.md D6 теперь требует **`[domain:X]` indicator** рядом с `[fix:X]` (общий для всех фиксов одного корня); `/plan` Шаг -1.3 п.3 + `/diagnose` grep'ают DEVLOG **двумя проходами** — точный тег (fallback) + `[domain:X]`. `[domain:X] ≥ 2` → /diagnose предлагается на 3-м фиксе домена даже при разных surface-тегах. Старые записи без domain → graceful fallback на точный grep.
+
+**Actions:** (поведенческое правило — sync доставляет CLAUDE.md + команды)
+```
+/sync-audit   # подтянуть обновлённую методологию
+# При [fix:X] в DEVLOG добавляй [domain:<git-push|secrets|sync|...>] для кластер-детекта
+```
+
+**Priority:** 🟡 Medium — структурный фикс из /architecture-audit: кластер одного корня детектится на 3-м симптоме, не на 9-м.
+
+---
+
 ## v5.26.0 — feat: Roadmap visualization + G-100 pako-fidelity fix (2026-06-10, closes G-100)
 
 **Что:** ROADMAP.md получил секцию `## Визуальный roadmap` — mermaid-диаграмма с цветовым кодом статусов (Done/Now/High/Med/Low/Hold), двухстрочными «зачем:»-labels, collapse-политикой Done и affordance-узлом `/scope-out`. Шаблон `templates/ROADMAP.template.md` обновлён. Структурный фикс G-100: pako-URL теперь **никогда не проходит через генерацию модели** — `update-mermaid-links.sh` пишет URL прямо в файл, агент линкует строку файла. `/plan` Шаг 99.54 обновлён: Путь A = `update-mermaid-links.sh _tmp_draft-maps.md` + ссылка на файл. CLAUDE.md: roadmap-view строка в Maps Standard supporting views, pako-prohibition правило в Mermaid link rule, in-progress signal (незакоммиченные файлы = сигнал активной работы). `/sync-audit` получил Gap 9. `/product-review` и `/product-vision` получили шаг PR-coupling roadmap.
