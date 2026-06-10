@@ -84,6 +84,28 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 ---
 
+## Design Spec vs ADR
+
+Два типа документации решений. Выбор по одному вопросу:
+
+| Вопрос | Артефакт |
+|---|---|
+| Это архитектурное **решение** (принято навсегда, с отвергнутыми альтернативами)? | **ADR** (`docs/adr/ADR-NNN-*.md`) |
+| Это **спецификация** как именно работает фича/механизм (может уточняться)? | **Design Spec** (`docs/services/<svc>/<FEATURE>_DESIGN.md`) |
+| Нужна аргументация per-requirement + пример на каждый пункт? | **Design Spec** |
+| Одно предложение «мы решили X потому что Y, отвергли Z»? | **ADR** |
+
+**Совместное использование:** ADR принимает решение → Design Spec описывает детали реализации этого решения. Пример: ADR-009 (разделить Substitution/BOM/Succession) + `SUBSTITUTION_DESIGN.md` (как именно работает механизм замен).
+
+**Шаблон:** `templates/DESIGN_SPEC.template.md` (синхронизируется консьюмерам).
+**Skill:** `/design-spec` — интерактивное создание/обновление по VCD-протоколу (Anti-Loss, Draft/Final, аргументация + пример на каждый пункт).
+
+**Место хранения в консьюмер-проекте:**
+- Фича одного сервиса → `docs/services/<service>/<FEATURE>_DESIGN.md`
+- Cross-service / платформенная → `docs/architecture/<FEATURE>_DESIGN.md`
+
+---
+
 ## Workflow rules
 
 **Command-first invariant (первичная персона = AI engineer):** целевой пользователь методологии — **AI engineer**, который оркеструет AI через **команды и skills** (PRODUCT.md «Целевые пользователи»). Скрипты **не скрыты и доступны** — но это **внутренняя реализация**, не пользовательский путь. Правило:
@@ -415,6 +437,8 @@ Phase 1 защищает **agent-mediated утечки** (через transcript,
 - [templates/MARKETING.template.md](templates/MARKETING.template.md) — marketing central context (consumer artifact, --with-marketing)
 - [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
 - [templates/.claude/hooks/post-edit-watchdog.py](templates/.claude/hooks/post-edit-watchdog.py) — PostToolUse hook: после Edit/Write с mermaid-блоком → авто-запуск `update-mermaid-links.sh`. Config в `CLAUDE.local.md ## Post-edit hooks`
+- [templates/DESIGN_SPEC.template.md](templates/DESIGN_SPEC.template.md) — шаблон Design Spec (VCD-протокол: Anti-Loss, Draft/Final, аргументация + пример per-requirement)
+- [skills/design-spec/SKILL.md](skills/design-spec/SKILL.md) — Agent Skill `/design-spec`: интерактивное создание/обновление Design Spec
 - [skills/define-positioning/SKILL.md](skills/define-positioning/SKILL.md) — Agent Skill: positioning framework (12 секций)
 - [scripts/with-secret.sh](scripts/with-secret.sh) — **secrets injection** (primary tool): `bash scripts/with-secret.sh KEY -- <cmd>` — значение не в stdout
 - [scripts/check-secret.sh](scripts/check-secret.sh) — boolean existence check (exit 0/1, без значения)
