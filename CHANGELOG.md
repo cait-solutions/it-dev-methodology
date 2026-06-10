@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.23.0 — fix: consumer-pull.sh interpreter-резолвер — больше не «пуллю вручную» на Windows (2026-06-10, closes G-097)
+
+**Что:** `consumer-pull.sh` (за `/pull`) использовал голый `python3 -c` для парсинга `.code-workspace` → на Windows `python3` отсутствует (только `py`) → скрипт падал, `/pull` деградировал в «пуллю вручную». Рецидив G-081 (Windows python3 hardcode) — класс был решён в 6 скриптах резолвером `for _cmd in py python3 python`, но `consumer-pull.sh` (инлайн python) пропущен. Теперь резолвер выбирает `py` на Windows → workspace парсится → `/pull` работает автоматически.
+
+**Actions:**
+```
+/sync-audit   # подтянуть исправленный consumer-pull.sh
+```
+
+**Priority:** 🟡 Medium — `/pull` на Windows-консьюмерах перестаёт деградировать в ручной режим.
+
+**NB:** overlap `/pull` ↔ `consumer-pull.sh` (зачем тяжёлый multi-repo pull при простом /pull) — отдельный вопрос G-091, не закрыт этим фиксом.
+
+---
+
 ## v5.22.0 — feat: secrets-manifest = single source of truth для git-remote (2026-06-09, closes P-006)
 
 **Что:** методология теперь имеет SSOT для «куда пушить». Git-секрит в `secrets-manifest.yaml` можно пометить `git_remote: true` — его `service_url` становится каноническим адресом push/pull. Push-команды (`/push-merge`, `/deploy`) перед push сверяют `git remote origin` с manifest и при расхождении **предлагают выровнять** remote под manifest (`git remote set-url`, с подтверждением — не молча). Закрывает корень push-инцидентов (G-083/P-005/G-094 — все были симптомами «нет SSOT для remote»): агент теперь определяет target+auth из secrets детерминированно, не из возможно-неверного git remote.
