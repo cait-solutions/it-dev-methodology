@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.25.0 — feat: Sustainment Declaration — жизнеобеспечение механизмов в /plan + /review gate (2026-06-10, closes G-099)
+
+**Что:** `/plan` получил Шаг 97 «Sustainment Declaration» — обязательный per-артефакт анализ для каждого механизма, создаваемого или изменяемого планом: Trigger · Refresh · Detection · Owner. Результат выводится пользователю как отдельная секция «## Жизнеобеспечение». `/review` получил Sustainment gate в Completeness check: новый механизм в diff без декларации → 🔴 блок. Закрывает класс G-099 (≥10 инстансов: hooks/mermaid-links/sync-audit/workspace-list/etc. создавались без lifecycle-дизайна → умирали тихо). Добавлен `last_plan_session.sustainment[]` в `triggers.json` — аддитивное поле, старые consumers читают gracefully.
+
+**Actions:**
+```
+/sync-audit         # подтянуть обновлённые /plan + /review + triggers.json.template
+```
+
+**Consumer impact:** `merge_triggers_json` дозальёт поле `sustainment: []` при следующем sync. Поведение в /review: если поле отсутствует (старый план) → 🔵 info, не блок.
+
+**Priority:** 🟡 Medium — методологическое правило, не breaking. Следующий Full /plan автоматически потребует Шаг 97.
+
+---
+
 ## v5.24.0 — feat: /pull --current — pull только текущего репо (2026-06-10, closes G-091)
 
 **Что:** `/pull` добавлен режим `--current` — pull ТОЛЬКО текущего репо (`git pull --ff-only` текущей ветки, без workspace-парсинга и без `consumer-pull.sh`). Дефолт `/pull` (весь workspace) не меняется. Закрывает G-091: раньше простого pull одного репо не было — `/pull` всегда тянул весь workspace, для одного репо приходилось в терминал `git pull` (против command-first G-095). Pre-pull чистота + detached-HEAD guard + нет-origin guard.

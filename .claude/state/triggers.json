@@ -2,42 +2,66 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 12
+      "plans_since": 14
     },
     "last_retro": {
-      "date": "2026-06-04",
-      "plans_since": 6
+      "date": "2026-06-09",
+      "plans_since": 1
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 26
+      "plans_since": 28
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 20
+      "plans_since": 22
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 7
+      "plans_since": 9
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 22
+      "plans_since": 24
     },
     "last_architecture_audit": {
-      "date": "2026-06-08",
+      "date": "2026-06-09",
       "plans_since": 1,
       "recommendations": [
         {
-          "id": "R-029",
-          "type": "gap-structural",
-          "summary": "S-1 mandatory dogfood-delivery gate в /review (L4) — закрывает review-blindness + command-churn",
-          "status": "implemented",
+          "id": "R-030",
+          "type": "drift",
+          "summary": "S-3 de-count SYSTEM-MAP — убрать хардкод счётчиков из node-labels (drift-prone), счёт в таблице регенерит аудит; опц. validate-system-map-counts.sh",
+          "status": "proposed",
           "scope": "methodology",
-          "implementation_pr": "v5.14.0"
+          "implementation_pr": null
+        },
+        {
+          "id": "R-031",
+          "type": "gap-structural",
+          "summary": "S-1 mermaid-syntax validation — закрывает residual P-A класс (15 gaps): subgraph-edge antipattern (G-085), node-split label-loss (G-029), label-lang (G-005); validate-mermaid-links проверяет freshness не syntax",
+          "status": "proposed",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-032",
+          "type": "gap-structural",
+          "summary": "S-2 execution-context matrix pre-flight для [script]/[infra]/[hook] планов — enumerate {non-TTY, Windows-py, file-absent, parallel}; закрывает P-C/D (5 gaps) на этапе дизайна",
+          "status": "proposed-speculative",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-033",
+          "type": "gap-structural",
+          "summary": "S-4 CI для script idempotency + cross-platform — реальный L4 под S-2; закрывает P-C/D + SYSTEM-MAP drift + R-02 одним ходом; flagged не proposed (квартальный commitment, PM decision)",
+          "status": "flagged",
+          "scope": "methodology",
+          "implementation_pr": null
         }
       ],
-      "previous_cycle_implementation_rate": "7/10 (70%) — R-008/009/013/020/021/022 implemented; R-010 wont-fix; R-004/005/006/007 deferred"
+      "previous_cycle_implementation_rate": "1/1 (100%) — R-029 implemented + функционально верифицирован (validate-delivery.sh exit 0, wired в обоих repos)"
     }
   },
   "last_sync_audit": {
@@ -47,8 +71,10 @@
     "gaps_high_severity": 0
   },
   "session_gap_counter": {
-    "session_marker": null,
-    "counts": {}
+    "session_marker": "2026-06-10T09:14:42+00:00",
+    "counts": {
+      "completeness-gap": 1
+    }
   },
   "per_service": {},
   "queues": {
@@ -67,33 +93,39 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-09T00:00:00Z",
-    "task_id": "fix(sync-audit): заменить PAT pull на прямой git pull (G-091)",
-    "service": "methodology-platform",
+    "completed_at": "2026-06-10",
+    "task_id": "sustainment-declaration",
+    "service": "methodology",
     "mode": "Full",
-    "code_run": true,
+    "code_run": false,
     "commitments": [
       {
-        "text": "grep GITHUB_PAT.*pull в commands/ — class-bug check",
-        "status": "done",
+        "text": "production-config тест триады: тестовый /plan «добавить hook» → секция «Жизнеобеспечение» выводится + sustainment[] пишется + /review gate читает",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "Обновить строку auto_pull: true консистентно — fallback при ошибке",
-        "status": "done",
+        "text": "graceful read sustainment[] в /review gate: отсутствие поля → 🔵 info, не 🔴",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "derivation-правило в Self-Lint: строки таблицы выводятся из «Затрагиваемые файлы», не свободным ответом",
+        "status": "pending",
         "skip_reason": null
       }
-    ]
+    ],
+    "sustainment": []
   },
   "last_deploy": {
-    "date": "2026-06-08",
+    "date": "2026-06-10",
     "status": "ok",
-    "phase": "feat: visual-parity pre-fix protocol — completeness + стек-агностичность (v5.16.0, G-090)"
+    "phase": "v5.24.0 /pull --current (PR #169)"
   },
   "last_auto_pull": {
-    "at": "2026-06-09T10:12:22+00:00",
-    "version_before": "v5.16.0",
-    "version_after": "v5.16.0",
+    "at": "2026-06-10T08:54:58+00:00",
+    "version_before": "v5.23.0",
+    "version_after": "v5.23.0",
     "status": "failed"
   }
 }
