@@ -359,25 +359,34 @@ Output:
 
 **Цель:** проверить что Living Artifact Registry создан — единая точка lifecycle для всех механизмов/артефактов проекта.
 
-1. Проверить наличие `docs/architecture/LIVING-ARTIFACTS.md` (single-repo) или `<doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md` (two-repo):
+1. Определить путь к LAR (прочитать `CLAUDE.local.md ## Auto-update → doc_repo_path`):
+   - single-repo (`doc_repo_path: null`): `docs/architecture/LIVING-ARTIFACTS.md`
+   - two-repo: `<doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md`
+
+2. Проверить наличие файла:
    ```bash
    # single-repo:
    test -f docs/architecture/LIVING-ARTIFACTS.md && echo PRESENT || echo MISSING
-   # two-repo (methodology-platform):
+   # two-repo (пример):
    test -f ../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md && echo PRESENT || echo MISSING
    ```
-2. Если PRESENT — проверить наличие таблицы-реестра (заголовок колонки `Артефакт`):
+
+3. Если PRESENT — запустить `validate-lar.sh` (если скрипт доступен):
    ```bash
-   grep -q "| Артефакт" docs/architecture/LIVING-ARTIFACTS.md && echo HAS_TABLE || echo EMPTY
+   # single-repo:
+   bash scripts/validate-lar.sh
+   # two-repo — проверять против code-repo (где живут scripts/, templates/, commands/):
+   bash scripts/validate-lar.sh --root . --lar ../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md
    ```
-3. Если PRESENT и HAS_TABLE — посчитать строки реестра (приблизительно):
-   ```bash
-   grep -c "^| \`" docs/architecture/LIVING-ARTIFACTS.md   # строки с файловыми путями
-   ```
+   - Если `validate-lar.sh` отсутствует → авто-sync `bash <methodology_path>/scripts/sync-methodology.sh .`, затем повторить
+   - `MISSING_FILE` → 🟡 Medium: пути в LAR не существуют на диске (обновить LAR или создать файлы)
+   - `OK` → проверить количество строк: `grep -c "^| \`" <LAR_PATH>`
+     - 0 строк → 🟡 Medium: LAR пуст
+
 4. Output:
-   - Файл отсутствует → 🟡 **Medium severity** — lifecycle-реестр не создан; создать из `templates/LIVING-ARTIFACTS.template.md` командой `/plan` для v5.30.0 LAR. Без LAR /plan Шаг -1.3 Adjacent Impact неполон.
-   - Файл есть, таблица пуста (0 строк) → 🟡 **Medium severity** — LAR не заполнен; требует populate из /plan Шаг 97 существующих механизмов.
-   - Файл есть, таблица заполнена → 🟢 OK
+   - Файл отсутствует → 🟡 **Medium severity** — lifecycle-реестр не создан; создать из `templates/LIVING-ARTIFACTS.template.md`. Без LAR /plan Шаг -1.3 Adjacent Impact неполон.
+   - Файл есть, `validate-lar.sh` → MISSING_FILE → 🟡 **Medium severity** — LAR содержит несуществующие пути.
+   - Файл есть, таблица заполнена, все пути существуют → 🟢 OK
 
 ---
 
