@@ -97,59 +97,25 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-11",
-    "task_id": "p008-roadmap-done-trigger-reactive-path",
+    "completed_at": "2026-06-11T17:30:00+00:00",
+    "task_id": "blindspots-batch-01-false-green-validators",
     "service": "methodology",
     "mode": "Full",
+    "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-01-false-green-validators.md",
+    "batch": "sustainment-blindspots 01→05 (см. ROADMAP ## Now); после /code каждого плана — last_plan_session перезаписать следующим plan_file",
     "code_run": true,
     "commitments": [
-      {
-        "text": "CLAUDE.md: Done-trigger rule расширен — убран precondition ## Now, добавлен reactive path",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "commands/code.md Шаг 5: добавлен reactive path чекбокс с определением milestone",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "commands/sync-audit.md: добавлен Gap 12 (ROADMAP.Done vs DEVLOG milestone sync) + header «12 проверок» + строка таблицы",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "ROADMAP.md ## Done: backfill v5.34.0, v5.35.0, v5.36.0 + строка v5.37.0",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "LIVING-ARTIFACTS.md: Detection строки ROADMAP.md обновлена — добавлен Gap 12",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "VERSION v5.37.0, CHANGELOG, DEVLOG [milestone], triggers.json",
-        "status": "done",
-        "skip_reason": null
-      }
+      { "text": "validate-lar.sh auto-detect 3-уровневый: root → doc-root → doc_repo_path из CLAUDE.local.md", "status": "pending", "skip_reason": null },
+      { "text": "SKIP всегда с WARN-префиксом и списком путей где искал", "status": "pending", "skip_reason": null },
+      { "text": "LIVING-ARTIFACTS.md битый путь починен (templates/CLAUDE_LOCAL.template.md)", "status": "pending", "skip_reason": null },
+      { "text": "verification в wired-вызове (bash scripts/validate-lar.sh без аргументов из корня), exit-код без пайпа", "status": "pending", "skip_reason": null }
     ],
     "sustainment": [
-      {
-        "artifact": "CLAUDE.md Done-trigger rule",
-        "trigger": "Появляется новый milestone path в workflow без Done-trigger coverage",
-        "refresh": "Обновить критерий + примеры в правиле",
-        "detection": "/retro P-008 recurrence; /sync-audit Gap 12 skip-rate",
-        "owner": "методология"
-      },
-      {
-        "artifact": "commands/sync-audit.md Gap 12",
-        "trigger": "[milestone] тег формат в DEVLOG изменился",
-        "refresh": "Обновить grep-паттерн в п.3 Gap 12",
-        "detection": "/retro skip-rate Gap 12",
-        "owner": "методология"
-      }
-    ]
+      { "artifact": "scripts/validate-lar.sh auto-detect", "trigger": "/sync-audit Gap 10; /review LAR-gate", "refresh": "при изменении схемы CLAUDE.local.md ## Auto-update обновить grep", "detection": "негативный тест; /retro эмпирический прогон валидаторов", "owner": "методология" },
+      { "artifact": "LIVING-ARTIFACTS.md пути", "trigger": "/plan Шаг 97 / /code Шаг 5", "refresh": "PR-coupling", "detection": "validate-lar.sh default-вызов", "owner": "методология" }
+    ],
+    "commitments_done_archive_p008": "p008-roadmap-done-trigger-reactive-path завершён полностью (code_run true, все 6 commitments done) — см. DEVLOG v5.37.0",
+    "note": "p008 sustainment-строки перенесены в LIVING-ARTIFACTS.md (v5.37.0); полный контракт p008 — DEVLOG v5.37.0"
   },
   "last_deploy": {
     "date": "2026-06-10",
@@ -157,14 +123,14 @@
     "phase": "v5.28.0 Design Spec артефакт-тип — шаблон + skill /design-spec + правило ADR vs Design Spec (PR #174)"
   },
   "last_auto_pull": {
-    "at": "2026-06-11T11:25:52+00:00",
-    "version_before": "v5.33.0",
-    "version_after": "v5.33.0",
+    "at": "2026-06-11T13:58:38+00:00",
+    "version_before": "v5.37.0",
+    "version_after": "v5.37.0",
     "status": "failed"
   },
   "last_retro": {
-    "date": "2026-06-10",
-    "plans_since": 3
+    "date": "2026-06-11",
+    "plans_since": 0
   },
   "last_architecture_audit": {
     "date": "2026-06-10",

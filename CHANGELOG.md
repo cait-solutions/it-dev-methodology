@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.38.0 — fix: validate-lar.sh two-repo auto-detect + WARN-SKIP (PLAN-01) (2026-06-11)
+
+**Что:**
+- **`validate-lar.sh` auto-detect 3-уровневый:** (1) `$ROOT/docs/architecture/LIVING-ARTIFACTS.md`; (2) `--doc-root` если задан; (3) `doc_repo_path` из `CLAUDE.local.md` (two-repo без явных аргументов). Ранее SKIP→exit 0 при отсутствии LAR под `--root` — теперь WARN-SKIP с явным списком искавшихся путей.
+- **Фикс sed first-match:** скрипт брал последний бэктик-пэр строки (greedy sed) вместо первого → ложный MISSING_FILE. Теперь корректно берёт первую колонку таблицы.
+- **Битый путь в LAR исправлен:** `CLAUDE_LOCAL.template.md` → `templates/CLAUDE_LOCAL.template.md` в строке sync-audit.md команды.
+- **`/sync-audit` Gap 10 упрощён:** универсальный вызов `bash scripts/validate-lar.sh` (без аргументов) работает для single-repo и two-repo автоматически.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → обновить `scripts/validate-lar.sh`. Вызов без аргументов теперь стандартный.
+
+---
+
 ## v5.37.0 — feat: ROADMAP Done-trigger reactive path + Gap 12 (P-008) (2026-06-11)
 
 **Что:**
