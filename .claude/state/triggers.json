@@ -118,9 +118,9 @@
     "note": "p008 sustainment-строки перенесены в LIVING-ARTIFACTS.md (v5.37.0); полный контракт p008 — DEVLOG v5.37.0"
   },
   "last_deploy": {
-    "date": "2026-06-10",
+    "date": "2026-06-11",
     "status": "ok",
-    "phase": "v5.28.0 Design Spec артефакт-тип — шаблон + skill /design-spec + правило ADR vs Design Spec (PR #174)"
+    "phase": "v5.38.0 validate-lar.sh two-repo auto-detect + WARN-SKIP + sed first-match (PR #186, closes G-112a, PLAN-01)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
