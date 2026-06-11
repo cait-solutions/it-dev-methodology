@@ -374,6 +374,7 @@ Rationale: HIGH severity баг может лежать в RISKS.md месяца
 **1. Перечисли смежные зоны:**
 Что читает компонент который меняешь? Что зависит от него?
 - Для `[methodology]`: ARTIFACT-MAP, SYSTEM-MAP, USER-MAP, PRODUCT.md — всегда в списке; **если добавляется новый файл в `commands/` или `templates/` — попадает ли он к консьюмерам через `sync-methodology.sh`? Если нет — добавить в `templates/` или явно обосновать out-of-scope** (closes G-025)
+  - **LAR lookup** (closes LAR-integration): если задача добавляет/изменяет mechanism — прочитать `docs/architecture/LIVING-ARTIFACTS.md` (или consumer-эквивалент) → колонка «Связанные артефакты» для затрагиваемых строк → добавить эти артефакты в список смежных зон. Если LIVING-ARTIFACTS.md отсутствует → 🟡 info «LAR не создан — adjacent impact неполон».
 - Для любого проекта — **Gitignore ownership check:** если целевой файл физически присутствует в дереве, проверить: `git check-ignore -v <path>`. Hit → файл принадлежит upstream repo (например, `.claude/commands/*.md` в консьюмере = копии из it-dev-methodology). Изменение = отдельный PR в upstream, не в текущем проекте. Если git недоступен → предупредить разработчика и проверить вручную. **Исключение:** build-артефакты (`dist/`, `*.pyc`, `node_modules/`) — не methodology ownership, редактировать нормально. (closes G-007)
 - Для `[code]`: параллельные модули с тем же паттерном, shared state, event consumers
 - Для `[data]`: downstream сервисы, кеши, consumer модели
@@ -863,6 +864,7 @@ Full mode — выполнять всегда. Для каждого плана 
 - Записанная информация (workspace-список репо, список консьюмеров, ...)
 - DEVLOG / CHANGELOG / AGENT-GAPS / PRODUCT-GAPS запись (живёт ли или устаревает?)
 - **Design Spec** (`docs/services/<svc>/<FEATURE>_DESIGN.md` / `docs/architecture/<FEATURE>_DESIGN.md`) — если план меняет фичу покрытую Design Spec → обновление Design Spec обязательно в том же PR (PR-coupling). Detection: `git log -1 --format=%ad <design-spec-file>` vs `git log -1 --format=%ad <code-file>` — если код новее doc → STALE. Не обновлять при: рефакторинг без поведенческих изменений, performance fix, typo.
+- **Living Artifact Registry** (`docs/architecture/LIVING-ARTIFACTS.md`) — если план создаёт любой из классов выше (hook / script / command / map / config / registry / template) → строка для нового артефакта ОБЯЗАНА быть в LIVING-ARTIFACTS.md (либо в этом /code, либо как commitment). Lookup перед выводом плана: прочитать LIVING-ARTIFACTS.md → проверить что затрагиваемые строки присутствуют (колонка «Связанные артефакты»). Файл отсутствует → 🟡 info «LAR не создан — добавить в план создание».
 
 **Таблица Sustainment Declaration (заполни per-артефакт):**
 

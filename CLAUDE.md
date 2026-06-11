@@ -137,7 +137,7 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 - Почему эти gaps OK или требуют дополнительных шагов
 Без этого анализа → план не утверждён, код не merged, деплой не выполнен.
 
-**Sustainment rule (closes G-099 class):** Каждый Full `/plan`, создающий или меняющий механизм/артефакт, **обязан** выполнить Шаг 97 Sustainment Declaration и вывести пользователю отдельную секцию **«## Жизнеобеспечение (Sustainment)»** с per-артефакт таблицей: Trigger · Refresh · Detection · Owner. «❌ НЕТ» в ячейке без шага/commitment в плане → Self-Lint не passed. `/review` gate: новый механизм в diff без `sustainment[]` в triggers.json → 🔴. Детали: [/plan Шаг 97](commands/plan.md).
+**Sustainment rule (closes G-099 class):** Каждый Full `/plan`, создающий или меняющий механизм/артефакт, **обязан** выполнить Шаг 97 Sustainment Declaration и вывести пользователю отдельную секцию **«## Жизнеобеспечение (Sustainment)»** с per-артефакт таблицей: Trigger · Refresh · Detection · Owner. «❌ НЕТ» в ячейке без шага/commitment в плане → Self-Lint не passed. `/review` gate: новый механизм в diff без `sustainment[]` в triggers.json → 🔴. После /code — добавить строку нового механизма в `docs/architecture/LIVING-ARTIFACTS.md` (PR-coupling, closes LAR-integration). Детали: [/plan Шаг 97](commands/plan.md).
 
 **HIGH risks action rule:** Если `RISKS.md` существует — `/plan` pre-flight проверяет open HIGH severity риски без запланированного фикса. Любой HIGH риск старше 14 дней без связанного /plan → агент показывает его до начала анализа. Закрывает паттерн «долгого пути»: баг найден → записан в RISKS.md → лежит в backlog без action неделями. Если `RISKS.md` отсутствует → пропустить тихо.
 
@@ -438,6 +438,8 @@ Phase 1 защищает **agent-mediated утечки** (через transcript,
 - [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
 - [templates/.claude/hooks/post-edit-watchdog.py](templates/.claude/hooks/post-edit-watchdog.py) — PostToolUse hook: после Edit/Write с mermaid-блоком → авто-запуск `update-mermaid-links.sh`. Config в `CLAUDE.local.md ## Post-edit hooks`
 - [templates/DESIGN_SPEC.template.md](templates/DESIGN_SPEC.template.md) — шаблон Design Spec (VCD-протокол: Anti-Loss, Draft/Final, аргументация + пример per-requirement)
+- [templates/LIVING-ARTIFACTS.template.md](templates/LIVING-ARTIFACTS.template.md) — шаблон Living Artifact Registry (lifecycle-реестр: что живёт и требует поддержания; синхронизируется консьюмерам)
+- [../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md](../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md) — dogfood-инстанс LAR для methodology-platform (40+ строк; обновляется в /code Шаг 5 при новом механизме)
 - [skills/design-spec/SKILL.md](skills/design-spec/SKILL.md) — Agent Skill `/design-spec`: интерактивное создание/обновление Design Spec
 - [skills/define-positioning/SKILL.md](skills/define-positioning/SKILL.md) — Agent Skill: positioning framework (12 секций)
 - [scripts/with-secret.sh](scripts/with-secret.sh) — **secrets injection** (primary tool): `bash scripts/with-secret.sh KEY -- <cmd>` — значение не в stdout

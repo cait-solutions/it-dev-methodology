@@ -160,6 +160,10 @@ git log <production_branch>..HEAD --oneline
     - Строка есть → ✅ (декларирован lifecycle).
     - Строки нет И `sustainment` непустой (план знал о механизмах, но этот пропущен) → 🔴 **fix now**: «Новый механизм `<имя>` в diff без Sustainment Declaration — добавить строку в таблицу Шага 97 плана».
     - `sustainment` пуст ИЛИ поле отсутствует (старый план / Lite mode / doc-only) → 🔵 info: «Sustainment не проверен (старый план без поля или Lite mode) — при следующем Full /plan заполнить Шаг 97».
+  - **LAR cross-check:** если в diff есть новый механизм (hook / script / command / map / config / registry / template) — проверить наличие строки для него в `docs/architecture/LIVING-ARTIFACTS.md` (или consumer-эквиваленте):
+    - Строка есть → ✅ lifecycle задокументирован.
+    - Строки нет, LIVING-ARTIFACTS.md существует → 🔴 **fix now**: «Новый механизм `<имя>` в diff без строки в LIVING-ARTIFACTS.md — добавить запись (из Шаг 97 таблицы)».
+    - LIVING-ARTIFACTS.md отсутствует → 🟡 info: «LIVING-ARTIFACTS.md не создан — lifecycle-реестр недоступен; создать из `templates/LIVING-ARTIFACTS.template.md`».
   - **Анти-дубль правило:** если уже есть 🔴 от «Trigger chain integration» на тот же механизм — не дублировать; достаточно первого 🔴.
   - *Disposition для 🔴:* fix now — вернуться к плану, добавить Sustainment Declaration для пропущенного механизма, перезапустить /review.
 - [ ] **Error / empty / absent path:** happy path работает → что при failure внешнего вызова / пустом входе / отсутствующем файле / wrong type? Названа ли реакция на каждую ветку?

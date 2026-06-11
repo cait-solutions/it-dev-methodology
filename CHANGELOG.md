@@ -4,6 +4,30 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.30.0 — feat: Living Artifact Registry (LAR) — единая точка lifecycle для механизмов (2026-06-11)
+
+**Что:** нет единой точки «что живёт и требует поддержания» в проекте — /plan Шаг -1.3 Adjacent Impact не видел связанные артефакты, Sustainment Declaration оставалась только в triggers.json без persistent registry. LAR = lifecycle-реестр (не flow-граф): когда обновлять, как обнаружить устаревание, кто владелец. Интегрирован в /plan, /code, /review, /sync-audit.
+
+**Изменения:**
+- `templates/LIVING-ARTIFACTS.template.md`: новый шаблон LAR (синхронизируется консьюмерам). Колонки: Артефакт · Тип · Trigger обновления · Кто обновляет · Detection · Связанные артефакты
+- `commands/plan.md` Шаг -1.3: LAR lookup — читать «Связанные артефакты» колонку для adjacent impact
+- `commands/plan.md` Шаг 97: LIVING-ARTIFACTS.md добавлен как класс Sustainment — обязательна строка для нового механизма
+- `commands/code.md` Шаг 5: новый пункт «LIVING-ARTIFACTS.md update» (PR-coupling, аналогично Design Spec)
+- `commands/review.md` Sustainment gate: LAR cross-check — новый механизм в diff без строки в LIVING-ARTIFACTS.md → 🔴
+- `commands/sync-audit.md`: Gap 10 (LIVING-ARTIFACTS.md presence) + строка в report-таблице
+
+**Actions:**
+```
+bash scripts/sync-methodology.sh .    # подтянуть новый шаблон и обновлённые команды
+# Создать LAR для своего проекта:
+cp templates/LIVING-ARTIFACTS.template.md docs/architecture/LIVING-ARTIFACTS.md
+# Затем populate из /plan Шаг 97 истории
+```
+
+**Priority:** 🟡 Medium — новый артефакт, не ломает существующие механизмы. Gap 10 в /sync-audit поможет обнаружить consumer-проекты без LAR.
+
+---
+
 ## v5.29.0 — feat: Design Spec верификация + lifecycle — Anti-Hallucination gate + PR-coupling (2026-06-11)
 
 **Что:** Design Spec мог переводиться в `Final` без проверки реализуемости — галлюцинации и нереализуемые требования попадали в спецификацию незамеченными. Плюс: `/plan` и `/code` не требовали обновления Design Spec при изменении фичи → документ устаревал молча.

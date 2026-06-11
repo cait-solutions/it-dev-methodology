@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 16
+      "plans_since": 17
     },
     "last_retro": {
       "date": "2026-06-09",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 30
+      "plans_since": 31
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 24
+      "plans_since": 25
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 11
+      "plans_since": 12
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 26
+      "plans_since": 27
     },
     "last_architecture_audit": {
       "date": "2026-06-09",
-      "plans_since": 3,
+      "plans_since": 4,
       "recommendations": [
         {
           "id": "R-030",
@@ -95,25 +95,35 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-10",
-    "task_id": "design-spec-artifact-type",
+    "completed_at": "2026-06-11",
+    "task_id": "living-artifact-registry",
     "service": "methodology",
     "mode": "Full",
     "code_run": true,
-    "commitments": [],
+    "commitments": [
+      { "text": "Добавить Gap check для LAR в commands/sync-audit.md как Gap N", "status": "pending", "skip_reason": null },
+      { "text": "Обновить SYSTEM-MAP и USER-MAP в /code Шаг 5 (новый capability LAR)", "status": "pending", "skip_reason": null }
+    ],
     "sustainment": [
       {
-        "artifact": "it-dev-methodology-documentation/ROADMAP.md § Визуальный roadmap (mermaid-диаграмма)",
-        "trigger": "после /product-review, /product-vision, /plan при добавлении/закрытии узлов",
-        "refresh": "edit mermaid-block + bash scripts/update-mermaid-links.sh <roadmap-path>",
-        "detection": "validate-mermaid-links.sh → STALE_LINK; post-edit-watchdog.py авто-триггер при Edit",
+        "artifact": "templates/LIVING-ARTIFACTS.template.md",
+        "trigger": "создание/добавление mechanism у consumer",
+        "refresh": "sync-methodology.sh доставка",
+        "detection": "/sync-audit Gap N (new check for LAR presence)",
         "owner": "методология"
       },
       {
-        "artifact": "templates/ROADMAP.template.md § Визуальный roadmap (skeleton + classDefs)",
-        "trigger": "при изменении Maps Standard (новые классы, collapse-политика)",
-        "refresh": "правка template + VERSION bump + sync-methodology.sh",
-        "detection": "/sync-audit Gap 9; pair-parity /review",
+        "artifact": "docs/architecture/LIVING-ARTIFACTS.md",
+        "trigger": "добавление нового mechanism/артефакта в methodology",
+        "refresh": "/code Шаг 5 при каждом новом механизме; /plan Шаг 97 указывает",
+        "detection": "/review Sustainment gate + grep LIVING-ARTIFACTS.md",
+        "owner": "Developer (методология)"
+      },
+      {
+        "artifact": "commands/plan.md (Шаг 97 расширение) · commands/code.md (Шаг 5) · commands/review.md (Sustainment gate)",
+        "trigger": "Full /plan + /code с новым механизмом",
+        "refresh": "sync-methodology.sh",
+        "detection": "/sync-audit version delta",
         "owner": "методология"
       }
     ]
@@ -121,21 +131,21 @@
   "last_deploy": {
     "date": "2026-06-10",
     "status": "ok",
-    "phase": "v5.24.0 /pull --current (PR #169)"
+    "phase": "v5.28.0 Design Spec артефакт-тип — шаблон + skill /design-spec + правило ADR vs Design Spec (PR #174)"
   },
   "last_auto_pull": {
-    "at": "2026-06-10T13:14:17+00:00",
-    "version_before": "v5.27.0",
-    "version_after": "v5.27.0",
+    "at": "2026-06-11T06:00:30+00:00",
+    "version_before": "v5.28.0",
+    "version_after": "v5.28.0",
     "status": "failed"
   },
   "last_retro": {
     "date": "2026-06-10",
-    "plans_since": 1
+    "plans_since": 2
   },
   "last_architecture_audit": {
     "date": "2026-06-10",
-    "plans_since": 1,
+    "plans_since": 2,
     "recommendations": [
       {
         "id": "S-1",
