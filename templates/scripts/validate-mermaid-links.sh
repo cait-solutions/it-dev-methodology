@@ -1,4 +1,5 @@
 #!/bin/bash
+# DUAL-USE: канон scripts/validate-mermaid-links.sh — менять синхронно (G-103 dual-use pattern)
 # validate-mermaid-links.sh — Level 4 validation of mermaid.live link freshness
 # Covers ALL .md files including gitignored (walk-based, not git-based)
 # Bash 3.2+ compatible; requires Python 3.10+ for URL regeneration

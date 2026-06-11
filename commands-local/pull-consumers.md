@@ -267,11 +267,19 @@ done
 
 ## Шаг 4 — Report
 
-Вывести структурированный отчёт пользователю:
+Вывести структурированный отчёт пользователю, включая **drift-колонку** (closes PLAN-05 visibility):
 
 ```
 ## Pull Consumers Report — <ISO date>
 Discovery: workspace file (It dev methodology.code-workspace) — 8 repos, 4 with marker, 4 no-marker
+
+Drift summary (methodology v5.41.0):
+| Репо | ver | synced | Δ minor | Статус |
+|---|---|---|---|---|
+| erp-documentantion | v4.47.5 | 2026-06-01 | +94 | [drift] |
+| it-dev-documentation | v4.45.0 | 2026-06-01 | +96 | [drift] |
+| ... | ... | ... | ... | ... |
+Запустить /push-consumers чтобы доставить обновления.
 
 ### [marker] erp-documentantion (gitlab/ai-dev) — v4.47.5
 ✓ Pulled abc123 → def456 (12 commits since 2026-05-25)
