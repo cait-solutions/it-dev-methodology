@@ -143,6 +143,12 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Frontend DOM verification rule:** Любая задача затрагивающая файлы `.vue` / `.tsx` / `.jsx` / `.svelte` / `.css` / `.html` — верификация реального DOM обязательна до commit. Три допустимых пути: (1) Playwright E2E тест запуск, (2) screenshot через Claude Code + Read tool с явным описанием что видно в DOM, (3) explicit skip с письменной причиной. «Написал код → должно работать» без одного из трёх = шаг не завершён.
 
+**ROADMAP Done-trigger rule (closes G-101):** Каждый `/code`, завершающий milestone или feature-axis из ROADMAP.md `## Now` секции, **обязан** переместить запись в `## Done` в том же PR (/code Шаг 5 ROADMAP PR-coupling). Критерий «завершён»: основная часть реализована и задеплоена, edge cases могут быть отложены. Без этого ROADMAP устаревает молча — `## Now` наполняется задачами которые давно Done. Пропускать при typo/bugfix без самостоятельного milestone.
+
+**Recommendation-first rule (closes G-102):** При любом clarifying question — **сначала дать собственную рекомендацию с обоснованием**, затем спрашивать если нужно. «Не знаю куда» без рекомендации = agent gap. Исключение: вопрос принципиально требует выбора владельца (security-решение, бизнес-приоритет). Применяется в `/plan` Шаг 0 и везде где агент задаёт вопрос пользователю.
+
+**Self-apply rule (methodology-platform only):** `deploy-push.sh` автоматически запускает `sync-methodology.sh .` после каждого merge через guard `[ -d commands ] && [ -f scripts/sync-methodology.sh ]`. Guard-маркер: consumers не имеют `commands/` source-dir → guard false → consumer не затронут. Ручной self-apply нужен только если deploy-push.sh не использовался.
+
 Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
 
 ---

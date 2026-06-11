@@ -679,11 +679,10 @@ fi
 
 # ---------------------------------------------------------------------------
 # Skills — always overwrite (canonical source is methodology skills/).
-# Skipped for self-apply (methodology IS the source).
+# Runs for self-apply too: .claude/skills/ is the delivery path for Claude Code
+# skill auto-activation — even the methodology repo needs it populated.
 # ---------------------------------------------------------------------------
-if [[ "$IS_SELF_APPLY" == "false" ]]; then
-  sync_skills "$TARGET_DIR"
-fi
+sync_skills "$TARGET_DIR"
 
 # ---------------------------------------------------------------------------
 # Scripts — universal infrastructure, always overwrite (consumer only).

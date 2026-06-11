@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.33.0 — feat: self-apply automation + ROADMAP Done-trigger + G-101/G-102/G-103 (2026-06-11)
+
+**Что:**
+1. **Self-apply L4 automation:** `deploy-push.sh` теперь автоматически запускает `sync-methodology.sh .` после каждого merge через guard `[ -d commands ] && [ -f scripts/sync-methodology.sh ]`. Guard различает methodology-platform (true) от consumers (false) — consumers не затронуты. Решает проблему «новые команды/skills не видны после деплоя» системно, без ручного шага.
+2. **Skills fix:** `sync_skills()` теперь выполняется и при self-apply (убран `IS_SELF_APPLY == false` guard). `.claude/skills/` создаётся при каждом `sync-methodology.sh .`.
+3. **ROADMAP Done-trigger (G-101):** `/code` Шаг 5 добавлено правило — при завершении milestone переместить запись из `## Now` в `## Done` в том же PR. CLAUDE.md **ROADMAP Done-trigger rule** документирует правило.
+4. **Recommendation-first rule (G-102):** CLAUDE.md добавлено правило — при clarifying question агент обязан дать рекомендацию до вопроса.
+5. **Shared-artifact check (G-103):** `/plan` Шаг -1.3 для `[methodology]` добавлен explicit check: изменяя `scripts/` или `templates/` под self-нужды → проверить существует ли `templates/scripts/<имя>` (consumer-sync признак) + нужен ли guard.
+6. **sync-audit self-note:** документировано что для `methodology_path: .` sync-audit делает self-аудит (версионный delta всегда 0, форматные gaps проверяются нормально).
+
+**Consumer action:** `bash scripts/sync-methodology.sh .` после деплоя — после этого self-apply встроен навсегда.
+
+**Breaking:** нет (guard = additive; новые правила не меняют существующие команды).
+
+---
+
 ## v5.32.0 — fix: validate-lar.sh --doc-root (two-repo support) + SYSTEM-MAP hybrid labels (2026-06-11)
 
 **Что:** два gap из `/sync-audit`:
