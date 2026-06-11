@@ -4,6 +4,30 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.35.0 — feat: worktree auto для routine multi-session + G-025 consumer-reach checkpoint (2026-06-11)
+
+**Что:**
+- **methodology `CLAUDE.local.md`** — `worktree_isolation: off → auto` (owner routinely runs concurrent sessions; M0 verify passed на Git Bash/Windows 2026-06-11). Каждая сессия в своём worktree+ветке `ai-dev/<task>` — dirty-коллизии невозможны by-construction. Closes G-108.
+- **`/plan` Шаг -1.3 G-025** — расширен с file-scope на feature-scope: обязательная строка «Consumer-охват» для любого `[methodology]` изменения (не только при новом файле). Closes G-109 — агент structurally не забывает консьюмеров.
+- **`CLAUDE.md`** — Parallel-session rule (одна строка).
+- **`ADR-002`** — критерий auto-vs-disciplined-off + re-rejection M2-детектора (зафиксировано чтобы не предлагался 4-й раз).
+- **`USER-MAP`** — consumer guidance «когда включать auto».
+
+**Что делать consumers:**
+```bash
+# Если routinely запускаешь ≥2 сессии одновременно:
+# 1. Проверь что worktree работает:
+git worktree add ../wt-test -b wt-test && git worktree remove ../wt-test && git branch -D wt-test
+# 2. Если OK — поставь в CLAUDE.local.md ## Branching:
+#    worktree_isolation: auto
+# Если worktree не работает (Git Bash < 2.5) — оставь off, commit-discipline защищает.
+bash scripts/sync-methodology.sh .
+```
+
+**Приоритет:** 🟡 Medium — methodology repo flip (own config); consumers opt-in вручную.
+
+---
+
 ## v5.34.0 — fix: /sync-audit авто-синхронизирует consumer с клоном методологии (G-107) (2026-06-11)
 
 **Что:**
