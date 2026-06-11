@@ -36,13 +36,49 @@ Dog-fooding: methodology itself uses team-mode to validate the branching contrac
 
 ---
 
-## Consumer repos — READ ONLY
+## Consumer repos — READ ONLY (с исключениями для documentation-репо)
 
-❌ **НИКОГДА не коммитить, не пушить, не изменять файлы** в consumer репо:
-- `erp-documentantion/` (и любые sibling repos не являющиеся `it-dev-methodology` или `it-dev-methodology-documentation`)
-- Consumer repos используются ТОЛЬКО для чтения (анализ паттернов, диагностика)
-- Все изменения только в `it-dev-methodology/` и `it-dev-methodology-documentation/`
-- Перед `git add` / `git commit` — проверить что cwd находится в одном из двух разрешённых репо
+**Общее правило:** агент **не делает `git commit` или `git push` в consumer репо** кроме явно разрешённых случаев ниже.
+
+**Чтение (анализ, диагностика):** разрешено всегда — consumer repos можно читать свободно.
+
+**Запись файлов** (без commit/push): разрешена синком — `sync-methodology.sh` пишет `.claude/`, скрипты, артефакты.
+
+**Git commit + push в consumer repo** — разрешён **только** при выполнении ВСЕХ условий:
+1. Репо находится в `auto_commit_consumers` whitelist (ниже).
+2. Коммитятся **только файлы из манифеста** `sync-methodology.sh --print-changed` (explicit pathspec, не дерево) — закрывает класс a17ecc1 (pathspec-overcapture).
+3. Dirty-check по манифест-путям прошёл (грязный = пропустить, не коммитить).
+4. Выполняется через `/push-consumers --commit-push` — не голым `git commit`.
+
+❌ **Запрещено всегда:** прямой `git commit` / `git push` агентом без флага `--commit-push`; коммит файлов вне манифеста sync; любые операции в код-репо консьюмеров.
+
+**Исключение — `/sync-audit` Gap 14 write-only (v5.46.0):** создаёт файлы через `new-project-init.sh` после явного per-repo подтверждения (init / skip / never). Git commit остаётся за пользователем.
+
+### auto_commit_consumers whitelist
+
+Белый список documentation-репо консьюмеров куда `/push-consumers --commit-push` разрешён делать git commit + push. Репо **вне списка** — только sync (commit невозможен by-construction).
+
+```yaml
+auto_commit_consumers:
+  - path: ../erp-documentantion
+    branch: main
+  - path: ../it-dev-methodology-documentation
+    branch: main
+  - path: ../ai-assistant-documentation
+    branch: main
+  - path: ../client-matz-documentation
+    branch: main
+  - path: ../ebay-template-documentation
+    branch: main
+  - path: ../lead-gen-documentation
+    branch: main
+  - path: ../shopware-frontend-documentation
+    branch: main
+  - path: ../social-promo-documentation
+    branch: main
+```
+
+> Добавить репо: добавить строку `- path: <relative-path>\n  branch: <branch>`. Путь относительно этого (`it-dev-methodology`) репо. Только documentation-репо — не код-репо консьюмеров.
 
 ---
 
@@ -54,6 +90,8 @@ Auto-discovery параметры для `/pull-consumers` (см. [commands-loca
 consumers_root: ..              # path relative to methodology repo
 marker_file: .claude/.version   # marker that a sibling folder is methodology consumer
 workspace_file: ../It dev methodology.code-workspace  # VSCode workspace file — primary discovery source
+# exclude_paths: []             # абсолютные пути — /sync-audit Gap 14 пишет сюда при "never" решении
+                                # /pull-consumers и /sync-audit Gap 14 молча пропускают эти репо
 ```
 
 `/pull-consumers` использует **два режима discovery** (приоритет: workspace > sibling):

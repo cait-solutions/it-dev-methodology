@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 21
+      "plans_since": 23
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 35
+      "plans_since": 37
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 29
+      "plans_since": 31
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 16
+      "plans_since": 18
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 31
+      "plans_since": 33
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 3,
+      "plans_since": 5,
       "recommendations": [
         {
           "id": "R-030",
@@ -121,62 +121,80 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-11T17:30:00+00:00",
-    "task_id": "blindspots-batch-05-consumer-delivery-drift",
+    "completed_at": "2026-06-11T23:30:00+00:00",
+    "task_id": "maps-coverage-batch-PLAN-A",
     "service": "methodology",
     "mode": "Full",
-    "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-05-consumer-delivery-drift.md",
-    "batch": "sustainment-blindspots DONE (PLAN-01..05 all deployed v5.38-5.42)",
-    "code_run": true,
+    "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-maps-A-coverage-gate.md",
+    "batch": "maps-coverage A..G (B precondition-gated; C independent; D,E,G after A). Amendments: ROADMAP-ось + links-gate в A; PLAN-G LAR-driven runner (P-009). VERSION: v5.46.0 занята — бампить от текущей. Files: docs/plans/2026-06-11-maps-*.md",
+    "code_run": false,
     "commitments": [
       {
-        "text": "/push-consumers: discovery переиспользован, write-only (0 git commits в консьюмерах)",
-        "status": "done",
+        "text": "PLAN-A Шаг 1: backfill USER-MAP(+2cmd+2skills)/ARTIFACT-MAP(+6)/SYSTEM-MAP(полный реестр+R-030 de-count+S-3) — коммит doc-repo ПЕРВЫМ",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "dirty-консьюмер скипается с причиной",
-        "status": "done",
+        "text": "PLAN-A Шаг 2: validate-maps-coverage.sh + dual-copy (gate/report, ERROR при отсутствии карт в gate, worktree git-common-dir, POSIX-границы, CRLF; scripts=WARN) + ROADMAP-ось Now/Done + --print-doc-root",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "validate-lar.sh в templates/scripts/ (после PLAN-01)",
-        "status": "done",
+        "text": "PLAN-A Шаг 3: gate в deploy-push.sh (двойной guard) + dual-copy синхронно + links-gate оба repo (артефакт-агностично: Design Specs и будущие)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "первый реальный прогон: 6/6 консьюмеров v→v5.41.0",
-        "status": "done",
+        "text": "PLAN-A Шаг 4: sync-audit Gap 14 (report-only) + plan.md Подшаг -0.2 skipped-commitments",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "USER-MAP/LAR/model-tiers обновлены",
-        "status": "skipped",
-        "skip_reason": "USER-MAP большой refactor нужен, scope PLAN-05 не включал полный MAP; LAR и model-tiers обновлены"
+        "text": "PLAN-A Шаг 5: LAR-строка + VERSION next-minor (v5.46.0 занята) + CHANGELOG + DEVLOG + ROADMAP Done + deploy через gate",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "PLAN-A Шаг 6: /push-consumers (write-only) + read-only --report отчёт по 6 консьюмерам",
+        "status": "pending",
+        "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "commands-local/push-consumers.md",
-        "trigger": "владелец после релизов; рекомендация /deploy финала",
-        "refresh": "правка commands-local (не sync)",
-        "detection": "drift-таблица сама и есть detection",
-        "owner": "пользователь (владелец)"
+        "artifact": "scripts/validate-maps-coverage.sh (+dual-copy)",
+        "trigger": "каждый deploy (gate); /sync-audit Gap 14 (report)",
+        "refresh": "канон scripts/, dual-copy синхронно (G-103)",
+        "detection": "сам детектор; diff dual-copy parity",
+        "owner": "методология"
       },
       {
-        "artifact": "templates/scripts/validate-lar.sh dual-copy",
-        "trigger": "sync",
-        "refresh": "канон scripts/ — менять синхронно (G-103)",
-        "detection": "diff scripts/validate-lar.sh templates/scripts/validate-lar.sh",
+        "artifact": "deploy-push.sh gate-ветка (dual-copy)",
+        "trigger": "каждый deploy",
+        "refresh": "dual-copy синхронно",
+        "detection": "validate-delivery.sh parity + живой deploy",
+        "owner": "методология"
+      },
+      {
+        "artifact": "sync-audit Gap 14 + plan Подшаг -0.2",
+        "trigger": "каждый /sync-audit и /plan",
+        "refresh": "правка commands/ + sync",
+        "detection": "/retro Шаг 4.5 HIT/SILENT",
+        "owner": "методология"
+      },
+      {
+        "artifact": "строки карт (backfill)",
+        "trigger": "новая команда/skill",
+        "refresh": "/code Шаг 5 + gate принуждает",
+        "detection": "validate-maps-coverage.sh",
         "owner": "методология"
       }
-    ],
-    "last_deploy_note": "v5.40.0 PR #190 done"
+    ]
   },
   "last_deploy": {
     "date": "2026-06-11",
     "status": "ok",
-    "phase": "v5.42.0 /push-consumers + drift visibility + validate-lar.sh consumers (PR #193, PLAN-05)"
+    "phase": "v5.45.0 /init-consumer + exclude_paths + branch-protection (PR #195,196,197 PLAN-06+07)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
