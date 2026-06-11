@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.40.0 — fix: auto-pull failure surfacing — error capture + re-notify + /plan floor (PLAN-03) (2026-06-11)
+
+**Что:**
+- **`auto-update-watchdog.template.py` error capture:** при `returncode != 0` сохраняет error excerpt (первые 300 символов stderr/stdout, `errors=replace`) в `last_auto_pull.error` в triggers.json. Additive field — graceful read через `.get()`.
+- **Re-notify при каждом SessionStart:** если `last_auto_pull.status == "failed"` — печатает `⚠️ Прошлый auto-pull FAILED: <error excerpt>. Запусти /sync-audit` до момента пока status не сменится на success. Не один раз — постоянно.
+- **`/plan` Шаг -3 Подшаг -0.3:** floor check `last_auto_pull.status == "failed"` → 🔵 предупреждение с error excerpt. Fate-independent layer (работает даже если hook мёртв).
+- **Диагностика инцидента (2026-06-11T13:58:38):** ручной `sync-methodology.sh .` exit=0. Root cause: вероятно параллельная сессия держала `.auto-update.lock` или dirty-git-status во время SessionStart.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → обновить хук.
+
+---
+
 ## v5.39.0 — fix: triggers.json state hygiene — дедуп ключей + validate-triggers.sh (PLAN-02) (2026-06-11)
 
 **Что:**
