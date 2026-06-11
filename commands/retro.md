@@ -31,7 +31,8 @@
 ## Шаг 1 — Загрузка данных
 
 1. Прочитать `.claude/state/triggers.json`
-2. Прочитать DEVLOG.md (записи с `last_retro.date` или последние 30 дней)
+   - Запустить `bash scripts/validate-triggers.sh` (если доступен) — нарушения (дубль-ключи global.X vs X) → показать до анализа
+2. Прочитать DEVLOG.md (записи с `global.last_retro.date` или последние 30 дней)
 3. Прочитать OPEN-QUESTIONS.md (если есть)
 4. Прочитать HYPOTHESES.md (если есть)
 5. Зафиксировать метрики:
@@ -364,8 +365,8 @@ High-value steps: {список}
 ## После завершения
 
 1. Запись в DEVLOG: `[retro] {date}: {N} планов, skip rates X/Y/Z, {K} stale OQ, signals to /architecture-audit: {N}`
-2. Сбросить в triggers.json:
-   - `last_retro = { "date": today, "plans_since": 0 }`
+2. Сбросить в triggers.json (canonical path — closes дубль-ключи G-112b):
+   - `global.last_retro = { "date": today, "plans_since": 0 }` (НЕ top-level last_retro)
    - `skipped_warnings = { all zeros }`
 3. Если в Шаге 2 обнаружены системные паттерны рисков → предложить обновление RISKS.md. Показать текст, не применять без подтверждения.
 4. Если найдены 🔬 структурные сигналы → в финальном сообщении явно: «Следующий шаг: `/architecture-audit` для Level 4+ анализа найденных паттернов.»
