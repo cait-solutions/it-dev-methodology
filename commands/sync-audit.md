@@ -299,7 +299,7 @@ bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
 
 ---
 
-## Шаг 1 — Inventory gaps (14 проверок)
+## Шаг 1 — Inventory gaps (15 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
 
@@ -634,6 +634,30 @@ Output:
 
 ---
 
+### Gap 15: Maps coverage (v5.47.0)
+
+**Цель:** проверить что каждая команда, skill и скрипт упомянуты в living maps (USER-MAP, ARTIFACT-MAP, SYSTEM-MAP). L4-gate в methodology-platform, report для консьюмеров.
+
+**Scope:** применимо к любому проекту с `docs/product/USER-MAP.md` или `docs/architecture/SYSTEM-MAP.md`. Если карты отсутствуют → 🟢 N/A (consumer без карт — легитимно).
+
+**Graceful skip:** если `scripts/validate-maps-coverage.sh` отсутствует → `⚠️ Gap 15: скрипт не найден — обновите методологию до v5.47.0+`. Не exit 1.
+
+1. Если `[ -f scripts/validate-maps-coverage.sh ]`:
+   - Запустить: `bash scripts/validate-maps-coverage.sh --report`
+   - Вывести результат пользователю (mapped/unmapped counts per axis)
+   - **Для консьюмеров:** показывать только counts, **без MISSING-вердиктов** по synced командам — consumer карты описывают их продукт, а не methodology commands (SYSTEM-MAP §11)
+   - **Для methodology-platform:** вывести полный отчёт включая ROADMAP-ось
+2. Если скрипт отсутствует → `⚠️ Gap 15 [Medium]: validate-maps-coverage.sh не найден — sync методологию до v5.47.0+`.
+
+**Диагностика:**
+- 🟢 0 errors, 0 warnings — все карты покрыты
+- 🟡 Warnings (только WARN — скрипты или ROADMAP) — не блокируют deploy, информационно
+- 🔴 Errors — команды/skills без строк в картах → deploy будет заблокирован
+
+> **Sustainment:** `validate-maps-coverage.sh` вызывается в deploy-push.sh gate (methodology-platform) и здесь (report). Dual-copy: `scripts/` + `templates/scripts/` (G-103). При добавлении новой команды → deploy сам выявит пропуск.
+
+---
+
 ## Шаг 2 — Severity assessment
 
 Распредели gaps по severity (используя классификацию выше):
@@ -665,6 +689,7 @@ Output:
 | 12 | ROADMAP.Done vs DEVLOG milestone sync | 🟡/🟢 | [N milestone'ов без Done-записи] | backfill через `/code` Шаг 5 reactive path |
 | 13 | Branch protection on main | 🔴/🟡/🟢 | [статус из Gap 13] | `bash scripts/setup-branch-protection.sh` |
 | 14 | [no-marker] consumer initialization | 🟡/🟢 | [N repos без методологии] | init / skip / never (в Gap 14 inline) |
+| 15 | Maps coverage | 🔴/🟡/🟢 | [errors/warnings из Gap 15] | добавить строки в карты (USER-MAP/ARTIFACT-MAP/SYSTEM-MAP) |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная

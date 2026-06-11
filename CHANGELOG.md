@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.47.0 — feat: maps-coverage gate + validate-maps-coverage.sh + sync-audit Gap 15 (2026-06-11)
+
+**Что:**
+- **`scripts/validate-maps-coverage.sh`** (NEW) — проверяет что каждая команда/skill/скрипт присутствует в картах (USER-MAP, ARTIFACT-MAP, SYSTEM-MAP). Режимы: `gate` (exit 1 — deploy блокируется) / `--report` (exit 0, WARN-only — для консьюмеров). Config-матрица в верху файла. POSIX Bash 3.2, CRLF-safe.
+- **`scripts/deploy-push.sh`** — gate перед push: maps-coverage + mermaid links (code + doc repo) для methodology-platform. Closes класс "deploy прошёл, карты устарели" (L4).
+- **`commands/sync-audit.md`** — Gap 15: Maps coverage audit (`--report` режим). 15 проверок.
+- **`commands/plan.md`** — Подшаг -0.2: Skipped-commitments backlog. Показывает `skipped`/`deferred` пользователю перед планированием.
+- **Backfill карт:** USER-MAP (+`/push-only`, `/init-consumer`, skills `secrets-management`/`design-spec`/`testing-strategy`); ARTIFACT-MAP (+`/pull`, `/push-merge`, `/push-only`, `/test`, `/push-consumers`, `/init-consumer`, `CODE-GAPS.md`); SYSTEM-MAP (полный реестр 20 команд, reorganized scripts, `git-credential-from-env.sh`, R-030 de-count).
+
+**Что делать consumers:**
+- После sync: `bash scripts/validate-maps-coverage.sh --report` — увидеть gaps в своих картах (не блокирует).
+- Gap 15 в `/sync-audit` — аудит карт без блока.
+- `deploy-push.sh` gate активен только в methodology-platform (guard `[ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]`); у consumers не срабатывает.
+- `commands/plan.md` Подшаг -0.2 доедет при следующем sync.
+
+---
+
 ## v5.46.0 — refactor: /sync-audit Gap 14 replaces /init-consumer (2026-06-11)
 
 **Что:**
