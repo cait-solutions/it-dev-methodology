@@ -57,7 +57,7 @@
 ```
 ✅ it-dev-methodology актуальна (upstream HEAD = локальный, проверено через ls-remote).
 ```
-→ продолжить к Шагу 0
+→ **выполнить Consumer-vs-clone sync check (ниже)**, затем продолжить к Шагу 0
 
 **Если `remote_head != local_head` (upstream впереди) — АВТО-PULL ПО УМОЛЧАНИЮ (closes G-094):**
 
@@ -123,7 +123,9 @@ bash scripts/sync-methodology.sh .
      поведение СТАРОЙ версии (напр. старые правила auto_pull, старые шаги), не обновлённой.
      Файлы на диске уже новые — но активная сессия их перечитает только после рестарта.
   ```
-- ❌ Failed → показать ошибку + `⚠️ Pull прошёл но sync-apply упал — запусти вручную: bash scripts/sync-methodology.sh .`
+- ❌ Failed → показать ошибку + `⚠️ Pull прошёл но sync-apply упал — запусти вручную: bash <methodology_path>/scripts/sync-methodology.sh <consumer_root>`
+
+→ **выполнить Consumer-vs-clone sync check (ниже)**
 
 Затем перечитать `CHANGELOG.md` с диска (обновлённый файл) перед Шагом 1b.
 
@@ -140,6 +142,80 @@ bash scripts/sync-methodology.sh .
 > **Семантика `auto_pull` (инвертирована в v5.20.0, closes G-094):** поле **отсутствует / `true`** → авто-pull дефолтом (без вопроса). **`false`** → вернуть вопрос y/n (opt-out для осторожных). Раньше было наоборот (default спрашивал, true=авто) — половинчатая автоматизация: G-092 авто-applied sync ПОСЛЕ pull, но сам pull оставался за вопросом.
 
 > **⛔ Verdict propagation в Шаг 1b (closes G-088):** результат Шага -0.5 — один из трёх: `up-to-date` (HEAD совпал) / `stale` (upstream впереди, обновление пропущено/не сделано) / `unverified` (ls-remote failed). Шаг 1b и финальный Итог обязаны отразить ИМЕННО этот verdict. `stale` → «устарел на N версий, обновись». `unverified` → «актуальность НЕ подтверждена». **Только `up-to-date` даёт право написать «актуальна».** Сравнение локального VERSION с `.claude/.version` (оба могут быть stale синхронно) НЕ является подтверждением актуальности относительно upstream.
+
+---
+
+### Consumer-vs-clone sync check (closes G-107 — авто-синхронизация consumer с клоном)
+
+**Цель:** убедиться что consumer (этот проект) синхронизирован с локальным клоном методологии. Выполняется **после** каждого remote-check результата (up-to-date, pull success, или ls-remote failed). Закрывает класс «clone обновлён, но consumer не синхронизирован — /sync-audit говорит "актуально"» (G-107).
+
+> **⛔ Self-dogfood guard:** если `methodology_path: .` (methodology-platform = IS клон) → **пропустить этот подшаг** (consumer и клон — один репо, sync-methodology.sh уже вызван в auto-apply выше). Только для consumer-репо где `methodology_path` указывает на внешний клон.
+
+**Определить consumer_root:** корень текущего репо (где запущен `/sync-audit`).
+```bash
+consumer_root=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+```
+
+**Прочитать версии:**
+```bash
+# Версия consumer (этот проект):
+consumer_version=$(grep "^methodology:" "${consumer_root}/.claude/.version" 2>/dev/null | sed 's/methodology: //' | tr -d '[:space:]')
+
+# Версия клона методологии (уже обновлённого в этом шаге):
+clone_version=$(cat "<methodology_path>/VERSION" 2>/dev/null | tr -d '[:space:]')
+```
+
+**По результату:**
+
+**Если `.claude/.version` отсутствует** → ⚠️ bootstrap не выполнен, пропустить этот подшаг (Шаг 0 п.3 поймает).
+
+**Если `consumer_version == clone_version`:**
+```
+✅ Consumer актуален (соответствует клону методологии <clone_version>).
+```
+→ продолжить.
+
+**Если `consumer_version != clone_version` → АВТО-APPLY (self-heal, без вопроса, closes G-107):**
+```
+🔄 Consumer устарел относительно клона методологии:
+   consumer: <consumer_version> → клон: <clone_version>
+   Применяю sync-methodology.sh...
+```
+
+Выполнить:
+```bash
+bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
+```
+
+- ✅ **Успех** → сообщить:
+  ```
+  ✅ Consumer синхронизирован: <consumer_version> → <clone_version>
+     Новые команды, хуки и skills применены.
+
+  ⚠️ ПЕРЕЗАПУСТИ СЕССИЮ Claude Code — иначе НЕ вступит в силу:
+     Команды (/sync-audit, /plan, /code, …) загружаются в контекст ОДИН РАЗ при старте сессии.
+     ТЕКУЩАЯ сессия держит СТАРЫЕ версии команд. Всё что ты увидишь до рестарта —
+     поведение СТАРОЙ версии, не обновлённой.
+     Файлы на диске уже новые — но активная сессия их перечитает только после рестарта.
+  ```
+  Установить флаг `consumer_auto_synced = true` (используется в Шаге 1b для verdict).
+
+- ❌ **Ошибка** → показать:
+  ```
+  ❌ Авто-sync упал. Запусти вручную:
+     bash <methodology_path>/scripts/sync-methodology.sh <consumer_root>
+  ```
+  → продолжить (не блокировать), пометить `consumer_auto_synced = false`.
+
+**Если `clone_version` не прочитан** (клон недоступен / скрипт не найден):
+```
+⚠️ Не удалось прочитать VERSION из клона методологии (<methodology_path>/VERSION).
+   Убедись что клон скачан: git clone https://github.com/cait-solutions/it-dev-methodology.git <methodology_path>
+   Или укажи правильный путь в CLAUDE.local.md ## Auto-update → methodology_path
+```
+→ продолжить.
+
+> **Реальный инцидент (G-107, client-matz 2026-06-11):** clone v4.60.0, upstream v5.33.0, `/sync-audit` сказал «актуальна». После ручного pull клона до v5.33.0 — consumer остался на v4.60.0 (73 версии позади, 20+ команд и все skills отсутствовали). Этот подшаг детектирует и устраняет такое рассогласование автоматически.
 
 ---
 
@@ -191,7 +267,8 @@ bash scripts/sync-methodology.sh .
 ```
 
 **Если consumer_version = current_version:**
-- **И verdict Шага -0.5 = `up-to-date`** → "✅ Версия актуальна (подтверждено живым ls-remote)".
+- **И verdict Шага -0.5 = `up-to-date` И `consumer_auto_synced = false`** → "✅ Версия актуальна (подтверждено живым ls-remote, consumer синхронизирован)".
+- **И `consumer_auto_synced = true`** → "✅ Consumer синхронизирован автоматически в этом запуске: было `<old_consumer_version>`, стало `<current_version>`. Delta analysis: изменения уже применены, дополнительных действий не требуется."
 - **И verdict = `stale`** → ⛔ НЕ «актуальна»: "📦 Локальный клон совпадает с consumer (оба `<version>`), НО upstream впереди (`<remote_head>`). Клон устарел — `git -C <methodology_path> pull origin main`, затем повтори /sync-audit для актуального delta." *(closes G-088: consumer_version = current_version значит только что consumer синхронен СО СВОИМ клоном — НЕ что клон актуален относительно upstream.)*
 - **И verdict = `unverified`** → "🟡 Локально consumer = клон (`<version>`), но upstream НЕ проверен (ls-remote failed). Актуальность относительно GitHub не подтверждена."
 

@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.34.0 — fix: /sync-audit авто-синхронизирует consumer с клоном методологии (G-107) (2026-06-11)
+
+**Что:**
+**Consumer-vs-clone auto-sync в /sync-audit Шаг -0.5 (closes G-107):** `/sync-audit` теперь автоматически обнаруживает и устраняет расхождение между consumer `.claude/.version` и клоном методологии. Выполняется после каждого remote-check (клон актуален или только что обновлён) — читает версии обоих, при delta запускает `sync-methodology.sh <consumer_root>` без вопроса. Один `/sync-audit` = полный цикл: remote check + pull клона + apply consumer.
+
+**Реальный инцидент (G-107):** consumer client-matz на v4.60.0 (+73 версии позади), `/sync-audit` показывал «актуально» потому что сравнивал consumer с клоном (оба v4.60.0), не замечая что клон сам устарел. После pull клона — consumer не синхронизировался автоматически. 20+ команд и все 14 skills отсутствовали.
+
+**Consumer action:** `bash scripts/sync-methodology.sh .` — после этого новый подшаг активен в каждом `/sync-audit`.
+
+**Breaking:** нет (аддитивный подшаг; self-dogfood guard исключает methodology-platform).
+
+---
+
 ## v5.33.0 — feat: self-apply automation + ROADMAP Done-trigger + G-101/G-102/G-103 (2026-06-11)
 
 **Что:**
