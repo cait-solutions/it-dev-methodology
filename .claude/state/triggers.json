@@ -151,7 +151,7 @@
       },
       {
         "text": "self-apply: sync-methodology.sh . после деплоя",
-        "status": "pending",
+        "status": "done",
         "skip_reason": null
       }
     ],
@@ -170,12 +170,13 @@
         "detection": "/retro Шаг 4.5 HIT/SILENT",
         "owner": "методология"
       }
-    ]
+    ],
+    "last_deploy_note": "v5.40.0 PR #190 done"
   },
   "last_deploy": {
     "date": "2026-06-11",
     "status": "ok",
-    "phase": "v5.39.0 triggers.json state hygiene + validate-triggers.sh (PR #188, closes G-112b-state, PLAN-02)"
+    "phase": "v5.40.0 auto-pull failure surfacing + re-notify + /plan floor (PR #190, PLAN-03)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
