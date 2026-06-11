@@ -4,6 +4,32 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.32.0 — fix: validate-lar.sh --doc-root (two-repo support) + SYSTEM-MAP hybrid labels (2026-06-11)
+
+**Что:** два gap из `/sync-audit`:
+1. `validate-lar.sh` выдавал 8 false MISSING_FILE ошибок для two-repo setups: пути из doc-repo (ROADMAP.md, DEVLOG.md, VISION.md и др.) не находились потому что скрипт умел только один `--root`. Добавлен `--doc-root`: пути не найденные в `--root` дорезолвятся в `--doc-root`. Backwards-compatible: без `--doc-root` поведение идентично предыдущей версии (single-repo consumers не затронуты).
+2. `SYSTEM-MAP.md` содержал EN-only edge labels (`reads`, `writes`) — нарушение hybrid language rule (CLAUDE.md Maps Standard). Заменены на RU (`читает`, `пишет`); версия v2.1 → v2.2; URL mermaid.live обновлён.
+
+**Изменения:**
+- `scripts/validate-lar.sh`: добавлен `--doc-root <dir>` (опциональный второй корень); graceful check `test -d` перед `cd`; WARNING (не error) при недоступном `--doc-root`
+- `commands/sync-audit.md` Gap 10: обновлён вызов — при two-repo передаёт `--doc-root <doc_repo_path>`
+- `docs/architecture/LIVING-ARTIFACTS.md` (doc-repo): исправлен путь `auto-update-watchdog.py` → `auto-update-watchdog.template.py`; удалена строка `.code-workspace` (файл вне обоих repos); обновлён Detection для `validate-lar.sh`
+- `docs/architecture/SYSTEM-MAP.md` (doc-repo): EN-only edge labels → RU; версия v2.2; mermaid.live URL обновлён
+
+**Actions:**
+```
+bash scripts/sync-methodology.sh .    # подтянуть обновлённый скрипт + команду
+# two-repo вызов из /sync-audit Gap 10:
+bash scripts/validate-lar.sh \
+  --root . \
+  --lar ../project-documentation/docs/architecture/LIVING-ARTIFACTS.md \
+  --doc-root ../project-documentation
+```
+
+**Priority:** 🟡 Medium — fix false positives в /sync-audit Gap 10; hybrid label compliance.
+
+---
+
 ## v5.31.0 — feat: validate-lar.sh — детектор файлов Living Artifact Registry (2026-06-11)
 
 **Что:** Living Artifact Registry создан (v5.30.0), но нет инструментального способа проверить что файлы перечисленные в нём реально существуют на диске. Добавлен `scripts/validate-lar.sh` — exit 0 если все пути существуют, exit 1 с `MISSING_FILE:` строками если нет. Wired в `/sync-audit` Gap 10.
