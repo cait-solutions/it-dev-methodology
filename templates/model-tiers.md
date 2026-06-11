@@ -46,6 +46,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/pull` | **Fast** | (никогда — это git fetch + ff-only pull) | Consumer-only команда. Pull всех workspace repos (кроме it-dev-methodology) ff-only. Показывает preview входящих коммитов. Skip если history diverged |
 | `/scope-out` | **Fast** | Пользователь просит интерпретировать backlog (приоритизация / кластеризация по темам) → Default | Запуск `scope-view.sh` + показ URL — no reasoning. Эфемерная Mermaid-визуализация отложенного scope (PRODUCT-GAPS/AGENT-GAPS/ROADMAP/recommendations). Не пишет файлы |
 | `/push-consumers` | **Default** | (никогда — drift-таблица + batch sync. Fast если ≤2 консьюмера) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Доставка обновлений методологии консьюмерам. Запускается вручную после релизов |
+| `/init-consumer` | **Fast** | (никогда — discovery + per-repo вопросы + вызов init-скрипта, no reasoning) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Инициализация [no-marker] репо из workspace через new-project-init.sh. Запускается вручную после /pull-consumers при наличии [no-marker] |
 
 ---
 

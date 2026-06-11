@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.45.0 — feat: /init-consumer + exclude_paths (PLAN-06) (2026-06-11)
+
+**Что:**
+- **`commands-local/init-consumer.md`** — новая LOCAL-ONLY команда. Per-repo init / skip / never. `never` → `exclude_paths`. Закрывает command-first violation.
+- **`commands-local/pull-consumers.md`** — exclude_paths filter (Подшаг 0.2) + Summary → `/init-consumer` + Troubleshooting fix.
+- **`templates/model-tiers.md`** — строка `/init-consumer Fast LOCAL-ONLY`.
+
+**Что делать consumers:** эта команда LOCAL-ONLY — consumers не получают её через sync. Но `templates/model-tiers.md` обновлён → `sync-methodology.sh` доставит обновлённый model-tiers.
+
+---
+
 ## v5.44.0 — feat: /sync-audit Gap 13 — branch protection verify (PLAN-07b) (2026-06-11)
 
 **Что:**

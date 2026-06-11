@@ -83,6 +83,7 @@ Defaults если секция отсутствует: `consumers_root=..`, `mar
    - Пропустить если не существует или не директория
    - Пропустить если `resolved_path == methodology_repo_path` (self)
    - Пропустить если нет `.git/` (не git repo)
+   - **Пропустить если `resolved_path` присутствует в `exclude_paths`** (CLAUDE.local.md ## Consumers) — без вывода в inventory (владелец сознательно исключил через `/init-consumer` → `never`)
    - Определить тип: `[marker]` если есть `<path>/<marker_file>`, иначе `[no-marker]`
    - Добавить в список consumers с флагом типа
 
@@ -333,7 +334,7 @@ Pulled: 6 ok, 1 skipped (fetch failed), 1 skipped (uncommitted changes)
 New gap entries [marker repos]: 2 AGENT-GAPS, 0 PRODUCT-GAPS, 1 IDEAS
 Recommendations:
   • 2+ new AGENT-GAPS → consider /retro --consumers
-  • 4 repos [no-marker] — рассмотри bootstrap через new-project-init.sh если нужен gap-tracking
+  • 4 repos [no-marker] — запусти /init-consumer для per-repo решения (init / skip / never)
 ```
 
 **Brevity rules:**
@@ -384,9 +385,9 @@ marker_file: .claude/.version
 
 **Pull failed «non-ff»:** консьюмер local diverged от origin. Решение: вручную `cd <consumer> && git rebase origin/<branch>` или `git reset --hard origin/<branch>` (если local изменения не нужны).
 
-**`[no-marker]` repos видны но нет gap-tracking:** ожидаемо — методология не инициализирована. Bootstrap: `bash scripts/new-project-init.sh <path>`. После этого репо получит `.claude/.version` и появится как `[marker]` в следующем запуске.
+**`[no-marker]` repos видны но нет gap-tracking:** ожидаемо — методология не инициализирована. Запусти `/init-consumer` — команда предложит per-repo решение (init / skip / never) без ручного bash. После init + commit репо появится как `[marker]` в следующем запуске.
 
-**`[no-marker]` repos НЕ должны быть в /pull-consumers:** добавь путь в `exclude_paths` (опционально). Сейчас нет такого поля — удали папку из `.code-workspace` в VSCode как workaround.
+**`[no-marker]` repos НЕ должны быть в /pull-consumers:** запусти `/init-consumer` и выбери `never` для этого репо — путь автоматически добавится в `exclude_paths` в `CLAUDE.local.md ## Consumers`. При следующем запуске `/pull-consumers` этот репо исчезнет из inventory.
 
 **404 на одном консьюмере:** repo private/удалён/wrong URL. Проверь `git -C <consumer> remote get-url origin`. Исправь через `git remote set-url origin <correct-url>`.
 
