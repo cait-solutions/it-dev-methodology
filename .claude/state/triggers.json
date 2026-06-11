@@ -105,10 +105,10 @@
     "batch": "sustainment-blindspots 01→05 (см. ROADMAP ## Now); после /code каждого плана — last_plan_session перезаписать следующим plan_file",
     "code_run": true,
     "commitments": [
-      { "text": "validate-lar.sh auto-detect 3-уровневый: root → doc-root → doc_repo_path из CLAUDE.local.md", "status": "pending", "skip_reason": null },
-      { "text": "SKIP всегда с WARN-префиксом и списком путей где искал", "status": "pending", "skip_reason": null },
-      { "text": "LIVING-ARTIFACTS.md битый путь починен (templates/CLAUDE_LOCAL.template.md)", "status": "pending", "skip_reason": null },
-      { "text": "verification в wired-вызове (bash scripts/validate-lar.sh без аргументов из корня), exit-код без пайпа", "status": "pending", "skip_reason": null }
+      { "text": "validate-lar.sh auto-detect 3-уровневый: root → doc-root → doc_repo_path из CLAUDE.local.md", "status": "done", "skip_reason": null },
+      { "text": "SKIP всегда с WARN-префиксом и списком путей где искал", "status": "done", "skip_reason": null },
+      { "text": "LIVING-ARTIFACTS.md битый путь починен (templates/CLAUDE_LOCAL.template.md)", "status": "done", "skip_reason": null },
+      { "text": "verification в wired-вызове (bash scripts/validate-lar.sh без аргументов из корня), exit-код без пайпа", "status": "done", "skip_reason": null }
     ],
     "sustainment": [
       { "artifact": "scripts/validate-lar.sh auto-detect", "trigger": "/sync-audit Gap 10; /review LAR-gate", "refresh": "при изменении схемы CLAUDE.local.md ## Auto-update обновить grep", "detection": "негативный тест; /retro эмпирический прогон валидаторов", "owner": "методология" },
