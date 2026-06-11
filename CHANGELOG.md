@@ -4,6 +4,26 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.29.0 — feat: Design Spec верификация + lifecycle — Anti-Hallucination gate + PR-coupling (2026-06-11)
+
+**Что:** Design Spec мог переводиться в `Final` без проверки реализуемости — галлюцинации и нереализуемые требования попадали в спецификацию незамеченными. Плюс: `/plan` и `/code` не требовали обновления Design Spec при изменении фичи → документ устаревал молча.
+
+**Изменения:**
+- `skills/design-spec/SKILL.md` Шаг 5: добавлен блок «Верификация реализуемости (Anti-Hallucination gate)» — 4 проверки перед Final: source каждого механизма, ADR drift check, выполнимость примеров, OQ для допущений
+- `templates/DESIGN_SPEC.template.md`: новая секция `## Верификация` (между §6 и §7) — 8-пунктовый checklist с явным gate `[ ] Все OK → Final / [ ] Остались открытые → Draft`
+- `commands/plan.md` Шаг 97: Design Spec добавлен как класс артефактов требующих Sustainment — PR-coupling rule + STALE detection через `git log -1`
+- `commands/code.md` Шаг 5: новый пункт «Design Spec update» — `git log` comparison, graceful skip если нет Design Spec для фичи
+
+**Actions:** (поведенческое правило — sync доставляет обновлённые команды и шаблон)
+```
+/sync-audit   # подтянуть обновлённую методологию
+# При создании/обновлении Design Spec — шаблон теперь содержит § Верификации
+```
+
+**Priority:** 🟡 Medium — структурный guard для quality Design Spec; не ломает существующие docs.
+
+---
+
 ## v5.27.0 — feat: domain-aware /diagnose trigger — кластер симптомов одного корня детектится рано (2026-06-10, closes S-1)
 
 **Что:** `/diagnose` триггер «N-й фикс» grep'ал DEVLOG по **точному** `[fix:X]` тегу → кластер симптомов одного корня с разными surface-тегами (`consumer-push`/`deploy-push`/`command`) не группировался → /diagnose не срабатывал, корень назывался поздно (push-кластер v5.19-5.24: 9 симптомов до того как P-006 назван). Фикс: CLAUDE.md D6 теперь требует **`[domain:X]` indicator** рядом с `[fix:X]` (общий для всех фиксов одного корня); `/plan` Шаг -1.3 п.3 + `/diagnose` grep'ают DEVLOG **двумя проходами** — точный тег (fallback) + `[domain:X]`. `[domain:X] ≥ 2` → /diagnose предлагается на 3-м фиксе домена даже при разных surface-тегах. Старые записи без domain → graceful fallback на точный grep.

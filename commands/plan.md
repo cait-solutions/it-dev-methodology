@@ -862,6 +862,7 @@ Full mode — выполнять всегда. Для каждого плана 
 - Счётчик / threshold (plans_since, session_gap_counter, ...)
 - Записанная информация (workspace-список репо, список консьюмеров, ...)
 - DEVLOG / CHANGELOG / AGENT-GAPS / PRODUCT-GAPS запись (живёт ли или устаревает?)
+- **Design Spec** (`docs/services/<svc>/<FEATURE>_DESIGN.md` / `docs/architecture/<FEATURE>_DESIGN.md`) — если план меняет фичу покрытую Design Spec → обновление Design Spec обязательно в том же PR (PR-coupling). Detection: `git log -1 --format=%ad <design-spec-file>` vs `git log -1 --format=%ad <code-file>` — если код новее doc → STALE. Не обновлять при: рефакторинг без поведенческих изменений, performance fix, typo.
 
 **Таблица Sustainment Declaration (заполни per-артефакт):**
 
