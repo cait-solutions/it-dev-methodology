@@ -299,7 +299,7 @@ bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
 
 ---
 
-## Шаг 1 — Inventory gaps (11 проверок)
+## Шаг 1 — Inventory gaps (12 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
 
@@ -521,6 +521,41 @@ Output:
 
 ---
 
+### Gap 12: ROADMAP.Done vs DEVLOG milestone sync (v5.37.0)
+
+**Цель:** обнаружить methodology milestone'ы задеплоенные через reactive path (gap → /plan → /code) которые не попали в `ROADMAP.md ## Done`. Реактивные milestone'ы не проходят через `## Now` → ROADMAP Done-trigger исторически их не захватывал (P-008).
+
+⛔ **Report-only** — не self-heal. Backfill ROADMAP.Done требует решения владельца (формулировка строки).
+
+1. Определить path к ROADMAP.md и DEVLOG.md через `CLAUDE.local.md → doc_repo_path`:
+   ```bash
+   # two-repo: ROADMAP.md в doc_repo_path; single-repo: локально
+   ```
+   Если файлы отсутствуют → 🟢 N/A (gap culture не используется).
+
+2. Извлечь дату последней записи в `## Done` из ROADMAP.md:
+   ```bash
+   grep -m1 "|" ROADMAP.md  # первая строка таблицы Done → год
+   ```
+
+3. Найти `[milestone]` теги в DEVLOG.md ПОСЛЕ этой даты:
+   ```bash
+   grep "\[milestone\]" DEVLOG.md | head -20
+   ```
+
+4. Для каждого найденного milestone — проверить есть ли соответствующая строка в `## Done`:
+   - grep по version / task_id в таблице Done
+   - Если отсутствует → кандидат для backfill
+
+5. Output:
+   - Все milestone'ы присутствуют в Done → 🟢 OK (ROADMAP.Done синхронен)
+   - N milestone'ов в DEVLOG без записи в Done → 🟡 **Medium**: перечислить с рекомендацией backfill через `/code` (следующий /code Шаг 5 reactive path)
+   - `[milestone]` тегов нет в DEVLOG → 🟢 N/A (methodology milestone tracking не используется)
+
+> **Sustainment:** если формат `[milestone]` тега в DEVLOG изменится — обновить grep-паттерн в п.3. Связь: CLAUDE.md DEVLOG теги секция.
+
+---
+
 ## Шаг 2 — Severity assessment
 
 Распредели gaps по severity (используя классификацию выше):
@@ -549,6 +584,7 @@ Output:
 | 7 | Mermaid live links | 🟡/🟢 | [MISSING/STALE/OK] | `bash scripts/update-mermaid-links.sh` |
 | 10 | LIVING-ARTIFACTS.md presence | 🟡/🟢 | [PRESENT/MISSING] | `/plan`: создать из `templates/LIVING-ARTIFACTS.template.md` |
 | 11 | CLAUDE.local.md config-recommendations | 🟡/🟢 | [worktree_isolation / enabled / interval_hours] | `/plan`: оценить включение `auto` / `true` / `≤4` |
+| 12 | ROADMAP.Done vs DEVLOG milestone sync | 🟡/🟢 | [N milestone'ов без Done-записи] | backfill через `/code` Шаг 5 reactive path |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная

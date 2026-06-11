@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.37.0 — feat: ROADMAP Done-trigger reactive path + Gap 12 (P-008) (2026-06-11)
+
+**Что:**
+- **ROADMAP Done-trigger rule расширен (CLAUDE.md + /code Шаг 5):** planner path (из ## Now → переместить) + reactive path (gap → /plan → /code → создать новую строку Done). Закрывает P-008: реактивные methodology milestone'ы больше не пропускают ROADMAP.Done.
+- **`/sync-audit` Gap 12 (ROADMAP.Done vs DEVLOG milestone sync):** обнаруживает `[milestone]` теги в DEVLOG без соответствующей записи в ROADMAP.Done. Detection layer для P-008.
+- **Backfill ROADMAP.Done:** добавлены записи v5.34.0, v5.35.0, v5.36.0 (три пропущенных реактивных milestone).
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → получить обновлённые команды.
+
+---
+
 ## v5.36.0 — feat: /sync-audit Gap 11 — config-recommendations для консьюмеров (2026-06-11)
 
 **Что:**

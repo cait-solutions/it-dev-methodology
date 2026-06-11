@@ -2,27 +2,27 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 19
+      "plans_since": 20
     },
     "last_retro": {
       "date": "2026-06-09",
-      "plans_since": 6
+      "plans_since": 7
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 33
+      "plans_since": 34
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 27
+      "plans_since": 28
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 14
+      "plans_since": 15
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 29
+      "plans_since": 30
     },
     "last_architecture_audit": {
       "date": "2026-06-09",
@@ -98,48 +98,55 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-11",
-    "task_id": "g111-sync-audit-gap11-config-recommendations",
+    "task_id": "p008-roadmap-done-trigger-reactive-path",
     "service": "methodology",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "commands/sync-audit.md: добавить Gap 11 после Gap 10 — проверка CLAUDE.local.md ## Branching (worktree_isolation) + ## Auto-update (enabled, interval_hours, auto_pull) против эталона методологии",
-        "status": "pending",
+        "text": "CLAUDE.md: Done-trigger rule расширен — убран precondition ## Now, добавлен reactive path",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md: добавить строку Gap 11 в таблицу Шага 3 Report",
-        "status": "pending",
+        "text": "commands/code.md Шаг 5: добавлен reactive path чекбокс с определением milestone",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md Gap 11: явно указать что НЕ дублирует Gap 2 (validators presence — разные оси)",
-        "status": "pending",
+        "text": "commands/sync-audit.md: добавлен Gap 12 (ROADMAP.Done vs DEVLOG milestone sync) + header «12 проверок» + строка таблицы",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md Gap 11: документировать в тексте Sustainment trigger связь с CLAUDE_LOCAL.template.md",
-        "status": "pending",
+        "text": "ROADMAP.md ## Done: backfill v5.34.0, v5.35.0, v5.36.0 + строка v5.37.0",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "VERSION: bump → v5.35.0; CHANGELOG.md: добавить запись; DEVLOG.md: [feat:command][domain:sync] Gap 11 config-recommendations",
-        "status": "pending",
+        "text": "LIVING-ARTIFACTS.md: Detection строки ROADMAP.md обновлена — добавлен Gap 12",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "docs/architecture/LIVING-ARTIFACTS.md: обновить строку commands/sync-audit.md — добавить Gap 11 trigger в колонку Trigger",
-        "status": "pending",
+        "text": "VERSION v5.37.0, CHANGELOG, DEVLOG [milestone], triggers.json",
+        "status": "done",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "commands/sync-audit.md Gap 11 (config-recommendations check)",
-        "trigger": "Методология добавляет новую рекомендованную конфиг-секцию в CLAUDE_LOCAL.template.md; или меняет дефолты worktree_isolation/auto-update",
-        "refresh": "Developer обновляет список проверяемых полей и эталонных значений в тексте Gap 11",
-        "detection": "/retro — skip-rate Gap 11; DEVLOG [domain:config-gap] ≥2 → пересмотреть список",
+        "artifact": "CLAUDE.md Done-trigger rule",
+        "trigger": "Появляется новый milestone path в workflow без Done-trigger coverage",
+        "refresh": "Обновить критерий + примеры в правиле",
+        "detection": "/retro P-008 recurrence; /sync-audit Gap 12 skip-rate",
+        "owner": "методология"
+      },
+      {
+        "artifact": "commands/sync-audit.md Gap 12",
+        "trigger": "[milestone] тег формат в DEVLOG изменился",
+        "refresh": "Обновить grep-паттерн в п.3 Gap 12",
+        "detection": "/retro skip-rate Gap 12",
         "owner": "методология"
       }
     ]
