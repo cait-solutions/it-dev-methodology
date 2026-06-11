@@ -299,7 +299,7 @@ bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
 
 ---
 
-## Шаг 1 — Inventory gaps (13 проверок)
+## Шаг 1 — Inventory gaps (14 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
 
@@ -593,6 +593,47 @@ Output:
 
 ---
 
+### Gap 14: [no-marker] consumer initialization (v5.46.0)
+
+**Цель:** обнаружить workspace repos без инициализированной методологии и предложить bootstrap через `scripts/new-project-init.sh`.
+
+⛔ **Gap 14 — единственный gap `/sync-audit` который записывает файлы** (только на явный `init` ответ пользователя). Gaps 1-13 — диагностика. Gap 14 — диагностика + условный write. Commit в consumer repo остаётся за пользователем.
+
+**Scope:** только если workspace_file найден (Режим A в `/pull-consumers` discovery). Если нет workspace_file или все `[no-marker]` repos уже в `exclude_paths` → 🟢 N/A.
+
+1. Определить `workspace_file` из `CLAUDE.local.md ## Consumers`. Если отсутствует → 🟢 N/A.
+2. Прочитать `exclude_paths` из `CLAUDE.local.md ## Consumers` (defensive: `.get('exclude_paths') or []`).
+3. Извлечь все `folders[].path` из workspace-файла, резолвить относительно папки workspace-файла.
+4. Для каждого пути проверить: `[ -f "<path>/.claude/.version" ]`
+   - Есть `.version` → `[marker]`, пропустить.
+   - Нет `.version` И путь в `exclude_paths` → молча пропустить (владелец выбрал `never`).
+   - Нет `.version` И путь не в `exclude_paths` → добавить в список `[no-marker]`.
+5. Если список `[no-marker]` пустой → 🟢 OK.
+6. Вывести список найденных `[no-marker]` repos и для каждого задать вопрос (по одному):
+   ```
+   ❔ Gap 14: <repo-name> не инициализирован методологией.
+      Инициализировать? (init / skip / never)
+        init  — запустить scripts/new-project-init.sh (создаст .claude/ структуру)
+        skip  — пропустить этот запуск (спросит снова при следующем /sync-audit)
+        never — добавить в exclude_paths (не показывать больше)
+   ```
+7. **При `init`:**
+   - Если `<path>/.claude/` существует → предупредить: `⚠️ .claude/ уже есть в <repo-name> — new-project-init.sh может перезаписать файлы. Продолжить? (y/n)`
+   - Pre-check: `[ -f scripts/new-project-init.sh ]`. Если нет → `⚠️ scripts/new-project-init.sh не найден — bootstrap недоступен в этом репо. Пропускаю.`
+   - Запустить: `bash scripts/new-project-init.sh "<project_name>" "<abs_path>"` (пути в кавычках — Windows path с пробелами)
+   - Сообщить результат. Commit остаётся за пользователем.
+8. **При `never`:** добавить `abs_path` в `exclude_paths` в `CLAUDE.local.md ## Consumers` yaml-блок (append-only, не перезаписывать файл целиком).
+9. **При `skip`:** ничего не записывать.
+
+**Диагностика:**
+- 🟢 Нет `[no-marker]` repos (или все в `exclude_paths`) → OK
+- 🟡 Есть `[no-marker]` repos → предложить init/skip/never
+- 🟢 Initialized: `new-project-init.sh` выполнен для X repo(s)
+
+> **Sustainment:** discovery через workspace_file (актуальный список). `exclude_paths` пишется здесь при `never`. `scripts/new-project-init.sh` не синхронизируется консьюмерам (LOCAL в methodology-platform) — pre-check в п.7 защищает от `command not found`. Связь: `commands-local/pull-consumers.md` · `CLAUDE.local.md ## Consumers` · `scripts/new-project-init.sh`.
+
+---
+
 ## Шаг 2 — Severity assessment
 
 Распредели gaps по severity (используя классификацию выше):
@@ -622,6 +663,8 @@ Output:
 | 10 | LIVING-ARTIFACTS.md presence | 🟡/🟢 | [PRESENT/MISSING] | `/plan`: создать из `templates/LIVING-ARTIFACTS.template.md` |
 | 11 | CLAUDE.local.md config-recommendations | 🟡/🟢 | [worktree_isolation / enabled / interval_hours] | `/plan`: оценить включение `auto` / `true` / `≤4` |
 | 12 | ROADMAP.Done vs DEVLOG milestone sync | 🟡/🟢 | [N milestone'ов без Done-записи] | backfill через `/code` Шаг 5 reactive path |
+| 13 | Branch protection on main | 🔴/🟡/🟢 | [статус из Gap 13] | `bash scripts/setup-branch-protection.sh` |
+| 14 | [no-marker] consumer initialization | 🟡/🟢 | [N repos без методологии] | init / skip / never (в Gap 14 inline) |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная

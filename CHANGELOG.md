@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.46.0 — refactor: /sync-audit Gap 14 replaces /init-consumer (2026-06-11)
+
+**Что:**
+- **`commands/sync-audit.md`** — Gap 14: `[no-marker]` consumer initialization (init/skip/never + `new-project-init.sh`). 14 проверок вместо 13.
+- **`commands-local/init-consumer.md`** — **удалён**. Логика перенесена в Gap 14.
+- **`templates/model-tiers.md`** — строка `/init-consumer` удалена.
+- **`commands-local/pull-consumers.md`** — ссылки на `/init-consumer` → `/sync-audit`.
+
+**Что делать consumers:** `commands/sync-audit.md` синхронизируется → consumers получают Gap 14 автоматически при следующем `sync-methodology.sh`. `/init-consumer` была LOCAL-ONLY — consumers её не имели, ничего не теряют.
+
+**Архитектурное обоснование:** slash-команда = пользовательский интерфейс; скрипт = реализация. `/init-consumer` была излишней: `scripts/new-project-init.sh` вызывается из `/sync-audit` напрямую.
+
+---
+
 ## v5.45.0 — feat: /init-consumer + exclude_paths (PLAN-06) (2026-06-11)
 
 **Что:**
