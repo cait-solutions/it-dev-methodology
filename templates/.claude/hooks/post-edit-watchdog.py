@@ -16,8 +16,10 @@ Config: CLAUDE.local.md section "## Post-edit hooks"
         script: scripts/update-changelog-links.sh
         file_arg: true
 
-Rules are matched against the changed text (new_string for Edit, content for Write).
-If pattern found in changed text → run script.
+Rules are matched against the changed text (new_string for Edit, content for Write)
+OR against the full file on disk (QB11: if pattern exists anywhere in the file, run script
+even when the edit itself didn't touch the mermaid block — e.g. editing a Done table).
+If pattern found in changed text OR in file on disk → run script.
 file_arg: true  → script is called with the file path as argument
 file_arg: false → script is called without arguments
 
@@ -122,7 +124,16 @@ def main():
 
         if not pattern or not script:
             continue
-        if pattern not in changed_text:
+        # QB11: match against changed text OR full file on disk
+        # (covers edits to tables/text in files that also contain a mermaid block)
+        in_changed = pattern in changed_text
+        in_file = False
+        if not in_changed and file_path and os.path.exists(file_path):
+            try:
+                in_file = pattern in open(file_path, encoding="utf-8-sig").read()
+            except Exception:
+                pass
+        if not in_changed and not in_file:
             continue
         if not is_safe_script_path(script):
             print(f"[post-edit-watchdog] Skipped unsafe script path: {script}", file=sys.stderr)
