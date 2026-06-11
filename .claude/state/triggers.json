@@ -32,9 +32,9 @@
           "id": "R-030",
           "type": "drift",
           "summary": "S-3 de-count SYSTEM-MAP — убрать хардкод счётчиков из node-labels (drift-prone), счёт в таблице регенерит аудит; опц. validate-system-map-counts.sh",
-          "status": "proposed",
+          "status": "implemented",
           "scope": "methodology",
-          "implementation_pr": null
+          "implementation_pr": "v5.47.0"
         },
         {
           "id": "R-031",
@@ -80,9 +80,9 @@
           "id": "S-3",
           "type": "drift",
           "summary": "SYSTEM-MAP: добавить consumer-push/pull/credential-helper в secrets слой",
-          "status": "proposed",
+          "status": "implemented",
           "scope": "methodology",
-          "implementation_pr": null
+          "implementation_pr": "v5.47.0"
         }
       ],
       "previous_cycle_implementation_rate": "1/1 (100%) — R-029 implemented + функционально верифицирован (validate-delivery.sh exit 0, wired в обоих repos)"
@@ -127,37 +127,37 @@
     "mode": "Full",
     "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-maps-A-coverage-gate.md",
     "batch": "maps-coverage A..G (B precondition-gated; C independent; D,E,G after A). Amendments: ROADMAP-ось + links-gate в A; PLAN-G LAR-driven runner (P-009). VERSION: v5.46.0 занята — бампить от текущей. Files: docs/plans/2026-06-11-maps-*.md",
-    "code_run": false,
+    "code_run": true,
     "commitments": [
       {
         "text": "PLAN-A Шаг 1: backfill USER-MAP(+2cmd+2skills)/ARTIFACT-MAP(+6)/SYSTEM-MAP(полный реестр+R-030 de-count+S-3) — коммит doc-repo ПЕРВЫМ",
-        "status": "pending",
+        "status": "completed",
         "skip_reason": null
       },
       {
         "text": "PLAN-A Шаг 2: validate-maps-coverage.sh + dual-copy (gate/report, ERROR при отсутствии карт в gate, worktree git-common-dir, POSIX-границы, CRLF; scripts=WARN) + ROADMAP-ось Now/Done + --print-doc-root",
-        "status": "pending",
+        "status": "completed",
         "skip_reason": null
       },
       {
         "text": "PLAN-A Шаг 3: gate в deploy-push.sh (двойной guard) + dual-copy синхронно + links-gate оба repo (артефакт-агностично: Design Specs и будущие)",
-        "status": "pending",
+        "status": "completed",
         "skip_reason": null
       },
       {
-        "text": "PLAN-A Шаг 4: sync-audit Gap 14 (report-only) + plan.md Подшаг -0.2 skipped-commitments",
-        "status": "pending",
+        "text": "PLAN-A Шаг 4: sync-audit Gap 15 (report-only) + plan.md Подшаг -0.2 skipped-commitments",
+        "status": "completed",
         "skip_reason": null
       },
       {
-        "text": "PLAN-A Шаг 5: LAR-строка + VERSION next-minor (v5.46.0 занята) + CHANGELOG + DEVLOG + ROADMAP Done + deploy через gate",
-        "status": "pending",
+        "text": "PLAN-A Шаг 5: LAR-строка + VERSION next-minor (v5.47.0) + CHANGELOG + DEVLOG + ROADMAP Done",
+        "status": "completed",
         "skip_reason": null
       },
       {
         "text": "PLAN-A Шаг 6: /push-consumers (write-only) + read-only --report отчёт по 6 консьюмерам",
         "status": "pending",
-        "skip_reason": null
+        "skip_reason": "post-deploy task"
       }
     ],
     "sustainment": [

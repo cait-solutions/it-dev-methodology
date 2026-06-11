@@ -270,6 +270,37 @@ _push() {
   return $rc
 }
 
+# ---------------------------------------------------------------------------
+# Maps-coverage gate (PLAN-A v5.47.0): methodology-platform only.
+# Double guard: [ -d commands ] — only methodology-platform has commands/ source dir.
+# [ -f scripts/sync-methodology.sh ] — second guard: consumers may have commands/ copy.
+# Both guards must pass → we're in methodology-platform → run the gate.
+# ---------------------------------------------------------------------------
+if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
+  echo "▶ Maps-coverage gate (methodology-platform)..."
+  if ! bash scripts/validate-maps-coverage.sh; then
+    echo "❌ BLOCKED: maps coverage failed — добавь недостающие строки карт, затем повтори деплой." >&2
+    exit 1
+  fi
+  # Mermaid links gate (amendment): artifact-agnostic — catches stale/missing links
+  # in ANY .md with mermaid (living maps, Design Specs, future artifact types).
+  DOC_ROOT_RESOLVED="$(bash scripts/validate-maps-coverage.sh --print-doc-root 2>/dev/null || true)"
+  echo "▶ Mermaid links gate (code repo)..."
+  if ! bash scripts/validate-mermaid-links.sh; then
+    echo "❌ BLOCKED: stale or missing mermaid.live links in code repo." >&2
+    exit 1
+  fi
+  if [ -n "$DOC_ROOT_RESOLVED" ]; then
+    echo "▶ Mermaid links gate (doc repo: $DOC_ROOT_RESOLVED)..."
+    if ! bash scripts/validate-mermaid-links.sh --root "$DOC_ROOT_RESOLVED"; then
+      echo "❌ BLOCKED: stale or missing mermaid.live links in doc repo." >&2
+      exit 1
+    fi
+  fi
+  echo "✅ Maps-coverage gate passed."
+  echo ""
+fi
+
 # Pre-push: SSOT alignment (closes P-006) — сверить remote с manifest ДО push.
 _check_remote_alignment
 
