@@ -349,7 +349,7 @@ Phase-теги: `[phase-a]` … — milestone history.
 
 **Утечка GitHub PAT и других токенов (was High → Mitigated):** Структурно закрыто секцией [Secrets & Credentials](#secrets--credentials) — 4 слоя защиты (gitignore, pre-commit hook, /review detector, tool deny). См. ниже.
 
-**Прямой push в main (High):** Branch protection не настроен. Будущая задача — required PR + review.
+**Прямой push в main (High → Mitigated v5.43.0):** Структурно закрыто тремя слоями: (1) `setup-branch-protection.sh` — required PR, enforce_admins, no force-push (GitHub layer); (2) `deploy-push.sh` GH006-классификация — при блоке направляет на PR-путь, а не ложный auth-flow; (3) `/sync-audit` Gap 13 — WARN если protection отключена. Emergency: `--off --yes` + re-apply. ADR-002 amendment 2026-06-11.
 
 **Drift между методологией и консьюмерами (Med):** Sync ручной. Будущая задача — auto version-drift check в `/plan` Шаг -3.
 

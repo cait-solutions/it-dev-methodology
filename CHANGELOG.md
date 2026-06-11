@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.43.0 — feat: branch protection + GH006 classifier + merge retry (PLAN-07) (2026-06-11)
+
+**Что:**
+- **`scripts/setup-branch-protection.sh`** (methodology-only, НЕ синхронизируется консьюмерам) — apply/--verify/--off. Закрывает HIGH-риск «Прямой push в main».
+- **`deploy-push.sh`** (оба: `scripts/` + `templates/scripts/`) — GH006 branch в `_classify_push_failure`: при блоке branch protection направляет на PR-путь (не ложный auth-flow). Merge retry 3s для transient «not mergeable».
+- **`CLAUDE.md § Security`** — «Прямой push в main (High)» → Mitigated.
+- **ADR-002** — amendment: pr_tool:auto-merge supersedes фазу 1; branch protection in-scope для methodology repos.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → получить обновлённый `templates/scripts/deploy-push.sh` с GH006-классификатором. Для включения protection на своём репо — requires GitHub + `gh` CLI + отдельный `setup-branch-protection.sh` (не синкается, methodology-specific).
+
+---
+
 ## v5.42.0 — feat: /push-consumers + drift visibility + validate-lar.sh в templates/scripts/ (PLAN-05) (2026-06-11)
 
 **Что:**

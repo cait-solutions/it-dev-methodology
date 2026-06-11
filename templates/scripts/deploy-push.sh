@@ -38,6 +38,8 @@ PRODUCTION_BRANCH=$(_get_field "production_branch" "main")
 INTEGRATION_BRANCH=$(_get_field "integration_branch" "$PRODUCTION_BRANCH")
 PR_TOOL=$(_get_field "pr_tool" "manual")
 WORKTREE_ISOLATION=$(_get_field "worktree_isolation" "off")
+# Exported for GH006 classifier message (which protected branch rejected the push)
+PROTECTED_BRANCH="$INTEGRATION_BRANCH"
 
 # ---------------------------------------------------------------------------
 # Concurrent-session isolation (closes P-001): when worktree_isolation: auto,
@@ -222,6 +224,12 @@ _classify_push_failure() {
       echo "   a) Создать репозиторий: gh repo create <owner>/<repo> --private --source=. --push"
       echo "   b) Исправить remote если опечатка: git remote set-url origin <url>"
     fi
+  elif echo "$err" | grep -qiE 'GH006|protected branch|refusing to allow|cannot be pushed'; then
+    echo "   🔒 Branch protection active on ${url} (GH006)."
+    echo "      Direct push to '${PROTECTED_BRANCH:-main}' is blocked — this is expected."
+    echo "      ✅ Normal path: deploy-push.sh creates a PR (auto-merge) — no action needed."
+    echo "      🚨 Emergency bypass: bash scripts/setup-branch-protection.sh --off --yes"
+    echo "                           git push ... && bash scripts/setup-branch-protection.sh"
   elif echo "$err" | grep -qiE '403|permission|denied|forbidden|access denied'; then
     echo "   🔒 Доступ запрещён (403)."
     case "$url" in
@@ -279,7 +287,13 @@ if [[ "$MODE" == "team" ]]; then
       --title "$PR_TITLE" \
       --body "Auto-deploy via deploy-push.sh")
     echo "  PR: $PR_URL"
-    gh pr merge "$PR_URL" --merge --delete-branch=false
+    # Retry once: GitHub can transiently report "not mergeable" immediately after pr create
+    # when branch protection is enabled (merge-conflict-detection runs async).
+    if ! gh pr merge "$PR_URL" --merge --delete-branch=false 2>/dev/null; then
+      echo "  ⏳ Merge transient failure — retrying in 3s..."
+      sleep 3
+      gh pr merge "$PR_URL" --merge --delete-branch=false
+    fi
     echo "✅ Merged: ${PUSH_BRANCH} → ${INTEGRATION_BRANCH}"
   else
     echo "✅ Pushed. Create PR: ${PUSH_BRANCH} → ${INTEGRATION_BRANCH}"
