@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.36.0 — feat: /sync-audit Gap 11 — config-recommendations для консьюмеров (2026-06-11)
+
+**Что:**
+- **`/sync-audit` Gap 11 (config-recommendations)** — новая gap-проверка: читает `CLAUDE.local.md` консьюмера, сравнивает `worktree_isolation` / `enabled` / `interval_hours` с эталоном методологии, предлагает `/plan` на каждое отклонение. Методология теперь «пушит» рекомендации конфигов при каждом audit. Closes G-111.
+- **Заголовок `## Шаг 1`** обновлён: «5 проверок» → «11 проверок».
+
+**Что делать consumers:**
+```bash
+bash scripts/sync-methodology.sh .
+# Затем запустить /sync-audit — Gap 11 покажет отклонения конфигов с рекомендациями
+```
+
+**Приоритет:** 🟡 Medium — config drift обнаруживается автоматически; изменения через /plan по решению владельца.
+
+---
+
 ## v5.35.0 — feat: worktree auto для routine multi-session + G-025 consumer-reach checkpoint (2026-06-11)
 
 **Что:**

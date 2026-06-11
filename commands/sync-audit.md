@@ -299,7 +299,7 @@ bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
 
 ---
 
-## Шаг 1 — Inventory gaps (5 проверок)
+## Шаг 1 — Inventory gaps (11 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
 
@@ -474,6 +474,51 @@ Output:
    - Файл есть, `validate-lar.sh` → MISSING_FILE → 🟡 **Medium severity** — LAR содержит несуществующие пути.
    - Файл есть, таблица заполнена, все пути существуют → 🟢 OK
 
+### Gap 11: CLAUDE.local.md config-recommendations (v5.35.0)
+
+**Цель:** проверить что ключевые конфигурационные поля `CLAUDE.local.md` соответствуют рекомендациям методологии. `CLAUDE.local.md` — project-owned (PRESERVE-семантика, не перезаписывается sync) → изменения только через `/plan` по решению владельца. Этот gap показывает отклонения и предлагает `/plan` на каждое.
+
+⛔ **НЕ дублирует Gap 2** (`## Sync validators` presence). Gap 2 = «секция существует?»; Gap 11 = «значения в `## Branching` и `## Auto-update` соответствуют рекомендациям?». Разные оси.
+
+**Эталон методологии (v5.35.0):**
+
+| Секция | Поле | Рекомендация | Severity при отклонении |
+|---|---|---|---|
+| `## Branching` | `worktree_isolation` | `auto` при параллельной / multi-session работе | 🟡 Medium |
+| `## Auto-update` | `enabled` | `true` | 🟡 Medium |
+| `## Auto-update` | `interval_hours` | `≤ 4` (default 2) | 🟢 Low |
+
+> **Sustainment:** при добавлении новой рекомендованной конфиг-секции в `templates/CLAUDE_LOCAL.template.md` или смене дефолтов — обновить таблицу эталонов выше и список проверок ниже. Связь: `templates/CLAUDE_LOCAL.template.md ## Branching` + `## Auto-update`.
+
+1. Проверить наличие `CLAUDE.local.md`:
+   - Отсутствует → 🟢 N/A (bootstrap не выполнен, шаг 0 п.3 поймает)
+
+2. Проверить `worktree_isolation`:
+   ```bash
+   grep "worktree_isolation" CLAUDE.local.md
+   ```
+   - Найдено `off` или поле отсутствует → 🟡 **Medium**: рекомендовать `/plan` для оценки (владелец сам решает — `off` правильно если заведомо одна сессия)
+   - Найдено `auto` → 🟢 OK
+
+3. Проверить `## Auto-update`:
+   ```bash
+   grep "enabled:" CLAUDE.local.md | head -1
+   grep "interval_hours:" CLAUDE.local.md | head -1
+   ```
+   - `enabled: false` → 🟡 **Medium**: auto-update выключен
+   - `interval_hours` > 4 → 🟢 **Low**: интервал длиннее рекомендованного
+   - Секция `## Auto-update` отсутствует → 🟡 **Medium** (Gap 3 уже фиксирует это; дублировать не нужно — указать что покрыто Gap 3)
+
+4. Output:
+   - Всё соответствует → 🟢 OK (конфиг актуален)
+   - Есть отклонения → перечислить с рекомендацией:
+     ```
+     🟡 worktree_isolation: off — рекомендовать /plan: оценить включение auto
+        (если у проекта есть / планируются параллельные сессии)
+     🟡 enabled: false — рекомендовать /plan: включить auto-update
+     🟢 interval_hours > 4 — рекомендовать /plan: снизить до 2
+     ```
+
 ---
 
 ## Шаг 2 — Severity assessment
@@ -503,6 +548,7 @@ Output:
 | 5 | Skills frontmatter spec | 🔴/🟢 | [N skills с нарушениями] | `/plan`: spec compliance fix |
 | 7 | Mermaid live links | 🟡/🟢 | [MISSING/STALE/OK] | `bash scripts/update-mermaid-links.sh` |
 | 10 | LIVING-ARTIFACTS.md presence | 🟡/🟢 | [PRESENT/MISSING] | `/plan`: создать из `templates/LIVING-ARTIFACTS.template.md` |
+| 11 | CLAUDE.local.md config-recommendations | 🟡/🟢 | [worktree_isolation / enabled / interval_hours] | `/plan`: оценить включение `auto` / `true` / `≤4` |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная
