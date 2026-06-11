@@ -145,7 +145,10 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Frontend DOM verification rule:** Любая задача затрагивающая файлы `.vue` / `.tsx` / `.jsx` / `.svelte` / `.css` / `.html` — верификация реального DOM обязательна до commit. Три допустимых пути: (1) Playwright E2E тест запуск, (2) screenshot через Claude Code + Read tool с явным описанием что видно в DOM, (3) explicit skip с письменной причиной. «Написал код → должно работать» без одного из трёх = шаг не завершён.
 
-**ROADMAP Done-trigger rule (closes G-101):** Каждый `/code`, завершающий milestone или feature-axis из ROADMAP.md `## Now` секции, **обязан** переместить запись в `## Done` в том же PR (/code Шаг 5 ROADMAP PR-coupling). Критерий «завершён»: основная часть реализована и задеплоена, edge cases могут быть отложены. Без этого ROADMAP устаревает молча — `## Now` наполняется задачами которые давно Done. Пропускать при typo/bugfix без самостоятельного milestone.
+**ROADMAP Done-trigger rule (closes G-101, P-008):** Каждый `/code`, завершающий methodology milestone, **обязан** добавить запись в `## Done` в том же PR (/code Шаг 5 ROADMAP PR-coupling).
+- **Planner path** (задача была в `## Now`) → переместить запись из `## Now` в `## Done`.
+- **Reactive path** (задача не была в `## Now` — gap → /plan → /code) → создать новую строку в `## Done` с кратким описанием.
+Критерий «milestone»: задача имеет самостоятельный task_id И закрывает gap или добавляет capability методологии. Typo/bugfix без самостоятельного milestone → пропускать. Критерий «завершён»: основная часть реализована и задеплоена, edge cases могут быть отложены.
 
 **Recommendation-first rule (closes G-102):** При любом clarifying question — **сначала дать собственную рекомендацию с обоснованием**, затем спрашивать если нужно. «Не знаю куда» без рекомендации = agent gap. Исключение: вопрос принципиально требует выбора владельца (security-решение, бизнес-приоритет). Применяется в `/plan` Шаг 0 и везде где агент задаёт вопрос пользователю.
 
