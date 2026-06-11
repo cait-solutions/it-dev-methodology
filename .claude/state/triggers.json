@@ -2,27 +2,27 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 18
+      "plans_since": 19
     },
     "last_retro": {
       "date": "2026-06-09",
-      "plans_since": 5
+      "plans_since": 6
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 32
+      "plans_since": 33
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 26
+      "plans_since": 27
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 13
+      "plans_since": 14
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 28
+      "plans_since": 29
     },
     "last_architecture_audit": {
       "date": "2026-06-09",
@@ -98,50 +98,48 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-11",
-    "task_id": "g107-sync-audit-consumer-vs-clone-auto-sync",
+    "task_id": "g111-sync-audit-gap11-config-recommendations",
     "service": "methodology",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "commands/sync-audit.md Шаг -0.5: добавить consumer-vs-clone check после pull клона (и при up-to-date) — читать .claude/.version + clone VERSION, если delta → авто-apply sync-methodology.sh",
-        "status": "done",
+        "text": "commands/sync-audit.md: добавить Gap 11 после Gap 10 — проверка CLAUDE.local.md ## Branching (worktree_isolation) + ## Auto-update (enabled, interval_hours, auto_pull) против эталона методологии",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md Шаг -0.5: добавить ⚠️ ПЕРЕЗАПУСТИ СЕССИЮ предупреждение после consumer sync (по аналогии с self-apply warning, closes G-098 для consumer case)",
-        "status": "done",
+        "text": "commands/sync-audit.md: добавить строку Gap 11 в таблицу Шага 3 Report",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md Шаг -0.5: self-dogfood guard (methodology_path: . → пропустить consumer-vs-clone check, т.к. consumer IS клон)",
-        "status": "done",
+        "text": "commands/sync-audit.md Gap 11: явно указать что НЕ дублирует Gap 2 (validators presence — разные оси)",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md Шаг 1b: добавить 4-й verdict case — если consumer был авто-синхронизирован в Шаге -0.5 → 'Consumer синхронизирован автоматически (было X, стало Y)'",
-        "status": "done",
+        "text": "commands/sync-audit.md Gap 11: документировать в тексте Sustainment trigger связь с CLAUDE_LOCAL.template.md",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "VERSION: bump → v5.34.0; CHANGELOG.md: добавить v5.34.0 запись; DEVLOG.md: [fix:command][domain:sync] G-107",
-        "status": "done",
+        "text": "VERSION: bump → v5.35.0; CHANGELOG.md: добавить запись; DEVLOG.md: [feat:command][domain:sync] Gap 11 config-recommendations",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "docs/architecture/LIVING-ARTIFACTS.md: обновить строку commands/sync-audit.md — добавить Gap 11 trigger в колонку Trigger",
+        "status": "pending",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "commands/sync-audit.md (consumer-vs-clone подшаг)",
-        "trigger": "sync-methodology.sh API изменился (параметры/путь)",
-        "refresh": "sync-methodology.sh доставка → consumer получает новую версию команды",
-        "detection": "/review downstream check; validate-delivery.sh",
-        "owner": "методология"
-      },
-      {
-        "artifact": "consumer-vs-clone check logic (.claude/.version парсинг)",
-        "trigger": ".claude/.version формат изменился",
-        "refresh": "Developer при смене формата",
-        "detection": "grep .claude/.version в команде",
+        "artifact": "commands/sync-audit.md Gap 11 (config-recommendations check)",
+        "trigger": "Методология добавляет новую рекомендованную конфиг-секцию в CLAUDE_LOCAL.template.md; или меняет дефолты worktree_isolation/auto-update",
+        "refresh": "Developer обновляет список проверяемых полей и эталонных значений в тексте Gap 11",
+        "detection": "/retro — skip-rate Gap 11; DEVLOG [domain:config-gap] ≥2 → пересмотреть список",
         "owner": "методология"
       }
     ]
