@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.31.0 — feat: validate-lar.sh — детектор файлов Living Artifact Registry (2026-06-11)
+
+**Что:** Living Artifact Registry создан (v5.30.0), но нет инструментального способа проверить что файлы перечисленные в нём реально существуют на диске. Добавлен `scripts/validate-lar.sh` — exit 0 если все пути существуют, exit 1 с `MISSING_FILE:` строками если нет. Wired в `/sync-audit` Gap 10.
+
+**Изменения:**
+- `scripts/validate-lar.sh`: новый скрипт (Bash 3.2+, POSIX-compatible). Флаги: `--root <dir>` (repo root для резолвинга путей), `--lar <path>` (явный путь к LAR-файлу). Авто-detect при отсутствии `--lar`
+- `commands/sync-audit.md` Gap 10: обновлён — теперь вызывает `validate-lar.sh`, документирует two-repo usage
+
+**Actions:**
+```
+bash scripts/sync-methodology.sh .    # подтянуть новый скрипт
+# Проверить свой LAR (single-repo):
+bash scripts/validate-lar.sh
+# Проверить LAR (two-repo, methodology-platform):
+bash scripts/validate-lar.sh --root . --lar ../project-documentation/docs/architecture/LIVING-ARTIFACTS.md
+```
+
+**Priority:** 🟢 Low — вспомогательный детектор; не блокирует workflow.
+
+---
+
 ## v5.30.0 — feat: Living Artifact Registry (LAR) — единая точка lifecycle для механизмов (2026-06-11)
 
 **Что:** нет единой точки «что живёт и требует поддержания» в проекте — /plan Шаг -1.3 Adjacent Impact не видел связанные артефакты, Sustainment Declaration оставалась только в triggers.json без persistent registry. LAR = lifecycle-реестр (не flow-граф): когда обновлять, как обнаружить устаревание, кто владелец. Интегрирован в /plan, /code, /review, /sync-audit.
