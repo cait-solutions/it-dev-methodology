@@ -175,7 +175,7 @@
   "last_deploy": {
     "date": "2026-06-11",
     "status": "ok",
-    "phase": "v5.38.0 validate-lar.sh two-repo auto-detect + WARN-SKIP + sed first-match (PR #186, closes G-112a, PLAN-01)"
+    "phase": "v5.39.0 triggers.json state hygiene + validate-triggers.sh (PR #188, closes G-112b-state, PLAN-02)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
