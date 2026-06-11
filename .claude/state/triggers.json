@@ -2,27 +2,27 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 17
+      "plans_since": 18
     },
     "last_retro": {
       "date": "2026-06-09",
-      "plans_since": 4
+      "plans_since": 5
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 31
+      "plans_since": 32
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 25
+      "plans_since": 26
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 12
+      "plans_since": 13
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 27
+      "plans_since": 28
     },
     "last_architecture_audit": {
       "date": "2026-06-09",
@@ -98,75 +98,51 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-11",
-    "task_id": "self-apply-guarded-roadmap-trigger-g101-g102-g103",
+    "task_id": "g107-sync-audit-consumer-vs-clone-auto-sync",
     "service": "methodology",
     "mode": "Full",
-    "code_run": false,
+    "code_run": true,
     "commitments": [
       {
-        "text": "validate-lar.sh: добавить --doc-root параметр (второй корень для two-repo)",
+        "text": "commands/sync-audit.md Шаг -0.5: добавить consumer-vs-clone check после pull клона (и при up-to-date) — читать .claude/.version + clone VERSION, если delta → авто-apply sync-methodology.sh",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "validate-lar.sh: graceful check на существование --doc-root перед cd",
+        "text": "commands/sync-audit.md Шаг -0.5: добавить ⚠️ ПЕРЕЗАПУСТИ СЕССИЮ предупреждение после consumer sync (по аналогии с self-apply warning, closes G-098 для consumer case)",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "commands/sync-audit.md Gap 10: передавать --doc-root из CLAUDE.local.md при two-repo",
+        "text": "commands/sync-audit.md Шаг -0.5: self-dogfood guard (methodology_path: . → пропустить consumer-vs-clone check, т.к. consumer IS клон)",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "LIVING-ARTIFACTS.md: исправить auto-update-watchdog.py → auto-update-watchdog.template.py",
+        "text": "commands/sync-audit.md Шаг 1b: добавить 4-й verdict case — если consumer был авто-синхронизирован в Шаге -0.5 → 'Consumer синхронизирован автоматически (было X, стало Y)'",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "LIVING-ARTIFACTS.md: решить судьбу .code-workspace (убрать — файл вне обоих repos)",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "templates/LIVING-ARTIFACTS.template.md: grep на auto-update-watchdog.py, исправить если есть",
-        "status": "done",
-        "skip_reason": "N/A — шаблон не содержит auto-update-watchdog.py"
-      },
-      {
-        "text": "SYSTEM-MAP.md: заменить EN-only edge labels на RU (reads→читает, writes→пишет и др.)",
+        "text": "VERSION: bump → v5.34.0; CHANGELOG.md: добавить v5.34.0 запись; DEVLOG.md: [fix:command][domain:sync] G-107",
         "status": "done",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "scripts/validate-lar.sh",
-        "trigger": "LIVING-ARTIFACTS.md схема изменена; новый two-repo path паттерн",
-        "refresh": "Developer при смене LAR structure",
-        "detection": "/sync-audit Gap 10 вызывает; validate-template-format.sh",
-        "owner": "методология"
-      },
-      {
-        "artifact": "commands/sync-audit.md (Gap 10 вызов)",
-        "trigger": "two-repo config изменён",
-        "refresh": "sync-methodology.sh доставка",
+        "artifact": "commands/sync-audit.md (consumer-vs-clone подшаг)",
+        "trigger": "sync-methodology.sh API изменился (параметры/путь)",
+        "refresh": "sync-methodology.sh доставка → consumer получает новую версию команды",
         "detection": "/review downstream check; validate-delivery.sh",
         "owner": "методология"
       },
       {
-        "artifact": "docs/architecture/LIVING-ARTIFACTS.md (path fixes)",
-        "trigger": "путь к файлу изменился в repo",
-        "refresh": "Developer в /code Шаг 5",
-        "detection": "validate-lar.sh (Gap 10)",
-        "owner": "Developer"
-      },
-      {
-        "artifact": "docs/architecture/SYSTEM-MAP.md (edge labels)",
-        "trigger": "hybrid-rule изменяется",
-        "refresh": "Developer в /code Шаг 5",
-        "detection": "/architecture-audit Шаг 3; validate-mermaid-links.sh",
-        "owner": "Developer"
+        "artifact": "consumer-vs-clone check logic (.claude/.version парсинг)",
+        "trigger": ".claude/.version формат изменился",
+        "refresh": "Developer при смене формата",
+        "detection": "grep .claude/.version в команде",
+        "owner": "методология"
       }
     ]
   },
@@ -176,9 +152,9 @@
     "phase": "v5.28.0 Design Spec артефакт-тип — шаблон + skill /design-spec + правило ADR vs Design Spec (PR #174)"
   },
   "last_auto_pull": {
-    "at": "2026-06-11T08:20:18+00:00",
-    "version_before": "v5.32.0",
-    "version_after": "v5.32.0",
+    "at": "2026-06-11T11:25:52+00:00",
+    "version_before": "v5.33.0",
+    "version_after": "v5.33.0",
     "status": "failed"
   },
   "last_retro": {
