@@ -299,7 +299,7 @@ bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
 
 ---
 
-## Шаг 1 — Inventory gaps (12 проверок)
+## Шаг 1 — Inventory gaps (13 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
 
@@ -550,6 +550,46 @@ Output:
    - `[milestone]` тегов нет в DEVLOG → 🟢 N/A (methodology milestone tracking не используется)
 
 > **Sustainment:** если формат `[milestone]` тега в DEVLOG изменится — обновить grep-паттерн в п.3. Связь: CLAUDE.md DEVLOG теги секция.
+
+---
+
+### Gap 13: Branch protection on main (v5.43.0)
+
+**Цель:** обнаружить если branch protection на `integration_branch` (default: `main`) отключена — риск прямого push в main открыт.
+
+⛔ **WARN-only** (не self-heal, не block). Применимо только для GitHub-репо с доступным `gh` CLI. Graceful skip при GitLab / отсутствии `gh` / недостатке прав — **без ошибки и без WARN**.
+
+**Scope:** только `mode: team` репо с `integration_branch` настроенным. Solo-mode: прямой push в main is expected → skip (Gap 13 только про team-guard). Если `CLAUDE.local.md` отсутствует или `mode` не `team` → 🟢 N/A.
+
+1. Читать `mode` и `integration_branch` из `CLAUDE.local.md ## Branching`. Если `mode != team` → 🟢 N/A.
+2. Определить owner/repo из `git remote get-url origin`. Если не `github.com` → 🟢 N/A (GitLab и другие — graceful skip).
+3. Проверить что `gh` CLI доступен: `command -v gh`. Если нет → 🟢 N/A.
+4. Inline verify (НЕ вызывать `scripts/setup-branch-protection.sh` — скрипт не синхронизируется консьюмерам, delivery-drift класс):
+   ```bash
+   gh api "repos/${owner}/${repo}/branches/${integration_branch}/protection" \
+     -q '.enforce_admins.enabled // "false"' 2>/dev/null
+   ```
+   - Exit 0 + enforce_admins = true → 🟢 OK (protection active)
+   - Exit 0 + enforce_admins = false → 🟡 **Medium** WARN (protected but admin bypass allowed)
+   - Exit 1 (404 / Branch not protected) → 🔴 **High** WARN: protection отсутствует
+   - Exit 403 (нет прав читать protection) → 🟢 N/A (нет доступа — нельзя вынести вердикт)
+   - Другая ошибка (network, etc.) → 🟢 N/A (graceful skip)
+
+5. При 🔴 WARN — output:
+   ```
+   ⚠️ Gap 13 [High]: Branch protection НЕ активна на ${owner}/${repo}:${integration_branch}.
+      Прямой push в main возможен (HIGH риск — CLAUDE.md § Security).
+      Включить: bash scripts/setup-branch-protection.sh
+      Verify:   bash scripts/setup-branch-protection.sh --verify
+   ```
+
+6. При 🟡 WARN — output:
+   ```
+   ℹ️ Gap 13 [Medium]: Protection active but enforce_admins=false — admin bypass возможен.
+      Включить enforce: bash scripts/setup-branch-protection.sh (re-apply)
+   ```
+
+> **Sustainment:** GitHub branch protection API endpoint стабилен; если owner/repo переехал → `git remote get-url origin` автоматически даёт новый адрес. Связь: `scripts/setup-branch-protection.sh` · ADR-002 Amendment v3 · CLAUDE.md § Security.
 
 ---
 

@@ -4,6 +4,15 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.44.0 — feat: /sync-audit Gap 13 — branch protection verify (PLAN-07b) (2026-06-11)
+
+**Что:**
+- **`commands/sync-audit.md`** Gap 13: если `mode: team` + GitHub + `gh` CLI → inline `gh api` verify branch protection. 🔴 High WARN если protection отсутствует; graceful skip для GitLab / solo / нет `gh` / нет прав.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → получить обновлённый `sync-audit.md` с Gap 13. Если `mode: team` + GitHub: следующий `/sync-audit` автоматически проверит protection.
+
+---
+
 ## v5.43.0 — feat: branch protection + GH006 classifier + merge retry (PLAN-07) (2026-06-11)
 
 **Что:**
