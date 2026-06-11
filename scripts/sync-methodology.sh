@@ -28,8 +28,32 @@
 
 set -euo pipefail
 
-TARGET_DIR="${1:?Usage: $0 <target-project-dir>}"
+# Parse args: optional --print-changed flag (for /push-consumers manifest-commit).
+# Usage: sync-methodology.sh <target-project-dir> [--print-changed]
+# With --print-changed: after sync, prints a machine-readable manifest of written paths
+# to stdout prefixed with "CHANGED:" — one line per file. Used by /push-consumers to
+# commit ONLY these exact files (not broad trees), preventing pathspec-overcapture (a17ecc1 class).
+PRINT_CHANGED=false
+_args=()
+for _a in "$@"; do
+  case "$_a" in
+    --print-changed) PRINT_CHANGED=true ;;
+    *) _args+=("$_a") ;;
+  esac
+done
+set -- "${_args[@]+"${_args[@]}"}"
+
+TARGET_DIR="${1:?Usage: $0 <target-project-dir> [--print-changed]}"
 METHODOLOGY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Accumulates relative paths (relative to TARGET_DIR) of every file written by sync.
+# Populated by _track_changed helper; consumed at end when PRINT_CHANGED=true.
+SYNC_CHANGED_FILES=()
+
+_track_changed() {
+  # Record a path relative to TARGET_DIR for the manifest.
+  # Usage: _track_changed "relative/path/to/file"
+  SYNC_CHANGED_FILES+=("$1")
+}
 VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
 SYNCED_AT="$(date -u +%Y-%m-%d)"
 
@@ -217,6 +241,7 @@ sync_skills() {
       mkdir -p "$dest_dir"
       if [[ -f "$skill_dir/SKILL.md" ]]; then
         inject_skill_banner "$skill_dir/SKILL.md" "$dest_dir/SKILL.md"
+        _track_changed ".claude/skills/$skill_name/SKILL.md"
         echo "  ✓ $skill_name/SKILL.md"
       fi
       # Copy any additional files in skill dir (e.g., examples/, README)
@@ -225,6 +250,7 @@ sync_skills() {
         fname="$(basename "$extra")"
         [[ "$fname" == "SKILL.md" ]] && continue
         cp "$extra" "$dest_dir/$fname"
+        _track_changed ".claude/skills/$skill_name/$fname"
         echo "  ✓ $skill_name/$fname"
       done
     done
@@ -249,11 +275,13 @@ sync_claude_canonical() {
     if head -1 "$dest" 2>/dev/null | grep -q "AUTO-GENERATED from methodology-platform"; then
       # Already canonical format — update in place
       inject_md_banner "$src" "$dest"
+      _track_changed "CLAUDE.md"
       echo "  ↻ CLAUDE.md (canonical rules updated)"
     else
       # Old-style project: migrate project content to CLAUDE.local.md first
       if [[ ! -f "$local_dest" ]]; then
         cp "$dest" "$local_dest"
+        _track_changed "CLAUDE.local.md"
         echo "  ✓ CLAUDE.local.md (migrated project content from CLAUDE.md)"
         echo "    ⚠️  Review CLAUDE.local.md: keep only project-specific sections"
         echo "        (Stack, Architecture invariants, Security threats, Key files, External links)"
@@ -261,13 +289,16 @@ sync_claude_canonical() {
         echo "  - CLAUDE.local.md (exists — preserved)"
       fi
       inject_md_banner "$src" "$dest"
+      _track_changed "CLAUDE.md"
       echo "  ↻ CLAUDE.md (canonical rules updated — project content in CLAUDE.local.md)"
     fi
   else
     inject_md_banner "$src" "$dest"
+    _track_changed "CLAUDE.md"
     echo "  ✓ CLAUDE.md (created canonical)"
     if [[ -f "$src_local" ]]; then
       sed "s/{{Project Name}}/$pname/g" "$src_local" > "$local_dest"
+      _track_changed "CLAUDE.local.md"
       echo "  ✓ CLAUDE.local.md (created from template)"
     fi
   fi
@@ -287,6 +318,7 @@ merge_triggers_json() {
 
   if [[ ! -f "$existing" ]]; then
     cp "$template" "$existing"
+    _track_changed ".claude/state/triggers.json"
     echo "  ✓ triggers.json (initialized)"
     return
   fi
@@ -490,6 +522,7 @@ check_artifact() {
   elif [[ -f "$src" ]]; then
     mkdir -p "$(dirname "$dest")"
     cp "$src" "$dest"
+    _track_changed "$dest_rel"
     echo "  ✓ $dest_rel (added from template)"
   else
     echo "  ! $dest_rel (template missing — skipped)"
@@ -508,6 +541,7 @@ check_artifact_subst() {
   elif [[ -f "$src" ]]; then
     mkdir -p "$(dirname "$dest")"
     sed "s/{{Project Name}}/$project_name/g" "$src" > "$dest"
+    _track_changed "$dest_rel"
     echo "  ✓ $dest_rel (added from template)"
   else
     echo "  ! $dest_rel (template missing — skipped)"
@@ -540,6 +574,7 @@ for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
   old_body=""
   [[ -f "$dest" ]] && old_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
   inject_md_banner "$cmd" "$dest"
+  _track_changed ".claude/commands/$name"
   new_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
   if [[ "$old_body" != "$new_body" ]]; then
     old_lines=$(echo "$old_body" | wc -l)
@@ -572,6 +607,7 @@ if [[ "$IS_SELF_APPLY" == "true" ]] && [[ -d "$METHODOLOGY_DIR/commands-local" ]
       name="$(basename "$cmd")"
       dest="$TARGET_DIR/.claude/commands/$name"
       inject_md_banner "$cmd" "$dest"
+      _track_changed ".claude/commands/$name"
       echo "  ✓ $name"
     done
   fi
@@ -633,6 +669,7 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
       *.sh) cp "$hook" "$dest"; chmod +x "$dest" 2>/dev/null || true ;;
       *)    cp "$hook" "$dest" ;;
     esac
+    _track_changed ".claude/hooks/$dest_name"
     echo "  ✓ $dest_name"
   done
 
@@ -699,6 +736,7 @@ if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/script
       dest="$TARGET_DIR/scripts/$name"
       cp "$script" "$dest"
       chmod +x "$dest" 2>/dev/null || true
+      _track_changed "scripts/$name"
       echo "  ✓ $name"
     done
     # Migration registry subdir (Flyway/Alembic-style) — consumers need these
@@ -710,6 +748,7 @@ if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/script
         mdest="$TARGET_DIR/scripts/migrations/$(basename "$mig")"
         cp "$mig" "$mdest"
         chmod +x "$mdest" 2>/dev/null || true
+        _track_changed "scripts/migrations/$(basename "$mig")"
         echo "  ✓ migrations/$(basename "$mig")"
       done
     fi
@@ -722,6 +761,7 @@ fi
 if [[ -f "$METHODOLOGY_DIR/templates/model-tiers.md" ]]; then
   echo "→ model-tiers/"
   inject_md_banner "$METHODOLOGY_DIR/templates/model-tiers.md" "$TARGET_DIR/.claude/model-tiers.md"
+  _track_changed ".claude/model-tiers.md"
   echo "  ✓ model-tiers.md"
 fi
 
@@ -733,6 +773,7 @@ methodology: $VERSION
 synced_at: $SYNCED_AT
 source: https://github.com/cait-solutions/it-dev-methodology
 EOF
+_track_changed ".claude/.version"
 
 # ---------------------------------------------------------------------------
 # Artifact coverage — add-only, never overwrite project content.
@@ -768,6 +809,7 @@ if [[ "$IS_SELF_APPLY" == "true" ]]; then
   # это runtime state (gitignored), его merge при self-apply конфликтует с активными сессиями.
   echo "  [self-apply — dogfood hook-wiring]"
   merge_settings_json
+  _track_changed ".claude/settings.json"
 else
   # Consumer project: overwrite canonical artifacts, add missing project-owned artifacts.
   _pname="$(basename "$TARGET_DIR")"
@@ -779,13 +821,16 @@ else
   if [[ -f "$METHODOLOGY_DIR/templates/adr/_TEMPLATE.md" ]]; then
     mkdir -p "$TARGET_DIR/docs/adr"
     inject_md_banner "$METHODOLOGY_DIR/templates/adr/_TEMPLATE.md" "$TARGET_DIR/docs/adr/_TEMPLATE.md"
+    _track_changed "docs/adr/_TEMPLATE.md"
     echo "  ↻ docs/adr/_TEMPLATE.md (updated)"
   fi
 
   # --- MERGE: special handling ---
   echo "  [special — merge]"
   merge_triggers_json
+  _track_changed ".claude/state/triggers.json"
   merge_settings_json
+  _track_changed ".claude/settings.json"
 
   # --- PRESERVE: project-owned (add-only, never overwrite) ---
   echo "  [project-owned — add if missing]"
@@ -848,3 +893,17 @@ fi
 
 echo ""
 echo "✅ Sync complete. Methodology version: $VERSION"
+
+# ---------------------------------------------------------------------------
+# --print-changed: emit manifest of written paths (relative to TARGET_DIR).
+# Each line prefixed "CHANGED:" for unambiguous machine parsing.
+# Consumed by /push-consumers to commit ONLY sync-written files — prevents
+# pathspec-overcapture (class a17ecc1): only exact files written, not broad trees.
+# ---------------------------------------------------------------------------
+if [[ "$PRINT_CHANGED" == "true" ]]; then
+  if [[ ${#SYNC_CHANGED_FILES[@]} -gt 0 ]]; then
+    for _f in "${SYNC_CHANGED_FILES[@]}"; do
+      echo "CHANGED:$_f"
+    done
+  fi
+fi
