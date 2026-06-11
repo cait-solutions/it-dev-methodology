@@ -15,6 +15,8 @@
 
 **Отличие от `/architecture-audit`:** /architecture-audit — что **построено в проекте** vs design (SYSTEM-MAP drift, AGENT-GAPS patterns). /sync-audit — что **methodology предлагает** vs **применено в проекте** (features adoption).
 
+> **Self-dogfood note (methodology_path: .):** Для methodology-platform (`CLAUDE.local.md methodology_path: .`) `/sync-audit` делает self-аудит — версионный delta всегда 0 (репо IS методология). Результат: Gap 1 (version delta) всегда пусто. Gaps 2-10 проверяются нормально (формат, mermaid, validators и т.д.). После деплоя `deploy-push.sh` запускает `sync-methodology.sh .` автоматически — дополнительный `/sync-audit` для self-case избыточен для версионного sync, но полезен для format-gaps.
+
 ---
 
 ## Рекомендуемая модель

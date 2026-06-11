@@ -295,3 +295,13 @@ else
   echo ""
   echo "✅ Deployed to ${PRODUCTION_BRANCH}"
 fi
+
+# Self-apply: синхронизировать .claude/ только для methodology-platform.
+# Guard: commands/ source dir + sync-methodology.sh должны существовать.
+# Consumers получат только один из этих признаков, не оба → guard false → skip.
+if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
+  echo ""
+  echo "▶ Self-apply (methodology-platform): bash scripts/sync-methodology.sh ."
+  bash scripts/sync-methodology.sh .
+  echo "✅ Self-applied"
+fi

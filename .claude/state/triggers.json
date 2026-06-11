@@ -98,18 +98,46 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-11",
-    "task_id": "validate-lar-doc-root-hybrid-labels",
+    "task_id": "self-apply-guarded-roadmap-trigger-g101-g102-g103",
     "service": "methodology",
     "mode": "Full",
-    "code_run": true,
+    "code_run": false,
     "commitments": [
-      { "text": "validate-lar.sh: добавить --doc-root параметр (второй корень для two-repo)", "status": "done", "skip_reason": null },
-      { "text": "validate-lar.sh: graceful check на существование --doc-root перед cd", "status": "done", "skip_reason": null },
-      { "text": "commands/sync-audit.md Gap 10: передавать --doc-root из CLAUDE.local.md при two-repo", "status": "done", "skip_reason": null },
-      { "text": "LIVING-ARTIFACTS.md: исправить auto-update-watchdog.py → auto-update-watchdog.template.py", "status": "done", "skip_reason": null },
-      { "text": "LIVING-ARTIFACTS.md: решить судьбу .code-workspace (убрать — файл вне обоих repos)", "status": "done", "skip_reason": null },
-      { "text": "templates/LIVING-ARTIFACTS.template.md: grep на auto-update-watchdog.py, исправить если есть", "status": "done", "skip_reason": "N/A — шаблон не содержит auto-update-watchdog.py" },
-      { "text": "SYSTEM-MAP.md: заменить EN-only edge labels на RU (reads→читает, writes→пишет и др.)", "status": "done", "skip_reason": null }
+      {
+        "text": "validate-lar.sh: добавить --doc-root параметр (второй корень для two-repo)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "validate-lar.sh: graceful check на существование --doc-root перед cd",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "commands/sync-audit.md Gap 10: передавать --doc-root из CLAUDE.local.md при two-repo",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "LIVING-ARTIFACTS.md: исправить auto-update-watchdog.py → auto-update-watchdog.template.py",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "LIVING-ARTIFACTS.md: решить судьбу .code-workspace (убрать — файл вне обоих repos)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "templates/LIVING-ARTIFACTS.template.md: grep на auto-update-watchdog.py, исправить если есть",
+        "status": "done",
+        "skip_reason": "N/A — шаблон не содержит auto-update-watchdog.py"
+      },
+      {
+        "text": "SYSTEM-MAP.md: заменить EN-only edge labels на RU (reads→читает, writes→пишет и др.)",
+        "status": "done",
+        "skip_reason": null
+      }
     ],
     "sustainment": [
       {
@@ -148,9 +176,9 @@
     "phase": "v5.28.0 Design Spec артефакт-тип — шаблон + skill /design-spec + правило ADR vs Design Spec (PR #174)"
   },
   "last_auto_pull": {
-    "at": "2026-06-11T06:00:30+00:00",
-    "version_before": "v5.28.0",
-    "version_after": "v5.28.0",
+    "at": "2026-06-11T08:20:18+00:00",
+    "version_before": "v5.32.0",
+    "version_after": "v5.32.0",
     "status": "failed"
   },
   "last_retro": {

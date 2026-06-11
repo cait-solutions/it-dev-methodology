@@ -262,17 +262,15 @@ push_token_owner (из CLAUDE.local.md): {push_token_owner или "не указ
 - Если были async failures → `last_deploy.status = "partial"` (git push OK но CI не started)
 
 **Только для `methodology-platform`:**
-- **solo:** сразу после push → self-apply:
-  ```
-  bash scripts/sync-methodology.sh .
-  ```
-- **team:** self-apply выполняется **ПОСЛЕ merge PR** в `production_branch`, не при deploy:
-  ```
-  # Запустить после того как PR был merged:
-  bash scripts/sync-methodology.sh .
-  ```
 
-Это обновляет `.claude/commands/` и `.claude/hooks/` в текущем проекте до только что задеплоенной версии. Без этого шага методология работает на устаревших командах до следующего ручного sync.
+Self-apply (`sync-methodology.sh .`) встроен в `deploy-push.sh` с guard'ом — выполняется автоматически в конце деплоя и для solo и для team режима. Guard: `[ -d commands ] && [ -f scripts/sync-methodology.sh ]` — срабатывает только в methodology-platform, consumers пропускают.
+
+Ручной запуск нужен только если `deploy-push.sh` не использовался:
+```
+bash scripts/sync-methodology.sh .
+```
+
+Это обновляет `.claude/commands/`, `.claude/hooks/`, `.claude/skills/` до только что задеплоенной версии.
 
 ---
 
