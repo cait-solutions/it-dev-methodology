@@ -176,7 +176,7 @@
   "last_deploy": {
     "date": "2026-06-11",
     "status": "ok",
-    "phase": "v5.41.0 Pre-Mortem exec-context + R-032 (PR #192)"
+    "phase": "v5.42.0 /push-consumers + drift visibility + validate-lar.sh consumers (PR #193, PLAN-05)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
