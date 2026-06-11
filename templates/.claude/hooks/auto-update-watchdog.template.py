@@ -96,18 +96,22 @@ def read_last_pull(triggers_path: Path) -> str | None:
 
 
 def write_last_pull(triggers_path: Path, version_before: str | None,
-                    version_after: str | None, status: str) -> None:
+                    version_after: str | None, status: str,
+                    error: str | None = None) -> None:
     """Обновляет last_auto_pull в triggers.json. Создаёт если нет."""
     try:
         data = json.loads(triggers_path.read_text(encoding="utf-8-sig")) if triggers_path.is_file() else {}
     except (json.JSONDecodeError, OSError):
         data = {}
-    data["last_auto_pull"] = {
+    entry: dict = {
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "version_before": version_before,
         "version_after": version_after,
         "status": status,
     }
+    if error is not None:
+        entry["error"] = error  # первые 300 символов stderr/stdout
+    data["last_auto_pull"] = entry
     triggers_path.parent.mkdir(parents=True, exist_ok=True)
     triggers_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -238,6 +242,24 @@ def main() -> int:
     # Ловит «settings→missing hook» даже если auto-update interval ещё не наступил.
     check_hook_health(project_root)
 
+    # Re-notify если прошлый auto-pull завершился с ошибкой.
+    # Повторяем при каждом SessionStart пока status не сменится на success,
+    # чтобы failed не терялся тихо (closes G-112b / PLAN-03).
+    if triggers_file.is_file():
+        try:
+            _tdata = json.loads(triggers_file.read_text(encoding="utf-8-sig"))
+            _last = _tdata.get("last_auto_pull") or {}
+            if _last.get("status") == "failed":
+                _err = _last.get("error", "")
+                _err_hint = f": {_err[:200]}" if _err else ""
+                print(
+                    f"⚠️ Прошлый auto-pull FAILED (at {_last.get('at', '?')}){_err_hint}\n"
+                    f"   Методология может быть устаревшей. Запусти `/sync-audit` или\n"
+                    f"   `bash scripts/sync-methodology.sh .` для диагностики."
+                )
+        except (json.JSONDecodeError, OSError):
+            pass
+
     # BOOTSTRAP mode — нет .claude/.version, методология не инициализирована
     if not version_file.is_file():
         methodology_path = (project_root / config["methodology_path"]).resolve()
@@ -295,12 +317,17 @@ def main() -> int:
 
         version_after = read_version(version_file)
         status = "success" if result.returncode == 0 else "failed"
-        write_last_pull(triggers_file, version_before, version_after, status)
+        # Собрать error excerpt: предпочитаем stderr, fallback на stdout (errors=replace — cp1252 safe)
+        error_excerpt: str | None = None
+        if result.returncode != 0:
+            raw_err = (result.stderr or result.stdout or "").strip()
+            error_excerpt = raw_err[:300] if raw_err else f"exit code {result.returncode}"
+        write_last_pull(triggers_file, version_before, version_after, status, error=error_excerpt)
 
         if result.returncode != 0:
             message = (
                 f"⚠️ Auto-update: sync-methodology.sh завершился с ошибкой (код {result.returncode}).\n"
-                f"   stderr: {result.stderr.strip()[:300]}\n"
+                f"   stderr: {(result.stderr or result.stdout or '').strip()[:300]}\n"
                 f"   Запусти вручную для диагностики: `bash {sync_script} .`"
             )
             if config["on_failure"] == "notify":
