@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.42.0 — feat: /push-consumers + drift visibility + validate-lar.sh в templates/scripts/ (PLAN-05) (2026-06-11)
+
+**Что:**
+- **`commands-local/push-consumers.md`** — новая LOCAL-ONLY команда `/push-consumers`: drift-таблица (version/Δ/статус), dirty-pre-check, батч-подтверждение, batch sync, write-only (без git commit в консьюмерах). Командный интерфейс к массовому обновлению.
+- **`templates/scripts/validate-lar.sh`** — dual-use копия validate-lar.sh для консьюмеров (G-112c). Заголовок «канон scripts/ — менять синхронно».
+- **`commands-local/pull-consumers.md`** — drift-колонка в report (version/Δ/статус). Видимость без явного пуша.
+- **`templates/model-tiers.md`** — строка `/push-consumers: Default tier`.
+- **Первый прогон:** 6/6 консьюмеров обновлены v4.10.6–v4.60.0 → v5.41.0 (write-only, без коммита агента). validate-lar.sh доехал до ebay, validate-mermaid-links.sh в erp.
+
+**3-й [domain:sync] в DEVLOG — порог /diagnose:** корень известен (PLAN-05 этот PR). /diagnose не требуется.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → получить обновлённые команды + validate-lar.sh.
+
+---
+
 ## v5.41.0 — feat: Pre-Mortem категория 7 «Execution context» (closes R-032) (PLAN-04) (2026-06-11)
 
 **Что:**
