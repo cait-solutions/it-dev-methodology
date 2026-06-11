@@ -451,20 +451,17 @@ Output:
    ```
 
 3. Если PRESENT — запустить `validate-lar.sh` (если скрипт доступен).
-   Читать `CLAUDE.local.md ## Auto-update → doc_repo_path` чтобы определить тип репо:
+   Скрипт автоматически определяет тип репо (single / two-repo) через `doc_repo_path` из `CLAUDE.local.md`:
    ```bash
-   # single-repo (doc_repo_path: null или не задан):
+   # Универсальный вызов — работает для single-repo и two-repo автоматически:
    bash scripts/validate-lar.sh
-
-   # two-repo (doc_repo_path задан, напр. ../it-dev-methodology-documentation):
-   # --root = code-repo (где живут scripts/, templates/, commands/)
-   # --doc-root = doc-repo (где живут ROADMAP.md, DEVLOG.md, VISION.md и т.п.)
-   bash scripts/validate-lar.sh \
-     --root . \
-     --lar <doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md \
-     --doc-root <doc_repo_path>
+   ```
+   Переопределение при нестандартных путях (необязательно при стандартной структуре):
+   ```bash
+   bash scripts/validate-lar.sh --root . --lar <path/to/LIVING-ARTIFACTS.md> --doc-root <doc_repo_path>
    ```
    - Если `validate-lar.sh` отсутствует → авто-sync `bash <methodology_path>/scripts/sync-methodology.sh .`, затем повторить
+   - `WARN-SKIP` (LAR не найден) → нет LAR → 🟡 Medium (создать из шаблона)
    - `MISSING_FILE` → 🟡 Medium: пути в LAR не существуют на диске (обновить LAR или создать файлы)
    - `OK` → проверить количество строк: `grep -c "^| \`" <LAR_PATH>`
      - 0 строк → 🟡 Medium: LAR пуст

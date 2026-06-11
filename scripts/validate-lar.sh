@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # validate-lar.sh — проверить что файлы в LIVING-ARTIFACTS.md существуют на диске
-# Exit 0 = OK, Exit 1 = MISSING_FILE entries found
+# Exit 0 = OK или WARN-SKIP (LAR не найден — легитимно), Exit 1 = MISSING_FILE entries found
 # Usage: bash scripts/validate-lar.sh [--root <dir>] [--lar <path>] [--doc-root <dir>]
 #   --root <dir>      code repo root to resolve relative paths against (default: .)
 #   --lar  <path>     explicit path to LIVING-ARTIFACTS.md (auto-detect if omitted)
 #   --doc-root <dir>  optional second root for two-repo setups (doc repo);
 #                     paths not found under --root are retried under --doc-root
+#
+# Auto-detect order (если --lar не задан):
+#   1. $ROOT/docs/architecture/LIVING-ARTIFACTS.md
+#   2. $DOC_ROOT/docs/architecture/LIVING-ARTIFACTS.md  (если --doc-root задан)
+#   3. doc_repo_path из CLAUDE.local.md ## Auto-update (для two-repo без явного --doc-root)
+# WARN-SKIP если нигде не найден (exit 0 — легитимное отсутствие).
 
 set -euo pipefail
 
@@ -49,19 +55,64 @@ if [ -n "$DOC_ROOT" ]; then
     fi
 fi
 
-# Auto-detect LAR path if not provided
+# Auto-detect LAR path if not provided (3-level search)
 if [ -z "$LAR_PATH" ]; then
-    # Standard locations (two-repo and single-repo)
-    if [ -f "$ROOT_ABS/docs/architecture/LIVING-ARTIFACTS.md" ]; then
-        LAR_PATH="$ROOT_ABS/docs/architecture/LIVING-ARTIFACTS.md"
-    else
-        echo "SKIP: LIVING-ARTIFACTS.md not found under $ROOT_ABS/docs/architecture/ — Gap 10 not applicable"
+    SEARCHED_PATHS=""
+
+    # Level 1: standard single-repo location under --root
+    CANDIDATE="$ROOT_ABS/docs/architecture/LIVING-ARTIFACTS.md"
+    SEARCHED_PATHS="$SEARCHED_PATHS $CANDIDATE"
+    if [ -f "$CANDIDATE" ]; then
+        LAR_PATH="$CANDIDATE"
+    fi
+
+    # Level 2: --doc-root if provided
+    if [ -z "$LAR_PATH" ] && [ -n "$ROOT2_ABS" ]; then
+        CANDIDATE="$ROOT2_ABS/docs/architecture/LIVING-ARTIFACTS.md"
+        SEARCHED_PATHS="$SEARCHED_PATHS $CANDIDATE"
+        if [ -f "$CANDIDATE" ]; then
+            LAR_PATH="$CANDIDATE"
+        fi
+    fi
+
+    # Level 3: doc_repo_path from CLAUDE.local.md ## Auto-update (two-repo without explicit --doc-root)
+    if [ -z "$LAR_PATH" ]; then
+        CLAUDE_LOCAL="$ROOT_ABS/CLAUDE.local.md"
+        if [ -f "$CLAUDE_LOCAL" ]; then
+            # Extract doc_repo_path value — grep line, strip key prefix, trim whitespace/quotes
+            DOC_REPO_RAW=$(grep -A 10 "## Auto-update" "$CLAUDE_LOCAL" 2>/dev/null | grep "doc_repo_path:" | sed 's/.*doc_repo_path:[[:space:]]*//' | tr -d '"'"'" | tr -d '[:space:]')
+            if [ -n "$DOC_REPO_RAW" ] && [ "$DOC_REPO_RAW" != "null" ]; then
+                # Resolve relative to ROOT_ABS
+                if [ -d "$ROOT_ABS/$DOC_REPO_RAW" ]; then
+                    DOC_REPO_ABS="$(cd "$ROOT_ABS/$DOC_REPO_RAW" && pwd)"
+                elif [ -d "$DOC_REPO_RAW" ]; then
+                    DOC_REPO_ABS="$(cd "$DOC_REPO_RAW" && pwd)"
+                else
+                    DOC_REPO_ABS=""
+                fi
+                if [ -n "$DOC_REPO_ABS" ]; then
+                    CANDIDATE="$DOC_REPO_ABS/docs/architecture/LIVING-ARTIFACTS.md"
+                    SEARCHED_PATHS="$SEARCHED_PATHS $CANDIDATE"
+                    if [ -f "$CANDIDATE" ]; then
+                        LAR_PATH="$CANDIDATE"
+                        # Also set ROOT2_ABS for path resolution if not already set
+                        [ -z "$ROOT2_ABS" ] && ROOT2_ABS="$DOC_REPO_ABS"
+                    fi
+                fi
+            else
+                echo "WARN: doc_repo_path не распознан в CLAUDE.local.md — пропускаю level-3 поиск"
+            fi
+        fi
+    fi
+
+    if [ -z "$LAR_PATH" ]; then
+        echo "WARN-SKIP: LIVING-ARTIFACTS.md не найден (искал:$SEARCHED_PATHS) — Gap 10 not applicable"
         exit 0
     fi
 else
     # Resolve relative to cwd
     if [ ! -f "$LAR_PATH" ]; then
-        echo "SKIP: LAR file not found: $LAR_PATH"
+        echo "WARN-SKIP: LAR file not found: $LAR_PATH"
         exit 0
     fi
 fi
@@ -87,8 +138,11 @@ while IFS= read -r line; do
         *)         continue ;;
     esac
 
-    # Extract content between first pair of backticks (POSIX-compatible)
-    path_raw=$(echo "$line" | sed "s/.*\`\([^\`]*\)\`.*/\1/")
+    # Extract content between FIRST pair of backticks (POSIX-compatible, non-greedy via [^`]*)
+    # Important: sed ".*`X`.*" is greedy — it matches the LAST backtick pair.
+    # To get the FIRST pair, strip from the beginning up to (not including) the first backtick,
+    # then take everything up to the next backtick.
+    path_raw=$(echo "$line" | sed "s/[^\`]*\`\([^\`]*\)\`.*/\1/")
 
     [ -z "$path_raw" ] && continue
 
