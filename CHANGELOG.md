@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.39.0 — fix: triggers.json state hygiene — дедуп ключей + validate-triggers.sh (PLAN-02) (2026-06-11)
+
+**Что:**
+- **Миграция triggers.json:** удалены top-level дубли `last_retro`/`last_architecture_audit`, смержены в канонические `global.*` с объединением recommendations (R-030..033 + S-1..3 = 7 записей).
+- **Новый `scripts/validate-triggers.sh`:** детектор дубль-ключей (global.X vs top-level X). Bash 3.2, python-интерпретер резолвер. Exit 1 при нарушении с именованием конкретных дублей; WARN-SKIP при отсутствии файла.
+- **Команды исправлены:** `/retro`, `/architecture-audit`, `/plan` — все инкременты и чтения теперь используют явный путь `global.last_*` (было bare `last_*` без `global.`).
+- **templates/scripts/validate-triggers.sh** — dual-use копия для консьюмеров.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → получить `scripts/validate-triggers.sh` + обновлённые команды.
+
+---
+
 ## v5.38.0 — fix: validate-lar.sh two-repo auto-detect + WARN-SKIP (PLAN-01) (2026-06-11)
 
 **Что:**

@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 20
+      "plans_since": 21
     },
     "last_retro": {
-      "date": "2026-06-09",
-      "plans_since": 7
+      "date": "2026-06-11",
+      "plans_since": 1
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 34
+      "plans_since": 35
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 28
+      "plans_since": 29
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 15
+      "plans_since": 16
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 30
+      "plans_since": 31
     },
     "last_architecture_audit": {
-      "date": "2026-06-09",
-      "plans_since": 5,
+      "date": "2026-06-10",
+      "plans_since": 3,
       "recommendations": [
         {
           "id": "R-030",
@@ -57,6 +57,30 @@
           "type": "gap-structural",
           "summary": "S-4 CI для script idempotency + cross-platform — реальный L4 под S-2; закрывает P-C/D + SYSTEM-MAP drift + R-02 одним ходом; flagged не proposed (квартальный commitment, PM decision)",
           "status": "flagged",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "S-1",
+          "type": "gap-structural",
+          "summary": "domain-aware /diagnose trigger — 3 фикса одного домена = /diagnose (не точный тег)",
+          "status": "implemented",
+          "scope": "methodology",
+          "implementation_pr": "v5.27.0"
+        },
+        {
+          "id": "S-2",
+          "type": "gap-structural",
+          "summary": "completeness-gap L3 reinforcement — domain-grep checkpoint в /code Шаг 1.7 [SUPERSEDED by G-099 Sustainment Declaration v5.25.0 — re-check выявил дубль]",
+          "status": "superseded",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "S-3",
+          "type": "drift",
+          "summary": "SYSTEM-MAP: добавить consumer-push/pull/credential-helper в secrets слой",
+          "status": "proposed",
           "scope": "methodology",
           "implementation_pr": null
         }
@@ -98,24 +122,55 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-11T17:30:00+00:00",
-    "task_id": "blindspots-batch-01-false-green-validators",
+    "task_id": "blindspots-batch-02-triggers-state-hygiene",
     "service": "methodology",
     "mode": "Full",
-    "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-01-false-green-validators.md",
-    "batch": "sustainment-blindspots 01→05 (см. ROADMAP ## Now); после /code каждого плана — last_plan_session перезаписать следующим plan_file",
+    "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-02-triggers-state-hygiene.md",
+    "batch": "sustainment-blindspots 03→05 (PLAN-01 v5.38.0, PLAN-02 v5.39.0 done); следующий: PLAN-03",
     "code_run": true,
     "commitments": [
-      { "text": "validate-lar.sh auto-detect 3-уровневый: root → doc-root → doc_repo_path из CLAUDE.local.md", "status": "done", "skip_reason": null },
-      { "text": "SKIP всегда с WARN-префиксом и списком путей где искал", "status": "done", "skip_reason": null },
-      { "text": "LIVING-ARTIFACTS.md битый путь починен (templates/CLAUDE_LOCAL.template.md)", "status": "done", "skip_reason": null },
-      { "text": "verification в wired-вызове (bash scripts/validate-lar.sh без аргументов из корня), exit-код без пайпа", "status": "done", "skip_reason": null }
+      {
+        "text": "детектор validate-triggers.sh ДО миграции exit=1 (2 duplicates)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "миграция triggers.json: top-level last_retro/last_architecture_audit удалены, смержены в global.*",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "recommendations объединены без потерь (7 = R-030..033 + S-1..3)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "все команды-писатели: explicit global.* пути",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "validate-triggers.sh в templates/scripts/",
+        "status": "done",
+        "skip_reason": null
+      }
     ],
     "sustainment": [
-      { "artifact": "scripts/validate-lar.sh auto-detect", "trigger": "/sync-audit Gap 10; /review LAR-gate", "refresh": "при изменении схемы CLAUDE.local.md ## Auto-update обновить grep", "detection": "негативный тест; /retro эмпирический прогон валидаторов", "owner": "методология" },
-      { "artifact": "LIVING-ARTIFACTS.md пути", "trigger": "/plan Шаг 97 / /code Шаг 5", "refresh": "PR-coupling", "detection": "validate-lar.sh default-вызов", "owner": "методология" }
-    ],
-    "commitments_done_archive_p008": "p008-roadmap-done-trigger-reactive-path завершён полностью (code_run true, все 6 commitments done) — см. DEVLOG v5.37.0",
-    "note": "p008 sustainment-строки перенесены в LIVING-ARTIFACTS.md (v5.37.0); полный контракт p008 — DEVLOG v5.37.0"
+      {
+        "artifact": "scripts/validate-triggers.sh",
+        "trigger": "/retro Шаг 1; /deploy validate-triggers",
+        "refresh": "при изменении templates/triggers.json.template global-блока — обновить GLOBAL_KEYS",
+        "detection": "сам себя (exit 1 при рецидиве)",
+        "owner": "методология"
+      },
+      {
+        "artifact": "triggers.json canonical structure",
+        "trigger": "команды-писатели (/retro, /architecture-audit, /plan)",
+        "refresh": "explicit global.* пути в командах",
+        "detection": "validate-triggers.sh",
+        "owner": "методология"
+      }
+    ]
   },
   "last_deploy": {
     "date": "2026-06-11",
@@ -127,39 +182,5 @@
     "version_before": "v5.37.0",
     "version_after": "v5.37.0",
     "status": "failed"
-  },
-  "last_retro": {
-    "date": "2026-06-11",
-    "plans_since": 0
-  },
-  "last_architecture_audit": {
-    "date": "2026-06-10",
-    "plans_since": 2,
-    "recommendations": [
-      {
-        "id": "S-1",
-        "type": "gap-structural",
-        "summary": "domain-aware /diagnose trigger — 3 фикса одного домена = /diagnose (не точный тег)",
-        "status": "implemented",
-        "scope": "methodology",
-        "implementation_pr": "v5.27.0"
-      },
-      {
-        "id": "S-2",
-        "type": "gap-structural",
-        "summary": "completeness-gap L3 reinforcement — domain-grep checkpoint в /code Шаг 1.7 [SUPERSEDED by G-099 Sustainment Declaration v5.25.0 — re-check выявил дубль]",
-        "status": "superseded",
-        "scope": "methodology",
-        "implementation_pr": null
-      },
-      {
-        "id": "S-3",
-        "type": "drift",
-        "summary": "SYSTEM-MAP: добавить consumer-push/pull/credential-helper в secrets слой",
-        "status": "proposed",
-        "scope": "methodology",
-        "implementation_pr": null
-      }
-    ]
   }
 }

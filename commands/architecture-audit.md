@@ -11,7 +11,7 @@
 | **C. Cross-project gap aggregation** | существует `consumers/*.yaml` registry с ≥ 1 ссылкой на склонированный проект имеющий `AGENT-GAPS.md` | methodology-platform или родительский проект с дочерними |
 
 **Запускается:**
-- `last_architecture_audit.plans_since` ≥ 5-10 (триггер из /plan)
+- `global.last_architecture_audit.plans_since` ≥ 5-10 (триггер из /plan)
 - `agent_gaps_open_count` ≥ 10 (накопилось критическая масса — нужен структурный взгляд)
 - Перед квартальным планированием
 - После крупных архитектурных изменений
@@ -349,9 +349,9 @@ A: ✓/✗ | B: ✓/✗ | C: ✓/✗
 
 1. Запись в DEVLOG:
    `[architecture-audit] Report YYYY-MM-DD: A=N drift, B=M patterns, C=K cross-project, structural=P, decommission=Q`
-2. Обновить `triggers.json`:
-   - `last_architecture_audit = { "date": today, "plans_since": 0 }`
-   - `last_architecture_audit.recommendations = [...]` — массив для self-eval в следующем цикле:
+2. Обновить `triggers.json` (canonical path — closes дубль-ключи G-112b):
+   - `global.last_architecture_audit = { "date": today, "plans_since": 0 }` (НЕ top-level)
+   - `global.last_architecture_audit.recommendations = [...]` — массив для self-eval в следующем цикле:
      ```json
      [
        { "id": "R-NNN", "type": "drift" | "gap-structural" | "decommission",
