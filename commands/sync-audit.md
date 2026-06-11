@@ -355,6 +355,30 @@ Output:
    - Секция есть, mermaid-блок есть, URL stale → покрывается Gap 7 (STALE_LINK)
    - Секция есть, mermaid-блок отсутствует → 🟡 **Medium** — секция-заглушка без диаграммы (добавить код по шаблону)
 
+### Gap 10: LIVING-ARTIFACTS.md presence (v5.30.0)
+
+**Цель:** проверить что Living Artifact Registry создан — единая точка lifecycle для всех механизмов/артефактов проекта.
+
+1. Проверить наличие `docs/architecture/LIVING-ARTIFACTS.md` (single-repo) или `<doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md` (two-repo):
+   ```bash
+   # single-repo:
+   test -f docs/architecture/LIVING-ARTIFACTS.md && echo PRESENT || echo MISSING
+   # two-repo (methodology-platform):
+   test -f ../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md && echo PRESENT || echo MISSING
+   ```
+2. Если PRESENT — проверить наличие таблицы-реестра (заголовок колонки `Артефакт`):
+   ```bash
+   grep -q "| Артефакт" docs/architecture/LIVING-ARTIFACTS.md && echo HAS_TABLE || echo EMPTY
+   ```
+3. Если PRESENT и HAS_TABLE — посчитать строки реестра (приблизительно):
+   ```bash
+   grep -c "^| \`" docs/architecture/LIVING-ARTIFACTS.md   # строки с файловыми путями
+   ```
+4. Output:
+   - Файл отсутствует → 🟡 **Medium severity** — lifecycle-реестр не создан; создать из `templates/LIVING-ARTIFACTS.template.md` командой `/plan` для v5.30.0 LAR. Без LAR /plan Шаг -1.3 Adjacent Impact неполон.
+   - Файл есть, таблица пуста (0 строк) → 🟡 **Medium severity** — LAR не заполнен; требует populate из /plan Шаг 97 существующих механизмов.
+   - Файл есть, таблица заполнена → 🟢 OK
+
 ---
 
 ## Шаг 2 — Severity assessment
@@ -383,6 +407,7 @@ Output:
 | 4 | Mermaid hybrid language | 🟢 | [N файлов с EN labels] | `/plan`: пройти по hybrid refactor (incremental) |
 | 5 | Skills frontmatter spec | 🔴/🟢 | [N skills с нарушениями] | `/plan`: spec compliance fix |
 | 7 | Mermaid live links | 🟡/🟢 | [MISSING/STALE/OK] | `bash scripts/update-mermaid-links.sh` |
+| 10 | LIVING-ARTIFACTS.md presence | 🟡/🟢 | [PRESENT/MISSING] | `/plan`: создать из `templates/LIVING-ARTIFACTS.template.md` |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная
