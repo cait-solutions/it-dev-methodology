@@ -26,7 +26,7 @@
     },
     "last_architecture_audit": {
       "date": "2026-06-09",
-      "plans_since": 4,
+      "plans_since": 5,
       "recommendations": [
         {
           "id": "R-030",
@@ -65,11 +65,13 @@
     }
   },
   "last_sync_audit": {
-    "date": "2026-06-10",
-    "methodology_version": "v5.26.1",
-    "gaps_found": 0,
+    "date": "2026-06-11",
+    "methodology_version": "v5.32.0",
+    "gaps_found": 2,
     "gaps_high_severity": 0,
-    "gap8_closed": "2026-06-10"
+    "gap8_closed": "2026-06-10",
+    "gap10_fixed": "2026-06-11",
+    "gap4_fixed": "2026-06-11"
   },
   "session_gap_counter": {
     "session_marker": "2026-06-10T12:30:00+00:00",
@@ -96,35 +98,47 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-11",
-    "task_id": "living-artifact-registry",
+    "task_id": "validate-lar-doc-root-hybrid-labels",
     "service": "methodology",
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "Добавить Gap check для LAR в commands/sync-audit.md как Gap N", "status": "pending", "skip_reason": null },
-      { "text": "Обновить SYSTEM-MAP и USER-MAP в /code Шаг 5 (новый capability LAR)", "status": "pending", "skip_reason": null }
+      { "text": "validate-lar.sh: добавить --doc-root параметр (второй корень для two-repo)", "status": "done", "skip_reason": null },
+      { "text": "validate-lar.sh: graceful check на существование --doc-root перед cd", "status": "done", "skip_reason": null },
+      { "text": "commands/sync-audit.md Gap 10: передавать --doc-root из CLAUDE.local.md при two-repo", "status": "done", "skip_reason": null },
+      { "text": "LIVING-ARTIFACTS.md: исправить auto-update-watchdog.py → auto-update-watchdog.template.py", "status": "done", "skip_reason": null },
+      { "text": "LIVING-ARTIFACTS.md: решить судьбу .code-workspace (убрать — файл вне обоих repos)", "status": "done", "skip_reason": null },
+      { "text": "templates/LIVING-ARTIFACTS.template.md: grep на auto-update-watchdog.py, исправить если есть", "status": "done", "skip_reason": "N/A — шаблон не содержит auto-update-watchdog.py" },
+      { "text": "SYSTEM-MAP.md: заменить EN-only edge labels на RU (reads→читает, writes→пишет и др.)", "status": "done", "skip_reason": null }
     ],
     "sustainment": [
       {
-        "artifact": "templates/LIVING-ARTIFACTS.template.md",
-        "trigger": "создание/добавление mechanism у consumer",
+        "artifact": "scripts/validate-lar.sh",
+        "trigger": "LIVING-ARTIFACTS.md схема изменена; новый two-repo path паттерн",
+        "refresh": "Developer при смене LAR structure",
+        "detection": "/sync-audit Gap 10 вызывает; validate-template-format.sh",
+        "owner": "методология"
+      },
+      {
+        "artifact": "commands/sync-audit.md (Gap 10 вызов)",
+        "trigger": "two-repo config изменён",
         "refresh": "sync-methodology.sh доставка",
-        "detection": "/sync-audit Gap N (new check for LAR presence)",
+        "detection": "/review downstream check; validate-delivery.sh",
         "owner": "методология"
       },
       {
-        "artifact": "docs/architecture/LIVING-ARTIFACTS.md",
-        "trigger": "добавление нового mechanism/артефакта в methodology",
-        "refresh": "/code Шаг 5 при каждом новом механизме; /plan Шаг 97 указывает",
-        "detection": "/review Sustainment gate + grep LIVING-ARTIFACTS.md",
-        "owner": "Developer (методология)"
+        "artifact": "docs/architecture/LIVING-ARTIFACTS.md (path fixes)",
+        "trigger": "путь к файлу изменился в repo",
+        "refresh": "Developer в /code Шаг 5",
+        "detection": "validate-lar.sh (Gap 10)",
+        "owner": "Developer"
       },
       {
-        "artifact": "commands/plan.md (Шаг 97 расширение) · commands/code.md (Шаг 5) · commands/review.md (Sustainment gate)",
-        "trigger": "Full /plan + /code с новым механизмом",
-        "refresh": "sync-methodology.sh",
-        "detection": "/sync-audit version delta",
-        "owner": "методология"
+        "artifact": "docs/architecture/SYSTEM-MAP.md (edge labels)",
+        "trigger": "hybrid-rule изменяется",
+        "refresh": "Developer в /code Шаг 5",
+        "detection": "/architecture-audit Шаг 3; validate-mermaid-links.sh",
+        "owner": "Developer"
       }
     ]
   },
@@ -141,7 +155,7 @@
   },
   "last_retro": {
     "date": "2026-06-10",
-    "plans_since": 2
+    "plans_since": 3
   },
   "last_architecture_audit": {
     "date": "2026-06-10",

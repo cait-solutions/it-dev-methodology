@@ -371,12 +371,19 @@ Output:
    test -f ../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md && echo PRESENT || echo MISSING
    ```
 
-3. Если PRESENT — запустить `validate-lar.sh` (если скрипт доступен):
+3. Если PRESENT — запустить `validate-lar.sh` (если скрипт доступен).
+   Читать `CLAUDE.local.md ## Auto-update → doc_repo_path` чтобы определить тип репо:
    ```bash
-   # single-repo:
+   # single-repo (doc_repo_path: null или не задан):
    bash scripts/validate-lar.sh
-   # two-repo — проверять против code-repo (где живут scripts/, templates/, commands/):
-   bash scripts/validate-lar.sh --root . --lar ../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md
+
+   # two-repo (doc_repo_path задан, напр. ../it-dev-methodology-documentation):
+   # --root = code-repo (где живут scripts/, templates/, commands/)
+   # --doc-root = doc-repo (где живут ROADMAP.md, DEVLOG.md, VISION.md и т.п.)
+   bash scripts/validate-lar.sh \
+     --root . \
+     --lar <doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md \
+     --doc-root <doc_repo_path>
    ```
    - Если `validate-lar.sh` отсутствует → авто-sync `bash <methodology_path>/scripts/sync-methodology.sh .`, затем повторить
    - `MISSING_FILE` → 🟡 Medium: пути в LAR не существуют на диске (обновить LAR или создать файлы)
