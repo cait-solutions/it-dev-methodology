@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.41.0 — feat: Pre-Mortem категория 7 «Execution context» (closes R-032) (PLAN-04) (2026-06-11)
+
+**Что:**
+- **`/plan` Шаг 98:** добавлена категория 7 «Execution context» (Windows/cp1252, non-TTY hook, two-repo cwd, parallel-session lock, missing dependency). Few-shot: G-097, G-098, v5.32.0. Прежний пункт 7 (over-engineering) → пункт 8. Счётчик «8 сценариев».
+- **`/retro` Шаг 4.6:** «6 категорий» → «7 категорий», список обновлён с `Execution context`. Примечание «зеркало — менять синхронно».
+- **R-032 → implemented** (v5.41.0) в `global.last_architecture_audit.recommendations`.
+
+**Что делать consumers:** `bash scripts/sync-methodology.sh .` → обновить команды.
+
+---
+
 ## v5.40.0 — fix: auto-pull failure surfacing — error capture + re-notify + /plan floor (PLAN-03) (2026-06-11)
 
 **Что:**
