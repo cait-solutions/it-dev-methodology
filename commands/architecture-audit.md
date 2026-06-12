@@ -9,6 +9,7 @@
 | **A. SYSTEM-MAP ↔ code drift** | существует `docs/architecture/SYSTEM-MAP.md` | проекты с архитектурной картой |
 | **B. Gap pattern analysis + Level 4+ ladder + decommission** | существует `AGENT-GAPS.md` И ≥ 3 записи (open + addressed). **Scope: только AGENT-GAPS** — agent's reasoning failures (methodology improvements). PRODUCT-GAPS обрабатывается через `/product-review`, не здесь. | проекты использующие AGENT-GAPS культуру |
 | **C. Cross-project gap aggregation** | существует `consumers/*.yaml` registry с ≥ 1 ссылкой на склонированный проект имеющий `AGENT-GAPS.md` | methodology-platform или родительский проект с дочерними |
+| **D. Diagram semantic review** | существует ≥ 1 living-карта с mermaid-блоком (`SYSTEM-MAP` / `USER-MAP` / `ARTIFACT-MAP` / `ROADMAP`) | любой проект с живыми картами (ADR-015) |
 
 **Запускается:**
 - `global.last_architecture_audit.plans_since` ≥ 5-10 (триггер из /plan)
@@ -33,6 +34,7 @@
 | Только A | Default | Стандартный drift анализ |
 | A + B (≥ 3 gaps) | **Capable** | Regulator ladder mapping требует deep reasoning |
 | A + B + C | **Capable** обязательно | Cross-project pattern detection |
+| D активна (semantic review) | **Capable** обязательно | Семантическое сравнение узлов/связей карт с реальностью — LLM-reasoning, не grep |
 
 **Pre-flight model check:** **да** — спроси какая модель активна, сравни с минимальным tier из матрицы. Если ниже → ⛔ hard-block: «На текущей модели Способность B даст тактические рекомендации, не Level 4+. Переключись на Capable или запускай только Способность A.»
 
@@ -49,11 +51,14 @@ Detected capabilities:
 - A (SYSTEM-MAP drift):  ✓ / ✗  (источник: docs/architecture/SYSTEM-MAP.md)
 - B (gap analysis):      ✓ / ✗  (источник: AGENT-GAPS.md, N=записей)
 - C (cross-project):     ✓ / ✗  (источник: consumers/*.yaml, N=consumers с GAPs)
+- D (diagram semantic):  ✓ / ✗  (источник: living-карты с mermaid: N найдено)
 ```
 
 Если **ни одна способность не активна** → ⛔ exit «нет данных для аудита; запусти когда появится хотя бы один из артефактов».
 
 Если активна **только A** → дальше выполняется только Способность A (Шаги 1-4), пропускается всё остальное.
+
+Способность D выполняется в **Шаге 3.5** (после drift-сравнения A, перед gap-анализом B) — независима от A/B/C, может быть единственной активной.
 
 **Cross-reference на `/sync-audit`:**
 
@@ -104,6 +109,47 @@ Detected capabilities:
 - При phantom/stale сравнении **исключай все узлы класса `affordance`** — у них нет и не должно быть кода. Флаг их как «phantom» = ложный позитив, который приучает владельца игнорировать вывод аудита.
 - Это **class-правило, НЕ ID-whitelist**: не перечисляй конкретные node-ID (`scopeOutAnchor` и т.п.) — это slope (каждый новый affordance потребует своего литерала). Исключай **по классу** `affordance` — одно правило закрывает весь класс non-architectural узлов.
 - Узел без `classDef affordance`, но фактически навигационный → это сигнал что карта нарушает конвенцию: рекомендовать пометить его `:::affordance` (см. CLAUDE.md Maps Standard §3), не молча игнорировать.
+
+---
+
+## Шаг 3.5 — Diagram semantic review (Способность D, ADR-015)
+
+*Пропустить если Способность D не активна (нет living-карт с mermaid).*
+
+> **Зачем отдельно от Шага 3:** Шаг 3 (drift) сравнивает **граф связей SYSTEM-MAP** с **кодом** — детерминированно-ish, привязан к code-counterpart. Шаг 3.5 проверяет **семантику узлов и labels ВСЕХ живых карт** (включая USER-MAP/ARTIFACT-MAP/ROADMAP, у которых нет code-графа) против реальности системы. Это LLM-review (presence ≠ semantics — grep сюда не достаёт), закрывает P-009 / BS-2 / BS-5. Регулятор L3 — не 100%-гарантия, periodic safety-net поверх per-PR couple (`/code`+`/review`, ADR-015 слой 1).
+
+**Scope: ВСЕ living-карты с mermaid-блоком.** Для two-repo — в `doc_repo_path`. Набор: `SYSTEM-MAP.md`, `USER-MAP.md`, `ARTIFACT-MAP.md`, `ROADMAP.md` (+ любая другая living-карта с mermaid).
+
+**Для каждой карты — прочитать mermaid-блок целиком и сверить три оси семантики с реальностью:**
+
+1. **Узлы (существование):** каждый компонентный узел (НЕ класса `affordance`, НЕ deferred-кластер) — соответствует реально существующей сущности (файл / команда / сервис / артефакт)? Узел есть, сущности нет → **stale node** (удалена/переименована).
+2. **Связи (направление + наличие):** каждая стрелка `A → B` — отражает реальное отношение (читает/пишет/вызывает/git)? Тип стрелки соответствует факту (`-.->` read vs `==>` write — не перепутаны)? Связь на карте есть, в реальности нет → **stale edge**; в реальности есть, на карте нет → **missing edge**.
+3. **Описания (labels / node-format):** строка «Зачем» / «Без него» (CLAUDE.md §3) ещё описывает текущее назначение? Назначение компонента сменилось, label остался старым → **stale label**.
+
+**Метод (честно — это LLM-review, не grep):**
+- Для каждого узла — найти реальную сущность (Read файла / grep команды / проверка артефакта). Подтвердить или флагнуть.
+- Для каждой связи — проверить что отношение существует в коде/контракте (grep вызова, чтение sync-loop, контракт чтения артефакта).
+- ⛔ **Не выдумывать связи** (Constraints): флагать только то, что подтверждено чтением, не «кажется устаревшим».
+- ⛔ Узлы класса `affordance` и deferred-кластер — **исключить** (как в Шаге 3): у них нет code-counterpart by design.
+
+**Confidence на каждый флаг:** stale/missing с пометкой `confirmed` (прочитал, сущности точно нет / связь точно есть) vs `suspected` (выглядит устаревшим, нужна проверка владельцем). Только `confirmed` идут в структурные рекомендации; `suspected` — в секцию «требует решения PM».
+
+**Вывод Способности D** (в отчёт Шага 10):
+```
+## 🗺 Diagram semantic review (Способность D)
+Карт проверено: N (SYSTEM-MAP, USER-MAP, ARTIFACT-MAP, ROADMAP)
+
+### <карта> — M узлов, K связей проверено
+- 🔴 stale node: `NodeX` — сущность не найдена (confirmed: grep/Read пусто)
+- 🟡 stale edge: `A -.-> B` — связь чтения не подтверждена в коде (suspected)
+- 🟡 stale label: `NodeY` «Зачем: …» — назначение сменилось (см. file:line)
+- ✅ остальное соответствует
+
+### Сводка
+- Карт чисто: X/N | с drift: Y/N | confirmed флагов: P | suspected: Q
+```
+
+**Если все карты чисты** → `## 🗺 Diagram semantic review: все N карт семантически актуальны — drift не найден.`
 
 ---
 
@@ -258,6 +304,11 @@ A: ✓/✗ | B: ✓/✗ | C: ✓/✗
 ### Summary
 - Edges in map: X | Edges in code: Y | Drift: Z (W%)
 
+## 🗺 Diagram semantic review (Способность D)
+*Если активна — из Шага 3.5*
+
+{per-карта stale node / stale edge / stale label с confirmed|suspected + сводка}
+
 ## 🔬 Gap pattern analysis (Способность B)
 *Если активна*
 
@@ -348,7 +399,7 @@ A: ✓/✗ | B: ✓/✗ | C: ✓/✗
 ## После завершения
 
 1. Запись в DEVLOG:
-   `[architecture-audit] Report YYYY-MM-DD: A=N drift, B=M patterns, C=K cross-project, structural=P, decommission=Q`
+   `[architecture-audit] Report YYYY-MM-DD: A=N drift, B=M patterns, C=K cross-project, D=R diagram-flags, structural=P, decommission=Q`
 2. Обновить `triggers.json` (canonical path — closes дубль-ключи G-112b):
    - `global.last_architecture_audit = { "date": today, "plans_since": 0 }` (НЕ top-level)
    - `global.last_architecture_audit.recommendations = [...]` — массив для self-eval в следующем цикле:
