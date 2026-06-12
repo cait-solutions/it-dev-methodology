@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.50.0 — feat: validate-lar.sh V2 (PLAN-G) — LAR-driven auto:* marker runner (2026-06-12)
+
+**Что:**
+- **`scripts/validate-lar.sh`** (UPGRADED V2) — per-row исполнение `auto:*` маркеров из LAR Detection ячейки. Enum (6): `auto:exists` (default), `auto:mermaid-links`, `auto:mermaid-syntax`, `auto:date-coupling=<glob>`, `auto:diagram-freshness`, `(нет маркеров)`. Делегирует существующим валидаторам — не реимплементирует. Summary: `auto-checked: N / existence-only: M`. Bash 3.2+, space-safe tmpfile.
+- **`templates/scripts/validate-lar.sh`** — dual-copy G-103 (diff -q identical).
+- **LAR `LIVING-ARTIFACTS.md`** — добавлены маркеры `auto:mermaid-links` `auto:mermaid-syntax` к SYSTEM-MAP/USER-MAP/ARTIFACT-MAP; `auto:diagram-freshness` к ROADMAP.
+- Закрывает PLAN-G задачу: LAR = исполняемый реестр.
+
+**Что делать consumers:**
+- После sync: `bash scripts/validate-lar.sh` теперь выполняет auto-проверки по маркерам в LAR. Добавлять маркеры в свою LAR строку для нужной проверки.
+- Существующие LAR без маркеров → existence-only (backward compatible).
+
+---
+
 ## v5.49.0 — feat: validate-mermaid-syntax.sh (PLAN-C) — R-031 structural mermaid checks (2026-06-12)
 
 **Что:**
