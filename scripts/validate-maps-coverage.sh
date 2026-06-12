@@ -553,10 +553,24 @@ _check_node_readability_file() {
     esac
     [ "$in_block" -eq 0 ] && continue
 
-    # Skip affordance nodes and deferred-cluster lines
+    # Skip affordance nodes, deferred-cluster, and subgraph declarations.
+    # subgraph headers are container labels, not component nodes — they carry no
+    # Зачем/Impact obligation (closes G-121b subgraph false-positive).
     case "$line" in
       *':::affordance'*|*'subgraph Deferred'*|*'classDef deferred'*|*'classDef affordance'*)
         continue ;;
+      *'subgraph '*) continue ;;
+    esac
+
+    # Skip EDGE lines (closes node-readability false-positive class, G-121b).
+    # An edge line carries an arrow operator or an edge-label pipe; on such a line
+    # the bracket-label belongs to an edge-label or an inline target, not the node
+    # whose format we audit. Node-format is enforced where the node is FIRST
+    # defined standalone. Auditing edges flagged edge-LABELS as node descriptions,
+    # which trains the owner to ignore the validator.
+    case "$line" in
+      *'--'*|*'=='*|*'.->'*|*'~~~'*) continue ;;
+      *'|'*'['*) continue ;;
     esac
 
     # Match component node definitions: NodeID["label"] or NodeID['label']
@@ -584,7 +598,11 @@ _check_node_readability_file() {
 $content
 NR_EOF
 
-  return 0
+  # Return the finding count so the caller folds it into ERRORS/WARNINGS totals.
+  # Без этого Summary рапортует ноль warnings при десятках напечатанных WARN
+  # (counter disconnect, closes G-121b). Cap at 255 (shell return-code ceiling).
+  [ "$findings" -gt 255 ] && findings=255
+  return "$findings"
 }
 
 _check_node_readability() {
@@ -605,15 +623,25 @@ _check_node_readability() {
   for scope_dir in $scope_dirs; do
     for f in "$scope_dir"/*.md; do
       [ -f "$f" ] || continue
-      local skip=0
+      local skip=0 nr_n=0
       for pat in $skip_patterns; do
         case "$f" in *"$pat"*) skip=1; break ;; esac
       done
       [ "$skip" -eq 1 ] && continue
       grep -q '```mermaid' "$f" 2>/dev/null || continue
-      _check_node_readability_file "$f"
+      # `|| nr_n=$?` keeps the non-zero finding-count return from tripping set -e;
+      # on zero findings the `&&` arm sets nr_n=0.
+      _check_node_readability_file "$f" && nr_n=0 || nr_n=$?
+      if [ "$nr_n" -gt 0 ]; then
+        if [ "$(_node_readability_sev)" = "ERROR" ]; then
+          ERRORS=$((ERRORS + nr_n))
+        else
+          WARNINGS=$((WARNINGS + nr_n))
+        fi
+      fi
     done
   done
+  return 0
 }
 
 # ── Negative-gate: no script-nodes in USER-MAP mermaid blocks (G-116) ────────

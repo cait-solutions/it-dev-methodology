@@ -7,10 +7,10 @@
 **Когда запускать:**
 - Хочешь увидеть «что отложено» визуально, одним взглядом (не читая 5 файлов).
 - Перешёл по anchor-узлу `📋 Отложенный scope → /scope-out` в любой living/draft карте.
-- Перед `/product-review` / `/product-vision` — обзор накопленного backlog.
+- Перед `/vision review` / `/vision strategy` — обзор накопленного backlog.
 
 **Отличие от соседей:**
-- `/product-review` — **обрабатывает** IDEAS (raw → P-NNN решения). `/scope-out` — только **визуализирует** уже классифицированное, ничего не меняет.
+- `/vision review` — **обрабатывает** IDEAS (raw → P-NNN решения). `/scope-out` — только **визуализирует** уже классифицированное, ничего не меняет.
 - Draft maps Шаг 99.54 кластер — показывает отложенное **текущего плана** (per-plan, эфемерно). `/scope-out` — **весь проект** (агрегат), включает deferred[] **последнего** завершённого плана (из `triggers.json`). После закрытия сессии, draft исчезает — `/scope-out` сохраняет данные через `last_plan_session.deferred[]`.
 
 ---
@@ -90,7 +90,7 @@ https://mermaid.live/edit#pako:...
 ## Граница (что /scope-out НЕ делает)
 
 - ❌ Не пишет файлы (read-only агрегатор).
-- ❌ Не меняет статусы gap'ов (это `/product-review` / `/plan`).
+- ❌ Не меняет статусы gap'ов (это `/vision review` / `/plan`).
 - ❌ Не агрегирует out-of-scope «на лету» из voida — читает только то что **захвачено на write-time** (/plan Шаг 99.3 «Не учтено → out of scope» + /review out-of-scope findings → PRODUCT-GAPS/ROADMAP). Если источники пусты — view пуст. Discovery без capture = пустая комната.
 
 ---
