@@ -7,6 +7,9 @@
 #
 # Configuration matrix — edit here, no logic changes needed:
 USER_MAP_CHECK="commands skills"        # axes checked against USER-MAP
+USER_MAP_NO_SCRIPTS="warn"             # warn if script-nodes found in USER-MAP mermaid blocks
+                                       # consumers: "warn" (graceful — no commands/ baseline yet)
+                                       # methodology-platform: "gate" (enforced in scripts/ copy)
 ARTIFACT_MAP_CHECK="commands"          # axes checked against ARTIFACT-MAP
 SYSTEM_MAP_COMMANDS="gate"             # gate=ERROR on miss; warn=WARNING only
 SYSTEM_MAP_SCRIPTS="warn"             # scripts only WARN in V1 (PLAN-B escalates)
@@ -15,6 +18,8 @@ DIAGRAM_FRESHNESS_SEVERITY="warn"      # warn|error — block deploy on stale di
 # Why scripts=warn: /retro 2026-06-11 data covers commands only. Script coverage
 # is large and partially internal — escalate after /retro evidence (PLAN-B).
 # Why commands-local non-issue for consumers: commands-local/ is empty in consumers.
+# Why USER_MAP_NO_SCRIPTS=warn for consumers: graceful — consumers may not yet have
+#   commands/ dir; methodology-platform uses gate (enforced in scripts/ copy, G-103).
 #
 # Modes:
 #   gate (default): missing on gate axes → exit 1 with list; maps absent = ERROR
@@ -503,6 +508,74 @@ _check_diagram_freshness() {
   fi
 }
 
+# ── Negative-gate: no script-nodes in USER-MAP mermaid blocks (G-116) ────────
+#
+# Scans ONLY content inside ```mermaid ... ``` fences (not markdown tables/text).
+# command-first invariant: USER-MAP must show commands/skills/affordance, not scripts.
+# Consumers get "warn" (graceful). Methodology-platform copy uses "gate".
+
+_check_user_map_no_scripts() {
+  local mapfile="$1"
+  local severity="$2"   # ERROR or WARN
+
+  if [ -z "$mapfile" ] || [ ! -f "$mapfile" ]; then
+    return
+  fi
+
+  local in_block=0
+  local block_num=0
+  local findings=0
+  local file_content
+  file_content="$(tr -d '\r' < "$mapfile")"
+
+  while IFS= read -r line; do
+    case "$line" in
+      '```mermaid'*)
+        in_block=1
+        block_num=$((block_num+1))
+        continue
+        ;;
+      '```')
+        if [ "$in_block" -eq 1 ]; then
+          in_block=0
+        fi
+        continue
+        ;;
+    esac
+
+    [ "$in_block" -eq 0 ] && continue
+
+    case "$line" in
+      *'.sh'*|*'.py'*)
+        # Strip edge labels (|".."|) — scripts in edge labels are not node defs
+        stripped="$(printf '%s' "$line" | sed 's/|"[^"]*"//g' | sed "s/|'[^']*'//g")"
+        case "$stripped" in
+          *'.sh'*|*'.py'*)
+            findings=$((findings+1))
+            script_ref="$(printf '%s' "$line" | grep -oE '[a-zA-Z0-9_.-]+\.(sh|py)' | head -1)"
+            if [ "$severity" = "ERROR" ]; then
+              ERRORS=$((ERRORS+1))
+              printf '[ERROR] USER-MAP script-node: "%s" в mermaid-блоке #%d — ' \
+                "$script_ref" "$block_num"
+              printf 'нарушение command-first инварианта. Заменить на /command или affordance-узел.\n'
+              MISSING_LIST="${MISSING_LIST}script-node:${script_ref} (USER-MAP mermaid)\n"
+            else
+              WARNINGS=$((WARNINGS+1))
+              printf '[WARN]  USER-MAP script-node: "%s" в mermaid-блоке #%d — ' \
+                "$script_ref" "$block_num"
+              printf 'command-first инвариант: заменить на /command или affordance-узел.\n'
+            fi
+            ;;
+        esac
+        ;;
+    esac
+  done << _MAP_CONTENT_EOF
+$file_content
+_MAP_CONTENT_EOF
+
+  printf '[INFO]  USER-MAP/no-scripts: %d script-node(s) found in mermaid blocks\n' "$findings"
+}
+
 # ── Main check ────────────────────────────────────────────────────────────────
 
 ERRORS=0
@@ -582,6 +655,13 @@ if printf '%s' "$USER_MAP_CHECK" | grep -q 'commands'; then
 fi
 if printf '%s' "$USER_MAP_CHECK" | grep -q 'skills'; then
   _check_axis "$SKILLS" "$USER_MAP" "USER-MAP/skills" "ERROR" "skill"
+fi
+
+# USER-MAP negative-gate: no script-nodes in mermaid blocks (G-116, command-first invariant)
+if [ -n "$USER_MAP" ]; then
+  NOSCRIPT_SEV="WARN"
+  [ "$USER_MAP_NO_SCRIPTS" = "gate" ] && [ -d "commands" ] && NOSCRIPT_SEV="ERROR"
+  _check_user_map_no_scripts "$USER_MAP" "$NOSCRIPT_SEV"
 fi
 
 # ARTIFACT-MAP checks

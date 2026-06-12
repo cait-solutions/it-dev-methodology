@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.52.0 — feat: command-first USER-MAP + /push-consumers init-flow (2026-06-12)
+
+**Что:**
+- **`scripts/validate-maps-coverage.sh`** — отрицательный gate `USER_MAP_NO_SCRIPTS="gate"`: блокирует `.sh`/`.py` узлы внутри mermaid-блоков USER-MAP. Сканирует только `\`\`\`mermaid\`\`\`` фенсы (не таблицы/тексты). Methodology: ERROR. Consumers: WARN (graceful). Closes G-116.
+- **`templates/scripts/validate-maps-coverage.sh`** — dual-copy G-103 (warn-only для consumers).
+- **`commands-local/push-consumers.md`** — Шаг 3 расширен: `[not-initialized]` repo → per-repo `init/skip/never` выбор → `new-project-init.sh` + включение в батч sync+commit+push. Gap 14 паттерн повторно применён. Closes P-010.
+- **`CLAUDE.md`** Maps Standard §3 — добавлено правило «USER-MAP MUST NOT содержать скрипт-узлы».
+- **`docs/adr/ADR-013-usermap-audience.md`** (documentation repo) — USER-MAP audience = владелец методологии (maintainer); no-script-nodes rule.
+- **`docs/product/USER-MAP.md`** (documentation repo) — 7 script-узлов заменены командами и affordance: `new-project-init.sh`→`/push-consumers`, `sync-methodology.sh`→`/sync-audit`, `set-secret.sh`/`with-secret.sh`/`validate-secrets.sh`→`/secrets`. Validate-maps-coverage gate: 0 ошибок.
+
+**Что делать consumers:**
+- После sync: `validate-maps-coverage.sh` на вашем проекте — WARN (не gate) для script-узлов в USER-MAP. Исправьте вручную: заменить `bash scripts/X.sh` узлы в mermaid на соответствующие команды `/cmd`.
+- Новые проекты: `new-project-init.sh` автоматически создаёт LAR (v5.51.0).
+
+---
+
 ## v5.51.0 — feat: consumer freshness rollout (PLAN-I) — LAR bootstrap + /sync-audit Gap 16 + annotations (2026-06-12)
 
 **Что:**

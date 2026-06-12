@@ -77,7 +77,7 @@ Pre-flight model check: спросить только если Capable (Opus) а
 
 ---
 
-## Шаг 3 — Pre-check (parallel-session safety)
+## Шаг 3 — Pre-check (parallel-session safety) + init [not-initialized]
 
 Для каждого консьюмера со статусом `[drift]`:
 
@@ -88,7 +88,44 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null
 - Вывод непустой → пометить `[skip: dirty]` + причина. **НЕ синкать** — dirty `.claude/` = in-progress работа параллельной сессии.
 - Вывод пустой → добавить в список «будет обновлено».
 
-`[not-initialized]` — sync НЕ применять. Init = решение владельца через `new-project-init.sh`. Показать в таблице, но в батч не включать.
+**`[not-initialized]` — inline init (Gap 14 pattern, closes P-010):**
+
+Репо без `.claude/` не может быть sync'нуто напрямую. Предложить per-repo выбор сразу в drift-таблице до батч-подтверждения Шага 4:
+
+```
+⚠️ [not-initialized]: lead-gen-documentation
+   Репо обнаружен в workspace, но не инициализирован методологией.
+
+   init    — запустить new-project-init.sh, затем включить в батч sync+commit+push
+   skip    — пропустить в этом прогоне (останется [not-initialized])
+   never   — исключить из всех будущих прогонов (добавить в exclude_paths)
+
+Выбор для lead-gen-documentation: (init / skip / never)
+```
+
+**При ответе `init`:**
+
+```bash
+# Определить project_name из basename репо (без суффиксов -documentation/-docs)
+PROJECT_NAME="$(basename <consumer-path> | sed 's/-documentation$//' | sed 's/-docs$//')"
+bash scripts/new-project-init.sh "$PROJECT_NAME" "<consumer-path>"
+```
+
+Guard: если `.claude/` уже существует после `init` (повторный запуск) → пропустить init, продолжить к sync как `[drift]`.
+
+После успешного init → добавить репо в батч Шага 4 со статусом `[initialized → sync]`. Применяется стандартный sync + commit + push Шага 5 Режима B (если whitelisted).
+
+**При ответе `skip`:** показать в таблице как `[skipped]`, не включать в батч.
+
+**При ответе `never`:** добавить в `exclude_paths` в `CLAUDE.local.md ## Consumers`:
+
+```yaml
+# exclude_paths: []
+exclude_paths:
+  - <absolute-path-to-consumer>
+```
+
+Затем пропустить в текущем и всех будущих прогонах (тот же механизм что `/sync-audit` Gap 14 never-flow).
 
 ---
 
@@ -104,15 +141,16 @@ Drift-таблица (methodology vX.Y.Z):
 | erp-documentantion | v4.47.5 | +94 | [drift] → обновить | ✅ whitelisted |
 | it-dev-documentation | v4.45.0 | +96 | [drift] → обновить | ✅ whitelisted |
 | some-other | v5.0.0 | +3 | [drift] → обновить | ⚠️ не в whitelist — только sync |
-| lead-gen | — | — | [not-initialized] → skip | — |
+| lead-gen | — | — | [initialized → sync] | ✅ whitelisted |
+| shopware | — | — | [not-initialized, skipped] | — |
 
-Будет обновлено: 3 | Пропущено: 1 (not-initialized)
-Будет сделан commit+push: 2 (whitelisted) | Только sync: 1 (not in whitelist)
+Будет обновлено: 4 | Пропущено: 1 (skipped)
+Будет сделан commit+push: 3 (whitelisted) | Только sync: 1 (not in whitelist)
 
 Продолжить? (y/n/список через запятую для выборочного)
 ```
 
-- **y** → все со статусом [drift] (кроме dirty и not-initialized)
+- **y** → все со статусом [drift] и [initialized → sync] (кроме dirty, never, skipped)
 - **n** → выход, ничего не делать
 - **«1,3»** → только указанные номера строк
 
@@ -235,10 +273,11 @@ fi
 ✅ erp-documentantion:          v4.47.5 → vX.Y.Z  (sync + commit + push ✅)
 ✅ it-dev-documentation:        v4.45.0 → vX.Y.Z  (sync + commit + push ✅)
 ✅ ai-assistant:                v4.10.6 → vX.Y.Z  (sync + commit + push ✅)
+🆕 lead-gen:                    — → vX.Y.Z  (init ✅ + sync + commit + push ✅)
 ⚠️ some-other:                  v5.0.0  → vX.Y.Z  (sync ✅, commit+push пропущен — не в whitelist)
-⏭ lead-gen:                    не инициализирован — пропущен
+⏭ shopware:                    [not-initialized] — пропущен (skipped)
 
-Sync: 4/4 ✅  |  Commit+Push: 3/3 whitelisted ✅  |  Пропущено: 1
+Sync: 5/5 ✅  |  Commit+Push: 4/4 whitelisted ✅  |  Init: 1 🆕  |  Пропущено: 1
 ```
 
 **Если передан `--sync-only` — формат с ручным шагом коммита:**

@@ -7,6 +7,9 @@
 #
 # Configuration matrix — edit here, no logic changes needed:
 USER_MAP_CHECK="commands skills"        # axes checked against USER-MAP
+USER_MAP_NO_SCRIPTS="gate"             # gate=ERROR if script-nodes found in USER-MAP mermaid blocks
+                                       # command-first invariant: scripts are internal impl, not user-facing
+                                       # consumers use "warn" (no commands/ source dir = no baseline)
 ARTIFACT_MAP_CHECK="commands"          # axes checked against ARTIFACT-MAP
 SYSTEM_MAP_COMMANDS="gate"             # gate=ERROR on miss; warn=WARNING only
 SYSTEM_MAP_SCRIPTS="warn"             # scripts only WARN in V1 (PLAN-B escalates)
@@ -15,6 +18,9 @@ DIAGRAM_FRESHNESS_SEVERITY="warn"      # warn|error — block deploy on stale di
 # Why scripts=warn: /retro 2026-06-11 data covers commands only. Script coverage
 # is large and partially internal — escalate after /retro evidence (PLAN-B).
 # Why commands-local non-issue for consumers: commands-local/ is empty in consumers.
+# Why USER_MAP_NO_SCRIPTS: command-first invariant (CLAUDE.md) requires USER-MAP shows
+#   only commands/skills/affordance — not scripts. Scripts are internal impl. Consumers
+#   get "warn" because they rarely have commands/ dir (graceful; closes G-116).
 #
 # Modes:
 #   gate (default): missing on gate axes → exit 1 with list; maps absent = ERROR
@@ -503,6 +509,85 @@ _check_diagram_freshness() {
   fi
 }
 
+# ── Negative-gate: no script-nodes in USER-MAP mermaid blocks (G-116) ────────
+#
+# Scans ONLY content inside ```mermaid ... ``` fences (not markdown tables/text).
+# Pattern: node label contains ".sh" or ".py" (script filename in a mermaid node def).
+# Mermaid node definition patterns: ID["label"] ID(label) ID{label} ID[label]
+# We look for .sh/.py inside node label strings — not in edge labels (|".."|).
+# False-positive guard: affordance nodes may reference "bash scripts/..." in label
+#   but that is intentional for text-section pointers only; the negative check catches
+#   actual script-node IDs being defined (e.g. Init["🚀 new-project-init.sh"]).
+# Safe-list: none needed — affordance nodes with scripts in label should use /command
+#   references instead (that's the whole point of this rule).
+
+_check_user_map_no_scripts() {
+  local mapfile="$1"
+  local severity="$2"   # ERROR or WARN
+
+  if [ -z "$mapfile" ] || [ ! -f "$mapfile" ]; then
+    return
+  fi
+
+  local in_block=0
+  local block_num=0
+  local findings=0
+  local file_content
+  file_content="$(tr -d '\r' < "$mapfile")"
+
+  while IFS= read -r line; do
+    case "$line" in
+      '```mermaid'*)
+        in_block=1
+        block_num=$((block_num+1))
+        continue
+        ;;
+      '```')
+        if [ "$in_block" -eq 1 ]; then
+          in_block=0
+        fi
+        continue
+        ;;
+    esac
+
+    [ "$in_block" -eq 0 ] && continue
+
+    # Inside mermaid block: look for node label definitions containing .sh or .py
+    # Only flag node definition lines: NodeId["label with .sh"] — not edge-only lines
+    # where .sh is only inside |"edge label"| pipe-labels.
+    # Heuristic: strip edge labels first, then check if .sh/.py remains.
+
+    case "$line" in
+      *'.sh'*|*'.py'*)
+        # Strip edge labels (|".."|) from line — scripts in edge labels are not node defs
+        stripped="$(printf '%s' "$line" | sed 's/|"[^"]*"//g' | sed "s/|'[^']*'//g")"
+        case "$stripped" in
+          *'.sh'*|*'.py'*)
+            findings=$((findings+1))
+            script_ref="$(printf '%s' "$line" | grep -oE '[a-zA-Z0-9_.-]+\.(sh|py)' | head -1)"
+            if [ "$severity" = "ERROR" ]; then
+              ERRORS=$((ERRORS+1))
+              printf '[ERROR] USER-MAP script-node: "%s" в mermaid-блоке #%d — ' \
+                "$script_ref" "$block_num"
+              printf 'нарушение command-first инварианта. Заменить на /command или affordance-узел.\n'
+              MISSING_LIST="${MISSING_LIST}script-node:${script_ref} (USER-MAP mermaid)\n"
+            else
+              WARNINGS=$((WARNINGS+1))
+              printf '[WARN]  USER-MAP script-node: "%s" в mermaid-блоке #%d — ' \
+                "$script_ref" "$block_num"
+              printf 'command-first инвариант: заменить на /command или affordance-узел.\n'
+            fi
+            ;;
+        esac
+        ;;
+    esac
+  done << _MAP_CONTENT_EOF
+$file_content
+_MAP_CONTENT_EOF
+
+  printf '[INFO]  USER-MAP/no-scripts: %d script-node(s) found in mermaid blocks\n' "$findings"
+}
+
 # ── Main check ────────────────────────────────────────────────────────────────
 
 ERRORS=0
@@ -582,6 +667,13 @@ if printf '%s' "$USER_MAP_CHECK" | grep -q 'commands'; then
 fi
 if printf '%s' "$USER_MAP_CHECK" | grep -q 'skills'; then
   _check_axis "$SKILLS" "$USER_MAP" "USER-MAP/skills" "ERROR" "skill"
+fi
+
+# USER-MAP negative-gate: no script-nodes in mermaid blocks (G-116, command-first invariant)
+if [ -n "$USER_MAP" ]; then
+  NOSCRIPT_SEV="WARN"
+  [ "$USER_MAP_NO_SCRIPTS" = "gate" ] && [ -d "commands" ] && NOSCRIPT_SEV="ERROR"
+  _check_user_map_no_scripts "$USER_MAP" "$NOSCRIPT_SEV"
 fi
 
 # ARTIFACT-MAP checks
