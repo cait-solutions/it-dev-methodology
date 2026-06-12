@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.54.0 — feat: mermaid-coverage axis + USER-MAP полнота команд + WARN-surfacing в deploy (2026-06-12)
+
+**Что:**
+- **`scripts/validate-maps-coverage.sh`** — новая ось `mermaid-coverage` (`USER_MAP_MERMAID_COVERAGE="warn"`): проверяет что каждая команда/skill присутствует именно в `\`\`\`mermaid\`\`\`` блоках USER-MAP (не только где-то в файле). Закрывает G-119: `_check_axis` грепал весь файл → команда в таблице falsely проходила проверку. Новая функция `_check_command_in_mermaid`: in-block scanner с edge-label стрипом + blob-поддержкой (`·`-разделители). Dynamic list: любая новая команда/skill автоматически входит в проверку.
+- **`scripts/deploy-push.sh`** — WARN-surfacing (G-119, RPN=384): `tee`-паттерн захватывает вывод gate в realtime И считает `[WARN]` строки → после «✅ passed» явно печатает `⚠️ N предупреждений карт — проверь [WARN] выше`. WARNs больше не тонут за passed-строкой.
+- **`templates/scripts/validate-maps-coverage.sh`** — dual-copy G-103 (идентичное изменение).
+- **`docs/product/USER-MAP.md`** (documentation repo) — добавлены 6 пропущенных элементов: `/test`, `/pull`, `/push-merge · /push-only` (blob), `design-spec · testing-strategy · secrets-management` (blob). 22/22 команд + 14/14 skills в mermaid. Gate: 0 error(s), 0 warning(s).
+
+**Что делать consumers:**
+- Sync: `validate-maps-coverage.sh` добавляет WARN на команды/skills пропущенные в mermaid-блоках. WARN — не блокирует. Исправляйте по-мере. Gate по умолчанию `warn` для консьюмеров.
+- Для methodology-platform: `USER_MAP_MERMAID_COVERAGE="gate"` включает ERROR (добавить в CLAUDE.local.md при необходимости).
+
+---
+
 ## v5.52.0 — feat: command-first USER-MAP + /push-consumers init-flow (2026-06-12)
 
 **Что:**

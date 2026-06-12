@@ -7,9 +7,12 @@
 #
 # Configuration matrix — edit here, no logic changes needed:
 USER_MAP_CHECK="commands skills"        # axes checked against USER-MAP
-USER_MAP_NO_SCRIPTS="warn"             # warn if script-nodes found in USER-MAP mermaid blocks
-                                       # consumers: "warn" (graceful — no commands/ baseline yet)
-                                       # methodology-platform: "gate" (enforced in scripts/ copy)
+USER_MAP_NO_SCRIPTS="gate"             # gate=ERROR if script-nodes found in USER-MAP mermaid blocks
+                                       # command-first invariant: scripts are internal impl, not user-facing
+                                       # consumers use "warn" (no commands/ source dir = no baseline)
+USER_MAP_MERMAID_COVERAGE="warn"       # warn=WARN if command/skill missing from mermaid blocks (not just file)
+                                       # gate=ERROR on miss; "off" disables axis entirely
+                                       # consumers use "warn" — no false-positives on partial maps
 ARTIFACT_MAP_CHECK="commands"          # axes checked against ARTIFACT-MAP
 SYSTEM_MAP_COMMANDS="gate"             # gate=ERROR on miss; warn=WARNING only
 SYSTEM_MAP_SCRIPTS="warn"             # scripts only WARN in V1 (PLAN-B escalates)
@@ -18,8 +21,9 @@ DIAGRAM_FRESHNESS_SEVERITY="warn"      # warn|error — block deploy on stale di
 # Why scripts=warn: /retro 2026-06-11 data covers commands only. Script coverage
 # is large and partially internal — escalate after /retro evidence (PLAN-B).
 # Why commands-local non-issue for consumers: commands-local/ is empty in consumers.
-# Why USER_MAP_NO_SCRIPTS=warn for consumers: graceful — consumers may not yet have
-#   commands/ dir; methodology-platform uses gate (enforced in scripts/ copy, G-103).
+# Why USER_MAP_NO_SCRIPTS: command-first invariant (CLAUDE.md) requires USER-MAP shows
+#   only commands/skills/affordance — not scripts. Scripts are internal impl. Consumers
+#   get "warn" because they rarely have commands/ dir (graceful; closes G-116).
 #
 # Modes:
 #   gate (default): missing on gate axes → exit 1 with list; maps absent = ERROR
@@ -511,8 +515,14 @@ _check_diagram_freshness() {
 # ── Negative-gate: no script-nodes in USER-MAP mermaid blocks (G-116) ────────
 #
 # Scans ONLY content inside ```mermaid ... ``` fences (not markdown tables/text).
-# command-first invariant: USER-MAP must show commands/skills/affordance, not scripts.
-# Consumers get "warn" (graceful). Methodology-platform copy uses "gate".
+# Pattern: node label contains ".sh" or ".py" (script filename in a mermaid node def).
+# Mermaid node definition patterns: ID["label"] ID(label) ID{label} ID[label]
+# We look for .sh/.py inside node label strings — not in edge labels (|".."|).
+# False-positive guard: affordance nodes may reference "bash scripts/..." in label
+#   but that is intentional for text-section pointers only; the negative check catches
+#   actual script-node IDs being defined (e.g. Init["🚀 new-project-init.sh"]).
+# Safe-list: none needed — affordance nodes with scripts in label should use /command
+#   references instead (that's the whole point of this rule).
 
 _check_user_map_no_scripts() {
   local mapfile="$1"
@@ -545,9 +555,14 @@ _check_user_map_no_scripts() {
 
     [ "$in_block" -eq 0 ] && continue
 
+    # Inside mermaid block: look for node label definitions containing .sh or .py
+    # Only flag node definition lines: NodeId["label with .sh"] — not edge-only lines
+    # where .sh is only inside |"edge label"| pipe-labels.
+    # Heuristic: strip edge labels first, then check if .sh/.py remains.
+
     case "$line" in
       *'.sh'*|*'.py'*)
-        # Strip edge labels (|".."|) — scripts in edge labels are not node defs
+        # Strip edge labels (|".."|) from line — scripts in edge labels are not node defs
         stripped="$(printf '%s' "$line" | sed 's/|"[^"]*"//g' | sed "s/|'[^']*'//g")"
         case "$stripped" in
           *'.sh'*|*'.py'*)
@@ -574,6 +589,88 @@ $file_content
 _MAP_CONTENT_EOF
 
   printf '[INFO]  USER-MAP/no-scripts: %d script-node(s) found in mermaid blocks\n' "$findings"
+}
+
+# mermaid-coverage axis: positive check — each command/skill must appear inside
+# a ```mermaid``` fence in USER-MAP (not just anywhere in file).
+# Blob support: "/push-merge · /push-only · /pull" counts as covering all three.
+# Edge-label stripping: |"/push"| in arrow labels does NOT count as node coverage.
+_check_command_in_mermaid() {
+  local items="$1"     # newline-separated list of command/skill names
+  local mapfile="$2"
+  local severity="$3"  # WARN or ERROR
+
+  if [ -z "$mapfile" ] || [ ! -f "$mapfile" ]; then
+    return
+  fi
+
+  # Extract only content inside ```mermaid``` fences
+  local mermaid_content=""
+  local in_block=0
+  local file_content
+  file_content="$(tr -d '\r' < "$mapfile")"
+
+  while IFS= read -r line; do
+    case "$line" in
+      '```mermaid'*)
+        in_block=1
+        continue
+        ;;
+      '```')
+        if [ "$in_block" -eq 1 ]; then
+          in_block=0
+        fi
+        continue
+        ;;
+    esac
+    if [ "$in_block" -eq 1 ]; then
+      # Strip edge-label segments |"..."| before storing — they must not count
+      stripped="$(printf '%s' "$line" | sed 's/|"[^"]*"//g' | sed "s/|'[^']*'//g")"
+      mermaid_content="${mermaid_content}
+${stripped}"
+    fi
+  done << _MERMAID_EXTRACT_EOF
+$file_content
+_MERMAID_EXTRACT_EOF
+
+  local checked=0
+  local missed=0
+
+  while IFS= read -r item; do
+    [ -z "$item" ] && continue
+    checked=$((checked + 1))
+    # Search for the item name in extracted mermaid content
+    # Item may appear as: /plan  "plan"  plan  or inside blob "· /plan ·"
+    local bare_name
+    bare_name="$(printf '%s' "$item" | sed 's|^/||')"
+    local found=0
+    # Commands have leading / in item (e.g. /plan); skills do not (e.g. define-positioning)
+    # Search accordingly: commands → must appear as /name, skills → name without slash
+    case "$item" in
+      /*)
+        printf '%s' "$mermaid_content" | grep -qF "/$bare_name" && found=1 || true
+        ;;
+      *)
+        printf '%s' "$mermaid_content" | grep -qF "$bare_name" && found=1 || true
+        ;;
+    esac
+    if [ "$found" -eq 0 ]; then
+      missed=$((missed + 1))
+      local display_name="$item"
+      if [ "$severity" = "ERROR" ]; then
+        ERRORS=$((ERRORS + 1))
+        printf '[ERROR] mermaid-coverage: %s отсутствует в mermaid-блоках USER-MAP\n' "$display_name"
+        MISSING_LIST="${MISSING_LIST}mermaid:${display_name} (USER-MAP)\n"
+      else
+        WARNINGS=$((WARNINGS + 1))
+        printf '[WARN]  mermaid-coverage: %s отсутствует в mermaid-блоках USER-MAP\n' "$display_name"
+      fi
+    fi
+  done << _ITEMS_EOF
+$items
+_ITEMS_EOF
+
+  printf '[INFO]  mermaid-coverage: %d checked, %d missing from mermaid blocks\n' "$checked" "$missed"
 }
 
 # ── Main check ────────────────────────────────────────────────────────────────
@@ -662,6 +759,16 @@ if [ -n "$USER_MAP" ]; then
   NOSCRIPT_SEV="WARN"
   [ "$USER_MAP_NO_SCRIPTS" = "gate" ] && [ -d "commands" ] && NOSCRIPT_SEV="ERROR"
   _check_user_map_no_scripts "$USER_MAP" "$NOSCRIPT_SEV"
+fi
+
+# USER-MAP positive mermaid-coverage: commands/skills must appear inside mermaid fences (G-119)
+if [ -n "$USER_MAP" ] && [ "$USER_MAP_MERMAID_COVERAGE" != "off" ]; then
+  MERMAID_SEV="WARN"
+  [ "$USER_MAP_MERMAID_COVERAGE" = "gate" ] && [ -d "commands" ] && MERMAID_SEV="ERROR"
+  _check_command_in_mermaid "$ALL_COMMANDS" "$USER_MAP" "$MERMAID_SEV"
+  if printf '%s' "$USER_MAP_CHECK" | grep -q 'skills'; then
+    _check_command_in_mermaid "$SKILLS" "$USER_MAP" "$MERMAID_SEV"
+  fi
 fi
 
 # ARTIFACT-MAP checks
