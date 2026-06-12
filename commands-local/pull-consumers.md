@@ -266,6 +266,47 @@ done
 
 ---
 
+## Шаг 3.6 — Freshness check (LAR presence + diagram freshness, v5.51.0)
+
+**Зачем:** без LAR у консьюмера lifecycle-реестр пуст; без аннотаций `diagram-sources` движок PLAN-H не видит связь диаграммы с данными. `/pull-consumers` — единственное место где владелец методологии видит состояние freshness по всем репо сразу.
+
+**Только для `[marker]` consumers.** `[no-marker]` — пропустить тихо.
+
+Для каждого `[marker]` консьюмера:
+
+1. **LAR presence check:**
+   ```bash
+   # Определить doc_repo_path из CLAUDE.local.md (single / two-repo)
+   # single-repo: docs/architecture/LIVING-ARTIFACTS.md
+   # two-repo: <doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md
+   LAR_PRESENT="❌"
+   [[ -f "$lar_path" ]] && LAR_PRESENT="✅"
+   ```
+
+2. **Diagram freshness check (Read-only):**
+   ```bash
+   FRESHNESS="—"
+   if [[ -f "$consumer_path/scripts/validate-maps-coverage.sh" ]]; then
+     result=$(bash "$consumer_path/scripts/validate-maps-coverage.sh" --report 2>&1)
+     errors=$(echo "$result" | grep -c "^\[ERROR\]" || true)
+     warnings=$(echo "$result" | grep -c "^\[WARN\]" || true)
+     if [ "$errors" -gt 0 ]; then
+       FRESHNESS="🔴 ${errors} err"
+     elif [ "$warnings" -gt 0 ]; then
+       FRESHNESS="🟡 ${warnings} warn"
+     else
+       FRESHNESS="🟢 0/0"
+     fi
+   fi
+   ```
+   Если скрипт отсутствует → `FRESHNESS="— (v5.47.0+)"`.
+
+3. Сохранить `LAR_PRESENT` + `FRESHNESS` для drift-таблицы в Шаге 4.
+
+⛔ Read-only: не запускать `validate-lar.sh` с изменением state, не писать в консьюмера.
+
+---
+
 ## Шаг 4 — Report
 
 Вывести структурированный отчёт пользователю, включая **drift-колонку** (closes PLAN-05 visibility):
@@ -275,12 +316,14 @@ done
 Discovery: workspace file (It dev methodology.code-workspace) — 8 repos, 4 with marker, 4 no-marker
 
 Drift summary (methodology v5.41.0):
-| Репо | ver | synced | Δ minor | Статус |
-|---|---|---|---|---|
-| erp-documentantion | v4.47.5 | 2026-06-01 | +94 | [drift] |
-| it-dev-documentation | v4.45.0 | 2026-06-01 | +96 | [drift] |
-| ... | ... | ... | ... | ... |
+| Репо | ver | synced | Δ minor | LAR | Freshness | Статус |
+|---|---|---|---|---|---|---|
+| erp-documentantion | v4.47.5 | 2026-06-01 | +94 | ✅ | 🟡 2 warn | [drift] |
+| it-dev-documentation | v4.45.0 | 2026-06-01 | +96 | ❌ | — | [drift] |
+| ... | ... | ... | ... | ... | ... | ... |
 Запустить /push-consumers чтобы доставить обновления.
+
+LAR = наличие LIVING-ARTIFACTS.md (✅ / ❌); Freshness = результат validate-maps-coverage.sh --report (🟢 0/0 / 🟡 N warn / 🔴 N err / — нет карт).
 
 ### [marker] erp-documentantion (gitlab/ai-dev) — v4.47.5
 ✓ Pulled abc123 → def456 (12 commits since 2026-05-25)

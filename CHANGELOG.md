@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.51.0 — feat: consumer freshness rollout (PLAN-I) — LAR bootstrap + /sync-audit Gap 16 + annotations (2026-06-12)
+
+**Что:**
+- **`scripts/new-project-init.sh`** — LAR bootstrap: создаёт `docs/architecture/LIVING-ARTIFACTS.md` из шаблона при init. Guard: существующий файл не перезаписывается.
+- **`commands/sync-audit.md`** — Gap 16 «Living Artifact Registry bootstrap» (per-repo init/skip/never, паттерн Gap 14); Gap 15 расширен: diagram-freshness вывод + инструкция по аннотациям для консьюмера.
+- **`templates/SYSTEM-MAP.template.md`**, **`USER-MAP.template.md`**, **`ARTIFACT-MAP.template.md`** — вставлены `<!-- diagram-sources: axes -->` стабы перед каждым mermaid-блоком → новые консьюмерские артефакты рождаются аннотированными.
+- **`commands-local/pull-consumers.md`** — Шаг 3.6 freshness check (LAR ✅/❌ + validate-maps-coverage.sh result); drift-таблица расширена колонками LAR + Freshness.
+- Закрывает PLAN-I задачу: freshness-механизм доставлен консьюмерам через bootstrap + команды.
+
+**Что делать consumers:**
+- После sync: `/sync-audit` теперь включает Gap 16 (LAR bootstrap предложение).
+- Неаннотированные диаграммы → Gap 15 покажет список + инструкцию `<!-- diagram-sources: ... -->`.
+- Новые проекты: `new-project-init.sh` создаёт LAR автоматически.
+
+---
+
 ## v5.50.0 — feat: validate-lar.sh V2 (PLAN-G) — LAR-driven auto:* marker runner (2026-06-12)
 
 **Что:**

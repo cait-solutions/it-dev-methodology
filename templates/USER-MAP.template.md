@@ -62,6 +62,7 @@ actor → trigger → entity/flow → outcome
 
 ### Variant A — Simple
 
+<!-- diagram-sources: axes -->
 _(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
@@ -100,6 +101,7 @@ graph TD
 
 ### Variant B — Medium (несколько actors)
 
+<!-- diagram-sources: axes -->
 _(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
@@ -134,6 +136,7 @@ graph TD
 
 ### Variant C — Complex (multi-domain)
 
+<!-- diagram-sources: axes -->
 _(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
@@ -191,6 +194,7 @@ Scenario 3 — [TODO: название]:
 
 > _(Переименуй секцию если продукт не использует slash-команды: "Quick Actions", "Key Operations" и т.п.)_
 
+<!-- diagram-sources: axes -->
 _(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid
