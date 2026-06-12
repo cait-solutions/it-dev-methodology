@@ -61,9 +61,9 @@ Dog-fooding: methodology itself uses team-mode to validate the branching contrac
 ```yaml
 auto_commit_consumers:
   - path: ../erp-documentantion
-    branch: main
+    branch: ai-dev              # team/GitLab, integration=develop, pr_tool=manual — push в ai-dev, MR делает человек
   - path: ../it-dev-methodology-documentation
-    branch: main
+    branch: ai-dev              # agent_branch=ai-dev — push в ai-dev (не main напрямую)
   - path: ../ai-assistant-documentation
     branch: main
   - path: ../client-matz-documentation
@@ -73,12 +73,14 @@ auto_commit_consumers:
   - path: ../lead-gen-documentation
     branch: main
   - path: ../shopware-frontend-documentation
-    branch: main
+    branch: ai-dev              # agent_branch=ai-dev
   - path: ../social-promo-documentation
     branch: main
 ```
 
-> Добавить репо: добавить строку `- path: <relative-path>\n  branch: <branch>`. Путь относительно этого (`it-dev-methodology`) репо. Только documentation-репо — не код-репо консьюмеров.
+> **`branch` ДОЛЖЕН совпадать с `agent_branch` из `CLAUDE.local.md ## Branching` целевого репо** (closes G-117 branch-mismatch класс): `/push-consumers` коммитит в текущую ветку и пушит в этот `branch`. Если репо работает через `ai-dev` (team/MR-workflow), а whitelist указывает `main` → прямой push в main отклоняется (non-ff / protected). При `agent_branch=ai-dev` → push в `ai-dev`, MR/PR в main делает человек. Репо без `agent_branch` (solo на main) → `branch: main`.
+>
+> Добавить репо: `- path: <relative-path>\n  branch: <agent_branch целевого репо>`. Путь относительно этого (`it-dev-methodology`) репо. Только documentation-репо — не код-репо консьюмеров.
 
 ---
 
