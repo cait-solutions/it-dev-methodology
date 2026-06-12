@@ -48,15 +48,15 @@ Dog-fooding: methodology itself uses team-mode to validate the branching contrac
 1. Репо находится в `auto_commit_consumers` whitelist (ниже).
 2. Коммитятся **только файлы из манифеста** `sync-methodology.sh --print-changed` (explicit pathspec, не дерево) — закрывает класс a17ecc1 (pathspec-overcapture).
 3. Dirty-check по манифест-путям прошёл (грязный = пропустить, не коммитить).
-4. Выполняется через `/push-consumers --commit-push` — не голым `git commit`.
+4. Выполняется через `/push-consumers` (commit+push — дефолтное поведение) — не голым `git commit`.
 
-❌ **Запрещено всегда:** прямой `git commit` / `git push` агентом без флага `--commit-push`; коммит файлов вне манифеста sync; любые операции в код-репо консьюмеров.
+❌ **Запрещено всегда:** прямой `git commit` / `git push` агентом вне `/push-consumers` харнесса; коммит файлов вне манифеста sync; любые операции в код-репо консьюмеров.
 
 **Исключение — `/sync-audit` Gap 14 write-only (v5.46.0):** создаёт файлы через `new-project-init.sh` после явного per-repo подтверждения (init / skip / never). Git commit остаётся за пользователем.
 
 ### auto_commit_consumers whitelist
 
-Белый список documentation-репо консьюмеров куда `/push-consumers --commit-push` разрешён делать git commit + push. Репо **вне списка** — только sync (commit невозможен by-construction).
+Белый список documentation-репо консьюмеров куда `/push-consumers` (commit+push по дефолту) разрешён делать git commit + push. Репо **вне списка** — только sync (commit невозможен by-construction).
 
 ```yaml
 auto_commit_consumers:
