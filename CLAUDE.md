@@ -282,6 +282,8 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 `validate-maps-coverage.sh --report` проверяет каждый mermaid-блок на наличие annotation и на соответствие диаграммы источнику данных. Диаграмма без annotation = WARN (ненулевой exit). Файл с annotation без совпадающей секции = WARN. Severity: `DIAGRAM_FRESHNESS_SEVERITY="warn"` (конфиг в шапке скрипта).
 
+**USER-MAP MUST NOT содержать скрипт-узлы** — только команды (`/cmd`), skills, affordance-узлы (класс `affordance`). Скрипты = внутренняя реализация команд, не user-facing capability. Нарушение: `new-project-init.sh`, `sync-methodology.sh`, `set-secret.sh` как mermaid-узлы. Structural enforcement: `validate-maps-coverage.sh` `USER_MAP_NO_SCRIPTS="gate"` — флагует `.sh`/`.py` внутри mermaid-блоков (не таблиц). Closes G-116. Исключение: `Initial Setup` текстовая секция (bash-команды для bootstrap до `.claude/`) — легитимна. ADR-013.
+
 **Гибридный язык:** технические термины/файлы/команды — EN; описания поведения/аннотации — RU.
 ❌ Транслитерация кириллицы латиницей (`"Stanet"`, `"Zapuskaet"`, `"dobavlen"`) — нарушение: это НЕ является RU. Только настоящая кириллица.
 Пример: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
