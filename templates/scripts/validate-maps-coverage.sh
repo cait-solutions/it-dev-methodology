@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# validate-maps-coverage.sh — Level-4 maps coverage gate (PLAN-A v5.47.0)
+# validate-maps-coverage.sh — Level-4 maps coverage gate (PLAN-H v5.48.0)
 #
 # Checks that every command, local-only command, and skill is mentioned in the
 # living maps (USER-MAP.md, ARTIFACT-MAP.md, SYSTEM-MAP.md).
+# Also runs generic diagram-freshness engine against diagram-sources annotations.
 #
 # Configuration matrix — edit here, no logic changes needed:
 USER_MAP_CHECK="commands skills"        # axes checked against USER-MAP
 ARTIFACT_MAP_CHECK="commands"          # axes checked against ARTIFACT-MAP
 SYSTEM_MAP_COMMANDS="gate"             # gate=ERROR on miss; warn=WARNING only
 SYSTEM_MAP_SCRIPTS="warn"             # scripts only WARN in V1 (PLAN-B escalates)
+DIAGRAM_FRESHNESS_SEVERITY="warn"      # warn|error — block deploy on stale diagrams
 #
 # Why scripts=warn: /retro 2026-06-11 data covers commands only. Script coverage
 # is large and partially internal — escalate after /retro evidence (PLAN-B).
@@ -195,80 +197,310 @@ _grep_script_in_file() {
   tr -d '\r' < "$file" | grep -F "${script}" > /dev/null 2>&1
 }
 
-# ── ROADMAP axis ──────────────────────────────────────────────────────────────
+# ── Generic diagram-freshness engine (PLAN-H v5.48.0) ────────────────────────
+#
+# Scans living-scope .md files for <!-- diagram-sources: ... --> annotations
+# and verifies diagram content matches declared data sources.
+#
+# Annotation enum (closed — new type requires new /plan):
+#   table:<Section>      — pipe-table rows from section present in diagram
+#   list:<Section>       — top-level bullet bold-names from section present in diagram
+#   max-version:<Section>— max vX.Y from section > version-marker in diagram → WARN
+#   axes                 — covered by FS-axes (living maps); engine skips
+#   none                 — static diagram; engine skips
+#
+# Living scope: DOC_ROOT root + docs/architecture/ + docs/product/
+# Excluded: _tmp_* templates/ .claude/ docs/plans/ node_modules
 
-_check_roadmap_axis() {
-  local dr="${DOC_ROOT}"
-  local roadmap=""
-
-  for cand in \
-    "$dr/ROADMAP.md" \
-    "ROADMAP.md"; do
-    if [ -f "$cand" ]; then roadmap="$cand"; break; fi
-  done
-
-  if [ -z "$roadmap" ]; then
-    printf '[WARN] ROADMAP-axis: ROADMAP.md не найден — пропуск\n'
-    return 0
+_freshness_sev() {
+  if [ "$DIAGRAM_FRESHNESS_SEVERITY" = "error" ]; then
+    printf 'ERROR'
+  else
+    printf 'WARN'
   fi
+}
 
-  # Check mermaid block exists in ## Визуальный roadmap section
-  if ! tr -d '\r' < "$roadmap" | grep -q '```mermaid'; then
-    printf '[WARN] ROADMAP-axis: нет mermaid-блока в ROADMAP.md\n'
-    return 0
+_freshness_finding() {
+  local file="$1"
+  local msg="$2"
+  local sev
+  sev="$(_freshness_sev)"
+  if [ "$sev" = "ERROR" ]; then
+    ERRORS=$((ERRORS+1))
+    printf '[ERROR] diagram-freshness: %s — %s\n' "$(basename "$file")" "$msg"
+  else
+    WARNINGS=$((WARNINGS+1))
+    printf '[WARN]  diagram-freshness: %s — %s\n' "$(basename "$file")" "$msg"
   fi
+}
 
-  # Extract Now entries (## Now section lines starting with -)
-  local now_entries=""
-  now_entries="$(tr -d '\r' < "$roadmap" | awk '/^## Now/{found=1; next} found && /^## /{found=0} found && /^[-*]/{print}' | head -20)"
+# Extract max vX.Y(.Z) from text
+_max_version_from_text() {
+  local text="$1"
+  printf '%s' "$text" | grep -oE 'v[0-9]+\.[0-9]+(\.[0-9]+)?' | \
+    sort -t. -k1,1V -k2,2n -k3,3n 2>/dev/null | tail -1
+}
 
-  # Extract last 10 Done entries
-  local done_entries=""
-  done_entries="$(tr -d '\r' < "$roadmap" | awk '/^## Done/{found=1; next} found && /^## /{found=0} found && /^[-*]/{print}' | tail -10)"
+# Compare two versions: returns 0 if v1 > v2, 1 otherwise
+_version_gt() {
+  local v1="${1#v}" v2="${2#v}"
+  local winner
+  winner="$(printf '%s\n%s' "$v1" "$v2" | sort -t. -k1,1V -k2,2n -k3,3n 2>/dev/null | tail -1)"
+  [ "$winner" = "$v1" ] && [ "$v1" != "$v2" ]
+}
 
-  local missing_count=0
-  local missing_list=""
+# Parse a section from a file — returns lines of the section
+_parse_section_lines() {
+  local file="$1"
+  local section="$2"
+  tr -d '\r' < "$file" | awk -v sec="$section" \
+    'BEGIN{found=0}
+     /^## /{if(found){exit} if($0 ~ "## " sec "($| )"){found=1; next}}
+     found{print}'
+}
 
-  # For each Now/Done entry, extract a short identifier (version or task name)
-  # and check if it appears in the mermaid block
-  local mermaid_content=""
-  mermaid_content="$(tr -d '\r' < "$roadmap" | awk '/```mermaid/{found=1; next} found && /```/{found=0} found{print}')"
+# Extract identifiers from section — dual-format: pipe-table + top-level bullets
+# Returns one identifier per line (full string, no truncation)
+_extract_idents_table() {
+  local section_text="$1"
+  # Pipe-table: lines starting with |, skip header (|---|) and empty first-cell
+  printf '%s' "$section_text" | grep '^|' | grep -v '^|[-: |]*$' | \
+    awk -F'|' '{
+      cell=$2
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", cell)
+      if(length(cell)>0 && cell !~ /^[-: ]+$/) print cell
+    }'
+}
 
-  local combined_entries="$now_entries
-$done_entries"
+_extract_idents_bullets() {
+  local section_text="$1"
+  # Top-level bullets: lines starting with "- " or "* ", extract **bold** name
+  printf '%s' "$section_text" | grep -E '^[-*] ' | \
+    grep -oE '\*\*[^*]+\*\*' | sed 's/\*\*//g'
+}
+
+_extract_version_max_from_section() {
+  local section_text="$1"
+  _max_version_from_text "$section_text"
+}
+
+# Check one mermaid block against diagram-sources annotation
+# $1=file $2=annotation_value $3=mermaid_content $4=block_num
+_check_one_block() {
+  local file="$1"
+  local annotation="$2"
+  local mermaid_content="$3"
+  local block_num="$4"
+  local block_label="block#${block_num}"
+
+  # Split annotation by comma
+  local sources
+  sources="$(printf '%s' "$annotation" | tr ',' '\n' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+
+  local findings=0
+
+  while IFS= read -r source; do
+    [ -z "$source" ] && continue
+
+    local stype sval
+    stype="$(printf '%s' "$source" | cut -d: -f1)"
+    sval="$(printf '%s' "$source" | cut -d: -f2-)"
+
+    case "$stype" in
+      axes|none)
+        # Skip — covered by FS-axes or static
+        continue
+        ;;
+      table|list|max-version)
+        # Find section
+        local sec_lines
+        sec_lines="$(_parse_section_lines "$file" "$sval")"
+        if [ -z "$sec_lines" ]; then
+          _freshness_finding "$file" "${block_label}: секция '${sval}' из diagram-sources не найдена"
+          findings=$((findings+1))
+          continue
+        fi
+
+        if [ "$stype" = "max-version" ]; then
+          # Extract max version from section (both table and bullet formats)
+          local max_v
+          max_v="$(_extract_version_max_from_section "$sec_lines")"
+          if [ -z "$max_v" ]; then
+            # Parser no-op self-check: section non-empty but 0 versions extracted
+            _freshness_finding "$file" "${block_label}: parser no-op — секция '${sval}' непуста, но версии не извлечены"
+            findings=$((findings+1))
+            continue
+          fi
+          # Find version-marker in mermaid block: "до vX.Y" pattern
+          local marker_v
+          marker_v="$(printf '%s' "$mermaid_content" | grep -oE 'до v[0-9]+\.[0-9]+(\.[0-9]+)?' | grep -oE 'v[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)"
+          if [ -z "$marker_v" ]; then
+            _freshness_finding "$file" "${block_label}: version-маркер 'до vX.Y' не найден в диаграмме (max в секции '${sval}': ${max_v})"
+            findings=$((findings+1))
+            continue
+          fi
+          if _version_gt "$max_v" "$marker_v"; then
+            _freshness_finding "$file" "${block_label}: диаграмма отстала — маркер ${marker_v}, max в секции '${sval}': ${max_v}"
+            findings=$((findings+1))
+          fi
+
+        elif [ "$stype" = "table" ]; then
+          local idents
+          idents="$(_extract_idents_table "$sec_lines")"
+          if [ -z "$idents" ]; then
+            # Self-check: section has pipe-table lines but 0 idents extracted?
+            local has_table
+            has_table="$(printf '%s' "$sec_lines" | grep -c '^|' || true)"
+            if [ "$has_table" -gt 0 ]; then
+              _freshness_finding "$file" "${block_label}: parser no-op — секция '${sval}' содержит таблицу, но идентификаторы не извлечены"
+              findings=$((findings+1))
+            fi
+            continue
+          fi
+          local miss=0
+          while IFS= read -r ident; do
+            [ -z "$ident" ] && continue
+            if ! printf '%s' "$mermaid_content" | grep -qF "$ident"; then
+              miss=$((miss+1))
+              if [ "$miss" -le 5 ]; then
+                _freshness_finding "$file" "${block_label}: '${ident}' (из секции '${sval}') не найден в диаграмме"
+                findings=$((findings+1))
+              fi
+            fi
+          done << IDENTS_EOF
+$idents
+IDENTS_EOF
+
+        elif [ "$stype" = "list" ]; then
+          local bidents
+          bidents="$(_extract_idents_bullets "$sec_lines")"
+          if [ -z "$bidents" ]; then
+            local has_bullets
+            has_bullets="$(printf '%s' "$sec_lines" | grep -cE '^[-*] ' || true)"
+            if [ "$has_bullets" -gt 0 ]; then
+              _freshness_finding "$file" "${block_label}: parser no-op — секция '${sval}' содержит буллеты, но **bold**-имена не извлечены"
+              findings=$((findings+1))
+            fi
+            continue
+          fi
+          local bmiss=0
+          while IFS= read -r bident; do
+            [ -z "$bident" ] && continue
+            if ! printf '%s' "$mermaid_content" | grep -qF "$bident"; then
+              bmiss=$((bmiss+1))
+              if [ "$bmiss" -le 5 ]; then
+                _freshness_finding "$file" "${block_label}: '${bident}' (из секции '${sval}') не найден в диаграмме"
+                findings=$((findings+1))
+              fi
+            fi
+          done << BIDENTS_EOF
+$bidents
+BIDENTS_EOF
+        fi
+        ;;
+      *)
+        _freshness_finding "$file" "${block_label}: неизвестный тип источника '${stype}' в diagram-sources"
+        findings=$((findings+1))
+        ;;
+    esac
+  done << SOURCES_EOF
+$sources
+SOURCES_EOF
+}
+
+# Scan one .md file for mermaid blocks + annotations
+_scan_file_freshness() {
+  local file="$1"
+  local content
+  content="$(tr -d '\r' < "$file")"
+
+  local block_num=0
+  local in_block=0
+  local mermaid_buf=""
+  local annotation=""
+  local prev_annotation=""
 
   while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    # Extract task identifier: version like v5.X or bracketed name like [task-name]
-    local ident=""
-    # Try vX.Y.Z pattern
-    ident="$(printf '%s' "$line" | grep -oE 'v[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)"
-    if [ -z "$ident" ]; then
-      # Try first bracketed word
-      ident="$(printf '%s' "$line" | grep -oE '\[([^]]+)\]' | head -1 | tr -d '[]')"
+    if [ "$in_block" -eq 0 ]; then
+      # Look for diagram-sources annotation
+      case "$line" in
+        *'<!-- diagram-sources:'*)
+          prev_annotation="$(printf '%s' "$line" | sed 's/.*diagram-sources:[[:space:]]*//' | sed 's/[[:space:]]*-->.*//')"
+          ;;
+      esac
+      case "$line" in
+        '```mermaid'*)
+          in_block=1
+          block_num=$((block_num+1))
+          annotation="$prev_annotation"
+          mermaid_buf=""
+          prev_annotation=""
+          ;;
+      esac
+    else
+      case "$line" in
+        '```')
+          in_block=0
+          # Process this block
+          if [ -z "$annotation" ]; then
+            _freshness_finding "$file" "block#${block_num}: нет аннотации diagram-sources — добавь <!-- diagram-sources: ... --> перед блоком"
+          else
+            _check_one_block "$file" "$annotation" "$mermaid_buf" "$block_num"
+          fi
+          mermaid_buf=""
+          annotation=""
+          ;;
+        *)
+          mermaid_buf="${mermaid_buf}
+${line}"
+          ;;
+      esac
     fi
-    if [ -z "$ident" ]; then
-      # Use first 3 significant words
-      ident="$(printf '%s' "$line" | sed 's/^[-* ]*//' | cut -c1-30)"
-    fi
-    [ -z "$ident" ] && continue
+  done << FILE_CONTENT_EOF
+$content
+FILE_CONTENT_EOF
+}
 
-    # Check in mermaid block (simple substring match for roadmap items)
-    if ! printf '%s' "$mermaid_content" | grep -qF "$ident"; then
-      missing_count=$((missing_count + 1))
-      missing_list="${missing_list}  - ROADMAP entry not in mermaid: ${ident}\n"
-    fi
-  done << EOF
-$combined_entries
-EOF
+# Determine living scope files to scan
+_check_diagram_freshness() {
+  local dr="${DOC_ROOT}"
+  local scanned=0
+  local skip_patterns="_tmp_ templates/ .claude/ docs/plans/ node_modules"
 
-  if [ "$missing_count" -gt 0 ]; then
-    printf '[WARN] ROADMAP-axis: %d Now/Done записей не упомянуты в mermaid-блоке\n' "$missing_count"
-    printf '%b' "$missing_list"
+  # Build file list from living scope: doc_root + docs/architecture/ + docs/product/
+  local scope_dirs=""
+  if [ -n "$dr" ] && [ -d "$dr" ]; then
+    scope_dirs="$dr"
+    [ -d "$dr/docs/architecture" ] && scope_dirs="$scope_dirs $dr/docs/architecture"
+    [ -d "$dr/docs/product" ]       && scope_dirs="$scope_dirs $dr/docs/product"
   else
-    printf '[OK]   ROADMAP-axis: все Now/Done записи упомянуты в mermaid-блоке\n'
+    [ -d "docs/architecture" ] && scope_dirs="docs/architecture"
+    [ -d "docs/product" ]       && scope_dirs="$scope_dirs docs/product"
+    scope_dirs="${scope_dirs:-.}"
   fi
-  return 0
+
+  for scope_dir in $scope_dirs; do
+    for f in "$scope_dir"/*.md; do
+      [ -f "$f" ] || continue
+      # Skip excluded patterns
+      local skip=0
+      for pat in $skip_patterns; do
+        case "$f" in *"$pat"*) skip=1; break ;; esac
+      done
+      [ "$skip" -eq 1 ] && continue
+      # Only process files that actually contain mermaid blocks
+      if grep -q '```mermaid' "$f" 2>/dev/null; then
+        _scan_file_freshness "$f"
+        scanned=$((scanned+1))
+      fi
+    done
+  done
+
+  if [ "$scanned" -eq 0 ]; then
+    printf '[INFO]  diagram-freshness: нет .md файлов с mermaid-блоками в living-scope\n'
+  else
+    printf '[INFO]  diagram-freshness: проверено %d файлов с mermaid-блоками\n' "$scanned"
+  fi
 }
 
 # ── Main check ────────────────────────────────────────────────────────────────
@@ -366,8 +598,8 @@ SYSTEM_SEV_SCR="WARN"
 [ "$SYSTEM_MAP_SCRIPTS" = "gate" ] && SYSTEM_SEV_SCR="ERROR"
 _check_axis "$SCRIPTS" "$SYSTEM_MAP" "SYSTEM-MAP/scripts" "$SYSTEM_SEV_SCR" "script"
 
-# ROADMAP axis
-_check_roadmap_axis
+# Diagram freshness (PLAN-H)
+_check_diagram_freshness
 
 echo ""
 echo "=== Summary: ${ERRORS} error(s), ${WARNINGS} warning(s) ==="
