@@ -277,6 +277,16 @@ _push() {
 # Both guards must pass → we're in methodology-platform → run the gate.
 # ---------------------------------------------------------------------------
 if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
+  # Dual-copy parity gate (G-122 / ADR-014): drift между scripts/ и templates/scripts/
+  # всегда баг — error-severity (блок), не WARN. Запускается ПЕРВЫМ: расхождение копий
+  # делает остальные gates недостоверными (они исполняют возможно-устаревший канон).
+  if [ -f "scripts/validate-script-parity.sh" ]; then
+    echo "▶ Script-parity gate (methodology-platform)..."
+    if ! bash scripts/validate-script-parity.sh; then
+      echo "❌ BLOCKED: dual-copy drift — выровняй пары scripts/ ↔ templates/scripts/, затем повтори деплой." >&2
+      exit 1
+    fi
+  fi
   echo "▶ Maps-coverage gate (methodology-platform)..."
   # tee-pattern: show output in realtime AND capture for WARN count (G-119 surfacing)
   _MAPS_TMP="$(mktemp)"

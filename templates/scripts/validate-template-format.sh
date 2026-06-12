@@ -126,18 +126,19 @@ fi
 echo ""
 
 # ---- Check 6: delivery-consistency (template ↔ sync-parser) — closes R-029 ----
-# No-op для большинства consumers (нет settings.template.json/sync — validate-delivery skip exit 0).
-# Активен если consumer имеет methodology-internal delivery-поверхность.
+# Riding the mandatory validator-run (/code Шаг 11 + /review) makes delivery-check L4
+# enforcement, not L3 prose. Catches v5.12.0 class: hook wired in template but
+# sync-parser doesn't recognize it → wiring never reaches consumer.
 echo "Check 6: delivery-consistency (validate-delivery.sh)"
 DELIV="$ROOT/scripts/validate-delivery.sh"
 if [ -f "$DELIV" ]; then
   if bash "$DELIV" --root "$ROOT" >/dev/null 2>&1; then
-    ok "delivery-consistency: consistent (or N/A — no delivery surface)"
+    ok "delivery-consistency: template ↔ sync-parser consistent"
   else
-    warn "delivery-consistency FAILED — run 'bash scripts/validate-delivery.sh' for details"
+    warn "delivery-consistency FAILED — run 'bash scripts/validate-delivery.sh' for details (hook-ref не доедет до консьюмера)"
   fi
 else
-  ok "validate-delivery.sh не найден — пропущено"
+  ok "validate-delivery.sh не найден — пропущено (старая версия methodology)"
 fi
 
 echo ""
