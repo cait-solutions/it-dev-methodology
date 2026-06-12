@@ -103,8 +103,41 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null
 Выбор для lead-gen-documentation: (init / skip / never)
 ```
 
-**При ответе `init`:**
+**При ответе `init` — ⛔ pre-init pre-flight (G-118: distributed-state check ОБЯЗАТЕЛЕН):**
 
+Перед запуском `new-project-init.sh` — убедиться что репо пустое во всех клонах, не только локально. Другой клон с незапушенными артефактами невидим через `git ls-files` / `find` → init поверх него создаёт дивергенцию и merge-конфликты при последующем push пользователя.
+
+**Шаг A — Git fetch + remote check:**
+```bash
+git -C "<consumer-path>" fetch origin 2>/dev/null
+REMOTE_BRANCHES=$(git -C "<consumer-path>" branch -r 2>/dev/null)
+```
+- Fetch упал (network/auth) → предупредить: «не смог проверить remote, init заблокирован» → задать вопрос Шага B вручную без fetch-данных.
+- Remote ветки содержат коммиты с `.claude/` или `docs/` → показать:
+  ```
+  ⚠️ pre-init: <repo-name> уже имеет инициализированные ветки на remote.
+     Возможно, другой клон уже содержит методологию или продуктовые файлы.
+     Push-first путь: git -C <consumer-path> pull origin <branch> → затем /push-consumers синкнет как [drift].
+     Init поверх существующего remote создаст дивергенцию.
+  ```
+  → предложить pull-first вместо init; пропустить init.
+
+**Шаг B — Явный вопрос про другой клон:**
+```
+❓ pre-init: <repo-name> не инициализирован.
+   Есть ли другой клон этого репо (на другой машине или в другой папке) с незапушенными файлами?
+
+   нет  — репо действительно пустое, продолжить init
+   да   — в другом клоне есть работа → сначала запушь её, затем повтори /push-consumers
+   пропустить — отложить init (статус [not-initialized] останется)
+
+Ответ (нет / да / пропустить):
+```
+- `да` → ⛔ **init ЗАПРЕЩЁН**: «Сначала запусти `git push` из клона с незапушенными файлами. После push повтори /push-consumers — репо появится как [drift] и будет синкнут без потерь.» → пропустить init, статус `[not-initialized, blocked: other-clone]`.
+- `пропустить` → показать как `[not-initialized, skipped]`, не включать в батч.
+- `нет` → продолжить к стандартному init.
+
+**Шаг C — Стандартный init (только после подтверждения «нет»):**
 ```bash
 # Определить project_name из basename репо (без суффиксов -documentation/-docs)
 PROJECT_NAME="$(basename <consumer-path> | sed 's/-documentation$//' | sed 's/-docs$//')"
