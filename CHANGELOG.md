@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.60.0 — feat: /doc-audit команда + dual-copy parity gate (G-122, ADR-014) (2026-06-12)
+
+**Что:**
+- **`commands/doc-audit.md`** — **новая команда**: полный mechanical-freshness аудит документации одним прогоном, on-demand «проверь всё сейчас». Закрывает окно между cadence-аудитами (/architecture-audit ≥5 планов, /retro ≥15) и deploy-gate. Оси: dual-copy parity, maps-coverage (+diagram-freshness +node-readability), mermaid-links/syntax (оба репо), внутренние ссылки, OVERVIEW freshness, LAR, ARTIFACT-MAP. `--fix` режим: авто-обновление всех mermaid.live ссылок (оба корня) перед проверкой. НЕ semantic drift (/architecture-audit), НЕ adoption (/sync-audit).
+- **`scripts/doc-audit.sh`** + dual-copy — оркестратор: каждая ось graceful-skip если не применима; Summary PASS/WARN/FAIL/SKIP; exit 1 при ошибках.
+- **`scripts/validate-script-parity.sh`** + dual-copy — атомарный детектор drift между `scripts/` и `templates/scripts/` (intersection-only, направление по git-датам). **Wired первым gate в `deploy-push.sh`** (error, блок) — закрывает G-122: ось node-readability (v5.58.0) попала только в templates-копию, канон не обновился, деплой её не запускал.
+- **Выравнен весь существующий drift — 7 пар:** validate-maps-coverage (node-readability теперь в каноне и реально работает), deploy-push (tee/G-119 → templates), validate-links, validate-template-format, validate-artifact-size, validate-mermaid-links, mermaid-link.py.
+- **ADR-014** — dual-copy parity contract (gate вместо генерации; whitelist запрещён; OQ-007 на генерацию при рецидиве). CLAUDE.md MUST-строка.
+
+**Что делать consumers:**
+- Sync → получите `doc-audit.sh` + команду `/doc-audit`: ручной полный аудит своей документации (manual-вариант BS-3 — последний рубеж который у consumers отсутствовал).
+- Parity-ось для consumers — no-op (guard `[ -d commands ]`).
+
+---
+
 ## v5.59.0 — feat: maps-freshness gate earlier + liveness (BS-1/BS-4, P-009) (2026-06-12)
 
 **Что:**

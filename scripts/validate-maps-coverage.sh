@@ -17,6 +17,10 @@ ARTIFACT_MAP_CHECK="commands"          # axes checked against ARTIFACT-MAP
 SYSTEM_MAP_COMMANDS="gate"             # gate=ERROR on miss; warn=WARNING only
 SYSTEM_MAP_SCRIPTS="warn"             # scripts only WARN in V1 (PLAN-B escalates)
 DIAGRAM_FRESHNESS_SEVERITY="warn"      # warn|error — block deploy on stale diagrams
+NODE_READABILITY_SEVERITY="warn"       # warn|error — node missing Зачем/Impact format (v5.57.0)
+                                       # CLAUDE.md Maps Standard §3 «Формат node-описания»
+                                       # warn=WARN if component node has <1 <br/> separator (no Зачем+Impact)
+                                       # affordance-class nodes and deferred-cluster exempt
 #
 # Why scripts=warn: /retro 2026-06-11 data covers commands only. Script coverage
 # is large and partially internal — escalate after /retro evidence (PLAN-B).
@@ -512,6 +516,106 @@ _check_diagram_freshness() {
   fi
 }
 
+# ── Node readability check (v5.57.0, closes G-121) ───────────────────────────
+#
+# Checks that component nodes in mermaid blocks follow the 3-line format:
+#   NodeID["Name<br/>Зачем: ...<br/>Без него: ..."]
+#
+# Detection strategy: ASCII-anchor only (cp1252-safe on Windows/Git Bash).
+# A component node definition is a line matching:   ID["..."] or ID['...']
+# A node is considered "readable" if its label contains at least 2 <br/> separators
+# (meaning: Name + line2 + line3).
+# Exempt: affordance-class nodes (:::affordance), deferred-subgraph lines,
+#         nodes whose label is ≤ 40 chars (Legend, short anchor labels).
+#
+# This check scans .md files in the same living-scope as diagram-freshness.
+# NODE_READABILITY_SEVERITY="warn" — does not block deploy, advisory only.
+
+_node_readability_sev() {
+  if [ "$NODE_READABILITY_SEVERITY" = "error" ]; then
+    printf 'ERROR'
+  else
+    printf 'WARN'
+  fi
+}
+
+_check_node_readability_file() {
+  local file="$1"
+  local content
+  content="$(tr -d '\r' < "$file")"
+  local in_block=0
+  local findings=0
+
+  while IFS= read -r line; do
+    case "$line" in
+      '```mermaid'*) in_block=1; continue ;;
+      '```')         in_block=0; continue ;;
+    esac
+    [ "$in_block" -eq 0 ] && continue
+
+    # Skip affordance nodes and deferred-cluster lines
+    case "$line" in
+      *':::affordance'*|*'subgraph Deferred'*|*'classDef deferred'*|*'classDef affordance'*)
+        continue ;;
+    esac
+
+    # Match component node definitions: NodeID["label"] or NodeID['label']
+    # Pattern: word-chars, then [" or [' (node label open)
+    case "$line" in
+      *'["'*|*"['"'"'")
+        # Extract label between outer quotes (approximate: take content after first [")
+        label="$(printf '%s' "$line" | sed 's/.*\[["'"'"']//' | sed 's/["'"'"']\].*//')"
+        # Skip if label is short (≤ 40 chars) — likely Legend/anchor
+        len="${#label}"
+        [ "$len" -le 40 ] && continue
+        # Skip if label contains only ASCII-path (no space after first word) — heuristic
+        # Count <br/> occurrences — need at least 2 for 3-line format
+        br_count="$(printf '%s' "$label" | grep -o '<br/>' | wc -l | tr -d ' ')"
+        if [ "${br_count:-0}" -lt 2 ]; then
+          sev="$(_node_readability_sev)"
+          node_id="$(printf '%s' "$line" | sed 's/[[:space:]]*//' | cut -c1-30)"
+          printf '[%s]  node-readability: %s — нода "%s..." без формата Зачем/Impact (<br/> count=%s, нужно ≥2). См. CLAUDE.md §3 «Формат node-описания»\n' \
+            "$sev" "$(basename "$file")" "$node_id" "${br_count:-0}"
+          findings=$((findings+1))
+        fi
+        ;;
+    esac
+  done << NR_EOF
+$content
+NR_EOF
+
+  return 0
+}
+
+_check_node_readability() {
+  local dr="${DOC_ROOT}"
+  local skip_patterns="_tmp_ templates/ .claude/ docs/plans/ node_modules"
+
+  local scope_dirs=""
+  if [ -n "$dr" ] && [ -d "$dr" ]; then
+    scope_dirs="$dr"
+    [ -d "$dr/docs/architecture" ] && scope_dirs="$scope_dirs $dr/docs/architecture"
+    [ -d "$dr/docs/product" ]       && scope_dirs="$scope_dirs $dr/docs/product"
+  else
+    [ -d "docs/architecture" ] && scope_dirs="docs/architecture"
+    [ -d "docs/product" ]       && scope_dirs="$scope_dirs docs/product"
+    scope_dirs="${scope_dirs:-.}"
+  fi
+
+  for scope_dir in $scope_dirs; do
+    for f in "$scope_dir"/*.md; do
+      [ -f "$f" ] || continue
+      local skip=0
+      for pat in $skip_patterns; do
+        case "$f" in *"$pat"*) skip=1; break ;; esac
+      done
+      [ "$skip" -eq 1 ] && continue
+      grep -q '```mermaid' "$f" 2>/dev/null || continue
+      _check_node_readability_file "$f"
+    done
+  done
+}
+
 # ── Negative-gate: no script-nodes in USER-MAP mermaid blocks (G-116) ────────
 #
 # Scans ONLY content inside ```mermaid ... ``` fences (not markdown tables/text).
@@ -787,6 +891,9 @@ _check_axis "$SCRIPTS" "$SYSTEM_MAP" "SYSTEM-MAP/scripts" "$SYSTEM_SEV_SCR" "scr
 
 # Diagram freshness (PLAN-H)
 _check_diagram_freshness
+
+# Node readability (v5.57.0, G-121)
+_check_node_readability
 
 echo ""
 echo "=== Summary: ${ERRORS} error(s), ${WARNINGS} warning(s) ==="

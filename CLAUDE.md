@@ -30,6 +30,7 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 - Любая правка синхронизируемого артефакта → bump VERSION
 - При **breaking** изменении схемы `triggers.json.template` (удаление / переименование поля, смена типа) → мажор bump + migration инструкция. **Аддитивное** изменение (новое опциональное поле, читаемое через `.get(...) or default`) → minor bump — `merge_triggers_json` дозаливает поле, existing values preserved, старый consumer не падает (graceful read). Критерий: «сломается ли consumer с pre-change triggers.json?» да → major, нет → minor.
 - `skills/*/SKILL.md` — YAML frontmatter MUST быть на строке 1; banner идёт в `metadata:` блок, НЕ как HTML-комментарий сверху (Agent Skills spec: frontmatter на line 1 обязательно)
+- **Dual-copy parity (ADR-014, closes G-122):** файл существующий И в `scripts/`, И в `templates/scripts/` — правится **синхронно в обе копии** в одном PR (канон = `scripts/`, templates = consumer-delivery). Enforcement: `validate-script-parity.sh` — первый gate в `deploy-push.sh` (error, блок) + ось `/doc-audit`. Намеренные расхождения запрещены (whitelist = slope)
 
 **MUST NOT:**
 - ❌ Редактировать `.claude/commands/*.md` напрямую — это банер-prefixed копии; канон в `commands/`
