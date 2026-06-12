@@ -269,6 +269,7 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
   - **single-repo (`doc_repo_path: null`):** `bash scripts/update-mermaid-links.sh && bash scripts/validate-mermaid-links.sh`
   - **two-repo (`doc_repo_path` задан):** также `--root <doc_repo_path>` для doc-репо + локально
   После update: STALE/MISSING = 🔴 CRITICAL (ручной фикс).
+- **Maps coverage surfacing (closes BS-1 / P-009)** → запустить `bash scripts/validate-maps-coverage.sh --report` (non-blocking, exit 0). Дублирует surfacing из `/code` Шаг 4 п.9.5 как финальная сверка перед merge. `[WARN]`/`[ERROR]` (команда/skill/компонент отсутствует в карте, или диаграмма stale по `diagram-sources`) = 🔵 Recommendation: «добавить недостающие строки карт». **НЕ блок** — жёсткий gate стоит на `deploy-push.sh` (последний рубеж); дублировать exit-1 блок в /review избыточно и рискует ложными блоками на in-progress картах. Скрипт отсутствует → graceful skip.
 - **Internal link-check (Docs-as-Code)** → изменены .md артефакты со ссылками? Запустить `bash scripts/validate-links.sh` (если доступен). `BROKEN_LINK` = 🔴 CRITICAL: ссылка `[...](path)` на несуществующий файл (typo / перемещённый файл / two-repo артефакт указан локально вместо `../<doc-repo>/`). Closes класс G-076 (code-repo ссылается на doc-repo артефакты локальным путём).
 - USER-MAP изменён → repo/setup контекст всё ещё актуален? (subgraph repos, sync-стрелки)
 - Изменился рекомендуемый порядок действий или prerequisites для существующих возможностей → USER-MAP.md потоки актуальны?
