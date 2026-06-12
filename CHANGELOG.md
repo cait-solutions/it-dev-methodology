@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.48.0 — feat: diagram-freshness engine (PLAN-H) — diagram-sources annotations + G-114 fix (2026-06-12)
+
+**Что:**
+- **`scripts/validate-maps-coverage.sh`** (UPGRADED) — добавлен generic движок `_check_diagram_freshness`. Каждый mermaid-блок в living-scope `.md` файлах проверяется через `<!-- diagram-sources: ... -->` annotation. Типы: `table:<Section>`, `list:<Section>`, `max-version:<Section>`, `axes` (skip), `none` (skip). UTF-8-safe (full-string `grep -F`, не `cut -c`). WARN на отсутствие annotation и на стейл-диаграмму. Config: `DIAGRAM_FRESHNESS_SEVERITY="warn"`.
+- **Annotations backfilled** во всех living-map файлах documentation repo (ROADMAP.md, SYSTEM-MAP.md, USER-MAP.md×2, ARTIFACT-MAP.md×2).
+- **ROADMAP.md Now-секция** актуализирована: заменена Freshness-механизм batch (PLAN-H/C/G/I); DoneBlob обновлён до `v5.47.0`.
+- **CLAUDE.md Maps Standard Rule** — добавлено правило `diagram-sources` annotation convention (закрытый enum, severity config, validate-maps-coverage wiring).
+- **PLAN-G plan doc** — `auto:diagram-freshness` добавлен в маркер-enum (закрытый, теперь 6 значений).
+- **G-114 зафиксирован → fixed**: `_check_roadmap_axis` парсил только bullets (awk `/^[-*]/`), Done-секция ROADMAP.md использует pipe-table → false-negative. Новый движок обрабатывает оба формата.
+
+**Что делать consumers:**
+- После sync: annotation convention из CLAUDE.md Maps Standard применима к consumer проектам — добавлять `<!-- diagram-sources: axes -->` (или конкретный тип) перед mermaid.live URL в living maps.
+- `validate-maps-coverage.sh --report` покажет mermaid-блоки без annotation (WARN, не блок).
+- **Уже существующие consumers:** при первом запуске `--report` увидят WARN по неаннотированным блокам — backfill нужен только для living maps (файлы с данными, не концептуальные диаграммы).
+
+---
+
 ## v5.47.0 — feat: maps-coverage gate + validate-maps-coverage.sh + sync-audit Gap 15 (2026-06-11)
 
 **Что:**

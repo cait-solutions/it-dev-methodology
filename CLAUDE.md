@@ -267,6 +267,21 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 **Mermaid-only.** ASCII art, PlantUML — запрещены.
 
+**`diagram-sources` annotation (closes G-114, v5.48.0):** каждый mermaid-блок в living-scope `.md` файлах ДОЛЖЕН иметь HTML-комментарий непосредственно перед mermaid.live URL:
+
+```
+<!-- diagram-sources: <type>:<Section>[, <type>:<Section>] -->
+```
+
+Типы (закрытый enum):
+- `table:<Section>` — pipe-table строки в секции (первая ячейка после `|`)
+- `list:<Section>` — top-level bullets `- **Name**` в секции
+- `max-version:<Section>` — максимальная `vX.Y` из секции vs маркер `до vX.Y` в диаграмме
+- `axes` — диаграмма показывает фиксированные оси/структуру (не данные); freshness не применима
+- `none` — статическая диаграмма (концептуальная); freshness не применима
+
+`validate-maps-coverage.sh --report` проверяет каждый mermaid-блок на наличие annotation и на соответствие диаграммы источнику данных. Диаграмма без annotation = WARN (ненулевой exit). Файл с annotation без совпадающей секции = WARN. Severity: `DIAGRAM_FRESHNESS_SEVERITY="warn"` (конфиг в шапке скрипта).
+
 **Гибридный язык:** технические термины/файлы/команды — EN; описания поведения/аннотации — RU.
 ❌ Транслитерация кириллицы латиницей (`"Stanet"`, `"Zapuskaet"`, `"dobavlen"`) — нарушение: это НЕ является RU. Только настоящая кириллица.
 Пример: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
