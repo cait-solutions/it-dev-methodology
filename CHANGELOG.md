@@ -4,6 +4,27 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.59.0 — feat: maps-freshness gate earlier + liveness (BS-1/BS-4, P-009) (2026-06-12)
+
+**Что:**
+- **`templates/.claude/hooks/maps-freshness-liveness.sh`** — **новый** SessionStart hook (pure POSIX sh, без run-hook.sh — зеркало `hook-liveness.sh`). На старте сессии смотрит `git diff HEAD` изменённых `.md` с `` ```mermaid `` → если ссылки stale/missing → warning. Закрывает **BS-4**: `post-edit-watchdog` (Edit|Write) слеп к правкам карт через Bash (sed/`>>`/mv) и к staleness при изменении кода-не-карты. Liveness git-diff agnostic к инструменту правки — ловит ЛЮБОЙ путь post-hoc. Non-blocking (exit 0).
+- **`commands/code.md` Шаг 4 п.9.5** — новый non-blocking surfacing `validate-maps-coverage.sh --report` сразу после финализации карт. Закрывает **BS-1**: раньше coverage-gate (exit 1) жил ТОЛЬКО в `deploy-push.sh` → drift невидим до деплоя. Теперь виден в момент /code.
+- **`commands/review.md`** — тот же `--report` surfacing как финальная сверка перед merge (🔵 Recommendation, НЕ блок — жёсткий gate остаётся на deploy).
+- **`commands/plan.md` Подшаг -0.4** — `maps-freshness-liveness.sh` добавлен в SessionStart liveness-set (документирован вместе с `hook-liveness.sh`).
+- **`templates/settings.template.json`** — wire нового hook в SessionStart.
+
+**Actions (consumer):**
+```bash
+bash <methodology>/scripts/sync-methodology.sh .   # доставит новый hook + wiring (merge_settings_json)
+```
+Перезапусти сессию чтобы SessionStart hook активировался.
+
+**Priority:** 🟡 — улучшает гарантию актуальности карт; не breaking (аддитивный hook + non-blocking surfacing).
+
+**НЕ входит (отдельное PM-решение PLAN-F):** семантика диаграмм BS-2/BS-5 (presence ≠ semantics), консьюмер-симметрия deploy-gate BS-3 (guard `[-d commands]`).
+
+---
+
 ## v5.58.0 — feat: mermaid node-readability axis (G-121) (2026-06-12)
 
 **Что:**
