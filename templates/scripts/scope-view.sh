@@ -10,6 +10,7 @@
 #   AGENT-GAPS.md                       entries with `Статус: open`
 #   ROADMAP.md                          sections: Considered, On hold, Arch review
 #   .claude/state/triggers.json         recommendations[] with status `proposed` / `proposed-deferred`
+#   .claude/state/triggers.json         last_plan_session.deferred[] (tactic scope-cuts from last /plan)
 #
 # Usage:
 #   bash scripts/scope-view.sh [--root DIR] [--all] [--print-only]
@@ -82,9 +83,9 @@ try:
 except (AttributeError, ValueError):
     pass
 
-root = sys.argv[1]
+root          = sys.argv[1]
 triggers_path = sys.argv[2]
-show_all = sys.argv[3] == "1"
+show_all      = sys.argv[3] == "1"
 
 def read(path):
     try:
@@ -159,10 +160,31 @@ def parse_recs(path):
                         "status": st})
     return out
 
+# --- Parse last_plan_session.deferred[] (5th source, closes P-013) --------------------
+def parse_deferred(path):
+    out = []
+    text = read(path)
+    if not text:
+        return out
+    try:
+        data = json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        return out  # graceful: malformed JSON → skip
+    task_id = (data.get("last_plan_session") or {}).get("task_id") or "?"
+    items   = (data.get("last_plan_session") or {}).get("deferred") or []
+    for item in items:
+        out.append({
+            "task_id": str(task_id)[:30],
+            "text":    str(item.get("text", ""))[:70],
+            "tag":     str(item.get("tag", "deferred")),
+        })
+    return out
+
 product_gaps = parse_gaps(read(os.path.join(root, "PRODUCT-GAPS.md")), "product")
 agent_gaps   = parse_gaps(read(os.path.join(root, "AGENT-GAPS.md")), "agent")
 roadmap      = parse_roadmap(read(os.path.join(root, "ROADMAP.md")))
 recs         = parse_recs(triggers_path)
+deferred     = parse_deferred(triggers_path)
 
 # --- Default filter (anti node-explosion): High severity + open only ------------------
 dropped = 0
@@ -175,7 +197,7 @@ if not show_all:
     agent_gaps = agent_gaps[:8]
     dropped += before - len(agent_gaps)
 
-total = len(product_gaps) + len(agent_gaps) + len(roadmap) + len(recs)
+total = len(product_gaps) + len(agent_gaps) + len(roadmap) + len(recs) + len(deferred)
 
 def esc(s):
     return s.replace('"', "'").replace("|", "·").replace("\n", " ")
@@ -187,6 +209,7 @@ lines.append("    classDef med fill:#78350f,stroke:#f59e0b,color:#fef3c7")
 lines.append("    classDef road fill:#1e3a8a,stroke:#3b82f6,color:#dbeafe")
 lines.append("    classDef rec fill:#3b0764,stroke:#a855f7,color:#f3e8ff")
 lines.append("    classDef hub fill:#0f172a,stroke:#64748b,color:#e2e8f0")
+lines.append("    classDef def fill:#1e293b,stroke:#64748b,color:#94a3b8,stroke-dasharray:5 3")
 
 scope_label = "все" if show_all else "High + in-roadmap"
 lines.append('    HUB["🔭 Отложенный scope<br/>фильтр: %s · всего %d"]:::hub' % (scope_label, total))
@@ -223,6 +246,16 @@ if recs:
         lines.append('        RC_%s["%s"]:::rec' % (r["id"].replace("-", "_"), lbl))
     lines.append("    end")
     lines.append("    HUB --> RC")
+
+if deferred:
+    task_label = deferred[0]["task_id"] if deferred else "?"
+    lines.append('    subgraph DF["🟪 Отложено последним планом (%s)"]' % esc(task_label))
+    for i, d in enumerate(deferred):
+        tag_label = "[%s]" % d["tag"] if d["tag"] else ""
+        lbl = "%s %s" % (tag_label, esc(d["text"]))
+        lines.append('        DF_%d["%s"]:::def' % (i, lbl))
+    lines.append("    end")
+    lines.append("    HUB --> DF")
 
 if total == 0:
     lines.append('    EMPTY["✅ Нет отложенного scope<br/>(или источники пусты)"]:::hub')

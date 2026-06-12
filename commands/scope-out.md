@@ -1,6 +1,6 @@
 # /scope-out — Визуальный обзор отложенного / out-of-scope scope
 
-> **Цель:** показать **одной Mermaid-диаграммой** весь отложенный / непокрытый / out-of-scope scope проекта — то что осознанно НЕ сделано. Закрывает «нет визуальности» — данные живут текстом в 5+ файлах (IDEAS, PRODUCT-GAPS, AGENT-GAPS, ROADMAP, triggers.json recommendations[]), и владелец, глядя на карты, их пропускает.
+> **Цель:** показать **одной Mermaid-диаграммой** весь отложенный / непокрытый / out-of-scope scope проекта — то что осознанно НЕ сделано. Закрывает «нет визуальности» — данные живут текстом в 5+ файлах (IDEAS, PRODUCT-GAPS, AGENT-GAPS, ROADMAP, triggers.json recommendations[], last_plan_session.deferred[]), и владелец, глядя на карты, их пропускает.
 >
 > **Эфемерная по дизайну:** диаграмма **не сохраняется в файл** — генерируется из текстовых источников при каждом запуске и выбрасывается. Источник правды = текстовые файлы; диаграмма — производная проекция → **не может устареть** (L4: нет альтернативного пути для drift). Это НЕ 7-я постоянная карта (нет refresh policy, нет PR-coupling).
 
@@ -11,7 +11,7 @@
 
 **Отличие от соседей:**
 - `/product-review` — **обрабатывает** IDEAS (raw → P-NNN решения). `/scope-out` — только **визуализирует** уже классифицированное, ничего не меняет.
-- Draft maps Шаг 99.54 кластер — показывает отложенное **этого плана** (per-plan). `/scope-out` — **весь проект** (агрегат). Разные источники, не пересекаются.
+- Draft maps Шаг 99.54 кластер — показывает отложенное **текущего плана** (per-plan, эфемерно). `/scope-out` — **весь проект** (агрегат), включает deferred[] **последнего** завершённого плана (из `triggers.json`). После закрытия сессии, draft исчезает — `/scope-out` сохраняет данные через `last_plan_session.deferred[]`.
 
 ---
 
@@ -62,6 +62,7 @@ bash scripts/scope-view.sh --print-only
 | `AGENT-GAPS.md` | `Статус: open` (cap 8 в дефолте) | 🟡 med |
 | `ROADMAP.md` | разделы Considered / On hold / Arch review | 🔵 road |
 | `triggers.json` | `recommendations[]` status `proposed*` | 🟣 rec |
+| `triggers.json` | `last_plan_session.deferred[]` (closes P-013) | 🟪 def (dashed) |
 
 **Дефолт-фильтр (anti node-explosion):** только High severity product-gaps + in-roadmap + первые 8 agent-gaps. `--all` снимает фильтр. Скрипт пишет в stderr `SCOPE_META total=N dropped=M` — **если `dropped > 0`, упомяни пользователю** сколько скрыто и что `--all` покажет всё (no silent truncation).
 

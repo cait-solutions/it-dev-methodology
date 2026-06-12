@@ -479,7 +479,9 @@ Lint-7 Summary fidelity: если меняли табличный артефак
   "service": "<сервис из плана>",
   "mode": "<Lite|Full>",
   "code_run": true,
-  "commitments": [ ... обновлённые status ... ]
+  "commitments": [ ... обновлённые status ... ],
+  "sustainment": [ ... carry-over без изменений из last_plan_session ... ],
+  "deferred": [ ... carry-over без изменений из last_plan_session ... ]
 },
 "last_deploy": {
   "date": "<YYYY-MM-DD>",
@@ -487,6 +489,8 @@ Lint-7 Summary fidelity: если меняли табличный артефак
   "phase": "<краткое описание деплоя>"
 }
 ```
+
+**⛔ Carry-over `sustainment[]` и `deferred[]` (closes latent-drop bug):** при записи `last_plan_session` — **обязательно перенести** `sustainment[]` и `deferred[]` из текущего `last_plan_session` без изменений. Шаблон выше намеренно показывает `... carry-over ...` — не пустые массивы. Если записать `"sustainment": []` / `"deferred": []` без carry — данные плана исчезают после первого commit (FMEA-1 класс). Алгоритм: прочитать `triggers.json → last_plan_session.sustainment` → вставить в новый объект как есть. То же для `deferred[]`. Defensive: если поле отсутствует у старого consumer → `[]` (не ошибка).
 
 ⛔ Пропуск этого шага = счётчики и флаги сессии устаревают → /plan следующей сессии видит `code_run: false` и предлагает вернуться к «незавершённому» плану. *(closes G-063)*
 
@@ -496,5 +500,11 @@ Lint-7 Summary fidelity: если меняли табличный артефак
 - ⛔ Оставить `pending` нельзя если работа закончена — `pending` без причины блокирует merge в `/review` Шаг 3. Если реально не сделал и не знаешь почему — это сигнал вернуться в Шаг 2, не пометить skipped без причины.
 - `commitments` отсутствует / пустой (план на старой версии до schema-бампа, или Lite без обязательств) → пропустить тихо.
 - Carried-over записи (`carried_over: true`, уже `done` из прошлого re-plan) — не трогать, они уже зачтены.
+
+**DEVLOG-запись перед deploy (auto_deploy путь, closes P-013):** при `auto_deploy: true` `/deploy` не запускается отдельно — DEVLOG-запись формируется здесь в /code перед `deploy-push.sh`. Формат `[deploy]` обязателен; если `last_plan_session.deferred[]` непустой — добавить строку:
+```
+Deferred: <пункт 1 ≤80 симв> · <пункт 2> · ... (по каждому deferred[].text)
+```
+Строка `Deferred:` пишется **одной строкой** через `·` — не список. Если deferred[] пустой → строку пропустить.
 
 $ARGUMENTS
