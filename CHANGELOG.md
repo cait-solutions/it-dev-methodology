@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.61.0 — feat: diagram semantic fidelity — detect+couple (P-009 BS-2/BS-5, ADR-015) (2026-06-12)
+
+**Что:**
+- **`commands/architecture-audit.md`** — новая **Способность D «Diagram semantic review»** (Шаг 3.5): LLM читает узлы+labels+связи **всех** living-карт (SYSTEM/USER/ARTIFACT-MAP, ROADMAP), сравнивает с реальностью системы, выдаёт diff (stale node / stale edge / stale label, confirmed|suspected). Capability-detection в Шаг 0; Capable tier обязателен. Закрывает семантическую ось которую Способность A (граф SYSTEM-MAP↔код) и grep-валидаторы не берут.
+- **`commands/code.md` Шаг 4 п.9.5 + `commands/review.md`** — **semantic PR-couple** (L3): расширение существующего v5.59.0 maps-surfacing. diff трогает компонент → сверить его узел/связи/label в картах → обновить в том же PR. Presence ловит `--report`, семантику — этот couple.
+- **ADR-015** «Diagram semantic fidelity — detect+PR-couple, не generate» (зеркало ADR-014): семантика поддерживается detect+принуждением обновить в PR, НЕ авто-генерацией. Честно L3, не 100% — для рукописной диаграммы выше нельзя без генерации.
+- **OQ-008** — генерация table-derived карт (ARTIFACT-MAP/ROADMAP) при рецидиве drift. CLAUDE.md Maps Standard §5 — правило Semantic fidelity.
+
+**Что делать consumers:**
+- Sync → `/architecture-audit` получит Способность D (запускается если есть living-карты с mermaid); `/code` и `/review` — semantic-couple под-пункт.
+- Изменение поведенческое, аддитивное (новая способность + prompt-пункты), не breaking.
+
+---
+
 ## v5.60.0 — feat: /doc-audit команда + dual-copy parity gate (G-122, ADR-014) (2026-06-12)
 
 **Что:**
