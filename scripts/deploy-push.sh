@@ -278,7 +278,13 @@ _push() {
 # ---------------------------------------------------------------------------
 if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
   echo "▶ Maps-coverage gate (methodology-platform)..."
-  if ! bash scripts/validate-maps-coverage.sh; then
+  # tee-pattern: show output in realtime AND capture for WARN count (G-119 surfacing)
+  _MAPS_TMP="$(mktemp)"
+  bash scripts/validate-maps-coverage.sh 2>&1 | tee "$_MAPS_TMP"
+  _MAPS_EXIT="${PIPESTATUS[0]}"
+  _MAPS_WARN_COUNT="$(grep -c '^\[WARN\]' "$_MAPS_TMP" 2>/dev/null || true)"
+  rm -f "$_MAPS_TMP"
+  if [ "$_MAPS_EXIT" -ne 0 ]; then
     echo "❌ BLOCKED: maps coverage failed — добавь недостающие строки карт, затем повтори деплой." >&2
     exit 1
   fi
@@ -298,6 +304,11 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
     fi
   fi
   echo "✅ Maps-coverage gate passed."
+  # Explicit WARN surfacing: WARNs don't block deploy but must not be invisible (G-119, RPN=384)
+  if [ "${_MAPS_WARN_COUNT:-0}" -gt 0 ]; then
+    echo "" >&2
+    echo "⚠️  ${_MAPS_WARN_COUNT} предупреждений карт — проверь [WARN] выше перед следующим деплоем." >&2
+  fi
   echo ""
 fi
 
