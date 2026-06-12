@@ -1,19 +1,19 @@
-# /push-consumers — Доставка обновлений методологии консьюмерам (drift visibility + batch sync + optional auto-commit-push)
+# /push-consumers — Доставка обновлений методологии консьюмерам (drift visibility + batch sync + commit-push by default)
 
 > **LOCAL-ONLY command — NEVER syncs to consumer projects.**
 > Lives in `commands-local/` (excluded from `sync-methodology.sh` glob).
 > Цель: владелец видит drift всех консьюмеров и одной командой доставляет обновления.
 >
-> **Default (без флага):** только sync файлов (write-only). Коммит делает владелец самостоятельно.
+> **Default (без флага):** sync файлов + автоматический `git commit` (только manifest-пути из `--print-changed`) + `git push` в каждом whitelisted консьюмере. Только репо из `auto_commit_consumers` в `CLAUDE.local.md`. Репо вне whitelist получают только sync (commit невозможен by-construction). Commit scope = точный список файлов записанных sync'ом — гарантия отсутствия pathspec-overcapture (класс a17ecc1).
 >
-> **С флагом `--commit-push`:** после успешного sync — автоматический `git commit` (только manifest-пути из `--print-changed`) + `git push` в каждом whitelisted консьюмере. Только репо из `auto_commit_consumers` в `CLAUDE.local.md`. Commit scope = точный список файлов записанных sync'ом — гарантия отсутствия pathspec-overcapture (класс a17ecc1).
+> **С флагом `--sync-only`:** только sync файлов (write-only). Коммит делает владелец самостоятельно. Escape-hatch для случая «хочу просто доставить файлы без коммита».
 
 ---
 
 ## Рекомендуемая модель
 
 **Default tier** — читаем версии, вызываем sync-methodology.sh, собираем отчёт.
-**Fast tier** если ≤2 консьюмера и без `--commit-push`.
+**Fast tier** если ≤2 консьюмера и с `--sync-only` (без commit/push).
 Pre-flight model check: спросить только если Capable (Opus) активен — не нужен.
 
 ---
@@ -22,16 +22,18 @@ Pre-flight model check: спросить только если Capable (Opus) а
 
 | Флаг | Поведение |
 |---|---|
-| *(без флага)* | Только sync файлов. Коммит и push — ручные. |
-| `--commit-push` | Sync + авто-commit (manifest-scope) + авто-push (reuse deploy-push харнесс). Только whitelisted репо. |
+| *(без флага — DEFAULT)* | Sync + авто-commit (manifest-scope) + авто-push (reuse deploy-push харнесс). Только whitelisted репо; вне whitelist — только sync. |
+| `--sync-only` | Только sync файлов. Коммит и push — ручные. Escape-hatch. |
 
 ---
 
 ## Шаг 1 — Инициализация (флаги + whitelist)
 
-**Флаг `--commit-push`:** зафиксировать в памяти сессии — `COMMIT_PUSH=true`.
+**Дефолт = commit+push.** Зафиксировать в памяти сессии: `COMMIT_PUSH=true`.
 
-**Whitelist (только при `--commit-push`):** прочитать `CLAUDE.local.md ## auto_commit_consumers` → список `path`+`branch`. Это **policy gate** — commit+push разрешён ТОЛЬКО для путей в этом списке. Вне списка → только sync. Если секция отсутствует → 🔴 СТОП: «`auto_commit_consumers` не настроен в CLAUDE.local.md — добавь whitelist перед запуском с `--commit-push`».
+**Флаг `--sync-only`:** если передан — `COMMIT_PUSH=false` (только sync файлов, без commit/push). Whitelist при `--sync-only` не читается.
+
+**Whitelist (при `COMMIT_PUSH=true`, т.е. дефолт):** прочитать `CLAUDE.local.md ## auto_commit_consumers` → список `path`+`branch`. Это **policy gate** — commit+push разрешён ТОЛЬКО для путей в этом списке. Вне списка → только sync. Если секция отсутствует → 🔴 СТОП: «`auto_commit_consumers` не настроен в CLAUDE.local.md — добавь whitelist, или запусти с `--sync-only` для sync без коммита».
 
 ---
 
@@ -92,7 +94,7 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null
 
 ## Шаг 4 — Одно подтверждение на весь батч
 
-Показать итоговую таблицу. При `--commit-push` — добавить колонку `Commit+Push`:
+Показать итоговую таблицу. При `COMMIT_PUSH=true` (дефолт) — добавить колонку `Commit+Push`. При `--sync-only` — колонку не показывать:
 
 ```
 Drift-таблица (methodology vX.Y.Z):
@@ -118,9 +120,9 @@ Drift-таблица (methodology vX.Y.Z):
 
 ## Шаг 5 — Батч синк (+ manifest-commit-push если флаг)
 
-Для каждого согласованного консьюмера — **два режима**:
+Для каждого согласованного консьюмера — **два режима** (выбор по `COMMIT_PUSH`):
 
-### Режим A (default — без `--commit-push`)
+### Режим A (`--sync-only` — только sync)
 
 ```bash
 echo "→ Синкаю <имя> (was <ver>)..."
@@ -134,7 +136,7 @@ else
 fi
 ```
 
-### Режим B (`--commit-push`, только whitelisted репо)
+### Режим B (DEFAULT — commit+push, только whitelisted репо)
 
 ```bash
 echo "→ Синкаю <имя> (was <ver>)..."
@@ -225,6 +227,8 @@ fi
 
 ## Шаг 6 — Финальный отчёт
 
+**Дефолт (commit+push):**
+
 ```
 === /push-consumers результаты (methodology vX.Y.Z) ===
 
@@ -237,10 +241,10 @@ fi
 Sync: 4/4 ✅  |  Commit+Push: 3/3 whitelisted ✅  |  Пропущено: 1
 ```
 
-**Если `--commit-push` НЕ передан — старый формат с ручным шагом:**
+**Если передан `--sync-only` — формат с ручным шагом коммита:**
 
 ```
-=== /push-consumers результаты ===
+=== /push-consumers результаты (--sync-only) ===
 
 ✅ erp-documentantion:     v4.47.5 → vX.Y.Z  (sync успешен)
 ...
@@ -249,14 +253,14 @@ Sync: 4/4 ✅  |  Commit+Push: 3/3 whitelisted ✅  |  Пропущено: 1
    git -C ../erp-documentantion commit .claude/ docs/adr/_TEMPLATE.md scripts/ -m "sync methodology vX.Y.Z" && \
    git -C ../it-dev-methodology-documentation commit .claude/ docs/adr/_TEMPLATE.md scripts/ -m "sync methodology vX.Y.Z" && \
    ...
-   (скопируй всё одним paste — или используй /push-consumers --commit-push для авто)
+   (скопируй всё одним paste — или запусти без `--sync-only` для авто commit+push)
 ```
 
 ---
 
 ## Когда запускать
 
-- **После каждого релиза** методологии (рекомендация в `/deploy` финале)
+- **После каждого релиза** методологии (рекомендация в `/deploy` финале). Дефолт = zero-step deploy: sync + commit + push для всех whitelisted в одном прогоне.
 - **Перед `/retro`** — убедиться что консьюмеры на свежей версии
-- **`--commit-push`** — когда хочешь полный zero-step deploy: sync + commit + push для всех whitelisted в одном прогоне
+- **`--sync-only`** — когда нужно только доставить файлы без коммита (редкий случай: ручная проверка diff перед коммитом)
 - ❌ НЕ запускать автоматически — manual trigger only (решение владельца)
