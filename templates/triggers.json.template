@@ -33,7 +33,8 @@
     "mode": "Full",
     "code_run": true,
     "commitments": [],
-    "sustainment": []
+    "sustainment": [],
+    "deferred": []
   },
   "last_deploy": {
     "date": null,

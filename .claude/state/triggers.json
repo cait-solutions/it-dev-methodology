@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 24
+      "plans_since": 25
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 38
+      "plans_since": 39
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 32
+      "plans_since": 33
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 19
+      "plans_since": 20
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 34
+      "plans_since": 35
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 6,
+      "plans_since": 7,
       "recommendations": [
         {
           "id": "R-030",
@@ -121,52 +121,91 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-12T11:30:00",
-    "task_id": "design-spec-diagrams-scope-G120-P012",
+    "completed_at": "2026-06-12T12:00:00",
+    "task_id": "deferred-persistence-P013",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": true,
+    "code_run": false,
     "commitments": [
       {
-        "text": "SKILL Шаг 3: под-шаг генерации диаграмм — per-компонент на нетривиальный §2.N (стандарт) + опц. сквозной §8 + запуск update-mermaid-links.sh + G-100 запрет pako-в-чат; критерий нетривиальности (поток/состояние/>=3 шага)",
+        "text": "templates/triggers.json.template — добавить deferred[] в last_plan_session",
         "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "SKILL Шаг 2: scope-gate — подсчёт §2.N + cross-domain проверка; рекомендация декомпозиции (recommendation-first) если >=6 компонентов ИЛИ cross-domain граница; объём >400 строк как подтверждающий симптом",
+        "text": "commands/plan.md Шаг 100 — сбор deferred[] (text·reason·tag) + anti-double-count + write-path note в Шаге 99.3",
         "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "SKILL Шаг 5: checklist-пункты — каждый нетривиальный §2.N имеет диаграмму ИЛИ skip-причина; нет PLACEHOLDER над заполненным mermaid; блок Final без этого",
+        "text": "commands/code.md Шаг 7 — carry deferred[] + sustainment[] (фикс латентной дыры); auto_deploy DEVLOG путь — строка Deferred: если непусто",
         "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "template DESIGN_SPEC: §2.N слот под per-компонент диаграмму + §8 «Опциональная» -> условие-триггер обязательности (когда обязательна / когда skip)",
+        "text": "commands/deploy.md Шаг 2 — Deferred: строка в [deploy] DEVLOG если last_plan_session.deferred[] непусто",
         "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "VERSION v5.56.0 + frontmatter banner bump в SKILL + CHANGELOG + DEVLOG [feat:command][domain:design-spec] (G-120/P-012 closed) + ROADMAP Done + LAR check (строка 99)",
+        "text": "commands/review.md — проверка ключа deferred в last_plan_session в commitments-сверке",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "scripts/scope-view.sh + templates/scripts/scope-view.sh — parse_deferred() → subgraph 🟪 Отложено последним планом (task_id); включить в SCOPE_META total",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "commands/scope-out.md — таблица источников +5-й источник; строка 14 формулировка («не пересекаются» → «/scope-out включает deferred последнего плана»)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION minor bump (v5.57.0) + CHANGELOG + DEVLOG [feat:command][domain:scope-visibility] + ROADMAP Done + LIVING-ARTIFACTS строка + P-013 статус resolved",
         "status": "pending",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "skills/design-spec/SKILL.md (diagram-протокол + scope-gate)",
-        "trigger": "вызов /design-spec пользователем",
-        "refresh": "sync-methodology -> консьюмеры",
-        "detection": "validate-template-format.sh + grep mermaid > 0 в SKILL",
+        "artifact": "last_plan_session.deferred[] (schema-поле)",
+        "trigger": "/plan Шаг 100 каждый Full-план",
+        "refresh": "перезапись каждым планом; merge_triggers_json дозаливает консьюмерам",
+        "detection": "/review проверка ключа + defensive read .get('deferred') or []",
         "owner": "методология"
       },
       {
-        "artifact": "templates/DESIGN_SPEC.template.md (§2.N слот + §8 триггер)",
-        "trigger": "автор spec через skill",
-        "refresh": "sync -> консьюмеры",
-        "detection": "validate-template-format.sh",
+        "artifact": "parse_deferred в scope-view.sh · templates/scripts/scope-view.sh",
+        "trigger": "запуск /scope-out",
+        "refresh": "sync-methodology (templates/scripts) + self-apply",
+        "detection": "exit 2 при падении парсера + SCOPE_META счётчик",
         "owner": "методология"
+      },
+      {
+        "artifact": "Deferred: строка DEVLOG",
+        "trigger": "[deploy]-запись (оба пути: /deploy Шаг 2, auto_deploy /code)",
+        "refresh": "append-only журнал, не устаревает",
+        "detection": "grep Deferred: в /retro",
+        "owner": "методология"
+      }
+    ],
+    "deferred": [
+      {
+        "text": "показ deferred[] прошлого плана в Подшаге -0.2 (напоминание перед перезаписью)",
+        "reason": "anti-over-engineering: ждём эмпирический сигнал что нужно",
+        "tag": "deferred"
+      },
+      {
+        "text": "история глубже последнего плана в /scope-out (агрегат всех deferred за всё время)",
+        "reason": "DEVLOG-grep покрывает потребность; добавлять только при подтверждённом use case",
+        "tag": "out-of-scope"
+      },
+      {
+        "text": "deferred[] брошенного плана (без deploy) не попадает в DEVLOG",
+        "reason": "ценность deferred недоехавшего плана спорна; accepted risk",
+        "tag": "accepted-risk"
       }
     ]
   },
