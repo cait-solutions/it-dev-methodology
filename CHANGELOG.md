@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.49.0 — feat: validate-mermaid-syntax.sh (PLAN-C) — R-031 structural mermaid checks (2026-06-12)
+
+**Что:**
+- **`scripts/validate-mermaid-syntax.sh`** (NEW) — 5 структурных проверок для `graph`/`flowchart` mermaid-блоков: SUBGRAPH-EDGE (G-085), DUP-NODE (G-029), UNDEF-CLASS, CYRILLIC-ID (G-005), TRANSLIT-LABEL (эвристика). V1: WARN-only (exit 0). `--strict` → exit 1 на findings. Space-safe (tmpfile для find). Bash 3.2+ compatible.
+- **`templates/scripts/validate-mermaid-syntax.sh`** — dual-copy G-103 (diff -q identical).
+- Закрывает R-031 (architecture-audit 2026-06-10, status proposed).
+
+**Что делать consumers:**
+- После sync: `bash scripts/validate-mermaid-syntax.sh --root .` — увидеть structural anti-patterns в своих mermaid-диаграммах (WARN, не блок).
+- TRANSLIT-LABEL словарь расширяем через header скрипта `TRANSLIT_WORDS=...`.
+
+---
+
 ## v5.48.0 — feat: diagram-freshness engine (PLAN-H) — diagram-sources annotations + G-114 fix (2026-06-12)
 
 **Что:**
