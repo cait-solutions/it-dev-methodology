@@ -47,6 +47,7 @@
 
 ## Граф системы
 
+<!-- diagram-sources: axes -->
 _(ссылка: запусти `bash scripts/update-mermaid-links.sh`)_
 
 ```mermaid

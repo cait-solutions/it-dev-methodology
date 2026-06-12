@@ -647,6 +647,16 @@ Output:
    - Вывести результат пользователю (mapped/unmapped counts per axis)
    - **Для консьюмеров:** показывать только counts, **без MISSING-вердиктов** по synced командам — consumer карты описывают их продукт, а не methodology commands (SYSTEM-MAP §11)
    - **Для methodology-platform:** вывести полный отчёт включая ROADMAP-ось
+   - **Diagram freshness (PLAN-H движок, v5.48.0+):** `validate-maps-coverage.sh --report` включает вывод `diagram-freshness` секции. Для консьюмеров:
+     - `🟡 unannotated: <N> diagram(s)` → показать список файлов + инструкцию:
+       ```
+       Добавь аннотацию перед каждой mermaid.live URL (или перед ```mermaid если URL ещё нет):
+         <!-- diagram-sources: axes -->           ← для карт без data-source (layout/navigation)
+         <!-- diagram-sources: table:Section -->  ← для диаграмм из pipe-таблицы
+         <!-- diagram-sources: list:Section -->   ← для диаграмм из bullet-списка
+         <!-- diagram-sources: none -->           ← для примеров/иллюстраций без data-coupling
+       ```
+     - `🟢 diagram-freshness: OK` → все диаграммы аннотированы и свежие
 2. Если скрипт отсутствует → `⚠️ Gap 15 [Medium]: validate-maps-coverage.sh не найден — sync методологию до v5.47.0+`.
 
 **Диагностика:**
@@ -655,6 +665,53 @@ Output:
 - 🔴 Errors — команды/skills без строк в картах → deploy будет заблокирован
 
 > **Sustainment:** `validate-maps-coverage.sh` вызывается в deploy-push.sh gate (methodology-platform) и здесь (report). Dual-copy: `scripts/` + `templates/scripts/` (G-103). При добавлении новой команды → deploy сам выявит пропуск.
+
+---
+
+### Gap 16: Living Artifact Registry bootstrap (v5.51.0)
+
+**Цель:** проверить что LAR (`docs/architecture/LIVING-ARTIFACTS.md`) создан в репо консьюмера. Без LAR `validate-lar.sh` (Gap 10) и PLAN-G runner не работают — lifecycle-реестр пуст.
+
+**Scope:** любой проект. Если LAR уже присутствует — Gap 10 вызывает `validate-lar.sh`, Gap 16 пропускает инициализацию.
+
+**Graceful skip:** если файл присутствует → Gap 16 ⬇️ пропуск (LAR уже есть — анализируется в Gap 10). Если `exclude_paths` содержит текущее репо → тихо пропустить.
+
+**Поток:**
+
+1. Определить путь к LAR (через `doc_repo_path`, как в Gap 10):
+   ```bash
+   # single-repo:   docs/architecture/LIVING-ARTIFACTS.md
+   # two-repo:      <doc_repo_path>/docs/architecture/LIVING-ARTIFACTS.md
+   ```
+
+2. Если LAR **присутствует** → `✅ Gap 16: LIVING-ARTIFACTS.md найден — переходи к Gap 10 для validate-lar`.
+
+3. Если LAR **отсутствует** → предложить пользователю (per-repo, паттерн Gap 14):
+   ```
+   🟡 Gap 16: LIVING-ARTIFACTS.md отсутствует в <repo>.
+      Без LAR validate-lar.sh (Gap 10) и auto:* runner (PLAN-G) не работают.
+
+   Действие:
+     [init]  — создать из шаблона: bash scripts/new-project-init.sh (LAR-секция)
+     [skip]  — пропустить этот раз
+     [never] — добавить в exclude_paths (не спрашивать в будущем)
+
+   Твой выбор (init / skip / never):
+   ```
+
+4. При выборе **init**:
+   - Проверить `[ -f scripts/new-project-init.sh ]`. Если нет → `⚠️ new-project-init.sh не найден — обновите методологию`.
+   - Предупредить: init создаёт ТОЛЬКО файл LAR из шаблона; git commit остаётся за пользователем.
+   - Вывести: `bash scripts/new-project-init.sh <project-path>` — выполняет LAR-секцию (guard: существующий файл не перезапишет).
+   - После: `✅ LIVING-ARTIFACTS.md создан. Git commit — вручную. Заполни Detection-колонку auto:* маркерами для живых карт (PLAN-G).`
+
+5. При выборе **never** → добавить путь репо в `exclude_paths` в `CLAUDE.local.md ## Consumers`:
+   ```yaml
+   # exclude_paths: [<absolute-path-to-repo>]
+   ```
+   Сообщить: `📝 Репо добавлен в exclude_paths — Gap 16 не будет показываться.`
+
+> **Sustainment:** при изменении `templates/LIVING-ARTIFACTS.template.md` — gap продолжает работать (ссылается на template через `new-project-init.sh`). Связь: `Gap 10` (validate-lar.sh) · `Gap 14` (consumer init паттерн) · `CLAUDE.local.md ## Consumers exclude_paths`.
 
 ---
 
@@ -689,7 +746,8 @@ Output:
 | 12 | ROADMAP.Done vs DEVLOG milestone sync | 🟡/🟢 | [N milestone'ов без Done-записи] | backfill через `/code` Шаг 5 reactive path |
 | 13 | Branch protection on main | 🔴/🟡/🟢 | [статус из Gap 13] | `bash scripts/setup-branch-protection.sh` |
 | 14 | [no-marker] consumer initialization | 🟡/🟢 | [N repos без методологии] | init / skip / never (в Gap 14 inline) |
-| 15 | Maps coverage | 🔴/🟡/🟢 | [errors/warnings из Gap 15] | добавить строки в карты (USER-MAP/ARTIFACT-MAP/SYSTEM-MAP) |
+| 15 | Maps coverage + diagram freshness | 🔴/🟡/🟢 | [errors/warnings из Gap 15 + unannotated diagrams count] | добавить строки в карты; добавить `<!-- diagram-sources: ... -->` к неаннотированным диаграммам |
+| 16 | Living Artifact Registry bootstrap | 🟡/🟢 | [PRESENT / MISSING / SKIPPED] | `bash scripts/new-project-init.sh <path>` или init inline (Gap 16 поток) |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная

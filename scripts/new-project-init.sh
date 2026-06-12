@@ -355,6 +355,21 @@ echo "→ gitignore/"
 copy_with_subst "$METHODOLOGY_DIR/templates/.gitignore.template"  "$TARGET_DIR/.gitignore"
 
 # ---------------------------------------------------------------------------
+# Living Artifact Registry (v5.51.0+).
+# Guard: existing LAR is owned by the project — never overwrite.
+# ---------------------------------------------------------------------------
+echo "→ lar/"
+_lar_dest="$TARGET_DIR/docs/architecture/LIVING-ARTIFACTS.md"
+_lar_tmpl="$METHODOLOGY_DIR/templates/LIVING-ARTIFACTS.template.md"
+if [[ -f "$_lar_dest" ]]; then
+  echo "  - LIVING-ARTIFACTS.md (exists — preserved; review Detection column for auto: markers)"
+elif [[ -f "$_lar_tmpl" ]]; then
+  copy_with_subst "$_lar_tmpl" "$_lar_dest"
+else
+  echo "  - LIVING-ARTIFACTS.md (template not found — skip; install methodology v5.51.0+)"
+fi
+
+# ---------------------------------------------------------------------------
 # Git init.
 # ---------------------------------------------------------------------------
 if [[ ! -d "$TARGET_DIR/.git" ]]; then
