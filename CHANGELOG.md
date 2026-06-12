@@ -4,6 +4,42 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v5.58.0 — feat: mermaid node-readability axis (G-121) (2026-06-12)
+
+**Что:**
+- **`CLAUDE.md §3`** — новое правило «Формат node-описания» (closes G-121): компонентные ноды в mermaid обязаны иметь три строки понятные нетехническому читателю: `NodeID["🔹 Имя<br/>Зачем: назначение<br/>Без него: impact"]`. Применяется ко ВСЕМ создаваемым диаграммам (living maps, draft, design-spec §8, ad-hoc). Affordance-ноды и deferred-кластер освобождены.
+- **`templates/scripts/validate-maps-coverage.sh`** — новая ось `node-readability` (`NODE_READABILITY_SEVERITY="warn"`): per-block scanner с ASCII-heuristic (≥2 `<br/>`), affordance/deferred exemption. Dual-copy parity (G-103).
+- **`templates/CLAUDE-methodology.template.md §3`** — dogfood parity: compact mirror правила.
+- **`skills/design-spec/SKILL.md`** — node-format в Шаг 3 (per-component diagram rule) + checklist item в Шаг 5. Combines G-120+G-121 enforcement.
+- **`commands/plan.md`** Шаг 99.54 и **`commands/review.md`** — явные ссылки на §3 node-format.
+
+**Что делать consumers:**
+- Sync для получения обновлённого `validate-maps-coverage.sh` (новая ось), `skills/design-spec/SKILL.md`, `CLAUDE-methodology.template.md`.
+- Существующие диаграммы: migrate форматирование в отдельном PR (WARN, не block).
+- Новые диаграммы: следовать формату автоматически (правило в CLAUDE.md §3).
+
+---
+
+## v5.58.0 — feat: deferred[] persistence — тактические scope-cuts видны в /scope-out (P-013) (2026-06-12)
+
+**Что:**
+- **`commands/plan.md` Шаг 100** — новый пункт 1bis: сбор `deferred[]` из «Не учтено → deferred/out-of-scope» (anti-double-count vs PRODUCT-GAPS); JSON-шаблон добавлен; Шаг 99.3 write-path note о персистенции тактических cuts.
+- **`commands/code.md` Шаг 7** — явный carry-over `sustainment[]` и `deferred[]` (фикс латентной дыры: без carry оба поля тихо терялись при перезаписи last_plan_session); auto_deploy DEVLOG путь: строка `Deferred:` если непусто.
+- **`commands/deploy.md` Шаг 2** — строка `Deferred:` в формате [deploy]-записи (читает `last_plan_session.deferred[]`).
+- **`commands/review.md`** — новый чек-пункт Deferred-field presence (detection + ссылка на `parse_deferred`).
+- **`scripts/scope-view.sh` + `templates/scripts/scope-view.sh`** — 5-й источник `parse_deferred()`: читает `last_plan_session.deferred[]`, генерирует субграф `🟪 Отложено последним планом (task_id)` со стилем dashed; включён в `SCOPE_META total`.
+- **`commands/scope-out.md`** — таблица источников +5-я строка; формулировка «не пересекаются» исправлена.
+- **`templates/triggers.json.template`** — аддитивное поле `"deferred": []` в `last_plan_session`.
+
+**Зачем:** тактические `→ deferred` / `→ out of scope` пункты планов пропадали навсегда через анти-шум фильтр (P-013). Теперь `/scope-out` показывает их субграфом, DEVLOG фиксирует строкой.
+
+**Что запустить:**
+- `bash scripts/sync-methodology.sh .` — self-apply (обновит `.claude/skills/`, `.claude/commands/`, `scripts/scope-view.sh` у себя)
+- `bash scripts/sync-methodology.sh <consumer-path>` — доставить `templates/scripts/scope-view.sh` + `triggers.json.template` консьюмеру
+- `merge_triggers_json` дозальёт `deferred: []` в существующий consumer `triggers.json` без поломки (graceful additive).
+
+---
+
 ## v5.56.0 — feat: /design-spec diagrams + scope-gate (G-120/P-012) (2026-06-12)
 
 **Что:**

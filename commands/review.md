@@ -166,7 +166,9 @@ git log <production_branch>..HEAD --oneline
     - LIVING-ARTIFACTS.md отсутствует → 🟡 info: «LIVING-ARTIFACTS.md не создан — lifecycle-реестр недоступен; создать из `templates/LIVING-ARTIFACTS.template.md`».
   - **Анти-дубль правило:** если уже есть 🔴 от «Trigger chain integration» на тот же механизм — не дублировать; достаточно первого 🔴.
   - *Disposition для 🔴:* fix now — вернуться к плану, добавить Sustainment Declaration для пропущенного механизма, перезапустить /review.
+- [ ] **Deferred-field presence check** (closes P-013 detection): прочитать `last_plan_session` → убедиться что ключ `deferred` присутствует (defensive: `.get('deferred') or []`; отсутствие у old consumer = 🔵 info «merge_triggers_json дозальёт поле — не блок»). Если ключ есть и непустой → убедиться что `/scope-out` источник `triggers.json last_plan_session.deferred[]` читает его (косвенная сверка: наличие `parse_deferred` в `scripts/scope-view.sh`). Только для diff содержащего изменение `scope-view.sh` или `triggers.json` — иначе пропустить.
 - [ ] **Error / empty / absent path:** happy path работает → что при failure внешнего вызова / пустом входе / отсутствующем файле / wrong type? Названа ли реакция на каждую ветку?
+- [ ] **Node readability (v5.57.0, G-121):** diff содержит mermaid-блоки → компонентные ноды в формате «Имя + Зачем + Без него» (≥ 2 `<br/>`)? Запустить `bash scripts/validate-maps-coverage.sh --report` (вывод `node-readability: WARN` = 🔵 Suggestion, не fix-now; но perfunctory «Зачем: нужно / Без него: плохо» = 🔵 с пометкой «переформулировать»). Affordance-ноды освобождены.
 - [ ] **Что ещё специфично для этого изменения** (open-ended — список выше не исчерпывающий): какой класс пропуска уникален для этой задачи?
 
 **Disposition:**
