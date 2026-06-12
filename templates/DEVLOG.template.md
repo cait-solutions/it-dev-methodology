@@ -12,7 +12,7 @@
 - Принято архитектурное решение.
 - Обнаружена критическая проблема или регрессия.
 - Завершён крупный milestone.
-- Запущен `/architecture-audit`, `/sync-vision` или `/retro` — записать итог.
+- Запущен `/architecture-audit`, `/vision sync` или `/retro` — записать итог.
 
 ---
 
@@ -57,7 +57,7 @@
 | Тег | Когда |
 |---|---|
 | `[architecture-audit]` | итог `/architecture-audit` |
-| `[sync-vision]` | итог `/sync-vision` |
+| `[sync-vision]` | итог `/vision sync` |
 | `[retro]` | итог `/retro` |
 | `[diagnose]` | итог `/diagnose` |
 | `[methodology-override]` | локальная правка `.claude/commands/*` без PR в методологию (требует PR в 48h) |

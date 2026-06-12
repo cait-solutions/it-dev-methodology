@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.0.0 — BREAKING: /vision consolidation + Ground-before-act rule + validator fix (2026-06-12)
+
+**Что (3 потока из architecture-audit + diagnose):**
+
+- ⚠️ **BREAKING — командная консолидация:** `/product-vision` + `/product-review` + `/sync-vision` слиты в **`/vision {strategy|review|sync}`** (dispatcher по аргументу). Тела трёх команд сохранены дословно под per-mode секциями; per-mode model-tier таблица (strategy=Capable, review/sync=Default); все три triggers-ключа (`last_product_vision/review/sync_vision`) сохранены — каждый mode пишет свой → схема triggers.json **не меняется**. `/product-check` остаётся отдельной командой (механический Fast-tier аудит, другая ось). Обоснование: один домен (VISION+ROADMAP) + одна аудитория (PM) + взаимные cross-ref «НЕ для X» = три фасета одного lifecycle.
+- **`CLAUDE.md` Workflow rules — новое `Ground-before-act rule`:** общий L3-регулятор «читай live-источник перед утверждением о структуре/состоянии/версии/cross-repo». Закрывает `assumption-gap` recurrence class (architecture-audit recurrence_rate=**0.53**, самый высокий — фиксы были локальные, паттерн возвращался). Обобщает разрозненные per-command pre-flights. Таблица канонических триггеров (G-039/G-085/G-100/G-105/G-106/G-109/G-116/G-117 — один корень).
+- **`scripts/validate-maps-coverage.sh` (dual-copy) — fix node-readability validator (G-121b):** (1) перестал флагать edge-labels (`X -->|"..."|`) и subgraph-заголовки как ноды без Зачем/Impact формата (false-positive class — приучал владельца игнорировать вывод); (2) summary-counter теперь считает node-readability findings (рапортовал «0 warning(s)» при десятках напечатанных WARN). После фикса 55 **настоящих** advisory-warnings всплыли — существующие карты до G-121 формата (миграция — отдельный PR, как и заявлено в CLAUDE.md §3).
+
+**Что делать consumers (migration):**
+- ⚠️ Переименование команд: `/product-vision` → **`/vision strategy`**, `/product-review` → **`/vision review`**, `/sync-vision` → **`/vision sync`**. После sync старые команды **исчезнут** (`sync-methodology.sh` удаляет команды, отсутствующие в источнике). Привычки/скрипты/доки, ссылающиеся на старые имена → обновить.
+- triggers.json и DEVLOG-теги (`[sync-vision]` и т.п.) — **без изменений**, обратно совместимы.
+- Sync → `/vision` появится; `Ground-before-act rule` в CLAUDE.md; validator перестанет шуметь на edge-labels.
+
+---
+
 ## v5.61.0 — feat: diagram semantic fidelity — detect+couple (P-009 BS-2/BS-5, ADR-015) (2026-06-12)
 
 **Что:**

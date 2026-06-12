@@ -1,13 +1,13 @@
 # /architecture-audit — Структурный аудит проекта
 
-> **Цель:** структурный аудит **архитектуры проекта** — SYSTEM-MAP ↔ code drift, AGENT-GAPS pattern analysis (Level 4+ ladder), decommission candidates, cross-project aggregation. НЕ для methodology adoption (это `/sync-audit`), НЕ для тактических проблем (это `/retro`), НЕ для product gaps (это `/product-review`).
+> **Цель:** структурный аудит **архитектуры проекта** — SYSTEM-MAP ↔ code drift, AGENT-GAPS pattern analysis (Level 4+ ladder), decommission candidates, cross-project aggregation. НЕ для methodology adoption (это `/sync-audit`), НЕ для тактических проблем (это `/retro`), НЕ для product gaps (это `/vision review`).
 
 Универсальная команда структурного анализа. Применима к **любому проекту** (консьюмер или methodology-platform). Способности команды активируются автоматически по наличию артефактов в проекте:
 
 | Способность | Активируется если | Применимо к |
 |---|---|---|
 | **A. SYSTEM-MAP ↔ code drift** | существует `docs/architecture/SYSTEM-MAP.md` | проекты с архитектурной картой |
-| **B. Gap pattern analysis + Level 4+ ladder + decommission** | существует `AGENT-GAPS.md` И ≥ 3 записи (open + addressed). **Scope: только AGENT-GAPS** — agent's reasoning failures (methodology improvements). PRODUCT-GAPS обрабатывается через `/product-review`, не здесь. | проекты использующие AGENT-GAPS культуру |
+| **B. Gap pattern analysis + Level 4+ ladder + decommission** | существует `AGENT-GAPS.md` И ≥ 3 записи (open + addressed). **Scope: только AGENT-GAPS** — agent's reasoning failures (methodology improvements). PRODUCT-GAPS обрабатывается через `/vision review`, не здесь. | проекты использующие AGENT-GAPS культуру |
 | **C. Cross-project gap aggregation** | существует `consumers/*.yaml` registry с ≥ 1 ссылкой на склонированный проект имеющий `AGENT-GAPS.md` | methodology-platform или родительский проект с дочерними |
 | **D. Diagram semantic review** | существует ≥ 1 living-карта с mermaid-блоком (`SYSTEM-MAP` / `USER-MAP` / `ARTIFACT-MAP` / `ROADMAP`) | любой проект с живыми картами (ADR-015) |
 

@@ -102,13 +102,13 @@ graph LR
     subgraph Periodic["📊 Периодические (по счётчику)"]
         PCheck["/product-check<br/>freshness PRODUCT.md"]:::periodic
         Arch["/architecture-audit<br/>drift SYSTEM-MAP"]:::periodic
-        PReview["/product-review<br/>обработка IDEAS"]:::periodic
+        PReview["/vision review<br/>обработка IDEAS"]:::periodic
         Retro["/retro<br/>паттерны проблем"]:::periodic
     end
 
     subgraph Strategic["🔭 Стратегические + Ad-hoc"]
-        PVision["/product-vision<br/>обзор VISION+ROADMAP"]:::strategic
-        SyncV["/sync-vision<br/>стратегия vs реальность · ⚡"]:::strategic
+        PVision["/vision strategy<br/>обзор VISION+ROADMAP"]:::strategic
+        SyncV["/vision sync<br/>стратегия vs реальность · ⚡"]:::strategic
         Diag["/diagnose<br/>root-cause анализ · ⚡"]:::strategic
     end
 
@@ -230,9 +230,9 @@ graph LR
 |---|---|---|---|---|
 | Маркетплейс | `docs/product/orders.md`, `docs/product/invoices.md`, `docs/product/catalog.md` | `/product-check`, `order.created` (CRUD) | Developer, PM | PM (статус deprecated) |
 | ERP | `docs/product/parties.md`, `docs/product/contracts.md`, `docs/product/packages.md` | `/product-check`, Developer | Developer, PM | PM (сущность удалена) |
-| CRM / продажи | `docs/product/customers.md`, `docs/product/pipelines.md` | `/product-review`, Owner | Developer, Owner | — |
+| CRM / продажи | `docs/product/customers.md`, `docs/product/pipelines.md` | `/vision review`, Owner | Developer, Owner | — |
 | ИИ-бот / агент | `docs/product/prompts.md`, `docs/product/conversation-flows.md` | `/product-check`, Developer | Developer, `/review` | — |
-| API-сервис | `docs/api-contracts.md`, `docs/rate-limits.md` | `/sync-vision`, Developer | Developer, `/review` | Developer (v-deprecated) |
+| API-сервис | `docs/api-contracts.md`, `docs/rate-limits.md` | `/vision sync`, Developer | Developer, `/review` | Developer (v-deprecated) |
 | Внутренний инструмент | `docs/product/user-roles.md`, `docs/product/permissions.md` | `/product-check`, PM | Developer, PM | PM (роль удалена) |
 
 | Артефакт | Назначение | Условие обновления | Пишет / Актор | Читает | Закрывает | Частота |
@@ -249,21 +249,21 @@ graph LR
 | Артефакт | Назначение | Условие обновления | Пишет / Актор | Читает | Закрывает | Частота |
 |---|---|---|---|---|---|---|
 | `triggers.json` | State-машина методологии: счётчики, даты, статус сессии | автоматически при каждом `/plan` и `/deploy` | `/plan`, `/deploy` | все команды (state check) | — | 🔁 каждый цикл |
-| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy`, `/architecture-audit`, `/sync-vision` | `/retro`, `/review`, `/product-vision` | — | 🔁 каждый деплой |
-| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/product-review`, `/code` | `/plan`, `/product-check`, `/code` | — | 📊 ~5 планов |
+| `DEVLOG.md` | Хронология проекта: деплои, решения, milestones | каждый деплой — обязательно | `/deploy`, `/architecture-audit`, `/vision sync` | `/retro`, `/review`, `/vision strategy` | — | 🔁 каждый деплой |
+| `PRODUCT.md` | Спецификация поведения продукта с точки зрения пользователя | `last_product_check.plans_since ≥ 5` | `/product-check`, `/vision review`, `/code` | `/plan`, `/product-check`, `/code` | — | 📊 ~5 планов |
 | `docs/product/USER-MAP.md` | Визуальная карта возможностей пользователей (Mermaid) | `last_user_map_sync.plans_since ≥ 10` или `[TODO:]` найдены | `/code` | `/product-check`, `/code`, Developer, PM/Owner | — | 📊 ~10 планов |
 | `docs/architecture/SYSTEM-MAP.md` | Архитектурная карта: компоненты, связи, границы модулей | `plans_since ≥ 5` | `/code` | `/review`, `/architecture-audit`, `/code`, Developer | — | 📊 ~5 планов |
 | `HYPOTHESES.md` | Гипотезы о поведении системы, наблюдения, аномалии | при ретро / диагностике | `/retro`, `/diagnose` | `/plan` (Шаг -1.5), `/retro` | — | 📊 ~5–15 планов |
 | `AGENT-GAPS.md` | Лог признанных пропусков / ошибок AI | при явном признании ошибки AI (триггер -4 в `/plan`) | `/plan` (Шаг -4), `/code`, `/review`, AI Agent | `/architecture-audit`, `/retro` | — | ⚡ по событию |
-| `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/sync-vision`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
-| `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/sync-vision` | `/sync-vision`, `/plan` → `_processed/` | ⚡ по событию |
-| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review`, `/retro` | `/product-review`, `/plan` (Шаг 1.6), `/retro` (Шаг 6) | `/product-review` | 📊 ~10 планов |
-| `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/product-vision` | `/plan` (Шаг 1.5), Developer, PM/Owner | — | 🔭 ~30 планов |
-| `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/product-vision`, `/sync-vision` | `/plan`, `/product-review`, `/sync-vision` | — | 🔭 ~30 планов |
+| `OPEN-QUESTIONS.md` | Открытые вопросы, требующие решения команды или PM | при изменении контрактов | `/vision sync`, `/plan` | `/plan` (Шаг -3.3), `/retro`, PM/Owner | PM / Owner | ⚡ по событию |
+| `inbox/` | Очередь внешних входящих документов: VCD, specs, анализы | при получении внешнего документа | PM / Owner / Developer | `/plan` (Шаг 0.7), `/vision sync` | `/vision sync`, `/plan` → `_processed/` | ⚡ по событию |
+| `IDEAS.md` | Сырые сигналы: боль пользователей, идеи, friction | `plans_since ≥ 10` или ≥ 7 unreviewed | `/plan`, `/review`, `/retro` | `/vision review`, `/plan` (Шаг 1.6), `/retro` (Шаг 6) | `/vision review` | 📊 ~10 планов |
+| `ROADMAP.md` | Стратегический план: что делаем и когда | `plans_since ≥ 30` | `/vision strategy` | `/plan` (Шаг 1.5), Developer, PM/Owner | — | 🔭 ~30 планов |
+| `VISION.md` | Стратегические оси, долгосрочные цели продукта | `plans_since ≥ 30` или при контракт-изменениях | `/vision strategy`, `/vision sync` | `/plan`, `/vision review`, `/vision sync` | — | 🔭 ~30 планов |
 | `docs/product/ARTIFACT-MAP.md` | Lifecycle карта артефактов (этот файл) | при добавлении команды / артефакта / актора | Developer | Developer, `/review` | — | ручное |
-| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при новом риске или по рекомендации `/retro` | `/sync-vision` (Type B), PM / Owner | `/plan`, PM/Owner, Developer | PM / Owner | 📊 ~15 планов |
+| `RISKS.md` | Реестр рисков: угрозы, вероятность, mitigation | при новом риске или по рекомендации `/retro` | `/vision sync` (Type B), PM / Owner | `/plan`, PM/Owner, Developer | PM / Owner | 📊 ~15 планов |
 | `CLAUDE.md` | Правила работы AI-агентов в проекте | при sync pull или изменении правил | `/code`, sync-script | все команды (rules) | — | ⚡ по событию |
-| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | `/code` | `/review` (Шаг 2), `/architecture-audit`, `/sync-vision`, `/code` | Developer (deprecated) | ⚡ по решению |
+| `docs/adr/` | Архитектурные решения и их обоснование | при архитектурном решении | `/code` | `/review` (Шаг 2), `/architecture-audit`, `/vision sync`, `/code` | Developer (deprecated) | ⚡ по решению |
 
 ### Проектные команды (если есть)
 
@@ -285,7 +285,7 @@ graph LR
 | `RISKS.md` | `/retro` (паттерны) или новый риск | PM / Owner | Устаревший threat landscape |
 | `CLAUDE.md` | sync pull или изменение правил | Developer (запускает sync-script) | Правила расходятся с практикой |
 | `docs/adr/` | архитектурное решение или `/architecture-audit` | Developer (запускает `/code`) | ADR противоречат текущей архитектуре |
-| `inbox/` | Получен новый внешний документ | PM / Owner / Developer | Документ не обработан → план и sync-vision работают с устаревшими данными |
+| `inbox/` | Получен новый внешний документ | PM / Owner / Developer | Документ не обработан → план и /vision sync работают с устаревшими данными |
 | `[TODO: продуктовый артефакт]` | `[TODO: триггер]` | `[TODO: актор]` | `[TODO: риск]` |
 
 ---

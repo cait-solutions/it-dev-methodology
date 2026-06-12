@@ -39,11 +39,11 @@ node_to_file() {
         Deploy)  echo "deploy.md" ;;
         Retro)   echo "retro.md" ;;
         Arch)    echo "architecture-audit.md" ;;
-        SyncV)   echo "sync-vision.md" ;;
+        SyncV)   echo "vision.md" ;;
         Diag)    echo "diagnose.md" ;;
         PCheck)  echo "product-check.md" ;;
-        PReview) echo "product-review.md" ;;
-        PVision) echo "product-vision.md" ;;
+        PReview) echo "vision.md" ;;
+        PVision) echo "vision.md" ;;
         Onboard) echo "onboard.md" ;;
         *)       echo "" ;;
     esac

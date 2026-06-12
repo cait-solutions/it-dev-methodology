@@ -43,6 +43,15 @@ HYPOTHESES.md
 RISKS.md
 OPEN-QUESTIONS.md
 BEHAVIOR.md
+
+# ⚠️ Un-ignore command/template sources: the artifact-doc patterns above are
+# unanchored and case-insensitive on Windows, so `VISION.md` accidentally matches
+# `commands/vision.md` (the /vision command source). Command sources are canon —
+# never ignore them. Closes the case-collision class (G-123).
+!commands/**
+!commands-local/**
+!templates/**
+
 # Consumer project docs (not canonical for methodology-platform):
 docs/product/
 docs/adr/

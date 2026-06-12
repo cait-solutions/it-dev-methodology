@@ -133,6 +133,22 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 - Симптом или причина? Симптом → найди причину
 - Локальный или системный? Локальный без обоснования = красный флаг
 
+**Ground-before-act rule (closes assumption-gap recurrence class — `/architecture-audit` recurrence_rate=0.53, самый высокий из всех категорий):** ПЕРЕД любым утверждением или действием о **структуре / состоянии / версии / cross-repo workflow** — прочитать live-источник, не отвечать из внутренней модели или generic-конвенции. Это **общий L3-регулятор**, обобщающий разрозненные per-command pre-flights (DOM-rule, commit-discipline, cite-gate), которые чинили класс локально → паттерн возвращался на каждой непокрытой поверхности (free-chat, draft-фаза, version bump, инструкции третьей стороне).
+
+Канонические триггеры и обязательная верификация (если хоть один сработал — СНАЧАЛА читать, потом отвечать):
+
+| Если вопрос/действие про… | Прочитать ПЕРЕД ответом | Закрывает |
+|---|---|---|
+| структуру проекта / «где что лежит» / setup / workspace | USER-MAP + SYSTEM-MAP (always-available canon) | G-109 |
+| текущее состояние репо / «репо пустой?» / init | `git -C <repo> ls-remote` + `git log` (не single-clone view) | G-117 |
+| VERSION bump / «свободна ли версия» | `git show HEAD:VERSION` + `git log --oneline -3` | G-116 |
+| cross-repo git-инструкция третьей стороне | `git ls-remote --heads origin` (фактические ветки, не generic flow) | G-014, [[G-018]], 2026-… |
+| «что делает команда / методология X» | актуальный текст `commands/<X>.md` (не по памяти) | L778-класс |
+| описание legacy/механизма в design-spec/доке | real code `file:line` (не по памяти модели) | G-105 |
+| sync/adoption «версия актуальна?» у консьюмера | `.claude/.version` consumer vs актуальный `VERSION` клона | sync-audit-version |
+
+⛔ «Уверен на N%» про структуру/состояние **без чтения источника** = это hunch, не evidence → понизить до verify-first. Пользовательская инструкция «проверь не галлюцинируешь ли» — человек, компенсирующий именно этот класс; правило делает компенсацию структурной. Detection: `/retro` + `/architecture-audit` Шаг 6.3 мониторят recurrence_rate по `assumption-gap` — рост ≥0.4 = правило не держит, нужен L4. Закрывает класс G-039/G-085/G-100/G-105/G-106/G-109/G-116/G-117 (один корень, ≥8 раз cross-ref в AGENT-GAPS).
+
 **Completeness rule:**
 Каждое решение (в /plan, /code, /review, /deploy) ДОЛЖНО явно указать:
 - Что закрывается (main path, happy cases)
@@ -243,7 +259,7 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 | View | Viewpoint | Когда обновляется | Файл |
 |---|---|---|---|
-| **roadmap-view** | Temporal/Priorities | Что и в каком порядке строить? Status-карта: Now/Next/Considered/Hold | Developer, /product-review, /product-vision | Developer после /product-review, /product-vision, /plan (при добавлении/закрытии узлов) |
+| **roadmap-view** | Temporal/Priorities | Что и в каком порядке строить? Status-карта: Now/Next/Considered/Hold | Developer, /vision review, /vision strategy | Developer после /vision review, /vision strategy, /plan (при добавлении/закрытии узлов) |
 | **data-map** | Process/data flow | при изменении хранилищ/схемы данных | `docs/data-map.md` (если есть runtime-данные) |
 | **ADR catalog** | Decisions (arc42 §9) | при принятии/superseding решения | `docs/adr/` + `README.md` каталог |
 | **threat-model** | Trust-boundary | на `[security]` планах | `docs/threat-model-*.md` (instantiate из template) |

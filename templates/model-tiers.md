@@ -15,9 +15,9 @@ Centralized model recommendation registry. Команды читают этот 
 | Tier | Когда использовать |
 |---|---|
 | **Fast tier** | ТОЛЬКО для non-reasoning validation tasks: smoke tests, структурное сравнение кода/текста, простые чеклист-проверки. ❌ НЕ для /plan, /code, /review которые требуют reasoning и синтеза |
-| **Default tier** | **PRIMARY CHOICE** для большинства work: /plan, /code, /review, /retro, /sync-vision, /product-review, /onboard. Стандарт для Full mode. До ~50 файлов в контексте. Достаточна для reasoning, консистентности, архитектурного анализа |
+| **Default tier** | **PRIMARY CHOICE** для большинства work: /plan, /code, /review, /retro, /vision review, /vision sync, /onboard. Стандарт для Full mode. До ~50 файлов в контексте. Достаточна для reasoning, консистентности, архитектурного анализа |
 | **Extended tier** | Refactor / scan большого количества файлов / монолит-обход. Та же интеллектуальность что Default, но больший контекст |
-| **Capable tier** | Complex reasoning: `[contract]` + threat model, multi-service refactor, root-cause analysis в `/diagnose`, стратегическая работа в `/product-vision`, обнаружение class-bug при review |
+| **Capable tier** | Complex reasoning: `[contract]` + threat model, multi-service refactor, root-cause analysis в `/diagnose`, стратегическая работа в `/vision strategy`, обнаружение class-bug при review |
 
 ---
 
@@ -31,9 +31,9 @@ Centralized model recommendation registry. Команды читают этот 
 | `/deploy` | Fast | smoke test failed; regression detected at after-effects | (always Fast — это чек-листы) |
 | `/retro` | Default | 60+ DEVLOG entries за период; multiple skip-rate alerts | < 10 entries — тактическая ретроспектива проекта; pattern analysis делегируется /architecture-audit |
 | `/architecture-audit` | **Default** (только Способность A) или **Capable** (если Способность B/D активна) | gap pattern analysis (≥ 3 AGENT-GAPS, Способность B) активирует Capable обязательно; cross-project aggregation (C) — Capable; diagram semantic review (D — сравнение узлов/связей всех карт с реальностью) — Capable обязательно; multi-service + 10+ сервисов; 30%+ drift detected | Capability matrix в самой команде. Только drift detection (A) — Default. AGENT-GAPS / Level 4+ ladder (B) ИЛИ semantic diagram review (D) — Capable hard-block |
-| `/sync-vision` | Default | 10+ inbox файлов И 5+ открытых OQ; Type C конфликт обнаружен | (always Default) |
-| `/product-vision` | **Capable** | (always Capable — стратегическая работа требует deep reasoning) | (никогда не downgrade) |
-| `/product-review` | Default | 20+ unreviewed IDEAS за период | < 5 IDEAS |
+| `/vision strategy` | **Capable** | (always Capable — стратегическая работа требует deep reasoning) | (никогда не downgrade) |
+| `/vision review` | Default | 20+ unreviewed IDEAS за период | < 5 IDEAS |
+| `/vision sync` | Default | 10+ inbox файлов И 5+ открытых OQ; Type C конфликт обнаружен | (always Default) |
 | `/product-check` | Fast | (always Fast — структурное сравнение текста с кодом) | (always Fast) |
 | `/diagnose` | **Capable** | 3+ failed hypotheses (нужно искать unusual root cause) | (никогда — диагностика всегда сложна) |
 | `/onboard` | Default | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
@@ -112,7 +112,7 @@ Pre-flight check — advisory. Пользователь решает. Auto-switc
 ### Пример
 
 - Пользователь подтверждает "Opus 4.7", запускает `/product-check` → match: Capable vs Fast = 2 tiers over → 🟡 пауза, рекомендация Sonnet/Haiku.
-- Пользователь подтверждает "Haiku 4.5", запускает `/product-vision` → match: Fast vs Capable = 2 tiers under → 🔴 strong recommendation Opus.
+- Пользователь подтверждает "Haiku 4.5", запускает `/vision strategy` → match: Fast vs Capable = 2 tiers under → 🔴 strong recommendation Opus.
 
 ---
 
