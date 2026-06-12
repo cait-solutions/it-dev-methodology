@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 23
+      "plans_since": 24
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 2
+      "plans_since": 3
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 37
+      "plans_since": 38
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 31
+      "plans_since": 32
     },
     "last_product_vision": {
       "date": "2026-06-03",
-      "plans_since": 18
+      "plans_since": 19
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 33
+      "plans_since": 34
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 5,
+      "plans_since": 6,
       "recommendations": [
         {
           "id": "R-030",
@@ -98,10 +98,10 @@
     "gap4_fixed": "2026-06-11"
   },
   "session_gap_counter": {
-    "session_marker": "2026-06-10T12:30:00+00:00",
+    "session_marker": "2026-06-12T10:07:39",
     "counts": {
-      "completeness-gap": 1,
-      "assumption-gap": 1
+      "assumption-gap": 1,
+      "scope-gap": 1
     }
   },
   "per_service": {},
@@ -121,76 +121,56 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-11T23:30:00+00:00",
-    "task_id": "maps-coverage-batch-PLAN-A",
-    "service": "methodology",
+    "completed_at": "2026-06-12T11:30:00",
+    "task_id": "design-spec-diagrams-scope-G120-P012",
+    "service": "methodology-platform",
     "mode": "Full",
-    "plan_file": "../it-dev-methodology-documentation/docs/plans/2026-06-11-maps-A-coverage-gate.md",
-    "batch": "maps-coverage A..G (B precondition-gated; C independent; D,E,G after A). Amendments: ROADMAP-ось + links-gate в A; PLAN-G LAR-driven runner (P-009). VERSION: v5.46.0 занята — бампить от текущей. Files: docs/plans/2026-06-11-maps-*.md",
     "code_run": true,
     "commitments": [
       {
-        "text": "PLAN-A Шаг 1: backfill USER-MAP(+2cmd+2skills)/ARTIFACT-MAP(+6)/SYSTEM-MAP(полный реестр+R-030 de-count+S-3) — коммит doc-repo ПЕРВЫМ",
-        "status": "completed",
-        "skip_reason": null
-      },
-      {
-        "text": "PLAN-A Шаг 2: validate-maps-coverage.sh + dual-copy (gate/report, ERROR при отсутствии карт в gate, worktree git-common-dir, POSIX-границы, CRLF; scripts=WARN) + ROADMAP-ось Now/Done + --print-doc-root",
-        "status": "completed",
-        "skip_reason": null
-      },
-      {
-        "text": "PLAN-A Шаг 3: gate в deploy-push.sh (двойной guard) + dual-copy синхронно + links-gate оба repo (артефакт-агностично: Design Specs и будущие)",
-        "status": "completed",
-        "skip_reason": null
-      },
-      {
-        "text": "PLAN-A Шаг 4: sync-audit Gap 15 (report-only) + plan.md Подшаг -0.2 skipped-commitments",
-        "status": "completed",
-        "skip_reason": null
-      },
-      {
-        "text": "PLAN-A Шаг 5: LAR-строка + VERSION next-minor (v5.47.0) + CHANGELOG + DEVLOG + ROADMAP Done",
-        "status": "completed",
-        "skip_reason": null
-      },
-      {
-        "text": "PLAN-A Шаг 6: /push-consumers (write-only) + read-only --report отчёт по 6 консьюмерам",
+        "text": "SKILL Шаг 3: под-шаг генерации диаграмм — per-компонент на нетривиальный §2.N (стандарт) + опц. сквозной §8 + запуск update-mermaid-links.sh + G-100 запрет pako-в-чат; критерий нетривиальности (поток/состояние/>=3 шага)",
         "status": "pending",
-        "skip_reason": "post-deploy task"
+        "skip_reason": null
+      },
+      {
+        "text": "SKILL Шаг 2: scope-gate — подсчёт §2.N + cross-domain проверка; рекомендация декомпозиции (recommendation-first) если >=6 компонентов ИЛИ cross-domain граница; объём >400 строк как подтверждающий симптом",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SKILL Шаг 5: checklist-пункты — каждый нетривиальный §2.N имеет диаграмму ИЛИ skip-причина; нет PLACEHOLDER над заполненным mermaid; блок Final без этого",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "template DESIGN_SPEC: §2.N слот под per-компонент диаграмму + §8 «Опциональная» -> условие-триггер обязательности (когда обязательна / когда skip)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION v5.56.0 + frontmatter banner bump в SKILL + CHANGELOG + DEVLOG [feat:command][domain:design-spec] (G-120/P-012 closed) + ROADMAP Done + LAR check (строка 99)",
+        "status": "pending",
+        "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "scripts/validate-maps-coverage.sh (+dual-copy)",
-        "trigger": "каждый deploy (gate); /sync-audit Gap 14 (report)",
-        "refresh": "канон scripts/, dual-copy синхронно (G-103)",
-        "detection": "сам детектор; diff dual-copy parity",
+        "artifact": "skills/design-spec/SKILL.md (diagram-протокол + scope-gate)",
+        "trigger": "вызов /design-spec пользователем",
+        "refresh": "sync-methodology -> консьюмеры",
+        "detection": "validate-template-format.sh + grep mermaid > 0 в SKILL",
         "owner": "методология"
       },
       {
-        "artifact": "deploy-push.sh gate-ветка (dual-copy)",
-        "trigger": "каждый deploy",
-        "refresh": "dual-copy синхронно",
-        "detection": "validate-delivery.sh parity + живой deploy",
-        "owner": "методология"
-      },
-      {
-        "artifact": "sync-audit Gap 14 + plan Подшаг -0.2",
-        "trigger": "каждый /sync-audit и /plan",
-        "refresh": "правка commands/ + sync",
-        "detection": "/retro Шаг 4.5 HIT/SILENT",
-        "owner": "методология"
-      },
-      {
-        "artifact": "строки карт (backfill)",
-        "trigger": "новая команда/skill",
-        "refresh": "/code Шаг 5 + gate принуждает",
-        "detection": "validate-maps-coverage.sh",
+        "artifact": "templates/DESIGN_SPEC.template.md (§2.N слот + §8 триггер)",
+        "trigger": "автор spec через skill",
+        "refresh": "sync -> консьюмеры",
+        "detection": "validate-template-format.sh",
         "owner": "методология"
       }
     ]
   },
+  "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
     "date": "2026-06-11",
     "status": "ok",
