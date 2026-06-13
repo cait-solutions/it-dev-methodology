@@ -21,6 +21,13 @@ NODE_READABILITY_SEVERITY="warn"       # warn|error — node missing Зачем/
                                        # CLAUDE.md Maps Standard §3 «Формат node-описания»
                                        # warn=WARN if component node has <1 <br/> separator (no Зачем+Impact)
                                        # affordance-class nodes and deferred-cluster exempt
+MAP_STALENESS_SEVERITY="warn"          # warn|error — content-staleness of diagrams (v6.1.0, closes /diagnose root cause)
+                                       # Detection-ось: компонент-файл изменён в git ПОЗЖЕ карты, которая его описывает →
+                                       # рукописные стрелки/labels диаграммы могли отстать от логики. Источник маппинга
+                                       # компонент→карты — колонка «Связанные артефакты» в LIVING-ARTIFACTS.md (не label-parse).
+                                       # Commit-based сравнение (не file-mtime): same-commit ⇒ синхронный PR-couple ⇒ НЕ stale.
+                                       # warn=WARN (не блок) — это подсказка «сверь», семантику не проверяет (ADR-015 L3+detect).
+                                       # Дополняет presence (coverage) + url-freshness (mermaid-links): третья detection-ось.
 #
 # Why scripts=warn: /retro 2026-06-11 data covers commands only. Script coverage
 # is large and partially internal — escalate after /retro evidence (PLAN-B).
@@ -644,6 +651,174 @@ _check_node_readability() {
   return 0
 }
 
+# ── Map content-staleness check (v6.1.0, closes /diagnose root cause) ────────
+#
+# Detection-ось: living-карта могла содержательно отстать от логики компонента.
+# Когда файл-компонент (script/command/hook/mechanism) изменён в git ПОЗЖЕ карты,
+# которая его описывает — рукописные стрелки/labels диаграммы могли устареть, но
+# presence-coverage (нода есть) и url-freshness (URL свеж) этого НЕ ловят.
+#
+# Маппинг компонент→карты берётся из LIVING-ARTIFACTS.md колонки «Связанные
+# артефакты»: каждая не-map LAR-строка декларирует какие карты её описывают
+# (напр. validate-maps-coverage.sh → USER-MAP · ARTIFACT-MAP · SYSTEM-MAP).
+# Это явный человеческий маппинг (PR-coupled в /code Шаг 5), не хрупкий label-parse.
+#
+# Сравнение COMMIT-based, не file-mtime: если компонент и карта в ОДНОМ последнем
+# коммите → синхронный PR-couple → НЕ stale (устраняет ложные WARN, урок G-121b).
+# Stale = последний коммит компонента СТРОГО новее последнего коммита карты.
+#
+# Graceful: git недоступен (zip-снимок consumer) / файл удалён / LAR отсутствует
+# → skip + видимый INFO-счётчик (не silent miss, FMEA D-mitigation).
+#
+# Two-repo: git log выполняется в репо КАЖДОГО файла через `git -C <dir>` — карты в
+# doc-repo, компоненты в code-repo. cwd-git был бы слеп к doc-repo (execution-context).
+
+_map_staleness_sev() {
+  if [ "$MAP_STALENESS_SEVERITY" = "error" ]; then printf 'ERROR'; else printf 'WARN'; fi
+}
+
+# git commit timestamp (epoch) последнего коммита, тронувшего файл; пусто если git нет / файл untracked
+_git_last_commit_ts() {
+  local f="$1"
+  local dir base
+  dir="$(dirname "$f")"
+  base="$(basename "$f")"
+  [ -d "$dir" ] || return 0
+  git -C "$dir" rev-parse --git-dir >/dev/null 2>&1 || return 0
+  git -C "$dir" log -1 --format=%ct -- "$base" 2>/dev/null
+}
+
+# git commit hash последнего коммита, тронувшего файл (для same-commit детекта)
+_git_last_commit_hash() {
+  local f="$1"
+  local dir base
+  dir="$(dirname "$f")"
+  base="$(basename "$f")"
+  [ -d "$dir" ] || return 0
+  git -C "$dir" rev-parse --git-dir >/dev/null 2>&1 || return 0
+  git -C "$dir" log -1 --format=%H -- "$base" 2>/dev/null
+}
+
+# Резолв пути карты по её имени из LAR-ячейки (USER-MAP.md / SYSTEM-MAP.md / ARTIFACT-MAP.md)
+# Использует уже-вычисленные $USER_MAP / $SYSTEM_MAP / $ARTIFACT_MAP.
+_resolve_map_path() {
+  case "$1" in
+    *USER-MAP*)     printf '%s' "$USER_MAP" ;;
+    *SYSTEM-MAP*)   printf '%s' "$SYSTEM_MAP" ;;
+    *ARTIFACT-MAP*) printf '%s' "$ARTIFACT_MAP" ;;
+    *)              printf '' ;;
+  esac
+}
+
+# Резолв пути компонента из LAR первой ячейки (напр. `scripts/validate-maps-coverage.sh`)
+# Снимает backtick-обёртку. Проверяет существование относительно cwd (code-repo).
+_resolve_component_path() {
+  local raw="$1"
+  local p
+  p="$(printf '%s' "$raw" | tr -d '`' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+  [ -f "$p" ] && printf '%s' "$p" || printf ''
+}
+
+_check_map_staleness() {
+  local dr="${DOC_ROOT}"
+  local lar=""
+  # Найти LIVING-ARTIFACTS.md (doc-repo приоритет, потом local)
+  for cand in \
+    "$dr/docs/architecture/LIVING-ARTIFACTS.md" \
+    "docs/architecture/LIVING-ARTIFACTS.md"; do
+    if [ -n "$cand" ] && [ -f "$cand" ]; then lar="$cand"; break; fi
+  done
+
+  if [ -z "$lar" ]; then
+    printf '[INFO]  map-staleness: LIVING-ARTIFACTS.md не найден — ось пропущена (нет маппинга компонент→карты)\n'
+    return 0
+  fi
+
+  # git вообще доступен? (zip-снимок consumer → нет)
+  if ! git -C "$(dirname "$lar")" rev-parse --git-dir >/dev/null 2>&1; then
+    printf '[INFO]  map-staleness: git недоступен в репо карт — ось пропущена (graceful)\n'
+    return 0
+  fi
+
+  local sev checked stale skipped
+  sev="$(_map_staleness_sev)"
+  checked=0; stale=0; skipped=0
+
+  # Парсим pipe-таблицу LAR: первая ячейка = файл-артефакт, последняя = «Связанные артефакты».
+  # Интересуют строки где первая ячейка — путь к script/command/hook (содержит / и расширение),
+  # а последняя ячейка упоминает *-MAP. Карты-строки (тип map) пропускаем — у них «связанные» = др. карты.
+  while IFS= read -r row; do
+    case "$row" in
+      '|'*'|'*) : ;;          # это table-row
+      *) continue ;;
+    esac
+    # skip header / separator
+    case "$row" in
+      *'Артефакт'*'Тип'*) continue ;;
+      *'---'*) continue ;;
+    esac
+
+    local first last
+    first="$(printf '%s' "$row" | awk -F'|' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    last="$(printf '%s' "$row" | awk -F'|' '{print $(NF-1)}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+    # Связанные артефакты упоминают карту?
+    case "$last" in
+      *MAP*) : ;;
+      *) continue ;;
+    esac
+
+    local comp
+    comp="$(_resolve_component_path "$first")"
+    [ -z "$comp" ] && continue          # первая ячейка не разрешается в существующий файл (карта/доки/несуществующий)
+
+    local comp_ts comp_hash
+    comp_ts="$(_git_last_commit_ts "$comp")"
+    comp_hash="$(_git_last_commit_hash "$comp")"
+    [ -z "$comp_ts" ] && { skipped=$((skipped+1)); continue; }   # untracked / git miss
+
+    # По каждой карте, упомянутой в «Связанные артефакты»
+    local map_name
+    for map_name in USER-MAP SYSTEM-MAP ARTIFACT-MAP; do
+      case "$last" in
+        *"$map_name"*) : ;;
+        *) continue ;;
+      esac
+      local mapf
+      mapf="$(_resolve_map_path "$map_name")"
+      [ -z "$mapf" ] && continue
+      [ -f "$mapf" ] || continue
+
+      local map_ts map_hash
+      map_ts="$(_git_last_commit_ts "$mapf")"
+      map_hash="$(_git_last_commit_hash "$mapf")"
+      [ -z "$map_ts" ] && continue
+      checked=$((checked+1))
+
+      # Same commit → синхронный PR-couple → не stale
+      [ -n "$comp_hash" ] && [ "$comp_hash" = "$map_hash" ] && continue
+
+      # Компонент строго новее карты → stale
+      if [ "$comp_ts" -gt "$map_ts" ] 2>/dev/null; then
+        stale=$((stale+1))
+        if [ "$sev" = "ERROR" ]; then
+          ERRORS=$((ERRORS+1))
+          printf '[ERROR] map-staleness: %s изменён позже чем %s — сверь стрелки/labels (диаграмма могла отстать от логики)\n' \
+            "$comp" "$(basename "$mapf")"
+          MISSING_LIST="${MISSING_LIST}map-staleness:${comp} → $(basename "$mapf")\n"
+        else
+          WARNINGS=$((WARNINGS+1))
+          printf '[WARN]  map-staleness: %s изменён позже чем %s — сверь стрелки/labels (диаграмма могла отстать от логики)\n' \
+            "$comp" "$(basename "$mapf")"
+        fi
+      fi
+    done
+  done < "$lar"
+
+  printf '[INFO]  map-staleness: %d пар проверено, %d stale, %d пропущено (untracked/git-miss)\n' \
+    "$checked" "$stale" "$skipped"
+}
+
 # ── Negative-gate: no script-nodes in USER-MAP mermaid blocks (G-116) ────────
 #
 # Scans ONLY content inside ```mermaid ... ``` fences (not markdown tables/text).
@@ -922,6 +1097,9 @@ _check_diagram_freshness
 
 # Node readability (v5.57.0, G-121)
 _check_node_readability
+
+# Map content-staleness (v6.1.0, closes /diagnose root cause — diagram-content drift)
+_check_map_staleness
 
 echo ""
 echo "=== Summary: ${ERRORS} error(s), ${WARNINGS} warning(s) ==="
