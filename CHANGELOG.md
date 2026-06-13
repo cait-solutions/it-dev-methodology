@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.1.0 — feat: map-staleness detection-ось (content-drift диаграмм) (2026-06-13)
+
+**Что (closes /diagnose root cause — «содержимое диаграммы молча отстаёт от логики»):**
+
+- **`scripts/validate-maps-coverage.sh` (dual-copy) — новая ось `_check_map_staleness`:** detection-слой поверх существующих presence (coverage) + url-freshness (mermaid-links). Ловит **time-drift**: если файл-компонент (script/command/hook) изменён в git **позже** living-карты, которая его описывает → `[WARN] map-staleness: <file> изменён позже чем <MAP> — сверь стрелки/labels`. Маппинг компонент→карты берётся из `LIVING-ARTIFACTS.md` колонки «Связанные артефакты» (явный человеческий маппинг, не хрупкий label-parse). Commit-based сравнение: синхронный PR-couple (карта+код в одном коммите) → **НЕ** stale (нет ложных WARN). Config `MAP_STALENESS_SEVERITY="warn"` (не блок).
+- **Граница:** ось **mechanical** (commit-времена), НЕ семантика. Неверную стрелку при синхронном коммите она пропустит — это остаётся за `/architecture-audit` Способность D (ADR-015 detect+couple). Это третья detection-ось, не замена LLM-аудита.
+- **`commands/doc-audit.md`** — ось добавлена в таблицу + уточнена граница.
+
+**Что делать consumers (migration):**
+- 🟢 Аддитивно — sync подтянет обновлённый `validate-maps-coverage.sh`. Ось работает автоматически в /doc-audit, /code Шаг 9.5 surfacing, /review, deploy-gate.
+- Требует `LIVING-ARTIFACTS.md` с заполненной колонкой «Связанные артефакты» (компонент → какие карты его описывают). Нет LAR → ось graceful-skip с INFO «маппинг недоступен». git недоступен (zip-снимок) → graceful-skip.
+- triggers.json **не меняется** — config-флаг в шапке скрипта, не в state. Старый consumer не падает.
+- Sync → `bash scripts/sync-methodology.sh .` (methodology) / стандартный sync (consumer).
+
+---
+
 ## v6.0.0 — BREAKING: /vision consolidation + Ground-before-act rule + validator fix (2026-06-12)
 
 **Что (3 потока из architecture-audit + diagnose):**

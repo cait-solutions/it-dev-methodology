@@ -115,105 +115,70 @@
     "sync_vision": 0,
     "retro": 0,
     "review_skipped": 0,
-    "code_skipped": 0,
+    "code_skipped": 1,
     "product_review_skipped": 0,
     "product_check_skipped": 0,
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-12T12:00:00",
-    "task_id": "deferred-persistence-P013",
+    "completed_at": "2026-06-13T00:00:00",
+    "task_id": "map-staleness-detection",
     "service": "methodology-platform",
     "mode": "Full",
-    "code_run": false,
+    "code_run": true,
     "commitments": [
       {
-        "text": "templates/triggers.json.template — добавить deferred[] в last_plan_session",
-        "status": "pending",
+        "text": "WARNINGS-fold верификация новой оси (урок G-121b counter-disconnect)",
+        "status": "done",
         "skip_reason": null
       },
       {
-        "text": "commands/plan.md Шаг 100 — сбор deferred[] (text·reason·tag) + anti-double-count + write-path note в Шаге 99.3",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "commands/code.md Шаг 7 — carry deferred[] + sustainment[] (фикс латентной дыры); auto_deploy DEVLOG путь — строка Deferred: если непусто",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "commands/deploy.md Шаг 2 — Deferred: строка в [deploy] DEVLOG если last_plan_session.deferred[] непусто",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "commands/review.md — проверка ключа deferred в last_plan_session в commitments-сверке",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "scripts/scope-view.sh + templates/scripts/scope-view.sh — parse_deferred() → subgraph 🟪 Отложено последним планом (task_id); включить в SCOPE_META total",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "commands/scope-out.md — таблица источников +5-й источник; строка 14 формулировка («не пересекаются» → «/scope-out включает deferred последнего плана»)",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "VERSION minor bump (v5.57.0) + CHANGELOG + DEVLOG [feat:command][domain:scope-visibility] + ROADMAP Done + LIVING-ARTIFACTS строка + P-013 статус resolved",
-        "status": "pending",
+        "text": "INFO-счётчик пропущенных карт (без LAR-записи / git недоступен) — видимый, не silent",
+        "status": "done",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "last_plan_session.deferred[] (schema-поле)",
-        "trigger": "/plan Шаг 100 каждый Full-план",
-        "refresh": "перезапись каждым планом; merge_triggers_json дозаливает консьюмерам",
-        "detection": "/review проверка ключа + defensive read .get('deferred') or []",
+        "artifact": "_check_map_staleness() в validate-maps-coverage.sh · dual-copy templates/scripts/",
+        "trigger": "/doc-audit, /code Шаг 9.5, /review surfacing, deploy-push",
+        "refresh": "sync-methodology (templates) + self-apply; обе копии синхронно (ADR-014)",
+        "detection": "validate-script-parity.sh dual-copy gate + сам прогон",
         "owner": "методология"
       },
       {
-        "artifact": "parse_deferred в scope-view.sh · templates/scripts/scope-view.sh",
-        "trigger": "запуск /scope-out",
-        "refresh": "sync-methodology (templates/scripts) + self-apply",
-        "detection": "exit 2 при падении парсера + SCOPE_META счётчик",
+        "artifact": "MAP_STALENESS_SEVERITY config-флаг",
+        "trigger": "изменение severity-политики",
+        "refresh": "ручной config",
+        "detection": "code review",
         "owner": "методология"
       },
       {
-        "artifact": "Deferred: строка DEVLOG",
-        "trigger": "[deploy]-запись (оба пути: /deploy Шаг 2, auto_deploy /code)",
-        "refresh": "append-only журнал, не устаревает",
-        "detection": "grep Deferred: в /retro",
-        "owner": "методология"
+        "artifact": "зависимость от LAR «Связанные артефакты» полноты",
+        "trigger": "/code Шаг 5 LAR PR-coupling",
+        "refresh": "LAR обновляется при новом механизме",
+        "detection": "validate-lar.sh + INFO-счётчик пропущенных карт",
+        "owner": "методология+consumer"
       }
     ],
     "deferred": [
       {
-        "text": "показ deferred[] прошлого плана в Подшаге -0.2 (напоминание перед перезаписью)",
-        "reason": "anti-over-engineering: ждём эмпирический сигнал что нужно",
-        "tag": "deferred"
-      },
-      {
-        "text": "история глубже последнего плана в /scope-out (агрегат всех deferred за всё время)",
-        "reason": "DEVLOG-grep покрывает потребность; добавлять только при подтверждённом use case",
+        "text": "смысловая ошибка стрелки при синхронном коммите карты+кода (mtime свежий, связь неверна)",
+        "reason": "остаётся за /architecture-audit Способность D (LLM-семантика); ADR-015 detect+couple",
         "tag": "out-of-scope"
       },
       {
-        "text": "deferred[] брошенного плана (без deploy) не попадает в DEVLOG",
-        "reason": "ценность deferred недоехавшего плана спорна; accepted risk",
+        "text": "изменение логики без правки файла (mtime-детектор слеп)",
+        "reason": "редкий edge, LLM-аудит покрывает; git-mtime ловит drift по времени не по смыслу",
         "tag": "accepted-risk"
       }
     ]
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-11",
+    "date": "2026-06-12",
     "status": "ok",
-    "phase": "v5.45.0 /init-consumer + exclude_paths + branch-protection (PR #195,196,197 PLAN-06+07)"
+    "phase": "maps-freshness gate BS-1/BS-4 v5.59.0 (PR #214 merged)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",

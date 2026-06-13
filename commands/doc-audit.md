@@ -18,6 +18,8 @@
 
 Cadence-аудиты /doc-audit **не заменяет** — semantic ≠ mechanical. Семантику стрелок/связей grep не проверит (P-009).
 
+> **map-staleness (v6.1.0) — третья detection-ось, не семантика.** Ловит **time-drift**: компонент изменён в git позже карты, которая его описывает (маппинг из LAR «Связанные артефакты») → подсказка «сверь стрелки/labels». Это **mechanical** (commit-времена), дополняет presence (coverage) + url-freshness (mermaid-links). НЕ проверяет *верность* связи — синхронный коммит карты+кода с неверной стрелкой ось пропустит (это остаётся за `/architecture-audit` Способность D, ADR-015 detect+couple). Закрывает /diagnose root cause «содержимое диаграммы отстаёт от логики молча».
+
 ---
 
 ## Рекомендуемая модель
@@ -63,7 +65,8 @@ bash scripts/doc-audit.sh --doc-root ../it-dev-methodology-documentation --fix
 | Ось | Что проверяет | Severity |
 |---|---|---|
 | parity | dual-copy `scripts/` ↔ `templates/scripts/` идентичны (G-122; только methodology-platform) | FAIL |
-| maps-coverage | команды/skills/скрипты присутствуют в картах; diagram-freshness; node-readability (G-121) | FAIL/WARN |
+| maps-coverage | команды/skills/скрипты присутствуют в картах; diagram-freshness; node-readability (G-121); **map-staleness** | FAIL/WARN |
+| ↳ map-staleness | компонент изменён в git позже карты, которая его описывает (через LAR «Связанные артефакты») → сверь стрелки/labels диаграммы (v6.1.0) | WARN |
 | mermaid-links | mermaid.live URL соответствует коду диаграммы (оба репо) | FAIL |
 | mermaid-syntax | антипаттерны (транслит кириллицы и т.п.) | WARN |
 | links | внутренние `.md` ссылки резолвятся | WARN |
