@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.5 — feat: Anti-cheat rule (no-gate-weakening) in /code + /review + CLAUDE.md (2026-06-15)
+
+**Что добавлено:**
+- **`commands/code.md`** Шаг 3 п.4: Anti-cheat (no-gate-weakening) — никогда не ослабляй артефакт/критерий ради прохождения гейта; universal + dev/non-dev примеры. Текущий п.4 → п.5.
+- **`commands/review.md`** Completeness-check: новый класс «No-gate-weakening» + disposition строка (🔴 fix now при отсутствии named обоснования).
+- **`CLAUDE.md`** Workflow rules: блок **Anti-cheat rule** (между Fix rule и Ground-before-act rule).
+- **`templates/CLAUDE.template.md`**: тот же блок на EN (dual-copy пара к CLAUDE.md).
+- **Closes:** no-gate-weakening class (G-082 смежный). Domain-agnostic — применяется к dev и non-dev консьюмерам.
+
+**Зачем:** правило «не маскировать симптом» покрывало только код; ослабление самого гейта/артефакта не было явно запрещено — теперь норма задокументирована как L1+L3.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обновит `commands/code.md`, `commands/review.md`, `CLAUDE.md`.
+- 🟡 **Info:** Anti-cheat rule теперь явная норма в `/code` Шаг 3 и `/review` Completeness-check.
+
+---
+
 ## v6.4.4 — docs: wire-or-retire subagents — Architecture decision rule honesty (2026-06-15)
 
 **Что изменено:**
