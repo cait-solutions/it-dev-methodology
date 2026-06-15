@@ -2,7 +2,7 @@
 
 Project-specific guardrails for your tech stack. These rules are read by:
 - `/review` command (Шаг 2 — context rules)
-- `qa.md` agent (before deep code analysis)
+- `qa` суб-агент (опционально, on-demand — например из `/review` Шаг 3.5 при class-level/инвариант-анализе)
 
 ---
 

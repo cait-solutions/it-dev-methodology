@@ -127,7 +127,7 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 2. DEVLOG запись `[deploy]` / `[feat:X]` / `[fix:X]` / `[methodology]`
 3. Bump VERSION если изменены команды / шаблоны / хуки
 
-**Architecture decision rule:** новая команда / шаблон / изменение `triggers.json` схемы → запустить `architect` sub-agent. Сначала собственная рекомендация, потом architect.
+**Architecture decision rule:** новая команда / шаблон / изменение `triggers.json` схемы → делегировать `architect` sub-agent. Сначала собственная рекомендация, потом architect. **NB:** architect вызывается **on-demand** через Claude Code auto-discovery (frontmatter `description`), не hard-wired обязательный pass — Claude Code делегирует когда уместно. `qa`/`security` суб-агенты доступны, но **только опционально** (например `/review` Шаг 3.5 при `[security]`/`[quality]` gap); фиксированный multi-agent конвейер отвергнут (VISION Граница 8). Rationale + примеры: [CLAUDE_LONG.md § Architecture decision rule](CLAUDE_LONG.md).
 
 **Fix rule:**
 - Симптом или причина? Симптом → найди причину

@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.4 — docs: wire-or-retire subagents — Architecture decision rule honesty (2026-06-15)
+
+**Что изменено:**
+- **`CLAUDE_LONG.md`** — заполнен placeholder `§ Architecture decision rule — расширенно`: nature on-demand, 3 реальных architect-validated решения (commit-discipline REJECT, testing-strategy APPROVE, M2 REJECT).
+- **`CLAUDE.md`** — Architecture decision rule: уточнено «on-demand auto-discovery», `qa`/`security` только опционально, ссылка на CLAUDE_LONG.
+- **`commands/review.md`** — Шаг 3.5: добавлен OPTIONAL prompt-указатель на делегирование `security`/`qa` суб-агентов (MAY, не MUST). Фиксированного конвейера нет.
+- **`templates/.claude/rules/README.template.md`** — уточнена ссылка на qa-агент: опционально on-demand.
+- **`docs/architecture/SYSTEM-MAP.md`** (doc repo) — узел `TMPL_AGENTS` + секция суб-агентов: architect = on-demand auto-discovery, qa/security = опционально.
+- **Closes:** doc-drift placeholder CLAUDE_LONG, unused-capability advertising qa/security as always-wired.
+
+**Зачем:** карта и правила рекламировали три равно-wired агента — реально работает один (on-demand). Честность = доверие к документации.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обновит `commands/review.md` с опциональным указателем.
+- 🟡 **Info:** `security.md`/`qa.md` в `.claude/agents/` — by-design опциональны; их ценность в наличии ready-to-use role-промпта, не в авто-вызове.
+
+---
+
 ## v6.4.3 — feat: task-types.md canonical task-type axis (2026-06-15)
 
 **Что добавлено:**

@@ -94,7 +94,32 @@
 
 ## Architecture decision rule — расширенно
 
-[Add: примеры решений где architect sub-agent выявил non-obvious risks]
+**Природа:** architect суб-агент вызывается **on-demand через Claude Code auto-discovery**
+(frontmatter `description` в `templates/.claude/agents/architect.template.md`), НЕ как hard-wired
+обязательный pass в конвейере. Claude Code сам решает делегировать при структурных изменениях
+(новая команда / шаблон / изменение схемы `triggers.json`). Правило в CLAUDE.md описывает *когда*
+делегирование уместно, а не принудительный шаг.
+
+**Реальные architect-валидированные решения (примеры non-obvious рисков, которые он выявил):**
+
+- **commit-discipline (IDEAS, 2026-06):** architect — APPROVE-WITH-CHANGES (Alt A). Выявил, что
+  детектор «чужие staged-файлы» даст warning fatigue (git не хранит авторство, при isolation:off
+  нет session identity → ложные срабатывания на нормальном multi-commit /code) → **REJECT детектора**,
+  замена на verify-before-commit gate (self-contained, false-positive-free). Реализовано v5.5.0.
+- **testing-strategy (IDEAS, 2026-06-05):** architect-validated — подтвердил Phase 1 (skill + /test
+  как advisory-навигатор, не блокирующий) и **defer Phase 2-4** с named re-trigger (урок G-047:
+  не строить превентивно). Граница 12 параллельна Границам 9/11, Граница 4 нетронута.
+- **concurrent-session M2-детектор (AGENT-GAPS, v5.35.0):** SessionStart-детектор отвергнут architect
+  как false-positive на solo-сессиях; L4 hook deferred с измеримым trigger.
+
+**Паттерн:** architect чаще всего ловит **over-engineering / warning-fatigue** риск — предлагает
+*cut*, а не *add* (VISION Ось 5 cut-not-add). Это и есть ценность on-demand-делегирования:
+независимый critic до написания кода.
+
+**qa / security суб-агенты:** существуют как knowledge-скелеты (role-промпты с чеклистами), но
+вызываются **только опционально on-demand** (например из `/review` Шаг 3.5, когда `[security]`/
+`[quality]` gap требует deep-pass). Они НЕ часть фиксированного конвейера — mandatory pass
+отвергнут (VISION Граница 8: workflow остаётся slash-командами, агенты — role-делегирование).
 
 ---
 
