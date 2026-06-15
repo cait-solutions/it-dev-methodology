@@ -212,13 +212,16 @@ lines.append("    classDef hub fill:#0f172a,stroke:#64748b,color:#e2e8f0")
 lines.append("    classDef def fill:#1e293b,stroke:#64748b,color:#94a3b8,stroke-dasharray:5 3")
 
 scope_label = "все" if show_all else "High + in-roadmap"
-lines.append('    HUB["🔭 Отложенный scope<br/>фильтр: %s · всего %d"]:::hub' % (scope_label, total))
+lines.append('    HUB["🔭 Отложенный scope<br/>Зачем: агрегат из IDEAS·GAPS·ROADMAP<br/>фильтр: %s · всего %d"]:::hub' % (scope_label, total))
 
 if product_gaps:
     lines.append('    subgraph PG["📄 Product gaps (не покрыто)"]')
     for g in product_gaps:
         cls = "hi" if g["sev"] == "🔴" else "med"
-        lbl = "%s %s<br/>%s" % (g["sev"], g["id"], esc(g["what"]))
+        # Maps Standard: 3 lines — ID / Что не покрыто / Статус+severity
+        sev_label = {"🔴": "High", "🟡": "Med", "🟢": "Low"}.get(g["sev"], "?")
+        lbl = "%s %s<br/>%s<br/>Статус: %s · %s" % (
+            g["sev"], g["id"], esc(g["what"])[:55], g["status"], sev_label)
         lines.append('        PG_%s["%s"]:::%s' % (g["id"].replace("-", "_"), lbl, cls))
     lines.append("    end")
     lines.append("    HUB --> PG")
@@ -226,7 +229,8 @@ if product_gaps:
 if agent_gaps:
     lines.append('    subgraph AG["📋 Agent gaps (open)"]')
     for g in agent_gaps:
-        lbl = "%s<br/>%s" % (g["id"], esc(g["what"]))
+        # Maps Standard: 3 lines — ID / что пропустил / тип gap
+        lbl = "%s<br/>%s<br/>Тип: agent gap · open" % (g["id"], esc(g["what"])[:55])
         lines.append('        AG_%s["%s"]:::med' % (g["id"].replace("-", "_"), lbl))
     lines.append("    end")
     lines.append("    HUB --> AG")
@@ -234,7 +238,9 @@ if agent_gaps:
 if roadmap:
     lines.append('    subgraph RM["🗺 ROADMAP (отложено)"]')
     for i, r in enumerate(roadmap):
-        lbl = "%s<br/>%s" % (r["section"], esc(r["title"]))
+        # Maps Standard: 3 lines — заголовок / раздел / статус
+        lbl = "%s<br/>Раздел: %s<br/>Статус: ждёт приоритизации" % (
+            esc(r["title"])[:55], esc(r["section"]))
         lines.append('        RM_%d["%s"]:::road' % (i, lbl))
     lines.append("    end")
     lines.append("    HUB --> RM")
@@ -242,7 +248,8 @@ if roadmap:
 if recs:
     lines.append('    subgraph RC["🏛 Audit recs (proposed-deferred)"]')
     for r in recs:
-        lbl = "%s<br/>%s" % (r["id"], esc(r["summary"]))
+        # Maps Standard: 3 lines — ID / summary / статус
+        lbl = "%s<br/>%s<br/>Статус: %s" % (r["id"], esc(r["summary"])[:50], esc(r["status"]))
         lines.append('        RC_%s["%s"]:::rec' % (r["id"].replace("-", "_"), lbl))
     lines.append("    end")
     lines.append("    HUB --> RC")
@@ -251,14 +258,16 @@ if deferred:
     task_label = deferred[0]["task_id"] if deferred else "?"
     lines.append('    subgraph DF["🟪 Отложено последним планом (%s)"]' % esc(task_label))
     for i, d in enumerate(deferred):
-        tag_label = "[%s]" % d["tag"] if d["tag"] else ""
-        lbl = "%s %s" % (tag_label, esc(d["text"]))
+        tag_label = "[%s]" % d["tag"] if d["tag"] else "[deferred]"
+        # Maps Standard: 3 lines — тег+текст / план-источник / что делать
+        lbl = "%s %s<br/>Отложено: план %s<br/>Вернуть: при следующем /plan" % (
+            tag_label, esc(d["text"])[:45], esc(d["task_id"])[:25])
         lines.append('        DF_%d["%s"]:::def' % (i, lbl))
     lines.append("    end")
     lines.append("    HUB --> DF")
 
 if total == 0:
-    lines.append('    EMPTY["✅ Нет отложенного scope<br/>(или источники пусты)"]:::hub')
+    lines.append('    EMPTY["✅ Нет отложенного scope<br/>Все gap\'ы закрыты / источники пусты<br/>Отлично: backlog чист"]:::hub')
     lines.append("    HUB --> EMPTY")
 
 mermaid = "\n".join(lines)
