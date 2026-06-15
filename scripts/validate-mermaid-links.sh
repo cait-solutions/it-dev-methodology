@@ -55,7 +55,7 @@ import base64
 BASE_URL = "https://mermaid.live"
 LINK_RE = re.compile(r'(https://mermaid\.live[^\)\s]+)')
 WINDOW = 5
-EXCLUDE_DIRS = {'.git', 'consumers'}
+EXCLUDE_DIRS = {'.git', 'consumers', 'fixtures'}  # 'fixtures': proof-of-rejection fixtures may lack links by design
 
 
 def encode_mermaid(code):

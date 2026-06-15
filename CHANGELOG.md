@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.0 — feat: validator proof-of-rejection harness (test-validators.sh) (2026-06-15)
+
+**Что добавлено:**
+- **`templates/scripts/test-validators.sh`** — proof-of-rejection harness (methodology-internal, guarded `[ -d commands ]`). Доставляется consumers через sync, но не исполняется на их стороне.
+- **`templates/scripts/fixtures/validators/`** — negative-fixtures каталог: 5 намеренно-сломанных входов для 5 validator-осей (triggers-duplicate, maps-no-scripts, mermaid-missing-link, parity-divergent, delivery-empty-settings).
+- **deploy-push.sh gate:** validator-harness вызывается после script-parity, перед maps-coverage.
+- **commands/code.md Шаг 5 + commands/review.md:** новое правило — новый `validate-*.sh` обязан иметь negative-fixture (proof-of-rejection обязателен, 🔴 блокирует merge без него).
+- **Closes:** G-112 класс (false-green / SKIP-masquerades-as-PASS).
+
+**Зачем:** валидаторы заявляли что отклоняют плохой ввод, но без фикстуров это не доказывалось. Deploy-gate думал «гейт существует ⇒ гейт работает» — без доказательства что гейт реально fire-ит.
+
+**Что делать consumers:**
+- 🟢 **Аддитивно:** sync подтянет `test-validators.sh` + fixtures. Harness guarded и не запускается на consumer-стороне.
+- 🟡 **Опционально:** если consumer хочет добавить свои валидаторы — see `scripts/fixtures/validators/README.md` для паттерна (добавить fixture + assert_exit строку).
+
+---
+
 ## v6.2.0 — feat: shared project context механизм (project-context.md) (2026-06-15)
 
 **Что добавлено:**
