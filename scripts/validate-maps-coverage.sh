@@ -699,13 +699,29 @@ _git_last_commit_hash() {
   git -C "$dir" log -1 --format=%H -- "$base" 2>/dev/null
 }
 
-# Резолв пути карты по её имени из LAR-ячейки (USER-MAP.md / SYSTEM-MAP.md / ARTIFACT-MAP.md)
-# Использует уже-вычисленные $USER_MAP / $SYSTEM_MAP / $ARTIFACT_MAP.
+# Единый источник множества living-maps (closes G-123: ROADMAP выпадал из хардкода «3 карты»).
+# ⛔ Добавляя новую living-map — добавь имя СЮДА и резолв в _resolve_map_path. Множество явное,
+# не «3 по памяти». 4-я карта ROADMAP — Temporal/Priorities viewpoint (LAR тип: map), лежит в
+# КОРНЕ doc-repo (не docs/product), потому резолвится отдельно.
+LIVING_MAPS="USER-MAP SYSTEM-MAP ARTIFACT-MAP ROADMAP"
+
+# Резолв пути карты по её имени из LAR-ячейки.
+# USER/SYSTEM/ARTIFACT-MAP — через _find_map ($USER_MAP/$SYSTEM_MAP/$ARTIFACT_MAP).
+# ROADMAP — в корне DOC_ROOT (или local), отдельный резолв.
 _resolve_map_path() {
   case "$1" in
     *USER-MAP*)     printf '%s' "$USER_MAP" ;;
     *SYSTEM-MAP*)   printf '%s' "$SYSTEM_MAP" ;;
     *ARTIFACT-MAP*) printf '%s' "$ARTIFACT_MAP" ;;
+    *ROADMAP*)
+      if [ -n "${DOC_ROOT:-}" ] && [ -f "$DOC_ROOT/ROADMAP.md" ]; then
+        printf '%s' "$DOC_ROOT/ROADMAP.md"
+      elif [ -f "ROADMAP.md" ]; then
+        printf '%s' "ROADMAP.md"
+      else
+        printf ''
+      fi
+      ;;
     *)              printf '' ;;
   esac
 }
@@ -777,9 +793,9 @@ _check_map_staleness() {
     comp_hash="$(_git_last_commit_hash "$comp")"
     [ -z "$comp_ts" ] && { skipped=$((skipped+1)); continue; }   # untracked / git miss
 
-    # По каждой карте, упомянутой в «Связанные артефакты»
+    # По каждой living-map, упомянутой в «Связанные артефакты» (источник — $LIVING_MAPS)
     local map_name
-    for map_name in USER-MAP SYSTEM-MAP ARTIFACT-MAP; do
+    for map_name in $LIVING_MAPS; do
       case "$last" in
         *"$map_name"*) : ;;
         *) continue ;;

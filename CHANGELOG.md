@@ -4,6 +4,14 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.1.1 — fix: map-staleness покрывает ROADMAP (4-я living-map) (2026-06-13)
+
+**Что (closes G-123):** ось `_check_map_staleness` (v6.1.0) покрывала 3 living-maps (USER/SYSTEM/ARTIFACT-MAP), ROADMAP выпадал — `_resolve_map_path` был захардкожен на 3 карты. ROADMAP — 4-я living-map (Temporal/Priorities viewpoint, LAR `тип: map`, в корне doc-repo). Фикс: множество карт вынесено в единый источник `LIVING_MAPS="USER-MAP SYSTEM-MAP ARTIFACT-MAP ROADMAP"` (L4 — явное множество вместо «3 по памяти»); резолв ROADMAP добавлен (корень DOC_ROOT). Цикл итерирует `$LIVING_MAPS`, не хардкод.
+
+**Что делать consumers:** 🟢 аддитивно — sync подтянет. Прогон map-staleness теперь учитывает ROADMAP-пары.
+
+---
+
 ## v6.1.0 — feat: map-staleness detection-ось (content-drift диаграмм) (2026-06-13)
 
 **Что (closes /diagnose root cause — «содержимое диаграммы молча отстаёт от логики»):**

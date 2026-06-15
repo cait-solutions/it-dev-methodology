@@ -98,10 +98,9 @@
     "gap4_fixed": "2026-06-11"
   },
   "session_gap_counter": {
-    "session_marker": "2026-06-12T10:07:39",
+    "session_marker": "2026-06-13T09:45:00",
     "counts": {
-      "assumption-gap": 1,
-      "scope-gap": 1
+      "completeness-gap": 1
     }
   },
   "per_service": {},
