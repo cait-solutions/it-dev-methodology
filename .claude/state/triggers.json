@@ -26,7 +26,7 @@
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 7,
+      "plans_since": 8,
       "recommendations": [
         {
           "id": "R-030",
@@ -120,56 +120,58 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-13T00:00:00",
-    "task_id": "map-staleness-detection",
+    "completed_at": "2026-06-15T00:00:00",
+    "task_id": "shared-project-context-mechanism",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "WARNINGS-fold верификация новой оси (урок G-121b counter-disconnect)",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "INFO-счётчик пропущенных карт (без LAR-записи / git недоступен) — видимый, не silent",
-        "status": "done",
+        "text": "idempotency guard в new-project-init.sh (if [ ! -f .claude/rules/project-context.md ])",
+        "status": "pending",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "_check_map_staleness() в validate-maps-coverage.sh · dual-copy templates/scripts/",
-        "trigger": "/doc-audit, /code Шаг 9.5, /review surfacing, deploy-push",
-        "refresh": "sync-methodology (templates) + self-apply; обе копии синхронно (ADR-014)",
-        "detection": "validate-script-parity.sh dual-copy gate + сам прогон",
+        "artifact": "project-context.template.md (шаблон)",
+        "trigger": "изменение формата context файла",
+        "refresh": "sync-methodology.sh доставляет обновлённый шаблон",
+        "detection": "/doc-audit parity с template",
         "owner": "методология"
       },
       {
-        "artifact": "MAP_STALENESS_SEVERITY config-флаг",
-        "trigger": "изменение severity-политики",
-        "refresh": "ручной config",
-        "detection": "code review",
+        "artifact": "project-context.md (consumer instance)",
+        "trigger": "добавление нового Design Spec / смена Project type",
+        "refresh": "ручное — разработчик при добавлении артефакта",
+        "detection": "нет (deferred — accepted risk v1)",
+        "owner": "consumer-проект"
+      },
+      {
+        "artifact": "пункт в CLAUDE.template.md (Read before any work)",
+        "trigger": "изменение workflow что читать перед /plan",
+        "refresh": "sync-methodology.sh перезаписывает CLAUDE.md",
+        "detection": "/doc-audit sync drift",
         "owner": "методология"
       },
       {
-        "artifact": "зависимость от LAR «Связанные артефакты» полноты",
-        "trigger": "/code Шаг 5 LAR PR-coupling",
-        "refresh": "LAR обновляется при новом механизме",
-        "detection": "validate-lar.sh + INFO-счётчик пропущенных карт",
-        "owner": "методология+consumer"
+        "artifact": "new-project-init.sh bootstrap шаг",
+        "trigger": "bootstrap нового проекта",
+        "refresh": "однократно при init",
+        "detection": "smoke test init script",
+        "owner": "методология"
       }
     ],
     "deferred": [
       {
-        "text": "смысловая ошибка стрелки при синхронном коммите карты+кода (mtime свежий, связь неверна)",
-        "reason": "остаётся за /architecture-audit Способность D (LLM-семантика); ADR-015 detect+couple",
-        "tag": "out-of-scope"
+        "text": "/doc-audit ось для stale project-context.md detection",
+        "reason": "требует отдельного /plan; v1 принимает acceptable risk",
+        "tag": "deferred"
       },
       {
-        "text": "изменение логики без правки файла (mtime-детектор слеп)",
-        "reason": "редкий edge, LLM-аудит покрывает; git-mtime ловит drift по времени не по смыслу",
-        "tag": "accepted-risk"
+        "text": "auto-generate project-context.md из ARTIFACT-MAP",
+        "reason": "нет empirical signal от пользователей что ручной ввод не adoption",
+        "tag": "deferred"
       }
     ]
   },

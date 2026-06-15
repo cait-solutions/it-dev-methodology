@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.2.0 — feat: shared project context механизм (project-context.md) (2026-06-15)
+
+**Что добавлено:**
+- **Новый файл при bootstrap:** `new-project-init.sh` создаёт `.claude/rules/project-context.md` (из шаблона). Tracked in git — все разработчики, клонирующие репо, получают его автоматически.
+- **Шаблон:** `.claude/rules/project-context.md` с секциями: Project type · Key Design Specs (таблица ссылок) · Key artifacts to read before /plan · Domain knowledge · Onboarding pointers.
+- **Instruction в CLAUDE.md:** п.5 в «Read before any work» — агент читает `project-context.md` перед каждым `/plan` (если файл существует).
+- **README обновлён:** `.claude/rules/README.md` теперь перечисляет стандартные файлы директории.
+
+**Зачем:** CLAUDE.local.md gitignored → второй разработчик на другой машине не знал про Design Spec ссылки, project type и что читать перед /plan. Теперь эта информация в git-tracked файле.
+
+**Что делать consumers:**
+- 🟢 **Новые проекты:** `new-project-init.sh` создаёт `.claude/rules/project-context.md` автоматически → заполни секции.
+- 🟡 **Существующие проекты:** файл НЕ создаётся sync (чтобы не перезаписать). Добавить вручную: скопируй из шаблона и заполни.
+
+---
+
 ## v6.1.1 — fix: map-staleness покрывает ROADMAP (4-я living-map) (2026-06-13)
 
 **Что (closes G-123):** ось `_check_map_staleness` (v6.1.0) покрывала 3 living-maps (USER/SYSTEM/ARTIFACT-MAP), ROADMAP выпадал — `_resolve_map_path` был захардкожен на 3 карты. ROADMAP — 4-я living-map (Temporal/Priorities viewpoint, LAR `тип: map`, в корне doc-repo). Фикс: множество карт вынесено в единый источник `LIVING_MAPS="USER-MAP SYSTEM-MAP ARTIFACT-MAP ROADMAP"` (L4 — явное множество вместо «3 по памяти»); резолв ROADMAP добавлен (корень DOC_ROOT). Цикл итерирует `$LIVING_MAPS`, не хардкод.

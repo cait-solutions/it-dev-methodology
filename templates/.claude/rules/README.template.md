@@ -6,6 +6,19 @@ Project-specific guardrails for your tech stack. These rules are read by:
 
 ---
 
+## Standard files in this directory
+
+| File | Purpose | Tracked in git |
+|---|---|---|
+| `README.md` (this file) | Directory guide | ✅ yes |
+| `project-context.md` | Shared project context: Design Spec links, domain knowledge, onboarding | ✅ yes |
+| `<stack>-style.md` | Tech stack rules (Python, Go, SQL, etc.) | ✅ yes |
+
+> **`project-context.md`** is the primary shared-context file. All developers who clone this repo
+> receive it automatically. AI agents read it when instructed by `CLAUDE.md § Read before any work`.
+
+---
+
 ## How to use this directory
 
 Create `.md` files for each domain or technology:
