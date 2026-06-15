@@ -37,7 +37,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/product-check` | Fast | (always Fast — структурное сравнение текста с кодом) | (always Fast) |
 | `/diagnose` | **Capable** | 3+ failed hypotheses (нужно искать unusual root cause) | (никогда — диагностика всегда сложна) |
 | `/onboard` | Default | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
-| `/sync-audit` | **Default** | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare) |
+| `/sync-audit` | **Default** | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare); `--doctor` режим — Default всегда достаточен (read-only снимок, no reasoning) |
 | `/pull-consumers` | **Fast** | (никогда — git fetch + diff parsing + report, no reasoning) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Запускается вручную перед /retro или анализом методологии |
 | `/marketing` | **Fast** | Первый запуск (нет MARKETING.md) → Default (autodraft требует чтения PRODUCT/VISION + генерацию) | Навигация + прогресс state — no reasoning. Только если объясняет skill → Default |
 | `/test` | **Default** | Логический/visual баг не сходится (reasoning-depth, N≥3 итераций); property-based для нетривиальной логики; L2 regression на большом приложении | Генерация E2E/contract/visual тестов требует понимания acceptance criteria. Fast допустим только для запуска готового suite без генерации |
