@@ -839,6 +839,16 @@ if [[ -f "$METHODOLOGY_DIR/templates/model-tiers.md" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Task types registry — canonical reference, always overwrite.
+# ---------------------------------------------------------------------------
+if [[ -f "$METHODOLOGY_DIR/templates/task-types.md" ]]; then
+  echo "→ task-types/"
+  inject_md_banner "$METHODOLOGY_DIR/templates/task-types.md" "$TARGET_DIR/.claude/task-types.md"
+  _track_changed ".claude/task-types.md"
+  echo "  ✓ task-types.md"
+fi
+
+# ---------------------------------------------------------------------------
 # .version pointer.
 # ---------------------------------------------------------------------------
 cat > "$TARGET_DIR/.claude/.version" <<EOF
