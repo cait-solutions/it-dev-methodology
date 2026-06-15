@@ -24,6 +24,9 @@
 # Artifact taxonomy:
 #   OVERWRITE (methodology-owned): commands/, hooks/, model-tiers.md, CLAUDE.md, adr/_TEMPLATE.md
 #   MERGE (special):               triggers.json (add new keys), settings.json (wire missing hooks)
+#   MANAGED-BLOCK:                 docs_reminder.py — methodology владеет секцией между
+#                                  '# >>> methodology managed >>>' markers; fill вне сохраняется.
+#                                  Fail-safe: dest без markers → НЕ перезаписывается (warn).
 #   PRESERVE (project-owned):      everything else — CLAUDE.local.md, PRODUCT.md, VISION.md, etc.
 
 set -euo pipefail
@@ -211,6 +214,70 @@ inject_py_banner() {
 EOF
     cat "$src"
   } > "$dest"
+}
+
+# ---------------------------------------------------------------------------
+# MANAGED-BLOCK режим (4-й в taxonomy наряду с OVERWRITE/MERGE/PRESERVE).
+#
+# Методология владеет ТОЛЬКО содержимым между markers; всё вне сохраняется.
+# Fail-safe: если dest существует БЕЗ markers — НЕ перезаписывать (warn).
+# Если dest отсутствует — записать целиком из template (markers уже в template).
+#
+# Marker-синтаксис (Python): строки-комментарии
+#   # >>> methodology managed >>>
+#   ... (methodology-owned)
+#   # <<< methodology managed <<<
+# Всё вне пары markers — project-owned fill, сохраняется дословно.
+#
+# Bash 3.2: awk-извлечение, без bash-4 features, без PCRE.
+# ---------------------------------------------------------------------------
+MB_OPEN='# >>> methodology managed >>>'
+MB_CLOSE='# <<< methodology managed <<<'
+
+# _mb_has_markers FILE → exit 0 если обе marker-строки присутствуют.
+_mb_has_markers() {
+  grep -qF "$MB_OPEN" "$1" 2>/dev/null && grep -qF "$MB_CLOSE" "$1" 2>/dev/null
+}
+
+# sync_managed_block SRC DEST DEST_REL
+#   SRC      — template (содержит markers + methodology-owned секцию)
+#   DEST     — целевой файл у консьюмера
+#   DEST_REL — путь для _track_changed / логов
+sync_managed_block() {
+  local src="$1" dest="$2" dest_rel="$3"
+
+  if [[ ! -f "$dest" ]]; then
+    # Нет файла → первичная установка целиком из template (markers + fill-зона внутри).
+    cp "$src" "$dest"
+    _track_changed "$dest_rel"
+    echo "  ✓ $dest_rel (managed-block — created)"
+    return
+  fi
+
+  if ! _mb_has_markers "$dest"; then
+    # FAIL-SAFE: файл есть, но markers нет → НЕ перезаписывать. Возможен
+    # заполненный консьюмером fill — clobber потеряет его. Warn + skip.
+    echo "  ⚠️  $dest_rel (managed-block — markers ОТСУТСТВУЮТ → preserved, NOT overwritten)"
+    echo "      → файл заполнен до managed-block эпохи. Запусти /sync-audit (Gap 18)"
+    echo "        чтобы безопасно добавить markers и получать обновления managed-секции."
+    return
+  fi
+
+  # Markers есть → заменить ТОЛЬКО methodology-секцию из template, fill вне сохранить.
+  # Стратегия: взять project-owned части dest (before-open + after-close),
+  # methodology-секцию (open..close включительно) — из template.
+  local tmp
+  tmp="$(mktemp)"
+  # part before MB_OPEN (project-owned head):
+  awk -v o="$MB_OPEN" 'index($0,o){exit} {print}' "$dest" > "${tmp}.before"
+  # part after MB_CLOSE (project-owned tail):
+  awk -v c="$MB_CLOSE" 'f{print} index($0,c){f=1}' "$dest" > "${tmp}.after"
+  # methodology section from TEMPLATE (open..close inclusive):
+  awk -v o="$MB_OPEN" -v c="$MB_CLOSE" 'index($0,o){f=1} f{print} index($0,c){f=0}' "$src" > "${tmp}.method"
+  cat "${tmp}.before" "${tmp}.method" "${tmp}.after" > "$dest"
+  rm -f "$tmp" "${tmp}.before" "${tmp}.after" "${tmp}.method"
+  _track_changed "$dest_rel"
+  echo "  ↻ $dest_rel (managed-block — methodology section refreshed, fill preserved)"
 }
 
 # inject_skill_banner: copy SKILL.md with banner metadata injected into YAML frontmatter.
@@ -648,21 +715,27 @@ if compgen -G "$METHODOLOGY_DIR/templates/.claude/agents/*.template.md" >/dev/nu
 fi
 
 # ---------------------------------------------------------------------------
-# Hooks — universal infrastructure, always overwrite. Strips .template from
-# filename so wiring in settings.json resolves.
-#
-# NOTE: This will overwrite local fills of docs_reminder.py LIBS dict. If your
-# project has filled LIBS, mirror that change in methodology/hooks/docs_reminder.template.py
-# before syncing, or keep a project-local docs_reminder_libs.py and import from it.
+# Hooks — universal infrastructure. Strips .template from filename so wiring
+# in settings.json resolves.
+# Dispatch order: MANAGED-BLOCK (4th taxonomy mode) → extension-based OVERWRITE.
 # ---------------------------------------------------------------------------
 if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLOGY_DIR/templates/.claude/hooks/*" >/dev/null; then
   echo "→ hooks/"
   mkdir -p "$TARGET_DIR/.claude/hooks"
+  # Managed-block хуки: methodology владеет только секцией между markers,
+  # per-project fill (напр. docs_reminder LIBS) сохраняется. (4-й режим taxonomy)
+  MANAGED_BLOCK_HOOKS="docs_reminder.py"
   for hook in "$METHODOLOGY_DIR"/templates/.claude/hooks/*; do
     [[ -f "$hook" ]] || continue
     name="$(basename "$hook")"
     dest_name="${name/.template/}"
     dest="$TARGET_DIR/.claude/hooks/$dest_name"
+    # managed-block ветка (по dest_name):
+    case " $MANAGED_BLOCK_HOOKS " in
+      *" $dest_name "*)
+        sync_managed_block "$hook" "$dest" ".claude/hooks/$dest_name"
+        continue ;;
+    esac
     case "$name" in
       *.py) inject_py_banner "$hook" "$dest" ;;
       *.md) inject_md_banner "$hook" "$dest" ;;

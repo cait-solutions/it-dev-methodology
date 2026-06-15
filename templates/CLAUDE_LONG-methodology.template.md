@@ -133,8 +133,24 @@
 **Drift между методологией и консьюмерами:**
 [Add: example of drift impact on consumer projects; planned auto version-drift check]
 
-**Sync overwrites local fills:**
-[Add: docs_reminder.py LIBS dict scenario; planned *.local.py support]
+**Sync overwrites local fills (Mitigated v6.4.1 — managed-block):**
+`docs_reminder.py` имеет per-project fill — `LIBS: dict` заполняется консьюмером (URLs на документацию библиотек). До v6.4.1 `sync-methodology.sh` перезаписывал файл целиком (OVERWRITE-режим), молча уничтожая fill консьюмера.
+
+**Фикс — MANAGED-BLOCK (4-й режим taxonomy в `sync-methodology.sh`):**
+Методология пишет только между markers `# >>> methodology managed >>>` … `# <<< methodology managed <<<`. Fill-зона (`LIBS = {}`) находится ВНЕ markers и физически не трогается на sync.
+
+**Fail-safe:** если dest существует без markers (pre-managed-block fill) → sync НЕ перезаписывает файл, выводит предупреждение и направляет в `/sync-audit` Gap 18. Gap 18 показывает текущий fill и предлагает безопасно добавить markers (аналог Gap 14 write-only паттерна).
+
+**Marker-синтаксис (Python):**
+```
+# >>> methodology managed >>>
+# DO NOT EDIT inside these markers — overwritten on sync.
+import sys
+...
+# <<< methodology managed <<<
+```
+
+**Распространение режима:** добавить файл в список `MANAGED_BLOCK_HOOKS` в `sync-methodology.sh` + разметить template markers — расширяется одной строкой без переписывания helper-а.
 
 ---
 

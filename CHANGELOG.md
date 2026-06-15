@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.1 — feat: managed-block idempotency для docs_reminder LIBS (2026-06-15)
+
+**Что добавлено:**
+- **`scripts/sync-methodology.sh` — MANAGED-BLOCK (4-й режим taxonomy):** `sync_managed_block()` helper. Методология пишет только между `# >>> methodology managed >>>` markers; fill-зона (LIBS) вне markers сохраняется by-construction.
+- **`templates/.claude/hooks/docs_reminder.template.py` — restructured:** LIBS fill-зона сверху (project-owned), вся логика — в одном managed-блоке снизу. Removes unused `import json`.
+- **Fail-safe:** pre-existing файл без markers → warn + skip (НЕ перезаписывается).
+- **`commands/sync-audit.md` Gap 18:** command-first точка входа для добавления markers в старый fill.
+- **Closes:** Security risk «Sync overwrites local fills (Low → Mitigated)».
+
+**Зачем:** консьюмер, заполнивший `LIBS`, терял его на каждом sync — OVERWRITE перезаписывал файл целиком. Managed-block — L4-фикс: потерять fill нельзя by-construction.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обнаружит markers в новом `docs_reminder.py` и начнёт делать selective refresh.
+- 🟡 **Если LIBS уже заполнен (pre-v6.4.1):** запусти `/sync-audit` Gap 18 — агент предложит безопасно добавить markers, сохранив твой fill.
+
+---
+
 ## v6.4.0 — feat: validator proof-of-rejection harness (test-validators.sh) (2026-06-15)
 
 **Что добавлено:**

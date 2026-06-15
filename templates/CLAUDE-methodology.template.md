@@ -323,7 +323,7 @@ Phase-теги: `[phase-a]` … — milestone history.
 
 **Drift между методологией и консьюмерами (Med):** Sync ручной. Будущая задача — auto version-drift check в `/plan` Шаг -3.
 
-**Sync overwrites local fills (Low):** `docs_reminder.py` LIBS заполняется per-project. Будущая задача — поддержка `*.local.py` соседних файлов.
+**Sync overwrites local fills (Low → Mitigated v6.4.1):** managed-block контракт — методология пишет только между markers, per-project fill (`docs_reminder.py` LIBS) сохраняется by-construction. Fail-safe: файл без markers НЕ перезаписывается. Детали: `/sync-audit` Gap 18.
 
 Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md).
 

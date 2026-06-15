@@ -328,6 +328,22 @@ Gap 17 результат:
 
 ---
 
+## Gap 18 — Managed-block markers (v6.4.1)
+
+**Scope:** только если `.claude/hooks/docs_reminder.py` существует у консьюмера.
+
+**Проверка:** содержит ли файл обе marker-строки
+`# >>> methodology managed >>>` и `# <<< methodology managed <<<`.
+
+- Markers присутствуют → 🟢 OK (managed-секция обновляется на sync, fill сохраняется).
+- Markers ОТСУТСТВУЮТ → 🟡 **Medium**: файл из pre-managed-block эпохи. Sync его НЕ
+  перезаписывает (fail-safe) → consumer не получает обновлений methodology-секции.
+  **Действие:** показать консьюмеру текущий fill (LIBS), предложить per-repo:
+  добавить markers (агент вставляет markers вокруг methodology-секции, сохраняя LIBS) /
+  skip / never. Аналог Gap 14 write-only паттерна (явное подтверждение, git commit за пользователем).
+
+---
+
 ## Шаг 1b — Version delta analysis (v4.43.0+)
 
 **Цель:** показать что конкретно добавилось в методологии с версии consumer и что нужно сделать.
