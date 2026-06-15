@@ -76,6 +76,31 @@ bash scripts/doc-audit.sh --doc-root ../it-dev-methodology-documentation --fix
 
 ---
 
+## Шаг 1.5 — Missing artifacts check (agent-driven)
+
+После прогона скрипта — агент проверяет наличие ожидаемых артефактов в doc-root через Glob/Read.
+
+**Expected artifacts (проверять в doc-root):**
+
+| Артефакт | Тип | Обязательность |
+|---|---|---|
+| `VISION.md` | content-heavy | обязателен |
+| `PRODUCT.md` | content-heavy | обязателен |
+| `DEVLOG.md` | structural | обязателен |
+| `ROADMAP.md` | content-heavy | рекомендован |
+| `docs/architecture/SYSTEM-MAP.md` | content-heavy | рекомендован |
+| `docs/product/USER-MAP.md` | content-heavy | рекомендован |
+| `docs/product/ARTIFACT-MAP.md` | content-heavy | рекомендован |
+| `docs/architecture/LIVING-ARTIFACTS.md` | structural | рекомендован |
+| `MARKETING.md` | content-heavy | опциональный (`--with-marketing`) |
+
+Каждый отсутствующий файл → MISSING запись для Шага 2.
+Severity: обязателен → WARN · рекомендован → INFO · опциональный → INFO.
+
+⚠️ Two-repo: пути резолвятся от doc-root (из `CLAUDE.local.md doc_repo_path`), не от cwd code-repo.
+
+---
+
 ## Шаг 2 — Представить результаты
 
 Показать пользователю Summary-таблицу скрипта + интерпретацию:
@@ -83,6 +108,7 @@ bash scripts/doc-audit.sh --doc-root ../it-dev-methodology-documentation --fix
 1. **FAIL-оси** — перечислить с конкретными файлами. Это ошибки, чинить сейчас.
 2. **WARN-оси** — сгруппировать по типу долга (stale-диаграммы / node-format миграция / битые ссылки).
 3. **SKIP-оси** — упомянуть одной строкой (не применимо для этого проекта — это нормально).
+4. **MISSING артефакты** — перечислить с командой создания (из Шага 3 таблицы). Сгруппировать: обязательные → рекомендованные → опциональные.
 
 ---
 
@@ -91,8 +117,48 @@ bash scripts/doc-audit.sh --doc-root ../it-dev-methodology-documentation --fix
 1. **Auto-fixable первыми** — выполнить сразу с подтверждением:
    - stale/missing mermaid-ссылки → повторный прогон с `--fix` (обновит ссылки в ОБОИХ репо) либо точечно `bash scripts/update-mermaid-links.sh [--root DIR]`
    - после фикса — повторить упавшую ось для верификации.
-2. **Ручные точечные** (stale-маркер диаграммы, битая ссылка) → предложить исправить в этой сессии, показав конкретный файл:строку.
-3. **Системный долг** (миграция node-format всех карт, массовый stale) → НЕ чинить ad-hoc, предложить `/plan` с конкретным scope из результатов аудита.
+2. **Missing artifacts** — для каждого MISSING из Шага 1.5:
+
+   **Context gathering (однократно, перед всеми предложениями):**
+
+   Trigger: ≥1 content-heavy артефакт в MISSING **И** `VISION.md` + `PRODUCT.md` оба отсутствуют.
+   Если хотя бы один из них присутствует — skip (контекст уже есть, вопросы не задавать).
+
+   ```
+   📋 Для создания артефактов нужен минимальный контекст (3 вопроса):
+   1. Что делает проект? (одно предложение: домен + основная функция)
+   2. Кто основной пользователь? (роль/тип)
+   3. Текущий статус? (идея / MVP / продакшн)
+   ```
+
+   Собранный контекст используется как prefix при предложении каждой команды.
+   Команды задают свои вопросы сами — повторно не спрашивать.
+
+   **Artifact → Command (предложить для каждого MISSING):**
+
+   | Отсутствует | Команда | Тип |
+   |---|---|---|
+   | `VISION.md` | `/vision` (strategy) | content-heavy |
+   | `PRODUCT.md` | `/plan [product]` | content-heavy |
+   | `ROADMAP.md` | `/vision review` | content-heavy |
+   | `docs/architecture/SYSTEM-MAP.md` | `/plan [code]` "создать SYSTEM-MAP" | content-heavy |
+   | `docs/product/USER-MAP.md` | `/plan [product]` "создать USER-MAP" | content-heavy |
+   | `docs/product/ARTIFACT-MAP.md` | `/plan [methodology]` "создать ARTIFACT-MAP" | content-heavy |
+   | `MARKETING.md` | `/define-positioning` | content-heavy |
+   | `DEVLOG.md` | создать из шаблона — авто, без вопросов | structural |
+   | `docs/architecture/LIVING-ARTIFACTS.md` | добавить задачей в ближайший `/plan` Шаг 5 | structural |
+
+   Structural артефакты — создать сразу с подтверждением (без контекстных вопросов).
+   Content-heavy — предложить команду с кратким напоминанием собранного контекста:
+
+   ```
+   ⚠️ MISSING: VISION.md → запустить `/vision` (strategy).
+      Контекст: [ответы 1-3 выше]
+      Запустить сейчас? (y / позже)
+   ```
+
+3. **Ручные точечные** (stale-маркер диаграммы, битая ссылка) → предложить исправить в этой сессии, показав конкретный файл:строку.
+4. **Системный долг** (миграция node-format всех карт, массовый stale) → НЕ чинить ad-hoc, предложить `/plan` с конкретным scope из результатов аудита.
 
 **⛔ Не создавать новый реестр долга** — долг уже трекается существующими путями: RISKS.md, AGENT-GAPS/PRODUCT-GAPS, `deferred[]` (P-013). Аудит = снимок, не ledger.
 
@@ -104,3 +170,4 @@ bash scripts/doc-audit.sh --doc-root ../it-dev-methodology-documentation --fix
 - ❌ Не проверяет adoption методологии — это `/sync-audit`.
 - ❌ Не меняет файлы сам (read-only прогон); fixes — отдельными шагами с подтверждением.
 - ❌ Не заменяет deploy-gate — gate остаётся последним рубежом перед push.
+- ❌ Не заполняет созданные артефакты контентом — только указывает команды; каждая команда ведёт свой intake.
