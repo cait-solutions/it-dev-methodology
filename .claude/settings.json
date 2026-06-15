@@ -112,6 +112,10 @@
           {
             "type": "command",
             "command": "sh .claude/hooks/hook-liveness.sh"
+          },
+          {
+            "type": "command",
+            "command": "sh .claude/hooks/maps-freshness-liveness.sh"
           }
         ]
       }

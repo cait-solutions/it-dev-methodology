@@ -15,6 +15,7 @@ Operational rules for AI agents. Short form, scan-friendly. For rationale, edge 
 2. Relevant ADRs / SYSTEM-MAP for the task domain.
 3. `docs/data-map.md` (if exists) before storage-touching changes.
 4. [CLAUDE.local.md](CLAUDE.local.md) — project stack, architecture invariants, security threats, key entry points.
+5. [`.claude/rules/project-context.md`](.claude/rules/project-context.md) (if exists) — **shared project context**: Design Spec links, domain knowledge, onboarding pointers. Tracked in git — all developers receive it.
 
 ---
 

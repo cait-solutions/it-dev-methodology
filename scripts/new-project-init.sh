@@ -15,6 +15,7 @@
 # Always created (v3.4.0+):
 #   .claude/{commands,agents,rules,state,hooks}/, .claude/.version
 #   .claude/rules/README.md (template for tech stack rules)
+#   .claude/rules/project-context.md (shared project context: Design Spec links, domain knowledge)
 #   README.md (workspace setup + links to SYSTEM-MAP/USER-MAP)
 #   AGENTS.md (concurrent-session task-ownership coordination)
 #   CLAUDE.md, CLAUDE_LONG.md, PRODUCT.md, VISION.md
@@ -349,7 +350,8 @@ echo "→ threat-model/"
 copy_with_subst "$METHODOLOGY_DIR/templates/threat-model.template.md"  "$TARGET_DIR/docs/threat-model.template.md"
 
 echo "→ rules/"
-copy_with_subst "$METHODOLOGY_DIR/templates/.claude/rules/README.template.md"  "$TARGET_DIR/.claude/rules/README.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/.claude/rules/README.template.md"          "$TARGET_DIR/.claude/rules/README.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/.claude/rules/project-context.template.md" "$TARGET_DIR/.claude/rules/project-context.md"
 
 echo "→ gitignore/"
 copy_with_subst "$METHODOLOGY_DIR/templates/.gitignore.template"  "$TARGET_DIR/.gitignore"
