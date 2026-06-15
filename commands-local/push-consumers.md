@@ -33,7 +33,38 @@ Pre-flight model check: спросить только если Capable (Opus) а
 
 **Флаг `--sync-only`:** если передан — `COMMIT_PUSH=false` (только sync файлов, без commit/push). Whitelist при `--sync-only` не читается.
 
-**Whitelist (при `COMMIT_PUSH=true`, т.е. дефолт):** прочитать `CLAUDE.local.md ## auto_commit_consumers` → список `path`+`branch`. Это **policy gate** — commit+push разрешён ТОЛЬКО для путей в этом списке. Вне списка → только sync. Если секция отсутствует → 🔴 СТОП: «`auto_commit_consumers` не настроен в CLAUDE.local.md — добавь whitelist, или запусти с `--sync-only` для sync без коммита».
+**Whitelist (при `COMMIT_PUSH=true`, т.е. дефолт):** прочитать `CLAUDE.local.md ## auto_commit_consumers` → список `path`+`branch`. Это **policy gate** — commit+push разрешён ТОЛЬКО для путей в этом списка. Вне списка → только sync. Если секция отсутствует → 🔴 СТОП: «`auto_commit_consumers` не настроен в CLAUDE.local.md — добавь whitelist, или запусти с `--sync-only` для sync без коммита».
+
+---
+
+## Шаг 1.5 — Guard: dirty .claude/ pre-check
+
+**Цель:** предупредить перед батч-синком если в whitelisted consumer repo есть грязные `.claude/` файлы. Работает для обоих режимов (`COMMIT_PUSH=true` и `--sync-only`).
+
+> **Почему:** sync перезапишет dirty файлы даже при `--sync-only`. Пользователь должен явно подтвердить что это его намерение.
+
+**Для каждого whitelisted repo** (из `auto_commit_consumers`):
+```bash
+git -C <consumer-path> status --short -- .claude/ 2>/dev/null | head -1
+```
+- exit ≠ 0 → skip с предупреждением `⚠️ git недоступен для <repo>`, продолжить
+
+**Если dirty обнаружены:**
+```
+⚠️ Dirty .claude/ обнаружены перед синком:
+   • ai-assistant-documentation: .version, commands/code.md, ...
+   • social-promo-documentation: settings.json, ...
+
+Синк перезапишет эти файлы (даже при --sync-only).
+Рекомендация: запусти /sync-audit (Gap 17) чтобы разрешить dirty ПЕРЕД синком.
+
+Продолжить несмотря на dirty? (y = продолжить / n = выйти)
+```
+- **y** → продолжить Шаг 2 (решение пользователя, его ответственность)
+- **n** → `Запусти /sync-audit (Gap 17) для разрешения dirty, затем повтори /push-consumers.` → выход
+
+**Если все clean:**
+→ продолжить к Шагу 2 (без сообщения)
 
 ---
 
@@ -85,7 +116,7 @@ Pre-flight model check: спросить только если Capable (Opus) а
 git -C <consumer-path> status --short -- .claude/ 2>/dev/null
 ```
 
-- Вывод непустой → пометить `[skip: dirty]` + причина. **НЕ синкать** — dirty `.claude/` = in-progress работа параллельной сессии.
+- Вывод непустой → пометить `[skip: dirty]` + причина. **НЕ синкать** — dirty `.claude/` = in-progress работа параллельной сессии. Запусти `/sync-audit` Gap 17 для разрешения (stash / ignore / ignore-always), затем повтори `/push-consumers`.
 - Вывод пустой → добавить в список «будет обновлено».
 
 **`[not-initialized]` — inline init (Gap 14 pattern, closes P-010):**

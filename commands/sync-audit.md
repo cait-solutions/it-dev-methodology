@@ -227,6 +227,107 @@ bash "<methodology_path>/scripts/sync-methodology.sh" "<consumer_root>"
 
 ---
 
+## Gap 17 — Dirty .claude/ check (v6.3.0+)
+
+**Цель:** обнаружить незакоммиченные изменения в `.claude/` всех consumer repo и предложить разрешить их до `/push-consumers`. Предотвращает накопление грязных файлов которые блокируют батч-синк.
+
+> **Доставка к консьюмерам:** этот Gap синкается через `sync-methodology.sh` (живёт в `commands/`, не `commands-local/`). Консьюмеры могут запускать `/sync-audit` для visibility своих dirty файлов. Guard в `/push-consumers` — LOCAL-ONLY (не синкается).
+
+**Когда запускать:** перед `/push-consumers` если несколько consumer repo давно не синкались, или если прошлый `/push-consumers` показал `[skip: dirty]` статусы.
+
+### Шаг 17.1 — Scan dirty repos
+
+Для каждого обнаруженного consumer repo (все — whitelisted + non-whitelisted):
+
+```bash
+git -C <consumer-path> status --short -- .claude/ 2>/dev/null | head -5
+```
+
+- **exit ≠ 0 (git недоступен / не git repo)** → skip с предупреждением: `⚠️ git недоступен для <repo> — пропуск dirty check`
+- **пустой вывод** → clean, пропустить
+- **1-5 строк** → dirty, добавить в таблицу
+- **5 строк (возможно truncated)** → уточнить счёт: `git -C <path> status --short -- .claude/ 2>/dev/null | wc -l` → показать `+N more`
+
+### Шаг 17.2 — Если нет dirty repos
+
+```
+✅ Gap 17: все consumer repo чисты (.claude/) — /push-consumers можно запустить без ограничений.
+```
+
+→ перейти к следующему Gap, пропустить 15.3–15.5.
+
+### Шаг 17.3 — Таблица dirty repos
+
+```
+⚠️ Gap 17 — Dirty .claude/ обнаружены в <N> репо:
+
+| # | Репо | Dirty файлы | Whitelist? |
+|---|---|---|---|
+| 1 | ai-assistant-documentation | .version, commands/code.md (+1) | ✅ commit+push |
+| 2 | social-promo-documentation | settings.json, skills/X.md (+2) | ✅ commit+push |
+| 3 | some-other-repo | settings.json | ⚠️ sync-only |
+```
+
+> ⚠️ **Worktree isolation:** если у тебя несколько активных worktrees (worktree_isolation: auto), dirty файлы из других worktrees НЕВИДИМЫ для этого check. Проверь другие worktrees вручную при необходимости.
+
+### Шаг 17.4 — Выбор action (batch + per-repo)
+
+```
+Действие для dirty repos:
+
+  all stash         — git stash во всех dirty репо
+  all ignore        — игнорировать все в этой сессии (без persistence)
+  all ignore-always — добавить все в exclude_paths (permanent)
+  1,2               — stash только репо #1 и #2
+  1s 2i             — репо #1 stash, репо #2 ignore (смешанный)
+
+Выбор:
+```
+
+### Шаг 17.5 — Выполнение
+
+**stash:**
+```bash
+git -C <consumer-path> stash
+```
+- **exit 0** → `✅ <repo>: stashed (восстановить: git -C <path> stash pop)`
+- **exit ≠ 0** →
+  ```
+  ❌ git stash упал для <repo> (exit <N>).
+     Вероятно merge conflict или .git/index.lock.
+     Разреши вручную:
+       git -C <path> status
+       git -C <path> stash --include-untracked
+     Затем повтори /sync-audit.
+  ```
+  → пометить `[skip: stash-failed]`, продолжить другие repos
+
+**ignore (session-only):**
+→ пометить `[skip: ignored-session]` — только на эту сессию, без записи в файл
+
+**ignore-always:**
+→ добавить в `CLAUDE.local.md ## Consumers → exclude_paths`:
+```yaml
+exclude_paths:
+  - <absolute-path-to-consumer>
+```
+→ пометить `[skip: excluded]`
+
+### Шаг 17.6 — Итог Gap 17
+
+```
+Gap 17 результат:
+  ✅ ai-assistant-documentation: stashed
+  ✅ social-promo-documentation: stashed
+  ⏭  some-other-repo: ignored this session
+  ❌ problem-repo: stash-failed — разреши вручную
+
+→ /push-consumers может синкать stashed + ignored репо.
+  Stashed изменения восстанови когда нужно: git -C <path> stash pop
+```
+
+---
+
 ## Шаг 1b — Version delta analysis (v4.43.0+)
 
 **Цель:** показать что конкретно добавилось в методологии с версии consumer и что нужно сделать.
@@ -814,6 +915,7 @@ Output:
 | 14 | [no-marker] consumer initialization | 🟡/🟢 | [N repos без методологии] | init / skip / never (в Gap 14 inline) |
 | 15 | Maps coverage + diagram freshness | 🔴/🟡/🟢 | [errors/warnings из Gap 15 + unannotated diagrams count] | добавить строки в карты; добавить `<!-- diagram-sources: ... -->` к неаннотированным диаграммам |
 | 16 | Living Artifact Registry bootstrap | 🟡/🟢 | [PRESENT / MISSING / SKIPPED] | `bash scripts/new-project-init.sh <path>` или init inline (Gap 16 поток) |
+| 17 | Dirty .claude/ check | 🟡/🟢 | [N repos с dirty .claude/] | stash / ignore / ignore-always (в Gap 17 inline) |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная
