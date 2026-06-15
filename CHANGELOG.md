@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.3 — feat: task-types.md canonical task-type axis (2026-06-15)
+
+**Что добавлено:**
+- **`templates/task-types.md`** — единый cited-canon оси классификации задач: 7 типов (`[code]`/`[product]`/`[data]`/`[infra]`/`[security]`/`[process]`/`[contract]`) + Lite/Full threshold + применимость по доменам. Синхронизируется консьюмерам как `model-tiers.md`.
+- **`commands/plan.md`** Шаг -2: заменена inline-таблица определений на ссылку `.claude/task-types.md`.
+- **`commands/code.md`** Режим: Lite/Full порог → ссылка на canon + кратко inline.
+- **`commands/review.md`**: добавлена строка-легенда под навигационной картой.
+- **`commands/diagnose.md`**: inline-ссылка на canon рядом с упоминанием типов.
+- **Closes:** navigation-table duplication drift-класс между plan/code/review/diagnose.
+
+**Зачем:** ось task-type физически дублировалась в 4 командах без источника правды. Добавление нового типа или изменение Lite-порога требовало ручной правки в нескольких местах — теперь только в canon.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync подтянет `.claude/task-types.md`.
+- 🟡 **Проверить:** ссылки `.claude/task-types.md` в командах резолвятся — `test -f .claude/task-types.md`.
+
+---
+
 ## v6.4.2 — feat: /sync-audit --doctor READ-ONLY healthcheck (2026-06-15)
 
 **Что добавлено:**
