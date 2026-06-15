@@ -129,7 +129,7 @@ Discovered consumers:
 
 Для каждого discovered консьюмера ДО pull:
 
-- [ ] `git -C <path> status --porcelain` пусто? Если нет → SKIP «local uncommitted changes»
+- [ ] **Dirty .claude/ check:** `git -C <path> status --short -- .claude/ 2>/dev/null` непусто? → SKIP только этот репо `[skip: dirty .claude/]` + сообщение; **продолжить следующий** (не блокировать весь батч). Dirty вне `.claude/` (DEVLOG.md, ROADMAP.md и т.п.) — не повод для skip; `git merge --ff-only` сам разберётся если нет конфликтов. Для разрешения dirty: запусти `/sync-audit` Gap 17 (stash / ignore / ignore-always), затем повтори `/pull-consumers`.
 - [ ] `git -C <path> remote get-url origin` существует? Если нет → SKIP «no origin remote»
 - [ ] Запомнить `prev_sha = git -C <path> rev-parse HEAD`
 - [ ] **GitHub multi-account check** — выполнить **один раз перед циклом**, не per-consumer:
