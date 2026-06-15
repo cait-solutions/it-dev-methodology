@@ -287,6 +287,16 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
       exit 1
     fi
   fi
+  # Validator-harness gate (PLAN-03 / G-112): proof-of-rejection — доказать что сами
+  # валидаторы отклоняют плохой ввод, прежде чем доверять их PASS в maps-coverage.
+  # Guard: if [ -f ... ] — graceful skip если harness не установлен (migration-window).
+  if [ -f "scripts/test-validators.sh" ]; then
+    echo "▶ Validator-harness gate (methodology-platform)..."
+    if ! bash scripts/test-validators.sh; then
+      echo "❌ BLOCKED: валидатор не отклонил плохой ввод (false-green, G-112). Почини валидатор/фикстур." >&2
+      exit 1
+    fi
+  fi
   echo "▶ Maps-coverage gate (methodology-platform)..."
   # tee-pattern: show output in realtime AND capture for WARN count (G-119 surfacing)
   _MAPS_TMP="$(mktemp)"
