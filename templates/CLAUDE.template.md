@@ -37,6 +37,11 @@ Operational rules for AI agents. Short form, scan-friendly. For rationale, edge 
 - Why gaps are OK or require action
 Without this analysis → plan not approved, code not merged, deploy blocked.
 
+**Anti-cheat rule (no-gate-weakening):** ⛔ Never weaken an **artifact** or **criterion** to pass a quality gate. Satisfy the gate on merit — change the measured, not the measuring instrument. Applies to ANY gate (universal core): `/review`, `/doc-audit`, acceptance criteria, tests, map validators.
+- **Dev domain (example):** don't disable a failing test · don't patch implementation just to make a check green · don't over-mock to bypass coverage.
+- **Non-dev domains (example):** don't delete a required artifact section to pass `/doc-audit` · don't weaken acceptance criteria to pass `/review` · don't remove a map node to pass `validate-maps-coverage`.
+- **Boundary (legitimate ≠ cheat):** changing a gate/criterion as an explicit decision with named justification (the gate was wrong) = legitimate. Changing it to pass without justification = cheat.
+
 **Adjacent Impact rule:** Before planning, enumerate adjacent zones (what reads this component / what depends on it). Explicitly mark each as in-scope or out-of-scope with reason. Classify solution as Point fix / Structural / Level 4+. Without this classification → plan incomplete. See `/plan` Step -1.3 for protocol.
 
 **Don't advise already-done:** check last 3-5 messages before suggesting an action that may already be running.

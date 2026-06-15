@@ -172,10 +172,12 @@ git log <production_branch>..HEAD --oneline
 - [ ] **Error / empty / absent path:** happy path работает → что при failure внешнего вызова / пустом входе / отсутствующем файле / wrong type? Названа ли реакция на каждую ветку?
 - [ ] **Node readability (v5.57.0, G-121):** diff содержит mermaid-блоки → компонентные ноды в формате «Имя + Зачем + Без него» (≥ 2 `<br/>`)? Запустить `bash scripts/validate-maps-coverage.sh --report` (вывод `node-readability: WARN` = 🔵 Suggestion, не fix-now; но perfunctory «Зачем: нужно / Без него: плохо» = 🔵 с пометкой «переформулировать»). Affordance-ноды освобождены.
 - [ ] **Новый validator без negative-fixture (closes G-112 class):** diff добавляет `scripts/validate-*.sh` → есть ли: (a) negative-fixture в `scripts/fixtures/validators/` + dual-copy в `templates/scripts/`; (b) `assert_exit` строка в `scripts/test-validators.sh`; (c) строка в `scripts/fixtures/validators/README.md`? Нет хотя бы одного → 🔴 **fix now**: validator без proof-of-rejection = потенциальный G-112 false-green.
+- [ ] **No-gate-weakening (anti-cheat):** трогает ли diff сам квалити-гейт или измеряемый артефакт способом, который **ослабляет** проверку вместо её удовлетворения? Конкретно grep diff на: удалённый/`skip`-нутый тест, удалённую обязательную секцию артефакта, ослабленный acceptance-критерий, удалённый узел карты/строку реестра, расширенный `try/except`/null-swallow вокруг падающей проверки. Для каждого hit — **named обоснование** (гейт был неверным → исправлен легитимно) или 🔴.
 - [ ] **Что ещё специфично для этого изменения** (open-ended — список выше не исчерпывающий): какой класс пропуска уникален для этой задачи?
 
 **Disposition:**
 - Любой 🔴 в **plan commitments** / CRUD / downstream / content-vs-existence / template-sync → 🔴 **fix now** (это классы с историей реальных провалов, не cosmetic). Невыполненное plan-обязательство (`pending` без причины) блокирует merge — но финальное merge/no-merge остаётся явным выбором пользователя (Disposition обязательна, не авто-abort).
+- 🔴 в **no-gate-weakening** (артефакт/критерий ослаблен ради прохождения без named обоснования) → 🔴 **fix now**: восстановить артефакт/критерий, удовлетворить гейт по существу. Блокирует merge.
 - Trigger-chain 🔴 → минимум 🔵 Recommendation «механизм требует ручного запуска — встроить в <команда>?».
 - Если ни один класс не проверен явно (агент написал общее «completeness OK») → 🔵 Recommendation "Completeness audit не выполнен по классам — пройти 7 пунктов".
 
