@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.2 — feat: /sync-audit --doctor READ-ONLY healthcheck (2026-06-15)
+
+**Что добавлено:**
+- **`scripts/sync-doctor.sh`** (+ dual-copy `templates/scripts/sync-doctor.sh`) — READ-ONLY health snapshot: version (consumer-vs-clone раздельно от clone-vs-remote, closes G-107 conflation), hook liveness, secrets-manifest, runtime deps. `--json` CI-режим. `--online` для upstream проверки.
+- **`commands/sync-audit.md` — doctor режим:** argument-dispatch секция + «## Режим doctor» + Ограничения. Trigger: «healthcheck», «doctor», «проверь install».
+- **`templates/model-tiers.md`** — уточнение: doctor режим = Default всегда достаточен.
+- **Closes:** G-107 (consumer-vs-clone конфляция), частично G-087 liveness.
+
+**Зачем:** консьюмер не мог быстро узнать «здоров ли install» без запуска полного adoption-аудита с побочными эффектами. Doctor = preflight-триаж без записи state.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync подтянет `sync-doctor.sh`. Запускать через `/sync-audit --doctor`.
+- 🟡 **CI:** `bash scripts/sync-doctor.sh --json` → exit 0/1, структурированный JSON.
+
+---
+
 ## v6.4.1 — feat: managed-block idempotency для docs_reminder LIBS (2026-06-15)
 
 **Что добавлено:**

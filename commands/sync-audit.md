@@ -2,6 +2,12 @@
 
 > **Цель:** проверить какие features methodology (накопившиеся при обновлениях) **не применены** к этому проекту, и **самостоятельно починить** то что чинится детерминированно.
 >
+> **Режимы:**
+> - `/sync-audit` — полный adoption-аудит + self-heal (может писать state)
+> - `/sync-audit --doctor` — READ-ONLY healthcheck (ничего не пишет); быстрый снимок: версия / hooks / secrets / deps
+> - `/sync-audit --doctor --json` — тот же снимок как JSON; exit 0=PASS / 1=FAIL (для CI-пайплайнов)
+> - `--online` — добавляет clone-vs-remote ось (git ls-remote); по умолчанию offline
+>
 > **Two-tier disposition (v4.58.0 — user-friendly «одна команда делает всё»):**
 > - **Self-heal (авто, без вопроса):** детерминированные идемпотентные fix'ы где ответ единственный — stale-скрипты (авто-sync), mermaid-ссылки формат (авто update-mermaid-links), очистка placeholder'ов. Consumer запускает ТОЛЬКО `/sync-audit` — остальное делается само.
 > - **Report + рекомендация (требует решения):** неоднозначные gaps где нужен выбор человека (создать секцию PRODUCT.md, исправить broken link на правильный путь, добавить validators) → `/plan` per gap.
@@ -24,6 +30,37 @@
 **Default tier (Sonnet)** — checklist + grep + report. Reasoning минимальный.
 **Upgrade to Capable** не требуется (нет архитектурного анализа).
 **Pre-flight model check:** да — спроси какая модель активна. Если на Capable — это over-powered, рекомендация Default для cost-savings.
+**doctor-режим** — Default достаточен (read-only снимок, reasoning минимальный).
+
+---
+
+## Режим doctor — READ-ONLY healthcheck (v6.4.2)
+
+**Когда использовать:** консьюмер хочет быстрый снимок «здоров ли install» без полного прогона и без записи state. Preflight-проверка перед /sync-audit или CI-gate.
+
+**Триггер:** пользователь говорит «healthcheck», «doctor», «проверь install», «на какой я версии», или явно пишет `--doctor`.
+
+**Что проверяет (5 секций, всегда в выводе даже как N/A):**
+
+| Секция | Проверка | Источник данных |
+|---|---|---|
+| `version` | consumer `.claude/.version` vs clone `VERSION` — раздельно от clone-vs-remote (G-107) | `.claude/.version`, `<methodology>/VERSION` |
+| `hooks` | каждый hook из `settings.json` существует на диске + Python доступен | `.claude/settings.json`, `.claude/hooks/` |
+| `secrets` | manifest presence + `validate-secrets.sh` (exit 0/1) | `.claude/secrets-manifest.yaml`, `validate-secrets.sh` |
+| `deps` | Python ≥3.10, gh auth boolean | `python --version`, `gh auth status` |
+| `dev-checks` | info-only если dev-профиль обнаружен; N/A иначе | `services-registry.yaml`, `CLAUDE.local.md domain:` |
+
+**Поведение агента:**
+
+1. Запустить (внутри команды, не просить пользователя):
+   ```
+   bash scripts/sync-doctor.sh [--json] [--online]
+   ```
+2. Вывести результат пользователю как есть (5 секций).
+3. При любом FAIL → направить на полный `/sync-audit`: «doctor — диагностика, починка — полный /sync-audit».
+4. `--online` добавляет clone-vs-remote ось через `git ls-remote`; по умолчанию офлайн.
+
+⛔ **Doctor НЕ пишет** `triggers.json`, НЕ запускает `sync-methodology.sh`, НЕ делает авто-pull. Чистый READ-ONLY снимок.
 
 ---
 
@@ -1010,6 +1047,7 @@ Methodology v4.27.0 полностью применена.
 
 - **Format-changes (трансформация заполненных артефактов) НЕ требуют правки этой команды** — добавь версионированный migration-файл `scripts/migrations/v<X.Y.Z>-<id>.sh` (auto/report), runner Шага 1.5 подхватит автоматически. Это структурное решение расширяемости (Flyway/Alembic pattern).
 - Adoption-gaps (новый структурный feature class: новая секция конфига, новый hook) — пока требуют новую Gap-секцию здесь. Кандидат на будущее: декларативный gap-registry по аналогии с migrations.
+- **doctor-режим READ-ONLY и офлайн по умолчанию:** clone-vs-remote ось доступна только через `--online`; doctor не чинит — только диагностирует и направляет на полный `/sync-audit`.
 - Mermaid labels check (Gap 4) — sample-based (3-5 blocks), не exhaustive. Полный hybrid refactor требует отдельного /plan.
 - Path patterns для Gap 1 (поиск major компонентов) могут не работать для monorepo / non-standard структур — graceful skip с сообщением «не могу определить структуру, проверь вручную».
 - Не запускает /plan сам — намеренно. Каждый gap может требовать архитектурного решения (где path patterns? создать секции для каких компонентов?). Пользователь решает.
