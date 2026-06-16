@@ -45,7 +45,7 @@ _get_field() {
   local value
   value=$(awk "/^## ${section}/{f=1; next} /^## /{f=0} f{print}" "$file" \
           | grep -E "^[[:space:]]*${field}:" | head -1 \
-          | sed "s/.*${field}:[[:space:]]*//" | sed 's/[[:space:]]*#.*$//' | tr -d '\r[:space:]')
+          | sed "s/.*${field}:[[:space:]]*//" | sed 's/[[:space:]]*#.*$//' | tr -d '\r')
   echo "${value:-$default}"
 }
 
@@ -101,7 +101,7 @@ except Exception as e:
 for f in data.get('folders', []):
     p = (ws_dir / f['path']).resolve()
     print(p)
-" "$WORKSPACE_FILE" 2>&1) || {
+" "$WORKSPACE_FILE" 2>&1 | tr -d '\r') || {
   echo "❌ Не удалось распарсить workspace: $REPOS_RAW"
   exit 1
 }

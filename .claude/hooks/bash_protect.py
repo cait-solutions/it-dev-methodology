@@ -1,5 +1,5 @@
-# AUTO-GENERATED from methodology-platform v6.2.0
-# Synced: 2026-06-15
+# AUTO-GENERATED from methodology-platform v6.4.6
+# Synced: 2026-06-16
 # DO NOT EDIT — changes will be overwritten on next sync
 # Modify via PR to https://github.com/cait-solutions/it-dev-methodology
 # Emergency override: edit locally + open PR within 48h

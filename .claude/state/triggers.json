@@ -120,8 +120,8 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-15T00:00:00",
-    "task_id": "shared-project-context-mechanism",
+    "completed_at": "2026-06-16T00:00:00",
+    "task_id": "feasibility-precheck-plan-command",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,

@@ -6,7 +6,7 @@ metadata:
   type: workflow-skill
   auto_generated: false
   methodology_version: v5.56.0
-  synced_at: "2026-06-15"
+  synced_at: "2026-06-16"
   source: https://github.com/cait-solutions/it-dev-methodology
   banner: "Synced from methodology-platform v5.56.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
