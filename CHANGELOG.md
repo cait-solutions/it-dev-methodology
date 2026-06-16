@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.4.7 — feat: File-type secrets + .gcp/ gitignore pattern (2026-06-16)
+
+**Что добавлено:**
+- **`.gitignore.template`** — добавлен блок `.gcp/` (+ закомментированные `.aws/` `.azure/`) для cloud credential directories. Доставляется всем консьюмерам через `sync-methodology.sh`.
+- **`secrets-manifest.yaml.template`** — новое опциональное поле `type: value | file` (default `value`). Тип `file` означает что значение ENV var = путь к файлу с credentials, а не сам секрет. Добавлен пример GCP-группы (GOOGLE_CLOUD_PROJECT, GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_CLOUD_LOCATION) с инструкциями.
+- **`scripts/validate-secrets.sh`** + **`templates/scripts/validate-secrets.sh`** (ADR-014 parity) — поддержка `type: file`: парсит новое поле, проверяет существование файла по пути из `.env`. Backward-compatible: манифесты без `type:` работают как прежде.
+
+**Зачем:** некоторые UI (n8n, Vertex AI) не позволяют вводить credentials как файл — требуется файловый подход. Ранее `.gcp/` добавлялось вручную на каждый проект; теперь это zero-config default для всех консьюмеров.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync добавит `.gcp/` в `.gitignore`, обновит `scripts/validate-secrets.sh`.
+- 🟡 **При использовании GCP:** раскомментировать GCP-блок в `.claude/secrets-manifest.yaml` + создать `.gcp/` dir + положить JSON ключ + `bash scripts/set-secret.sh GOOGLE_APPLICATION_CREDENTIALS`.
+- 🟡 **Если `.gcp/` уже была staged** до sync: `git rm --cached .gcp/<file>.json`.
+
+---
+
 ## v6.4.5 — feat: Anti-cheat rule (no-gate-weakening) in /code + /review + CLAUDE.md (2026-06-15)
 
 **Что добавлено:**

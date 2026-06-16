@@ -14,6 +14,7 @@
 #   6. [v2] expires_at within expiry_warn_days → warn.
 #   7. [v2] how_to_obtain_verified_at older than how_to_obtain_warn_days → warn.
 #   8. [v2] service_url missing for v2 manifests → warn (rec'd).
+#   9. [type:file] when type=file, env var value is a path — verify file exists at path.
 #
 # Output: human-readable; NO secret values printed.
 #
@@ -78,10 +79,10 @@ PLACEHOLDER_RE='^(changeme|your[-_]?token|paste[-_]?here|TODO|xxx+|placeholder|<
 _parse_manifest() {
   awk '
     /^[[:space:]]*-[[:space:]]*key:[[:space:]]*/ {
-      if (cur_key) print cur_key "\t" cur_req "\t" cur_sn "\t" cur_url "\t" cur_rot "\t" cur_exp "\t" cur_ver
+      if (cur_key) print cur_key "\t" cur_req "\t" cur_sn "\t" cur_url "\t" cur_rot "\t" cur_exp "\t" cur_ver "\t" cur_typ
       cur_key=$0; sub(/^[[:space:]]*-[[:space:]]*key:[[:space:]]*/, "", cur_key)
       gsub(/[[:space:]"'"'"']/, "", cur_key)
-      cur_req="false"; cur_sn=""; cur_url=""; cur_rot=""; cur_exp=""; cur_ver=""
+      cur_req="false"; cur_sn=""; cur_url=""; cur_rot=""; cur_exp=""; cur_ver=""; cur_typ="value"
       next
     }
     cur_key && /^[[:space:]]*required:[[:space:]]*true/ { cur_req="true" }
@@ -105,7 +106,11 @@ _parse_manifest() {
       cur_ver=$0; sub(/^[[:space:]]*how_to_obtain_verified_at:[[:space:]]*/, "", cur_ver)
       gsub(/^["'"'"']|["'"'"']$/, "", cur_ver); gsub(/[[:space:]]+$/, "", cur_ver)
     }
-    END { if (cur_key) print cur_key "\t" cur_req "\t" cur_sn "\t" cur_url "\t" cur_rot "\t" cur_exp "\t" cur_ver }
+    cur_key && /^[[:space:]]*type:[[:space:]]*/ {
+      cur_typ=$0; sub(/^[[:space:]]*type:[[:space:]]*/, "", cur_typ)
+      gsub(/[[:space:]"'"'"']/, "", cur_typ)
+    }
+    END { if (cur_key) print cur_key "\t" cur_req "\t" cur_sn "\t" cur_url "\t" cur_rot "\t" cur_exp "\t" cur_ver "\t" cur_typ }
   ' "$MANIFEST"
 }
 
@@ -165,7 +170,7 @@ total_required=0
 declared_keys=""
 warns=0
 
-while IFS=$'\t' read -r key req sn url rot exp ver; do
+while IFS=$'\t' read -r key req sn url rot exp ver typ; do
   [[ -z "$key" ]] && continue
   declared_keys="$declared_keys $key"
   loc=$(_locate "$key")
@@ -175,6 +180,20 @@ while IFS=$'\t' read -r key req sn url rot exp ver; do
       printf "  ✅ %-25s (%s)" "$key" "${loc#found:}"
       [[ -n "$sn" ]] && printf "  →  %s" "$sn"
       echo ""
+      if [[ "${typ:-value}" == "file" && "$loc" == "found:.env" ]]; then
+        _file_val=$(grep -E "^${key}=" ".env" 2>/dev/null | head -1 | sed -E "s/^${key}=//; s/^\"(.*)\"$/\1/")
+        if [[ -z "$_file_val" ]]; then
+          printf "       ⚠️  type:file — PATH is empty in .env\n"
+          warns=$((warns+1))
+        elif [[ ! -f "$_file_val" ]]; then
+          printf "       ❌ type:file — FILE NOT FOUND: %s\n" "$_file_val"
+          printf "          Run from project root; create .gcp/ dir and place the key file there.\n"
+          [[ "$req" == "true" ]] && missing_required=$((missing_required+1)) && total_required=$((total_required+1))
+          warns=$((warns+1))
+        else
+          printf "       📄 type:file — %s ✓\n" "$_file_val"
+        fi
+      fi
       ;;
     placeholder:*)
       printf "  ⚠️  %-25s (placeholder value in %s — not real)\n" "$key" "${loc#placeholder:}"
