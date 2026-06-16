@@ -6,7 +6,7 @@ metadata:
   type: knowledge-skill
   auto_generated: false
   methodology_version: v4.34.0
-  synced_at: "2026-06-15"
+  synced_at: "2026-06-16"
   source: https://github.com/cait-solutions/it-dev-methodology
   banner: "Synced from methodology-platform v4.34.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
