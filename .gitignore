@@ -12,6 +12,12 @@ secrets.local.*
 .env.lock
 .env.tmp.*
 
+# Cloud provider credential directories — contain key files (JSON, PEM, etc.), NEVER commit.
+# Managed via methodology file-type secrets (secrets-manifest.yaml type: file).
+.gcp/
+# .aws/
+# .azure/
+
 # OS / editor
 .DS_Store
 Thumbs.db
