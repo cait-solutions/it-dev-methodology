@@ -50,6 +50,13 @@ secrets.local.*
 .env.lock
 .env.tmp.*
 
+# Cloud provider credential directories — contain key files (JSON, PEM, etc.), NEVER commit.
+# These are managed via methodology file-type secrets (secrets-manifest.yaml type: file).
+# The env var (e.g. GOOGLE_APPLICATION_CREDENTIALS) stores the PATH; the file is gitignored.
+.gcp/
+# .aws/        # AWS credentials dir (if not using default ~/.aws)
+# .azure/      # Azure credentials dir (if not using default ~/.azure)
+
 # Node
 node_modules/
 npm-debug.log
