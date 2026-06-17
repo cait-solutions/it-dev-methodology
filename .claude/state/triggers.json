@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 25
+      "plans_since": 26
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 4
+      "plans_since": 5
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 39
+      "plans_since": 40
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 33
+      "plans_since": 34
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 0
+      "plans_since": 1
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 35
+      "plans_since": 36
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 8,
+      "plans_since": 9,
       "recommendations": [
         {
           "id": "R-030",
@@ -120,44 +120,82 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-16T00:00:00",
-    "task_id": "file-type-secrets-gcp",
-    "service": "secrets-layer / templates",
+    "completed_at": "2026-06-17T00:00:00",
+    "task_id": "axis8-phase1-roadmap-northstar",
+    "service": "commands / templates / value-orientation",
     "mode": "Full",
     "code_run": true,
-    "commitments": [],
+    "commitments": [
+      {
+        "text": "RICE-derived формула (Impact×Confidence)/Effort в /roadmap (владелец подтвердил RICE)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "Staleness-prompt для North Star state (дата + порог) в /roadmap",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "Few-shot хорошо/плохо для Impact/Effort оценок (anti-perfunctory forcing function)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "PRODUCT.md ## Логика компонентов секция для /roadmap (Шаг 5)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "/roadmap аннотирует score в Considered только по y владельца (Граница 12), не авто-reorder",
+        "status": "done",
+        "skip_reason": null
+      }
+    ],
     "sustainment": [
       {
-        "artifact": "templates/.gitignore.template + .gitignore",
-        "trigger": "новый cloud provider folder",
+        "artifact": "commands/roadmap.md",
+        "trigger": "запуск пользователем /roadmap",
         "refresh": "правка + sync-methodology.sh",
-        "detection": "/sync-audit gitignore drift",
+        "detection": "/doc-audit + sync version delta",
         "owner": "методология"
       },
       {
-        "artifact": "templates/secrets-manifest.yaml.template",
-        "trigger": "новый type вариант или cloud provider example",
-        "refresh": "правка + sync",
-        "detection": "/doc-audit schema drift",
+        "artifact": "templates/NORTH-STAR.template.md",
+        "trigger": "новый проект / правка схемы",
+        "refresh": "правка + sync (ADD-if-missing)",
+        "detection": "/sync-audit gap",
         "owner": "методология"
       },
       {
-        "artifact": "scripts/validate-secrets.sh + templates/scripts/validate-secrets.sh",
-        "trigger": "новая логика валидации",
+        "artifact": "NORTH-STAR.md (инстанс консьюмера)",
+        "trigger": "смена цели/состояния проекта",
+        "refresh": "владелец вручную; /roadmap напоминает при staleness",
+        "detection": "/roadmap показывает дату state",
+        "owner": "consumer-проект"
+      },
+      {
+        "artifact": "model-tiers.md (обе копии)",
+        "trigger": "новая команда /roadmap",
         "refresh": "dual-copy parity ADR-014",
-        "detection": "validate-script-parity.sh (gate в deploy-push.sh)",
+        "detection": "validate-script-parity принцип + /review",
         "owner": "методология"
       }
     ],
     "deferred": [
       {
-        "text": "secrets-guard.py extension для staged .gcp/*.json",
-        "reason": "не блокирует MVP, отдельный PR",
-        "tag": "deferred"
+        "text": "PORTFOLIO.md портфельная агрегация (Layer 2)",
+        "reason": "до >=3 проектов с North Star",
+        "tag": "out-of-scope"
       },
       {
-        "text": "deploy-secret-file.sh (VPS file deploy)",
-        "reason": "пользователь не запрашивал, separate task",
+        "text": "Дашборд (Layer 3 Оси 7)",
+        "reason": "Watch list, нет данных",
+        "tag": "out-of-scope"
+      },
+      {
+        "text": "Gitlab/аналитика read-only интеграции",
+        "reason": "после Phase 1+2",
         "tag": "out-of-scope"
       }
     ]
