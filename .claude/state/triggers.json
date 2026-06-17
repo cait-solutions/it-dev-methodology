@@ -202,9 +202,9 @@
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-12",
+    "date": "2026-06-17",
     "status": "ok",
-    "phase": "maps-freshness gate BS-1/BS-4 v5.59.0 (PR #214 merged)"
+    "phase": "Ось 8 Phase 1 — /roadmap + NORTH-STAR.md v6.5.0 (PR #234 merged)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
