@@ -14,11 +14,10 @@ status: reference-only  # clone not present until manually cloned
 #   bash scripts/clone-consumer.sh erp-documentantion
 #
 # Prerequisites (one-time setup per developer):
-#   1. Ensure GITHUB_PAT (or analog for this host) is set:
-#        bash scripts/check-secret.sh GITHUB_PAT  # exit 0 = present
-#   2. If missing:
-#        bash scripts/set-secret.sh GITHUB_PAT <value>
-#   3. Re-run clone-consumer.sh; it configures the per-host credential helper
-#      automatically (uses scripts/git-credential-from-env.sh).
+#   GitLab repo (code.nexchance.de) — use GitLab token, NOT GITHUB_PAT.
+#   1. Set token: bash scripts/set-secret.sh GITLAB_NEXCHANCE <token>
+#   2. Verify:   bash scripts/check-secret.sh GITLAB_NEXCHANCE  # exit 0 = set
+#   3. Re-run clone-consumer.sh (configures per-host credential helper
+#      automatically via scripts/git-credential-from-env.sh).
 #
 # To future-pull: cd consumers/repos/erp-documentantion && git pull
