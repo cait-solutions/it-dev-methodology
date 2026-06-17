@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.5.1 — fix: GITHUB_PAT rudiment removed from pull/clone path + gh_account in manifest (2026-06-17)
+
+**Что добавлено:**
+- `commands-local/pull-consumers.md` Prerequisite: заменён GITHUB_PAT check-secret на `gh api user -q .login` + `gh auth switch` (canonical GitHub auth).
+- `commands-local/pull-consumers.md` Step 1: URL-prefix longest-match для gh_account lookup + SSH→HTTPS нормализация + CLAUDE.local.md fallback + `🟡 switch пропущен` warning.
+- `scripts/clone-consumer.sh` + `templates/scripts/clone-consumer.sh`: error message теперь предлагает `gh auth switch` (GitHub) или `set-secret.sh <GITLAB_KEY>` (GitLab).
+- `.claude/secrets-manifest.yaml`: `gh_account: "cait-solutions"` к GITHUB_PAT; `gh_account: "cait-deployer"` к GITHUB_URAI — Step 1 lookup теперь находит аккаунт.
+- `templates/CLAUDE_LOCAL.template.md`: commented `gh_account` field в Branching section.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обновит `templates/CLAUDE_LOCAL.template.md` и `templates/scripts/clone-consumer.sh`.
+- 🟢 **Если используешь /pull-consumers:** добавь `gh_account: "<account>"` к нужным entries в `.claude/secrets-manifest.yaml` — Step 1 теперь использует его для switch.
+- 🟢 **Backward-compatible:** manifest без `gh_account` продолжает работать (switch пропускается с `🟡` предупреждением).
+
+---
+
 ## v6.5.0 — feat: /roadmap + NORTH-STAR.md — value-ranked приоритизация (VISION Ось 8 Phase 1) (2026-06-17)
 
 **Что добавлено:**

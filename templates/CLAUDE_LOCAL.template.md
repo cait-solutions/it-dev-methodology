@@ -88,6 +88,8 @@ agent_branch: ai-dev                # AI branch (single source of truth, enforce
 worktree_isolation: off             # off (default) | auto  — isolation axis (orthogonal to mode)
 branch_namespace: ai-dev/<task>     # branch per concurrent session when worktree_isolation: auto
                                     # collaborative (recommended); ai-dev/<username>/<task> for per-dev attribution
+# gh_account: IDK-IDK              # optional: GitHub CLI account for /pull-consumers switch
+                                    # omit if cait-solutions is always the active account
 ```
 
 - **solo** (default): agent pushes `{agent_branch} → production_branch` directly. For single-owner projects.

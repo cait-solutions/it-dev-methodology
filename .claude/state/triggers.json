@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 26
+      "plans_since": 27
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 5
+      "plans_since": 6
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 40
+      "plans_since": 41
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 34
+      "plans_since": 35
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 36
+      "plans_since": 37
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 9,
+      "plans_since": 10,
       "recommendations": [
         {
           "id": "R-030",
@@ -121,90 +121,77 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-17T00:00:00",
-    "task_id": "axis8-phase1-roadmap-northstar",
-    "service": "commands / templates / value-orientation",
+    "task_id": "p009-p010-github-pat-rudiment-fix",
+    "service": "methodology-platform / pull-consumers + clone-consumer",
     "mode": "Full",
     "code_run": true,
     "commitments": [
       {
-        "text": "RICE-derived формула (Impact×Confidence)/Effort в /roadmap (владелец подтвердил RICE)",
+        "text": "SSH URL нормализация (git@github.com:org/repo → https://github.com/org/repo) в Step 1 lookup",
         "status": "done",
         "skip_reason": null
       },
       {
-        "text": "Staleness-prompt для North Star state (дата + порог) в /roadmap",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "Few-shot хорошо/плохо для Impact/Effort оценок (anti-perfunctory forcing function)",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "PRODUCT.md ## Логика компонентов секция для /roadmap (Шаг 5)",
-        "status": "done",
-        "skip_reason": null
-      },
-      {
-        "text": "/roadmap аннотирует score в Considered только по y владельца (Граница 12), не авто-reorder",
+        "text": "Warning 🟡 gh_account не определён для <consumer> — switch пропущен при skip",
         "status": "done",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "commands/roadmap.md",
-        "trigger": "запуск пользователем /roadmap",
-        "refresh": "правка + sync-methodology.sh",
-        "detection": "/doc-audit + sync version delta",
+        "artifact": "commands-local/pull-consumers.md (Step 1 + Prerequisite)",
+        "trigger": "Изменение GitHub auth strategy",
+        "refresh": "Ручная правка",
+        "detection": "runtime 401 evidence",
         "owner": "методология"
       },
       {
-        "artifact": "templates/NORTH-STAR.template.md",
-        "trigger": "новый проект / правка схемы",
-        "refresh": "правка + sync (ADD-if-missing)",
-        "detection": "/sync-audit gap",
+        "artifact": "scripts/clone-consumer.sh · templates/scripts/clone-consumer.sh",
+        "trigger": "Изменение auth error path",
+        "refresh": "sync-methodology.sh",
+        "detection": "validate-script-parity.sh",
         "owner": "методология"
       },
       {
-        "artifact": "NORTH-STAR.md (инстанс консьюмера)",
-        "trigger": "смена цели/состояния проекта",
-        "refresh": "владелец вручную; /roadmap напоминает при staleness",
-        "detection": "/roadmap показывает дату state",
-        "owner": "consumer-проект"
+        "artifact": ".claude/secrets-manifest.yaml (gh_account fields)",
+        "trigger": "Новый GitHub consumer под другим аккаунтом",
+        "refresh": "Ручное добавление gh_account",
+        "detection": "accepted-gap: optional field",
+        "owner": "пользователь"
       },
       {
-        "artifact": "model-tiers.md (обе копии)",
-        "trigger": "новая команда /roadmap",
-        "refresh": "dual-copy parity ADR-014",
-        "detection": "validate-script-parity принцип + /review",
+        "artifact": "templates/CLAUDE_LOCAL.template.md (gh_account doc)",
+        "trigger": "Изменение Branching contract",
+        "refresh": "sync-methodology.sh",
+        "detection": "sync-audit delta",
         "owner": "методология"
+      },
+      {
+        "artifact": "consumers/erp-documentantion.yaml (comment fix)",
+        "trigger": "Смена GitLab auth strategy",
+        "refresh": "Ручная правка",
+        "detection": "нет (reference файл)",
+        "owner": "пользователь"
       }
     ],
     "deferred": [
       {
-        "text": "PORTFOLIO.md портфельная агрегация (Layer 2)",
-        "reason": "до >=3 проектов с North Star",
-        "tag": "out-of-scope"
+        "text": "50+ consumers gh switch overhead benchmark",
+        "reason": "не актуально при текущих 8 consumers",
+        "tag": "deferred"
       },
       {
-        "text": "Дашборд (Layer 3 Оси 7)",
-        "reason": "Watch list, нет данных",
-        "tag": "out-of-scope"
-      },
-      {
-        "text": "Gitlab/аналитика read-only интеграции",
-        "reason": "после Phase 1+2",
-        "tag": "out-of-scope"
+        "text": "Production runtime test gh switch + fetch",
+        "reason": "requires live CLI environment",
+        "tag": "deferred"
       }
     ]
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-12",
+    "date": "2026-06-17",
     "status": "ok",
-    "phase": "maps-freshness gate BS-1/BS-4 v5.59.0 (PR #214 merged)"
+    "phase": "P-009+P-010 GITHUB_PAT rudiment fix — v6.5.1"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
