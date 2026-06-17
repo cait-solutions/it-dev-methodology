@@ -67,15 +67,15 @@ auto_commit_consumers:
   - path: ../ai-assistant-documentation
     branch: main
   - path: ../client-matz-documentation
-    branch: main
+    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
   - path: ../ebay-template-documentation
-    branch: main
+    branch: main                # ebay: CLAUDE.local.md anomaly — keep main until resolved
   - path: ../lead-gen-documentation
-    branch: main
+    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
   - path: ../shopware-frontend-documentation
-    branch: ai-dev              # agent_branch=ai-dev
+    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
   - path: ../social-promo-documentation
-    branch: main
+    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
 ```
 
 > **`branch` ДОЛЖЕН совпадать с `agent_branch` из `CLAUDE.local.md ## Branching` целевого репо** (closes G-117 branch-mismatch класс): `/push-consumers` коммитит в текущую ветку и пушит в этот `branch`. Если репо работает через `ai-dev` (team/MR-workflow), а whitelist указывает `main` → прямой push в main отклоняется (non-ff / protected). При `agent_branch=ai-dev` → push в `ai-dev`, MR/PR в main делает человек. Репо без `agent_branch` (solo на main) → `branch: main`.
