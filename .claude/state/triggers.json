@@ -17,8 +17,8 @@
       "plans_since": 33
     },
     "last_product_vision": {
-      "date": "2026-06-03",
-      "plans_since": 20
+      "date": "2026-06-17",
+      "plans_since": 0
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
@@ -121,57 +121,44 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-16T00:00:00",
-    "task_id": "feasibility-precheck-plan-command",
-    "service": "methodology-platform",
+    "task_id": "file-type-secrets-gcp",
+    "service": "secrets-layer / templates",
     "mode": "Full",
     "code_run": true,
-    "commitments": [
-      {
-        "text": "idempotency guard в new-project-init.sh (if [ ! -f .claude/rules/project-context.md ])",
-        "status": "pending",
-        "skip_reason": null
-      }
-    ],
+    "commitments": [],
     "sustainment": [
       {
-        "artifact": "project-context.template.md (шаблон)",
-        "trigger": "изменение формата context файла",
-        "refresh": "sync-methodology.sh доставляет обновлённый шаблон",
-        "detection": "/doc-audit parity с template",
+        "artifact": "templates/.gitignore.template + .gitignore",
+        "trigger": "новый cloud provider folder",
+        "refresh": "правка + sync-methodology.sh",
+        "detection": "/sync-audit gitignore drift",
         "owner": "методология"
       },
       {
-        "artifact": "project-context.md (consumer instance)",
-        "trigger": "добавление нового Design Spec / смена Project type",
-        "refresh": "ручное — разработчик при добавлении артефакта",
-        "detection": "нет (deferred — accepted risk v1)",
-        "owner": "consumer-проект"
-      },
-      {
-        "artifact": "пункт в CLAUDE.template.md (Read before any work)",
-        "trigger": "изменение workflow что читать перед /plan",
-        "refresh": "sync-methodology.sh перезаписывает CLAUDE.md",
-        "detection": "/doc-audit sync drift",
+        "artifact": "templates/secrets-manifest.yaml.template",
+        "trigger": "новый type вариант или cloud provider example",
+        "refresh": "правка + sync",
+        "detection": "/doc-audit schema drift",
         "owner": "методология"
       },
       {
-        "artifact": "new-project-init.sh bootstrap шаг",
-        "trigger": "bootstrap нового проекта",
-        "refresh": "однократно при init",
-        "detection": "smoke test init script",
+        "artifact": "scripts/validate-secrets.sh + templates/scripts/validate-secrets.sh",
+        "trigger": "новая логика валидации",
+        "refresh": "dual-copy parity ADR-014",
+        "detection": "validate-script-parity.sh (gate в deploy-push.sh)",
         "owner": "методология"
       }
     ],
     "deferred": [
       {
-        "text": "/doc-audit ось для stale project-context.md detection",
-        "reason": "требует отдельного /plan; v1 принимает acceptable risk",
+        "text": "secrets-guard.py extension для staged .gcp/*.json",
+        "reason": "не блокирует MVP, отдельный PR",
         "tag": "deferred"
       },
       {
-        "text": "auto-generate project-context.md из ARTIFACT-MAP",
-        "reason": "нет empirical signal от пользователей что ручной ввод не adoption",
-        "tag": "deferred"
+        "text": "deploy-secret-file.sh (VPS file deploy)",
+        "reason": "пользователь не запрашивал, separate task",
+        "tag": "out-of-scope"
       }
     ]
   },
