@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.5.0 — feat: /roadmap + NORTH-STAR.md — value-ranked приоритизация (VISION Ось 8 Phase 1) (2026-06-17)
+
+**Что добавлено:**
+- **`commands/roadmap.md`** — новая consumer-facing команда. Ранжирует кандидатов проекта (`ROADMAP.md` Considered/Next) по **ROI к North Star**: RICE-score `(Impact×Confidence)/Effort`, форсинг явной оценки на каждого кандидата. Граница 12 — рекомендует, не решает; аннотирует score в ROADMAP только по `y`. Не генерирует кандидатов (это `/vision review`).
+- **`templates/NORTH-STAR.template.md`** — новый project-owned артефакт: целевая функция проекта (декларативная метрика ценности + target + self-reported state + `project_role: growth\|enabling` + dependency-edges). Конфигурируемый North Star (рост = дефолт). НЕ live-метрики (Граница 3/11).
+- **`templates/model-tiers.md`** — строка `/roadmap` (Default tier).
+- **`scripts/sync-methodology.sh`** + **`scripts/new-project-init.sh`** — `NORTH-STAR.md` доставляется (PRESERVE, ADD-if-missing) + создаётся при bootstrap.
+
+**Зачем:** методология приобретает целевую функцию — критерий, по которому работа ранжируется по вкладу в рост. Лекарство от «делаем ради делаем»: enabling-проекты оправдываются через leverage на growth-проекты.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync добавит `commands/roadmap.md`, `NORTH-STAR.md` (если отсутствует), строку в `model-tiers.md`.
+- 🟡 **Чтобы начать приоритизацию по ценности:** заполни `NORTH-STAR.md` (метрика + target + `project_role`) → запусти `/roadmap`. Или просто запусти `/roadmap` — команда проведёт опрос и создаст `NORTH-STAR.md`.
+- 🟢 **Backward-compatible:** старый проект без `NORTH-STAR.md` не ломается — `/roadmap` gracefully предложит создать.
+
+---
+
 ## v6.4.7 — feat: File-type secrets + .gcp/ gitignore pattern (2026-06-16)
 
 **Что добавлено:**

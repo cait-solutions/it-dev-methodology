@@ -924,6 +924,7 @@ else
   check_artifact_subst "DEVLOG.md"                        "templates/DEVLOG.template.md"              "$_pname"
   check_artifact_subst "IDEAS.md"                         "templates/IDEAS.template.md"               "$_pname"
   check_artifact_subst "ROADMAP.md"                       "templates/ROADMAP.template.md"             "$_pname"
+  check_artifact_subst "NORTH-STAR.md"                    "templates/NORTH-STAR.template.md"          "$_pname"
   check_artifact_subst "RISKS.md"                         "templates/RISKS.template.md"               "$_pname"
   check_artifact_subst "HYPOTHESES.md"                    "templates/HYPOTHESES.template.md"          "$_pname"
   check_artifact_subst "OPEN-QUESTIONS.md"                "templates/OPEN-QUESTIONS.template.md"      "$_pname"

@@ -24,7 +24,7 @@
 #   docs/adr/{_TEMPLATE,README}.md, docs/data-map.md
 #   docs/sync-vision-reports/ (placeholder for /sync-vision output)
 #   inbox/{README,_processed/,_processed/rejected/}, services-registry.yaml
-#   DEVLOG.md, IDEAS.md, ROADMAP.md, OPEN-QUESTIONS.md, HYPOTHESES.md, RISKS.md
+#   DEVLOG.md, IDEAS.md, ROADMAP.md, NORTH-STAR.md, OPEN-QUESTIONS.md, HYPOTHESES.md, RISKS.md
 #   .gitignore (standard ignores)
 #   triggers.json (local state)
 #
@@ -260,6 +260,7 @@ copy_with_subst "$METHODOLOGY_DIR/templates/ARTIFACT-MAP.template.md"    "$TARGE
 copy_with_subst "$METHODOLOGY_DIR/templates/DEVLOG.template.md"          "$TARGET_DIR/DEVLOG.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/IDEAS.template.md"           "$TARGET_DIR/IDEAS.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/ROADMAP.template.md"         "$TARGET_DIR/ROADMAP.md"
+copy_with_subst "$METHODOLOGY_DIR/templates/NORTH-STAR.template.md"      "$TARGET_DIR/NORTH-STAR.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/OPEN-QUESTIONS.template.md"  "$TARGET_DIR/OPEN-QUESTIONS.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/HYPOTHESES.template.md"      "$TARGET_DIR/HYPOTHESES.md"
 copy_with_subst "$METHODOLOGY_DIR/templates/RISKS.template.md"           "$TARGET_DIR/RISKS.md"
