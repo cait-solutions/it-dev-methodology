@@ -90,9 +90,9 @@ if [[ $exit_code -ne 0 ]]; then
   echo "" >&2
   echo "git clone failed (exit $exit_code)." >&2
   echo "If the failure was 'Authentication failed':" >&2
-  echo "  1. Ensure GITHUB_PAT (or applicable token) is set: bash scripts/check-secret.sh GITHUB_PAT" >&2
-  echo "  2. If missing: bash scripts/set-secret.sh GITHUB_PAT <value>" >&2
-  echo "  3. Re-run this script." >&2
+  echo "  For GitHub repos: gh api user -q .login  →  gh auth switch --user <account>" >&2
+  echo "  For GitLab/other: bash scripts/set-secret.sh <GITLAB_KEY>" >&2
+  echo "  Re-run after auth is resolved." >&2
   exit 3
 fi
 
