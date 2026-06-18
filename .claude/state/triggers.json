@@ -118,9 +118,9 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-18T20:00:00",
-    "task_id": "plan-bloat-refactor-v1",
-    "service": "methodology-platform (commands/plan.md)",
+    "completed_at": "2026-06-19T00:00:00",
+    "task_id": "g119-opinion-council-signal",
+    "service": "methodology-platform (commands/opinion.md)",
     "mode": "Lite",
     "code_run": true,
     "commitments": [],
@@ -238,9 +238,9 @@
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-18",
-    "status": "pending",
-    "phase": "/plan bloat refactor — v6.7.1"
+    "date": "2026-06-19",
+    "status": "ok",
+    "phase": "G-119 fix: /opinion council signal в format template — v6.7.2"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
