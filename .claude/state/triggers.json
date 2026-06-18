@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 28
+      "plans_since": 30
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 7
+      "plans_since": 9
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 42
+      "plans_since": 44
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 36
+      "plans_since": 38
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 3
+      "plans_since": 5
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 38
+      "plans_since": 40
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 11,
+      "plans_since": 13,
       "recommendations": [
         {
           "id": "R-030",
@@ -118,13 +118,106 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-17T00:00:00",
-    "task_id": "gap-analysis-systemic-8-sys",
-    "service": "methodology-platform (all layers)",
+    "completed_at": "2026-06-18T12:00:00",
+    "task_id": "opinion-command-v1",
+    "service": "methodology-platform (commands/opinion.md + templates/model-tiers.md + CLAUDE.md + LAR)",
     "mode": "Full",
     "code_run": true,
-    "consumer_reach_declared": true,
     "commitments": [
+      {
+        "text": "commands/opinion.md — новый файл: critical advisory command с pre-flight reads, North Star extraction, committed verdict, anti-flattery",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "templates/model-tiers.md — добавить строку /opinion",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "CLAUDE.md § DEVLOG tags — добавить [opinion:X] тег",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "CLAUDE.md § Workflow rules — добавить inline [?] convention (4-5 строк)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "CLAUDE.md opinion.md § Inline use — grep CLAUDE.md на [?] паттерны перед записью convention",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md — добавить строку /opinion",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "VERSION bump v6.6.3 → v6.6.4 (check HEAD:VERSION на collision перед bump)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "../it-dev-methodology-documentation/DEVLOG.md — deploy entry [feat:command]",
+        "status": "pending",
+        "skip_reason": null
+      }
+    ],
+    "sustainment": [
+      {
+        "artifact": "commands/opinion.md",
+        "trigger": "slash command /opinion",
+        "refresh": "ручной при изменении design",
+        "detection": "/review parity + /doc-audit",
+        "owner": "методология"
+      },
+      {
+        "artifact": "templates/model-tiers.md + .claude/model-tiers.md",
+        "trigger": "/plan model pre-flight",
+        "refresh": "sync-methodology.sh (dual-copy)",
+        "detection": "validate-script-parity.sh",
+        "owner": "методология"
+      },
+      {
+        "artifact": "CLAUDE.md § [opinion:X] + [?] inline convention",
+        "trigger": "always-read",
+        "refresh": "manual при taxonomy change",
+        "detection": "/review + /doc-audit",
+        "owner": "методология"
+      },
+      {
+        "artifact": "LIVING-ARTIFACTS.md строка /opinion",
+        "trigger": "periodic LAR review",
+        "refresh": "manual при команде удаляется/переименовывается",
+        "detection": "/architecture-audit Шаг B",
+        "owner": "методология"
+      }
+    ],
+    "deferred": [
+      {
+        "text": "anti-flattery structural enforcement",
+        "reason": "L1 sufficient; /review validation вручную",
+        "tag": "out-of-scope"
+      },
+      {
+        "text": "free-chat context enforcement",
+        "reason": "not addressable via command mechanism",
+        "tag": "out-of-scope"
+      },
+      {
+        "text": "opinion versioning при VISION update",
+        "reason": "нет механизма; мнения ephemeral по природе",
+        "tag": "deferred"
+      }
+    ],
+    "_prev_plan_note": "research-finding-persistence завершён параллельной сессией (code_run:true)"
+  },
+  "_last_plan_session_backup_gap_analysis": {
+    "task_id": "gap-analysis-systemic-8-sys",
+    "consumer_reach_declared": true,
+    "original_commitments": [
       {
         "text": "SYS-1: post-edit-watchdog.py — pako-inline detection для mermaid-блоков без update-mermaid-links.sh",
         "status": "pending",

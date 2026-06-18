@@ -181,6 +181,8 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 - **Scope:** ANY research — маркетплейс, технология, конкурент, регуляторика, API, domain knowledge — если вывод влияет на будущее решение.
 - ❌ Не пропускать запись под предлогом «это понятно из контекста» — следующая сессия не имеет этого контекста.
 
+**Inline `[?]` convention:** лёгкий маркер для встраивания в любой текст запроса — означает «нужно твоё честное мнение здесь». Агент при обнаружении `[?]` — применяет Opinion Protocol ([/opinion](commands/opinion.md)): North Star extraction → committed verdict → «Что меня беспокоит». Примеры: `«Думаю добавить X [?]»` · `«[?] стоит ли разделять Y?»` · `«Как думаешь [?]?»`. ❌ Агент НЕ пропускает `[?]` и НЕ даёт generic ответ без VISION.md anchor.
+
 **Self-apply rule (methodology-platform only):** `deploy-push.sh` автоматически запускает `sync-methodology.sh .` после каждого merge через guard `[ -d commands ] && [ -f scripts/sync-methodology.sh ]`. Guard-маркер: consumers не имеют `commands/` source-dir → guard false → consumer не затронут. Ручной self-apply нужен только если deploy-push.sh не использовался.
 
 Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
@@ -403,9 +405,11 @@ NodeID["📋 Отложенный scope → /scope-out"]:::affordance
 
 `[research:X]` — знание зафиксировано исследованием (WebSearch + явный вывод). `X` = kebab-case slug темы (`otto.de`, `stripe-fees-de`, `gdpr-email-collect`, `react-perf-2026`). Формат строки в DEVLOG: `[research:<slug>] → <что изучали>: <вывод>. <verdict: viable/not-viable/blocked/confirmed/conditional/unclear>. Source: <url>`. Covers **ANY** research: маркетплейс, технология, конкурент, регуляторика, API, domain knowledge — если вывод влияет на решение. Stop hook детектирует WebSearch + verdict-keyword → предлагает запись если не записано. Плановое исследование: [/research](commands/research.md) (interactive, ≤3 чекпоинта, DEVLOG-only).
 
+`[opinion:X]` — мнение агента по конкретному вопросу с контекстом проекта (VISION-anchored). `X` = kebab-case slug вопроса. Формат строки в DEVLOG: `[opinion:<slug>] → <вопрос кратко>: <verdict ✅/⚠️/❌/🤷>. <главный тезис ≤60 символов>`. Команда: [/opinion](commands/opinion.md). Записывается **только** при decision-relevant мнении (не при каждом /opinion запросе). Inline-аналог: `[?]` маркер в тексте (см. «Inline `[?]` convention» ниже).
+
 Phase-теги: `[phase-a]` … — milestone history.
 
-Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]` `[research]`
+Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]` `[research]` `[opinion]`
 
 **Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name.
 
