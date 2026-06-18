@@ -65,7 +65,8 @@ auto_commit_consumers:
   - path: ../it-dev-methodology-documentation
     branch: ai-dev              # agent_branch=ai-dev — push в ai-dev (не main напрямую)
   - path: ../ai-assistant-documentation
-    branch: main
+    branch: ai-dev              # agent_branch=ai-dev; gh_account=IDK-IDK (repo owner, switch before push)
+    gh_account: IDK-IDK
   - path: ../client-matz-documentation
     branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
   - path: ../ebay-template-documentation
