@@ -181,6 +181,11 @@ git log <production_branch>..HEAD --oneline
 - Trigger-chain 🔴 → минимум 🔵 Recommendation «механизм требует ручного запуска — встроить в <команда>?».
 - Если ни один класс не проверен явно (агент написал общее «completeness OK») → 🔵 Recommendation "Completeness audit не выполнен по классам — пройти 7 пунктов".
 
+**Consumer-reach gate (SYS-006, closes Кластер E):** если diff трогает `commands/` или `templates/`:
+- Прочитать `.claude/state/triggers.json` → `last_plan_session.consumer_reach_declared` (defensive: `.get(...)`).
+- Поле `true` → ✅ consumer-reach был явно задекларирован в /plan.
+- Поле отсутствует / `false` → 🟡 **WARN**: «Consumer-reach не задекларирован в last_plan_session — убедись что /plan Шаг -1.3 ответил на "Consumer-охват" для этого PR. Если задача была без предшествующего /plan — добавь явный ответ про охват консьюмеров в описание PR.» (не блок, но видимый сигнал)
+
 **Параллельные пути — grep:**
 - Если изменён компонент → grep по аналогичным паттернам в проекте
 - **Class bug rule:** если изменён код отправки/обработки данных → grep по аналогичным паттернам без защитных обёрток

@@ -53,6 +53,10 @@ Use case (затронут): [конкретный сценарий пользо
 Сигнал источник: agent observation | user feedback (IDEAS-NNN) | retro pattern | production incident
 Гипотеза почему не покрыто: [одна строка — выбор scope / приоритет / архитектурное ограничение]
 Potential fix: [предложение что нужно построить чтобы закрыть]
+Methodology hint (опционально, от консьюмера):
+  target: [файл + секция — e.g. "commands/plan.md Шаг 0.3"]
+  change: [одна строка — что добавить/изменить]
+  why: [почему этот fix закрывает именно этот корень]
 Связано с: [P-NNN другие gap'ы / IDEAS-NNN / ROADMAP-entry / ADR-NNN]
 Статус: open | in-roadmap | wont-fix | resolved
 ---

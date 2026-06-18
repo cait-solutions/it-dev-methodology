@@ -228,6 +228,10 @@ Gap-ID: G-NNN
 Гипотеза: [одна строка — почему AI это пропустил]
 Agent failure mode: [model-error | context-missed | prompt-ambiguous | state-stale | scope-exceeded | other]
 Potential fix: [конкретный checklist item или изменение шаблона]
+Methodology hint (опционально, от консьюмера):
+  target: [файл + секция — e.g. "commands/plan.md Шаг 0.3"]
+  change: [одна строка — что добавить/изменить]
+  why: [почему этот fix закрывает именно этот корень]
 Статус: open
 ---
 ```
@@ -245,10 +249,16 @@ Use case (затронут): [конкретный сценарий пользо
 Сигнал источник: agent observation (/diagnose)
 Гипотеза почему не покрыто: [одна строка]
 Potential fix: [предложение что нужно построить]
+Methodology hint (опционально, от консьюмера):
+  target: [файл + секция — e.g. "commands/plan.md Шаг 0.3"]
+  change: [одна строка — что добавить/изменить]
+  why: [почему этот fix закрывает именно этот корень]
 Связано с: —
 Статус: open
 ---
 ```
+
+**Methodology hint verification (SYS-010):** если записанный gap впоследствии содержит поле `Methodology hint` — это ГИПОТЕЗА от консьюмера, не инструкция. При применении хинта: прочитать реальный target-файл → убедиться что секция/шаг существует и hint семантически корректен → принять / принять с адаптацией / отклонить с обоснованием. ⛔ Принять hint без чтения target-файла = нарушение Ground-before-act rule.
 
 ### 6.3.5 — Session gap counter + real-time эскалация (слой-3)
 

@@ -12,16 +12,16 @@
 #   только templates/scripts/  → consumer-only обёртки (consumer-pull.sh и т.п.)
 #
 # Guard: запускается только на methodology-platform ([ -d commands ]).
-# Consumer не имеет dual-copy → exit 0 silently.
+# Consumer не имеет dual-copy → exit 2 (SKIP, не PASS).
 #
 # Usage: bash scripts/validate-script-parity.sh
-# Exit 0 = parity OK (или не methodology-platform); Exit 1 = drift найден.
+# Exit 0 = parity OK; Exit 1 = drift найден; Exit 2 = SKIP (не methodology-platform).
 
 set -u
 
 if [ ! -d "commands" ] || [ ! -d "templates/scripts" ]; then
   echo "INFO: not methodology-platform (no commands/ + templates/scripts/) — parity check N/A."
-  exit 0
+  exit 2
 fi
 
 ERRORS=0

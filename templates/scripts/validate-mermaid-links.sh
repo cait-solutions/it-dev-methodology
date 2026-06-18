@@ -80,7 +80,7 @@ def check_file(path):
             lines = f.readlines()
     except OSError as e:
         print("SKIP {}: {}".format(path, e), file=sys.stderr)
-        return 0, 0
+        return 0
 
     errors = 0
     i = 0
@@ -154,6 +154,9 @@ def main():
         file_count += 1
         total_errors += check_file(path)
 
+    if file_count == 0:
+        print("SKIP: no .md files found in '{}'.".format(root))
+        sys.exit(2)
     print("Checked: {} .md files".format(file_count))
     print()
     if total_errors > 0:
@@ -173,6 +176,10 @@ echo ""
 
 exit_code=0
 "$PYTHON" "$TMPPY" "$ROOT" || exit_code=$?
+
+if [ "$exit_code" -eq 2 ]; then
+    exit 2
+fi
 
 if [ "$exit_code" -ne 0 ] && [ "$IGNORE_EXIT" -eq 0 ]; then
     echo ""

@@ -56,6 +56,10 @@ Gap-ID: G-NNN
 Гипотеза: [одна строка — почему AI это пропустил]
 Agent failure mode: model-error | context-missed | prompt-ambiguous | state-stale | scope-exceeded | other
 Potential fix: [конкретный checklist item или изменение шаблона которое предотвратит повтор]
+Methodology hint (опционально, от консьюмера):
+  target: [файл + секция — e.g. "commands/plan.md Шаг 0.3"]
+  change: [одна строка — что добавить/изменить]
+  why: [почему этот fix закрывает именно этот корень]
 Статус: open | addressed | wont-fix
 ---
 ```

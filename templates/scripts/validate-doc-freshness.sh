@@ -3,7 +3,7 @@
 # Bash 3.2+ compatible (no associative arrays, no ${var,,}, no date -d)
 #
 # Usage: bash scripts/validate-doc-freshness.sh [--root PATH] [--days N] [--ignore-exit]
-# Exit 0 = all OVERVIEW files fresh (or no services dir); Exit 1 = stale found; Exit 2 = config error
+# Exit 0 = all OVERVIEW files fresh; Exit 1 = stale found; Exit 2 = SKIP (no services dir / not git repo) or config error
 #
 # Checks:
 #   STALE  : git log date for docs/services/<svc>/ is newer than OVERVIEW "Обновлён:" field by > N days
@@ -26,14 +26,14 @@ done
 SERVICES_DIR="$ROOT/docs/services"
 
 if [ ! -d "$SERVICES_DIR" ]; then
-    echo "INFO: $SERVICES_DIR not found — no services to check. Exit 0."
-    exit 0
+    echo "INFO: $SERVICES_DIR not found — no services to check. Exit 2 (SKIP)."
+    exit 2
 fi
 
 # Check git availability
 if ! git -C "$ROOT" rev-parse --git-dir > /dev/null 2>&1; then
-    echo "WARN: $ROOT is not a git repository — skipping freshness check."
-    exit 0
+    echo "WARN: $ROOT is not a git repository — skipping freshness check. Exit 2 (SKIP)."
+    exit 2
 fi
 
 # Parse ISO date from OVERVIEW "Обновлён:" field
