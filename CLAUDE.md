@@ -243,6 +243,12 @@ https://mermaid.live/edit#pako:...
 **Валидация:** `bash scripts/validate-mermaid-links.sh [--root DIR]`
 Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов — только одна команда.
 
+**L2 agent-responsibility rule (closes silent-hook class):** после любого `Edit`/`Write` файла содержащего ` ```mermaid ` блок — агент **обязан** запустить скрипт напрямую:
+- single-repo: `bash scripts/update-mermaid-links.sh <file>`
+- two-repo, файл в doc-repo: `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation`
+
+`post-edit-watchdog.py` остаётся страховкой — **не primary механизм**. Если скрипт не найден → сообщить явно, не игнорировать молча.
+
 ---
 
 ## Maps Standard Rule
@@ -289,6 +295,8 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 ### 3. Правила диаграммы
 
 **Mermaid-only.** ASCII art, PlantUML — запрещены.
+
+**URL над блоком: bare URL only** — никаких `[текст](url)` обёрток. Вставляется скриптом (L2 rule выше), не агентом вручную. Пример нарушения: `` [Открыть в Mermaid Live](https://mermaid.live/...) ``.
 
 **`diagram-sources` annotation (closes G-114, v5.48.0):** каждый mermaid-блок в living-scope `.md` файлах ДОЛЖЕН иметь HTML-комментарий непосредственно перед mermaid.live URL:
 
