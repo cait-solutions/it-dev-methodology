@@ -282,9 +282,13 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
   # делает остальные gates недостоверными (они исполняют возможно-устаревший канон).
   if [ -f "scripts/validate-script-parity.sh" ]; then
     echo "▶ Script-parity gate (methodology-platform)..."
-    if ! bash scripts/validate-script-parity.sh; then
+    _PARITY_EXIT=0
+    bash scripts/validate-script-parity.sh || _PARITY_EXIT=$?
+    if [ "$_PARITY_EXIT" -eq 1 ]; then
       echo "❌ BLOCKED: dual-copy drift — выровняй пары scripts/ ↔ templates/scripts/, затем повтори деплой." >&2
       exit 1
+    elif [ "$_PARITY_EXIT" -eq 2 ]; then
+      echo "⚡ Script-parity: SKIP (not methodology-platform) — OK."
     fi
   fi
   # Validator-harness gate (PLAN-03 / G-112): proof-of-rejection — доказать что сами
@@ -312,15 +316,23 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
   # in ANY .md with mermaid (living maps, Design Specs, future artifact types).
   DOC_ROOT_RESOLVED="$(bash scripts/validate-maps-coverage.sh --print-doc-root 2>/dev/null || true)"
   echo "▶ Mermaid links gate (code repo)..."
-  if ! bash scripts/validate-mermaid-links.sh; then
+  _MERMAID_EXIT=0
+  bash scripts/validate-mermaid-links.sh || _MERMAID_EXIT=$?
+  if [ "$_MERMAID_EXIT" -eq 1 ]; then
     echo "❌ BLOCKED: stale or missing mermaid.live links in code repo." >&2
     exit 1
+  elif [ "$_MERMAID_EXIT" -eq 2 ]; then
+    echo "⚡ Mermaid links (code repo): SKIP — no .md files found."
   fi
   if [ -n "$DOC_ROOT_RESOLVED" ]; then
     echo "▶ Mermaid links gate (doc repo: $DOC_ROOT_RESOLVED)..."
-    if ! bash scripts/validate-mermaid-links.sh --root "$DOC_ROOT_RESOLVED"; then
+    _MERMAID_DOC_EXIT=0
+    bash scripts/validate-mermaid-links.sh --root "$DOC_ROOT_RESOLVED" || _MERMAID_DOC_EXIT=$?
+    if [ "$_MERMAID_DOC_EXIT" -eq 1 ]; then
       echo "❌ BLOCKED: stale or missing mermaid.live links in doc repo." >&2
       exit 1
+    elif [ "$_MERMAID_DOC_EXIT" -eq 2 ]; then
+      echo "⚡ Mermaid links (doc repo): SKIP — no .md files found."
     fi
   fi
   echo "✅ Maps-coverage gate passed."
@@ -331,6 +343,34 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
   fi
   echo ""
 fi
+
+# Monotonic VERSION guard (SYS-007): prevents parallel-worktree VERSION collision.
+# If HEAD on integration branch already has VERSION >= our local, auto-bump to HEAD+1.
+# Fail-safe: network error or missing VERSION → silently skip (no block).
+_bump_version_monotonic() {
+  [ -f "VERSION" ] || return 0
+  local_ver="$(cat VERSION | tr -d '[:space:]')"
+  [ -z "$local_ver" ] && return 0
+  git fetch origin "$INTEGRATION_BRANCH" --quiet 2>/dev/null || return 0
+  head_ver="$(git show "origin/${INTEGRATION_BRANCH}:VERSION" 2>/dev/null | tr -d '[:space:]')"
+  [ -z "$head_ver" ] && return 0
+  _lv="${local_ver#v}"; _hv="${head_ver#v}"
+  l_maj="$(echo "$_lv" | cut -d. -f1)"; l_min="$(echo "$_lv" | cut -d. -f2)"; l_pat="$(echo "$_lv" | cut -d. -f3)"
+  h_maj="$(echo "$_hv" | cut -d. -f1)"; h_min="$(echo "$_hv" | cut -d. -f2)"; h_pat="$(echo "$_hv" | cut -d. -f3)"
+  for _c in "$l_maj" "$l_min" "$l_pat" "$h_maj" "$h_min" "$h_pat"; do
+    case "$_c" in *[!0-9]*) return 0;; esac
+  done
+  l_score=$(( l_maj * 10000 + l_min * 100 + l_pat ))
+  h_score=$(( h_maj * 10000 + h_min * 100 + h_pat ))
+  if [ "$h_score" -ge "$l_score" ]; then
+    new_pat=$(( h_pat + 1 ))
+    new_ver="v${h_maj}.${h_min}.${new_pat}"
+    echo "⚡ VERSION race: HEAD=${head_ver} >= local=${local_ver} → monotonic bump to ${new_ver}"
+    echo "$new_ver" > VERSION
+    git commit VERSION -m "chore(version): monotonic bump ${local_ver}→${new_ver} (parallel deploy race)"
+  fi
+}
+_bump_version_monotonic
 
 # Pre-push: SSOT alignment (closes P-006) — сверить remote с manifest ДО push.
 _check_remote_alignment

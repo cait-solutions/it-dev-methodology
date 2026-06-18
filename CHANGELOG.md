@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.6.0 — feat: systemic gap fixes SYS-001..SYS-010 (2026-06-18)
+
+**Consumer-facing changes:**
+
+- `templates/AGENT-GAPS.md.template` + `templates/PRODUCT-GAPS.md.template`: новое поле `Methodology hint` (target/change/why) — консьюмер указывает предполагаемый fix; агент верифицирует перед применением (SYS-010). Backward-compatible (опционально).
+- `templates/scripts/validate-*.sh` (×5): exit-code matrix — SKIP теперь exit 2, не exit 0; fix latent TypeError bug в validate-mermaid-links.sh (SYS-004).
+- `templates/scripts/deploy-push.sh`: `_bump_version_monotonic` — предотвращает VERSION collision при parallel worktree deploys; callers validate scripts обновлены (exit 2 non-blocking) (SYS-007).
+- `templates/.claude/hooks/post-edit-watchdog.py`: pako-inline detection — WARN в stderr при `](pako:` в edit output (SYS-001).
+- Команды `/plan`, `/review`, `/code`, `/diagnose`: новые gates (data provenance, consumer-reach, multi-form grep, methodology_hint verification) (SYS-003/006/009/010).
+- Skill `/design-spec`: Synth mode (skip interview if context known) + inline Source tagging (SYS-002).
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обновит `validate-*.sh` + `deploy-push.sh` + gap templates + `post-edit-watchdog.py`.
+- 🟡 **Новые поля в gap шаблонах:** `Methodology hint` поле опционально — добавь к existing open gap'ам если хочешь предложить fix (агент верифицирует перед применением).
+- 🟢 **Backward-compatible:** все изменения graceful для существующих consumers без изменений.
+
+---
+
 ## v6.5.1 — fix: GITHUB_PAT rudiment removed from pull/clone path + gh_account in manifest (2026-06-17)
 
 **Что добавлено:**

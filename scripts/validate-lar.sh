@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # validate-lar.sh — проверить что файлы в LIVING-ARTIFACTS.md существуют на диске
-# Exit 0 = OK или WARN-SKIP (LAR не найден — легитимно), Exit 1 = MISSING_FILE entries found
+# Exit 0 = OK, Exit 1 = MISSING_FILE entries found, Exit 2 = WARN-SKIP (LAR не найден — легитимно)
 # Usage: bash scripts/validate-lar.sh [--root <dir>] [--lar <path>] [--doc-root <dir>]
 #   --root <dir>      code repo root to resolve relative paths against (default: .)
 #   --lar  <path>     explicit path to LIVING-ARTIFACTS.md (auto-detect if omitted)
@@ -108,13 +108,13 @@ if [ -z "$LAR_PATH" ]; then
 
     if [ -z "$LAR_PATH" ]; then
         echo "WARN-SKIP: LIVING-ARTIFACTS.md не найден (искал:$SEARCHED_PATHS) — Gap 10 not applicable"
-        exit 0
+        exit 2
     fi
 else
     # Resolve relative to cwd
     if [ ! -f "$LAR_PATH" ]; then
         echo "WARN-SKIP: LAR file not found: $LAR_PATH"
-        exit 0
+        exit 2
     fi
 fi
 

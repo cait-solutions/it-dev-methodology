@@ -122,6 +122,12 @@
 
 **Scope-ось (объём работы):**
 - [ ] Обнаружен class bug в ≥3 файлах (фикс одного места недостаточен)?
+  **Multi-form grep protocol (SYS-003, closes Кластер C):** при class bug — выполнить grep по ВСЕМ четырём формам:
+  - [ ] File-level: `grep -rn "<паттерн>" .` — явные файлы
+  - [ ] Inline: `grep -rn "<inline-паттерн>" .` — e.g. `python3 -c`, `bash -c "..."`, inline-json
+  - [ ] Format-variants: оба варианта именования (kebab-case И underscore, pipe-table И bullet, `.sh` И `.py` для одной функции)
+  - [ ] Invocation paths: и explicit-args вызов, и default (без аргументов) вызов одного скрипта
+  ⛔ Grep по одной форме при class bug = неполный анализ → повторный рецидив (G-097, G-114, G-112). Протокол применяется только при class bug (≥3 файлов), не при точечном фиксе.
 - [ ] Нужно прочитать ≥50 файлов для proper analysis?
 - [ ] Появились задачи вне scope плана (требуется параллельный refactor)?
 - [ ] Обнаружено что текущий tier (см. `.claude/model-tiers.md`) не соответствует Capable когда задача того требует?
