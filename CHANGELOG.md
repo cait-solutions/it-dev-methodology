@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.7.2 — fix: /opinion Council signal вшит в format template — G-119 (2026-06-19)
+
+**Consumer-facing changes:**
+
+- `commands/opinion.md` — `📊 Совет [5/5]:` теперь **первая строка обязательного формата ответа** в Шаге 2. Раньше сигнал был только в описании Шага 1.5 (переименован из 2.5) — LLM его пропускал. Теперь вшит в format template: выход без совета = невалидный ответ.
+- Шаг 2.5 переименован в **Шаг 1.5** (нумерация отражает что council запускается ДО verdict).
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/commands/opinion.md`.
+- 🟡 **Перезапусти Claude Code сессию** после sync — обновлённый format template должен быть загружен.
+
+---
+
 ## v6.6.9 — fix: /opinion Council Protocol always-on — убран [council] маркер (2026-06-18)
 
 **Consumer-facing changes:**
