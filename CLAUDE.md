@@ -175,6 +175,12 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Recommendation-first rule (closes G-102):** При любом clarifying question — **сначала дать собственную рекомендацию с обоснованием**, затем спрашивать если нужно. «Не знаю куда» без рекомендации = agent gap. Исключение: вопрос принципиально требует выбора владельца (security-решение, бизнес-приоритет). Применяется в `/plan` Шаг 0 и везде где агент задаёт вопрос пользователю.
 
+**Research-capture rule (closes knowledge-evaporation class):** При обнаружении решение-влияющего вывода в процессе исследования (WebSearch + явный verdict) — **предложить запись `[research:X]` в DEVLOG** до конца сессии.
+- **Incidental finding** (находка попутно во время любой задачи): Stop hook детектирует автоматически (WebSearch + verdict-keyword → напоминание).
+- **Planned research** ([/research](commands/research.md)): запись в DEVLOG (Шаг 5 команды) обязательна.
+- **Scope:** ANY research — маркетплейс, технология, конкурент, регуляторика, API, domain knowledge — если вывод влияет на будущее решение.
+- ❌ Не пропускать запись под предлогом «это понятно из контекста» — следующая сессия не имеет этого контекста.
+
 **Self-apply rule (methodology-platform only):** `deploy-push.sh` автоматически запускает `sync-methodology.sh .` после каждого merge через guard `[ -d commands ] && [ -f scripts/sync-methodology.sh ]`. Guard-маркер: consumers не имеют `commands/` source-dir → guard false → consumer не затронут. Ручной self-apply нужен только если deploy-push.sh не использовался.
 
 Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
@@ -395,9 +401,11 @@ NodeID["📋 Отложенный scope → /scope-out"]:::affordance
 
 `[test-found:category]` — баг найден тестированием (`/test`, Playwright, Schemathesis, прод). `category` = `frontend-visual` / `frontend-logic` / `backend-contract` / `backend-crash` / `regression` / `perf` / … (открытый список, см. `skills/testing-strategy`). **Указатель**, не замена: сам баг + статус ведутся в `CODE-GAPS.md` (регистр), fix-событие дублируется `[fix:component]` (сохраняет QB3 regression-grep `/review`). Closes testing layer Phase 1.
 
+`[research:X]` — знание зафиксировано исследованием (WebSearch + явный вывод). `X` = kebab-case slug темы (`otto.de`, `stripe-fees-de`, `gdpr-email-collect`, `react-perf-2026`). Формат строки в DEVLOG: `[research:<slug>] → <что изучали>: <вывод>. <verdict: viable/not-viable/blocked/confirmed/conditional/unclear>. Source: <url>`. Covers **ANY** research: маркетплейс, технология, конкурент, регуляторика, API, domain knowledge — если вывод влияет на решение. Stop hook детектирует WebSearch + verdict-keyword → предлагает запись если не записано. Плановое исследование: [/research](commands/research.md) (interactive, ≤3 чекпоинта, DEVLOG-only).
+
 Phase-теги: `[phase-a]` … — milestone history.
 
-Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]`
+Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]` `[research]`
 
 **Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name.
 

@@ -51,6 +51,27 @@ USER_CORRECTION_PATTERNS = [
     r"you didn.?t.{0,20}(also|as well|similarly)",
 ]
 
+# Research finding detection — fires when WebSearch was used AND verdict keyword found.
+# WebSearch-only (doc lookup) does NOT trigger; verdict-only (no search) does NOT trigger.
+# This covers incidental findings during any session (planned research uses /research command).
+VERDICT_KEYWORDS = [
+    r"\bviable\b",
+    r"\bnot.viable\b",
+    r"\bblocked\b",
+    r"\bconfirmed\b",
+    r"\bconditional\b",
+    r"\bunclear\b",
+    r"\bзапрещает\b",
+    r"\bподходит\b",
+    r"\bне подходит\b",
+    r"\bзакрыт\b",
+    r"\bподтверждено\b",
+    r"\bnot.allowed\b",
+    r"\bnot.permitted\b",
+    r"\bprohibited\b",
+    r"\bavailable\b.{0,20}\bmarket\b",
+]
+
 GAPS_FILE = "AGENT-GAPS.md"
 RECENT_WRITE_SECONDS = 60
 
@@ -91,6 +112,37 @@ def get_last_messages(transcript_path: str) -> tuple[str, str]:
     return last_assistant, last_user
 
 
+def check_websearch_used(transcript_path: str) -> bool:
+    """Return True if WebSearch tool was called in the current assistant turn."""
+    if not transcript_path or not os.path.exists(transcript_path):
+        return False
+    try:
+        with open(transcript_path, encoding="utf-8") as f:
+            lines = f.readlines()
+        found_assistant = False
+        for line in reversed(lines):
+            try:
+                entry = json.loads(line)
+                role = entry.get("role", "")
+                if role == "user":
+                    if found_assistant:
+                        break  # passed current turn boundary
+                elif role == "assistant":
+                    found_assistant = True
+                    content = entry.get("content", [])
+                    if isinstance(content, list):
+                        for block in content:
+                            if (isinstance(block, dict)
+                                    and block.get("type") == "tool_use"
+                                    and block.get("name") == "WebSearch"):
+                                return True
+            except (json.JSONDecodeError, AttributeError):
+                continue
+    except OSError:
+        pass
+    return False
+
+
 def gaps_recently_written() -> bool:
     if not os.path.exists(GAPS_FILE):
         return False
@@ -108,6 +160,7 @@ def main() -> None:
 
     last_assistant, last_user = get_last_messages(data.get("transcript_path", ""))
 
+    # Admission watchdog — runs independently of research watchdog below
     ai_admission = last_assistant and any(
         re.search(p, last_assistant, re.IGNORECASE) for p in ADMISSION_PATTERNS
     )
@@ -115,19 +168,36 @@ def main() -> None:
         re.search(p, last_user, re.IGNORECASE) for p in USER_CORRECTION_PATTERNS
     )
 
-    if not ai_admission and not user_correction:
-        sys.exit(0)
+    if (ai_admission or user_correction) and not gaps_recently_written():
+        source = "в ответе агента" if ai_admission else "в сообщении разработчика"
+        print(
+            f"📋 AGENT-GAPS WATCHDOG: обнаружен признак ошибки/пропуска ({source}).\n"
+            "Если ещё не предложено — предложи запись в AGENT-GAPS.md:\n"
+            "  Категория: [prompt-gap | context-gap | logic-gap | assumption-gap | completeness-gap | scope-gap]\n"
+            "  Гипотеза: одна строка почему\n"
+            "  (Если уже предложил залогировать — игнорируй это напоминание)"
+        )
 
-    if gaps_recently_written():
-        sys.exit(0)
+    # Research watchdog — runs always (independent of admission)
+    main_research(data, last_assistant)
 
-    source = "в ответе агента" if ai_admission else "в сообщении разработчика"
+
+def main_research(data: dict, last_assistant: str) -> None:
+    """Separate research watchdog — fires only when WebSearch + verdict keyword detected."""
+    websearch_used = check_websearch_used(data.get("transcript_path", ""))
+    if not websearch_used:
+        return
+    has_verdict = last_assistant and any(
+        re.search(p, last_assistant, re.IGNORECASE) for p in VERDICT_KEYWORDS
+    )
+    if not has_verdict:
+        return
     print(
-        f"📋 AGENT-GAPS WATCHDOG: обнаружен признак ошибки/пропуска ({source}).\n"
-        "Если ещё не предложено — предложи запись в AGENT-GAPS.md:\n"
-        "  Категория: [prompt-gap | context-gap | logic-gap | assumption-gap | completeness-gap | scope-gap]\n"
-        "  Гипотеза: одна строка почему\n"
-        "  (Если уже предложил залогировать — игнорируй это напоминание)"
+        "🔍 RESEARCH WATCHDOG: обнаружен WebSearch + verdict-вывод в этой сессии.\n"
+        "Если вывод влияет на решение и ещё не записан — предложи строку в DEVLOG:\n"
+        "  [research:<slug>] → <что изучали>: <вывод>. <verdict>. Source: <url>\n"
+        "  verdict: viable / not-viable / blocked / confirmed / conditional / unclear\n"
+        "  Для planned research: /research команда"
     )
 
 
