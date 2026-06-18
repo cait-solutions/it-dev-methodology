@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.6.1 — fix: sync atomicity (P-003 — auto-commit flag) (2026-06-18)
+
+**Consumer-facing changes:**
+
+- `scripts/sync-methodology.sh` + `templates/scripts/sync-methodology.sh`: новый флаг `--auto-commit` — после sync автоматически коммитит non-gitignored tracked файлы с explicit pathspec (closes P-003: dirty-tree class).
+- `templates/.claude/hooks/auto-update-watchdog.template.py`: SessionStart sync теперь передаёт `--auto-commit` → sync output атомарно коммитится в consumer repo → устраняет orphaned dirty tree, которое блокировало `/push-consumers` rebase.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обновит `auto-update-watchdog.py` + `scripts/sync-methodology.sh`.
+- 🟢 **Backward-compatible:** `--auto-commit` — opt-in флаг; все существующие callers без флага поведение не меняется. Deploy-push.sh self-apply намеренно флаг не использует (он управляет коммитами сам).
+- 🟡 **После sync:** перезапусти Claude Code сессию чтобы SessionStart hook подхватил обновлённый `--auto-commit`.
+
+---
+
 ## v6.6.0 — feat: systemic gap fixes SYS-001..SYS-010 (2026-06-18)
 
 **Consumer-facing changes:**

@@ -309,7 +309,7 @@ def main() -> int:
         version_before = read_version(version_file)
 
         result = subprocess.run(
-            ["bash", str(sync_script), str(project_root)],
+            ["bash", str(sync_script), str(project_root), "--auto-commit"],
             capture_output=True,
             text=True,
             timeout=120,
