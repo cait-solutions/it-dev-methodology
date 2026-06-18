@@ -453,7 +453,7 @@ Gap 17 результат:
 
 ---
 
-## Шаг 1 — Inventory gaps (15 проверок)
+## Шаг 1 — Inventory gaps (16 проверок)
 
 Пройди по 5 gap-проверкам по порядку. Для каждой — output одной короткой секции с конкретикой.
 
@@ -935,6 +935,36 @@ Output:
 
 ---
 
+### Gap 19: External sources watch list (v6.6.6)
+
+**Цель:** проверить что consumer заполнил `external-sources.md` — не оставил пустой шаблон после sync.
+
+**Scope:** только если `external-sources.md` существует у consumer.
+
+```bash
+if [ -f external-sources.md ]; then
+  real_rows=$(grep "^| [0-9]" external-sources.md | grep -v "<!-- " | wc -l)
+  echo "real_rows=$real_rows"
+fi
+```
+
+- `real_rows ≥ 1` → ✅ Gap 19: источники присутствуют.
+- `real_rows = 0` И файл существует → 🟡:
+
+```
+🟡 Gap 19: external-sources.md создан но не содержит реальных источников.
+   Добавь 1-5 domain-specific источников в таблицу ## Your Domain Sources.
+   Цель: /retro Шаг 5.6 использует их для предложения кандидатов в IDEAS.md.
+
+   Добавить источники сейчас? (y / skip)
+```
+
+- Файл отсутствует → пропустить (consumer ещё не синхронизировал v6.6.6+).
+
+> **Sustainment:** gap живёт пока `external-sources.md` PRESERVE-доставляется через `sync-methodology.sh`. Связь: `commands/retro.md` Шаг 5.6 (использует данные) · `templates/external-sources.template.md` (шаблон) · `scripts/sync-methodology.sh` (PRESERVE delivery).
+
+---
+
 ## Шаг 2 — Severity assessment
 
 Распредели gaps по severity (используя классификацию выше):
@@ -969,6 +999,8 @@ Output:
 | 15 | Maps coverage + diagram freshness | 🔴/🟡/🟢 | [errors/warnings из Gap 15 + unannotated diagrams count] | добавить строки в карты; добавить `<!-- diagram-sources: ... -->` к неаннотированным диаграммам |
 | 16 | Living Artifact Registry bootstrap | 🟡/🟢 | [PRESENT / MISSING / SKIPPED] | `bash scripts/new-project-init.sh <path>` или init inline (Gap 16 поток) |
 | 17 | Dirty .claude/ check | 🟡/🟢 | [N repos с dirty .claude/] | stash / ignore / ignore-always (в Gap 17 inline) |
+| 18 | Managed-block markers | 🟡/🟢 | [markers present / absent] | добавить managed-block markers вокруг methodology-секции в docs_reminder.py (Gap 18 inline) |
+| 19 | External sources watch list | 🟡/🟢 | [FILLED / EMPTY / ABSENT] | добавить 1-5 domain sources в external-sources.md (/retro Шаг 5.6) |
 
 **Контекст:**
 - Версия в этом репо: `<from .claude/.version>` ← текущая, актуальная

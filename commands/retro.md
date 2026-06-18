@@ -289,6 +289,47 @@ bash scripts/build-knowledge-index.sh DEVLOG.md KNOWLEDGE.md
 
 ---
 
+## Шаг 5.6 — External source candidates (опциональный)
+
+*(Пропустить если нет `[research:X]` тегов или AGENT-GAPS категорий с recurrence ≥ 2 за период)*
+
+Агент анализирует сигналы за период и предлагает пополнение `external-sources.md`:
+
+**1. Сигналы из DEVLOG:**
+```bash
+# Methodology (two-repo):
+grep "\[research:" ../it-dev-methodology-documentation/DEVLOG.md | tail -20
+
+# Consumer (single-repo):
+grep "\[research:" DEVLOG.md | tail -20
+```
+Подсчитать уникальные slug'и. Slug встречается ≥ 2 раз → сигнал.
+
+**2. Сигналы из AGENT-GAPS:**
+Найти категории с `recurrence_rate` ≥ 2 или записи одной темы ≥ 2 раза. Категория с count ≥ 2 → сигнал недостающего знания.
+
+**3. Формирование кандидатов (≤ 3):**
+Для каждого сигнала — проверить есть ли уже покрывающий источник в `external-sources.md`.
+Если нет → предложить конкретный source-кандидат с обоснованием.
+
+```
+📌 Предлагаю добавить в external-sources.md:
+  - <название источника> (причина: <N× [research:slug] за период>)
+  - <название источника> (причина: <N× AGENT-GAP про тему>)
+
+Добавить? y (каждому отдельно) / skip / all
+```
+
+При **y** → дописать строку в таблицу `external-sources.md` в корне репо.
+При **skip** → пропустить; сигнал остаётся в DEVLOG для следующего `/retro`.
+
+**Где искать `external-sources.md`:**
+- Methodology platform: `external-sources.md` в корне этого репо
+- Consumer: `external-sources.md` в корне consumer-репо
+- Файл отсутствует → пропустить шаг молча (consumer ещё не получил sync)
+
+---
+
 ## Шаг 6 — Продуктовый поток и VISION (если применимо)
 
 **IDEAS.md:** записи за период есть? Нет → "капчер сигналов не работает"

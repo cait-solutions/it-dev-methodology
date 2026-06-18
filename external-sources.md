@@ -1,0 +1,41 @@
+# External Knowledge Sources — methodology-platform
+
+Список надёжных внешних источников для отслеживания новых идей и паттернов.
+Читается `/retro` Шаг 5.6 для предложения пополнения IDEAS.md и `external-sources.md` консьюмеров.
+
+---
+
+## Назначение
+
+Это список **методологии** (не для консьюмеров). Ловит:
+- Изменения в стеке методологии (Claude Code, Anthropic SDK, hooks API)
+- Новые agent/skill/hook patterns
+- Обновления marketing-skills и domain-skills библиотеки
+
+Консьюмеры используют свой `external-sources.md` (создаётся через sync) для domain-specific источников.
+Консьюмерские источники **не синхронизируются обратно** в методологию (Граница 1).
+
+---
+
+## Sources
+
+| # | Source | URL | Что ловить | Частота |
+|---|---|---|---|---|
+| 1 | anthropic-cookbook | https://github.com/anthropics/anthropic-cookbook | multi-agent patterns, tool-use, agent skills examples | каждый /retro |
+| 2 | anthropic-courses | https://github.com/anthropics/courses | структурированные гайды по Claude, prompt engineering best practices | ежеквартально |
+| 3 | claude-code releases | https://github.com/anthropics/claude-code/releases | новые hooks API, slash-commands изменения, agent capabilities (CRITICAL: следить за breaking) | каждый /retro |
+| 4 | marketingskills | https://github.com/coreyhaines31/marketingskills | новые marketing-skill patterns, структурные обновления skill-файлов | ежеквартально |
+
+> ⚠️ **Верифицируй URL перед использованием:** убедись что репо публичны и активны.
+> При смене URL — обновить строку в таблице и добавить запись в DEVLOG `[fix:external-sources]`.
+
+---
+
+## Refresh Policy
+
+| Trigger | Действие |
+|---|---|
+| `/retro` Шаг 5.6 | агент анализирует [research:X] теги + AGENT-GAPS → предлагает IDEAS-кандидатов из источников |
+| Источник устарел / удалён | удалить строку, DEVLOG `[fix:external-sources]` |
+| Новый надёжный источник найден (порог: ≥2 связанных сигнала из DEVLOG или AGENT-GAPS) | добавить строку (лимит 8) |
+| Ни один источник не обновлялся 2+ /retro подряд | пересмотреть актуальность |
