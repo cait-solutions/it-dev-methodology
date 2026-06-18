@@ -118,22 +118,22 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-18T17:30:00",
-    "task_id": "opinion-implicit-confirmation-v1",
-    "service": "methodology-platform (commands/opinion.md)",
+    "completed_at": "2026-06-18T20:00:00",
+    "task_id": "plan-bloat-refactor-v1",
+    "service": "methodology-platform (commands/plan.md)",
     "mode": "Lite",
-    "code_run": false,
+    "code_run": true,
     "commitments": [],
     "sustainment": [],
     "deferred": [
       {
-        "text": "Stop hook research-capture (y/skip) унификация под opt-out",
-        "reason": "отдельный механизм (watchdog.py), не commands/",
-        "tag": "out-of-scope"
+        "text": "Маркировка behavioral anchors как явных `[anchor]` комментариев",
+        "reason": "отдельный PR, не блокирует текущий рефакторинг",
+        "tag": "deferred"
       },
       {
-        "text": "Унификация всех opt-out паттернов методологии",
-        "reason": "отдельный PR при необходимости",
+        "text": "CLAUDE_LONG.md миграция избыточного rationale из plan.md",
+        "reason": "отдельный /plan при необходимости",
         "tag": "deferred"
       }
     ]
@@ -239,8 +239,8 @@
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
     "date": "2026-06-18",
-    "status": "ok",
-    "phase": "/opinion Council Protocol (Шаг 2.5) — v6.6.8"
+    "status": "pending",
+    "phase": "/plan bloat refactor — v6.7.1"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
