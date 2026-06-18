@@ -1,0 +1,33 @@
+# KNOWLEDGE.md — Knowledge Index
+
+> **Производный индекс** над DEVLOG `[research:X]` и `[opinion:X]` записями.
+> DEVLOG остаётся источником правды — этот файл перезаписывается скриптом.
+>
+> **Обновить:** `bash scripts/build-knowledge-index.sh DEVLOG.md KNOWLEDGE.md`
+> Или автоматически через `/retro` Шаг 5.5
+
+**Обновлён:** _не обновлялся_
+
+---
+
+## Research findings (`[research:X]`)
+
+_Нет записей. Появятся после первого `[research:slug]` тега в DEVLOG._
+
+---
+
+## Opinion log (`[opinion:X]`)
+
+_Нет записей. Появятся после первого `[opinion:slug]` тега в DEVLOG._
+
+---
+
+## Refresh Policy
+
+| Trigger | Действие |
+|---|---|
+| После каждого `/retro` | `bash scripts/build-knowledge-index.sh DEVLOG.md KNOWLEDGE.md` |
+| После большого блока research/opinion в DEVLOG | Ручной запуск скрипта |
+| Изменение формата тегов в DEVLOG | Обновить `scripts/build-knowledge-index.sh` и перегенерировать |
+
+**НЕ обновлять вручную** — перезаписывается скриптом.
