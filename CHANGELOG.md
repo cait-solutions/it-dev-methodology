@@ -4,12 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
-## v6.6.7 — feat: /opinion Council Protocol — [council] marker + 5 advisors under the hood (2026-06-18)
+## v6.6.9 — fix: /opinion Council Protocol always-on — убран [council] маркер (2026-06-18)
 
 **Consumer-facing changes:**
 
-- `commands/opinion.md` → новый **Шаг 2.5 Council Protocol**: добавь `[council]` к вопросу для активации 5 советников «под капотом» (Ценность · North Star · Горизонт · Скептик · Деятель). Вывод: 2 строки сигнала (grid + главное расхождение). Enrichment правила: Скептик ❌ → «Что меня беспокоит» обязан включить находку; Деятель ⚠️/❌ → «Условия» обязан включить action gap.
-- Существующий `/opinion` формат не изменён — команда работает без `[council]` как прежде.
+- `commands/opinion.md` — Council Protocol (Шаг 2.5) теперь запускается **автоматически при каждом вызове** `/opinion`. Явный `[council]` маркер больше не нужен и не требуется.
+- Поведение для тех кто использовал `[council]`: результат тот же — маркер можно убрать из привычки, функция не изменилась.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/commands/opinion.md`.
+- 🟡 **Перезапусти Claude Code сессию** после sync чтобы обновлённая команда была в контексте.
+
+---
+
+## v6.6.7 — feat: /opinion Council Protocol — 5 advisors under the hood (2026-06-18)
+
+**Consumer-facing changes:**
+
+- `commands/opinion.md` → новый **Шаг 2.5 Council Protocol**: 5 советников «под капотом» (Ценность · North Star · Горизонт · Скептик · Деятель). Вывод: 2 строки сигнала (grid + главное расхождение). Enrichment правила: Скептик ❌ → «Что меня беспокоит» обязан включить находку; Деятель ⚠️/❌ → «Условия» обязан включить action gap.
 
 **Что делать consumers:**
 - 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/commands/opinion.md`.
