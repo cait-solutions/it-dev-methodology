@@ -151,7 +151,7 @@ on_failure: notify
 methodology_path: .
 doc_repo_path: ../it-dev-methodology-documentation
 audit_threshold: 3
-auto_pull: false
+auto_pull: true
 ```
 
 `methodology_path: .` — methodology-platform это самоаудит (this repo IS the methodology). Hook проверяет наличие обновлений, но не делает self-pull (вместо этого запускает `sync-methodology.sh .`).

@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 27
+      "plans_since": 28
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 6
+      "plans_since": 7
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 41
+      "plans_since": 42
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 35
+      "plans_since": 36
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 2
+      "plans_since": 3
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 37
+      "plans_since": 38
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 10,
+      "plans_since": 11,
       "recommendations": [
         {
           "id": "R-030",
@@ -98,10 +98,8 @@
     "gap4_fixed": "2026-06-11"
   },
   "session_gap_counter": {
-    "session_marker": "2026-06-13T09:45:00",
-    "counts": {
-      "completeness-gap": 1
-    }
+    "session_marker": "2026-06-17T00:00:00",
+    "counts": {}
   },
   "per_service": {},
   "queues": {
@@ -121,68 +119,102 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-17T00:00:00",
-    "task_id": "p009-p010-github-pat-rudiment-fix",
-    "service": "methodology-platform / pull-consumers + clone-consumer",
+    "task_id": "gap-analysis-systemic-8-sys",
+    "service": "methodology-platform (all layers)",
     "mode": "Full",
     "code_run": true,
+    "consumer_reach_declared": true,
     "commitments": [
       {
-        "text": "SSH URL нормализация (git@github.com:org/repo → https://github.com/org/repo) в Step 1 lookup",
-        "status": "done",
+        "text": "SYS-1: post-edit-watchdog.py — pako-inline detection для mermaid-блоков без update-mermaid-links.sh",
+        "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "Warning 🟡 gh_account не определён для <consumer> — switch пропущен при skip",
-        "status": "done",
+        "text": "SYS-2: skills/design-spec/SKILL.md — сдвиг ADR-conflict+source-tag+context-entry в Шаг 3 (Draft)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-3: commands/code.md — multi-form class-bug grep checklist (file/inline/format/invocation-path)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-4: validate-*.sh × 5 + templates/ — exit-code matrix 0=PASS 1=FAIL 2=SKIP/WARN",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-5: CLAUDE.md + commands/code.md — ROADMAP Done unconditional (reactive path creates new entry)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-6: commands/review.md — consumer-reach WARN при diff commands/ или templates/",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-7: scripts/deploy-push.sh + templates/ — monotonic VERSION через git show HEAD:VERSION",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-8: commands/sync-audit.md — сравнение local .claude/.version vs local VERSION клона (не remote)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-9: commands/plan.md Шаг 0.3 — Data Provenance Check для [data]-задач (SCRAPED/INFERRED классификация)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "SYS-10: gap templates + plan.md Шаг -4 + diagnose Шаг 6.3 — structured methodology_hint с верификацией (hint = гипотеза, не инструкция)",
+        "status": "pending",
         "skip_reason": null
       }
     ],
     "sustainment": [
       {
-        "artifact": "commands-local/pull-consumers.md (Step 1 + Prerequisite)",
-        "trigger": "Изменение GitHub auth strategy",
-        "refresh": "Ручная правка",
-        "detection": "runtime 401 evidence",
+        "artifact": "templates/.claude/hooks/post-edit-watchdog.py",
+        "trigger": "PostToolUse Edit/Write с mermaid-блоком",
+        "refresh": "sync-methodology.sh",
+        "detection": "hook-liveness.sh",
         "owner": "методология"
       },
       {
-        "artifact": "scripts/clone-consumer.sh · templates/scripts/clone-consumer.sh",
-        "trigger": "Изменение auth error path",
-        "refresh": "sync-methodology.sh",
+        "artifact": "skills/design-spec/SKILL.md",
+        "trigger": "/design-spec запуск",
+        "refresh": "ручной при смене дизайна",
+        "detection": "validate-delivery.sh + /review parity",
+        "owner": "методология"
+      },
+      {
+        "artifact": "scripts/validate-*.sh × 5 + templates/",
+        "trigger": "deploy-push.sh gates",
+        "refresh": "dual-copy parity ADR-014",
         "detection": "validate-script-parity.sh",
         "owner": "методология"
       },
       {
-        "artifact": ".claude/secrets-manifest.yaml (gh_account fields)",
-        "trigger": "Новый GitHub consumer под другим аккаунтом",
-        "refresh": "Ручное добавление gh_account",
-        "detection": "accepted-gap: optional field",
-        "owner": "пользователь"
-      },
-      {
-        "artifact": "templates/CLAUDE_LOCAL.template.md (gh_account doc)",
-        "trigger": "Изменение Branching contract",
-        "refresh": "sync-methodology.sh",
-        "detection": "sync-audit delta",
+        "artifact": "scripts/deploy-push.sh + templates/",
+        "trigger": "/deploy запуск",
+        "refresh": "dual-copy parity ADR-014",
+        "detection": "validate-script-parity.sh",
         "owner": "методология"
-      },
-      {
-        "artifact": "consumers/erp-documentantion.yaml (comment fix)",
-        "trigger": "Смена GitLab auth strategy",
-        "refresh": "Ручная правка",
-        "detection": "нет (reference файл)",
-        "owner": "пользователь"
       }
     ],
     "deferred": [
       {
-        "text": "50+ consumers gh switch overhead benchmark",
-        "reason": "не актуально при текущих 8 consumers",
+        "text": "CI integration SYS-3 (multi-form grep structural enforcement)",
+        "reason": "R-033 квартальный commitment, PM decision",
         "tag": "deferred"
       },
       {
-        "text": "Production runtime test gh switch + fetch",
-        "reason": "requires live CLI environment",
+        "text": "free-chat structure gate (ground-before-act L4 для free-chat)",
+        "reason": "requires SessionStart hook — отдельный /plan",
         "tag": "deferred"
       }
     ]

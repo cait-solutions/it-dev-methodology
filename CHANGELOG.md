@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.6.2 — feat: mermaid URL rules — bare URL only + L2 agent mandate (2026-06-18)
+
+**Consumer-facing changes:**
+
+- `templates/CLAUDE.template.md` → `CLAUDE.md`: новое правило **bare URL only** в секции Правила диаграммы — запрет `[текст](url)` обёрток над mermaid-блоком.
+- `templates/CLAUDE.template.md` → `CLAUDE.md`: новое правило **L2 agent-responsibility** — агент обязан явно запустить `bash scripts/update-mermaid-links.sh <file>` после любого edit файла с mermaid-блоком; hook остаётся страховкой.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** sync обновит `CLAUDE.md` у консьюмеров через `sync-methodology.sh`.
+- 🟡 **Перезапусти Claude Code сессию** после sync чтобы обновлённый `CLAUDE.md` был в контексте.
+
+---
+
 ## v6.6.1 — fix: sync atomicity (P-003 — auto-commit flag) (2026-06-18)
 
 **Consumer-facing changes:**
