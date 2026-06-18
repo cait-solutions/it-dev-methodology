@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-01",
-      "plans_since": 30
+      "plans_since": 31
     },
     "last_retro": {
       "date": "2026-06-11",
-      "plans_since": 9
+      "plans_since": 10
     },
     "last_product_review": {
       "date": "2026-05-26",
-      "plans_since": 44
+      "plans_since": 45
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 38
+      "plans_since": 39
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 5
+      "plans_since": 6
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 40
+      "plans_since": 41
     },
     "last_architecture_audit": {
       "date": "2026-06-10",
-      "plans_since": 13,
+      "plans_since": 14,
       "recommendations": [
         {
           "id": "R-030",
@@ -118,101 +118,25 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-18T12:00:00",
-    "task_id": "opinion-command-v1",
-    "service": "methodology-platform (commands/opinion.md + templates/model-tiers.md + CLAUDE.md + LAR)",
-    "mode": "Full",
-    "code_run": true,
-    "commitments": [
-      {
-        "text": "commands/opinion.md — новый файл: critical advisory command с pre-flight reads, North Star extraction, committed verdict, anti-flattery",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "templates/model-tiers.md — добавить строку /opinion",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "CLAUDE.md § DEVLOG tags — добавить [opinion:X] тег",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "CLAUDE.md § Workflow rules — добавить inline [?] convention (4-5 строк)",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "CLAUDE.md opinion.md § Inline use — grep CLAUDE.md на [?] паттерны перед записью convention",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md — добавить строку /opinion",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "VERSION bump v6.6.3 → v6.6.4 (check HEAD:VERSION на collision перед bump)",
-        "status": "pending",
-        "skip_reason": null
-      },
-      {
-        "text": "../it-dev-methodology-documentation/DEVLOG.md — deploy entry [feat:command]",
-        "status": "pending",
-        "skip_reason": null
-      }
-    ],
-    "sustainment": [
-      {
-        "artifact": "commands/opinion.md",
-        "trigger": "slash command /opinion",
-        "refresh": "ручной при изменении design",
-        "detection": "/review parity + /doc-audit",
-        "owner": "методология"
-      },
-      {
-        "artifact": "templates/model-tiers.md + .claude/model-tiers.md",
-        "trigger": "/plan model pre-flight",
-        "refresh": "sync-methodology.sh (dual-copy)",
-        "detection": "validate-script-parity.sh",
-        "owner": "методология"
-      },
-      {
-        "artifact": "CLAUDE.md § [opinion:X] + [?] inline convention",
-        "trigger": "always-read",
-        "refresh": "manual при taxonomy change",
-        "detection": "/review + /doc-audit",
-        "owner": "методология"
-      },
-      {
-        "artifact": "LIVING-ARTIFACTS.md строка /opinion",
-        "trigger": "periodic LAR review",
-        "refresh": "manual при команде удаляется/переименовывается",
-        "detection": "/architecture-audit Шаг B",
-        "owner": "методология"
-      }
-    ],
+    "completed_at": "2026-06-18T17:30:00",
+    "task_id": "opinion-implicit-confirmation-v1",
+    "service": "methodology-platform (commands/opinion.md)",
+    "mode": "Lite",
+    "code_run": false,
+    "commitments": [],
+    "sustainment": [],
     "deferred": [
       {
-        "text": "anti-flattery structural enforcement",
-        "reason": "L1 sufficient; /review validation вручную",
+        "text": "Stop hook research-capture (y/skip) унификация под opt-out",
+        "reason": "отдельный механизм (watchdog.py), не commands/",
         "tag": "out-of-scope"
       },
       {
-        "text": "free-chat context enforcement",
-        "reason": "not addressable via command mechanism",
-        "tag": "out-of-scope"
-      },
-      {
-        "text": "opinion versioning при VISION update",
-        "reason": "нет механизма; мнения ephemeral по природе",
+        "text": "Унификация всех opt-out паттернов методологии",
+        "reason": "отдельный PR при необходимости",
         "tag": "deferred"
       }
-    ],
-    "_prev_plan_note": "research-finding-persistence завершён параллельной сессией (code_run:true)"
+    ]
   },
   "_last_plan_session_backup_gap_analysis": {
     "task_id": "gap-analysis-systemic-8-sys",
@@ -314,9 +238,9 @@
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-17",
+    "date": "2026-06-18",
     "status": "ok",
-    "phase": "P-009+P-010 GITHUB_PAT rudiment fix — v6.5.1"
+    "phase": "/opinion Council Protocol (Шаг 2.5) — v6.6.8"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
