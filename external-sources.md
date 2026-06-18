@@ -25,6 +25,7 @@
 | 2 | anthropic-courses | https://github.com/anthropics/courses | структурированные гайды по Claude, prompt engineering best practices | ежеквартально |
 | 3 | claude-code releases | https://github.com/anthropics/claude-code/releases | новые hooks API, slash-commands изменения, agent capabilities (CRITICAL: следить за breaking) | каждый /retro |
 | 4 | marketingskills | https://github.com/coreyhaines31/marketingskills | новые marketing-skill patterns, структурные обновления skill-файлов | ежеквартально |
+| 5 | mattpocock/skills | https://github.com/mattpocock/skills | engineering-discipline skill patterns (TDD, grill-me, architecture) — эталон для нашего engineering-skill layer | каждый /retro |
 
 > ⚠️ **Верифицируй URL перед использованием:** убедись что репо публичны и активны.
 > При смене URL — обновить строку в таблице и добавить запись в DEVLOG `[fix:external-sources]`.

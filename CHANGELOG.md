@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.7.4 — feat: /vision review batch×16 + [research:mattpocock-skills] + P-011 + R-034/R-035/R-031 false-green confirmed (2026-06-19)
+
+**Consumer-facing changes:** нет (methodology-internal — IDEAS/PRODUCT-GAPS/ROADMAP/triggers.json).
+
+**Что сделано:**
+- `IDEAS.md` — новая запись: engineering-discipline skill layer signal (mattpocock/skills, 135k★)
+- `PRODUCT-GAPS.md` — P-011: capability-gap skills marketing-перекос (14/14 marketing, 0 engineering)
+- `DEVLOG.md` — `[research:mattpocock-skills]`: adopt/adapt/reject классификация с номерами Границ; `[vision-review]`: batch×16 IDEAS
+- `ROADMAP.md` — Now cleared (PLAN-H/C/G/I все ✅ done); Watch list добавлен (engineering-discipline); Done обновлён v6.7.4
+- `triggers.json` — R-034/R-035/R-031 false-green исправлены: все три уже были реализованы (G-112 confirmed)
+
+**Что делать consumers:** ничего — без изменений команд/шаблонов/хуков.
+
+---
+
 ## v6.7.2 — fix: /opinion Council signal вшит в format template — G-119 (2026-06-19)
 
 **Consumer-facing changes:**

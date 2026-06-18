@@ -1,33 +1,65 @@
 {
   "global": {
     "last_sync_vision": {
-      "date": "2026-06-01",
-      "plans_since": 31
+      "date": "2026-06-19",
+      "plans_since": 0
     },
     "last_retro": {
-      "date": "2026-06-11",
-      "plans_since": 10
+      "date": "2026-06-19",
+      "plans_since": 1
     },
     "last_product_review": {
-      "date": "2026-05-26",
-      "plans_since": 45
+      "date": "2026-06-19",
+      "plans_since": 0
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 39
+      "plans_since": 40
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 6
+      "plans_since": 7
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 41
+      "plans_since": 42
     },
     "last_architecture_audit": {
-      "date": "2026-06-10",
-      "plans_since": 14,
+      "date": "2026-06-19",
+      "plans_since": 0,
       "recommendations": [
+        {
+          "id": "R-034",
+          "type": "gap-structural",
+          "summary": "S-1 monotonic VERSION allocation в deploy-push.sh — _bump_version_monotonic() реализован lines 347-373 + templates/ copy. G-112 false-green: /architecture-audit предлагал как proposed, но уже было реализовано (verified 2026-06-19).",
+          "status": "implemented",
+          "scope": "methodology",
+          "implementation_pr": "v6.6.0 SYS-007"
+        },
+        {
+          "id": "R-035",
+          "type": "gap-structural",
+          "summary": "S-2 USER-MAP negative-gate — USER_MAP_NO_SCRIPTS=gate реализован в validate-maps-coverage.sh line 10. G-112 false-green: /architecture-audit предлагал как proposed, G-116 open → потенциальный false-green, verified 2026-06-19: gate implemented.",
+          "status": "implemented",
+          "scope": "methodology",
+          "implementation_pr": "v5.48.0 PLAN-H"
+        },
+        {
+          "id": "R-036",
+          "type": "gap-structural",
+          "summary": "S-3 SessionStart canon-injection для free-chat assumption-gap (G-110 класс) — feasibility 45% (нельзя структурно заставить применить в free-chat); НЕ брать, мониторить остаточный класс",
+          "status": "proposed-speculative",
+          "scope": "methodology",
+          "implementation_pr": null
+        },
+        {
+          "id": "R-037",
+          "type": "drift",
+          "summary": "R-031 статус-дрейф → исправлен: validate-mermaid-syntax.sh подтверждён в scripts/ (2026-06-19); R-031 статус обновлён → implemented",
+          "status": "implemented",
+          "scope": "methodology",
+          "implementation_pr": "v6.7.4"
+        },
         {
           "id": "R-030",
           "type": "drift",
@@ -39,10 +71,10 @@
         {
           "id": "R-031",
           "type": "gap-structural",
-          "summary": "S-1 mermaid-syntax validation — закрывает residual P-A класс (15 gaps): subgraph-edge antipattern (G-085), node-split label-loss (G-029), label-lang (G-005); validate-mermaid-links проверяет freshness не syntax",
-          "status": "proposed",
+          "summary": "S-1 mermaid-syntax validation — закрывает residual P-A класс (15 gaps): subgraph-edge antipattern (G-085), node-split label-loss (G-029), label-lang (G-005). validate-mermaid-syntax.sh реализован v5.49.0 PLAN-C.",
+          "status": "implemented",
           "scope": "methodology",
-          "implementation_pr": null
+          "implementation_pr": "v5.49.0 PLAN-C"
         },
         {
           "id": "R-032",
@@ -85,7 +117,7 @@
           "implementation_pr": "v5.47.0"
         }
       ],
-      "previous_cycle_implementation_rate": "1/1 (100%) — R-029 implemented + функционально верифицирован (validate-delivery.sh exit 0, wired в обоих repos)"
+      "previous_cycle_implementation_rate": "4/6 actionable (67%) — R-030/R-032/S-1(diagnose)/S-3 implemented; R-031 status-drift (validate-mermaid-syntax.sh exists but marked proposed → R-037); R-033 flagged (quarterly PM)"
     }
   },
   "last_sync_audit": {
@@ -104,38 +136,40 @@
   "per_service": {},
   "queues": {
     "inbox_unprocessed_count": 0,
-    "open_questions_open_count": 0,
-    "open_questions_stale_count": 0
+    "open_questions_open_count": 4,
+    "open_questions_stale_count": 2
   },
   "skipped_warnings": {
     "architecture_audit": 0,
     "sync_vision": 0,
     "retro": 0,
     "review_skipped": 0,
-    "code_skipped": 1,
+    "code_skipped": 0,
     "product_review_skipped": 0,
     "product_check_skipped": 0,
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-19T00:00:00",
-    "task_id": "g119-opinion-council-signal",
-    "service": "methodology-platform (commands/opinion.md)",
-    "mode": "Lite",
+    "completed_at": "2026-06-19T21:00:00",
+    "task_id": "mattpocock-skills-analysis",
+    "service": "methodology-platform (analysis → IDEAS/PRODUCT-GAPS/DEVLOG)",
+    "mode": "Full",
     "code_run": true,
-    "commitments": [],
-    "sustainment": [],
+    "commitments": [
+      { "text": "Cross-link трёх записей: IDEAS ↔ PRODUCT-GAPS ↔ DEVLOG [research:mattpocock-skills]", "status": "done", "skip_reason": null },
+      { "text": "В DEVLOG verdict явно пометить reject-паттерны (to-issues/install/git-guardrails/pre-commit/migrate) с номерами Границ — чтобы будущие сессии не пере-предлагали", "status": "done", "skip_reason": null },
+      { "text": "При записи IDEAS пометить grill-me как «требует анализа пересечения с /plan Шаг 0/99.3»", "status": "done", "skip_reason": null }
+    ],
+    "sustainment": [
+      { "artifact": "IDEAS.md запись (engineering-discipline skill layer)", "trigger": "/vision review читает", "refresh": "при review → reviewed/converted", "detection": "/retro Шаг 6 IDEAS captured", "owner": "методология" },
+      { "artifact": "PRODUCT-GAPS.md P-NNN (skills marketing-перекос)", "trigger": "/vision review / /retro Шаг 2а.2", "refresh": "при конверсии в ROADMAP", "detection": "/retro PRODUCT-GAPS signal High≥3", "owner": "методология" },
+      { "artifact": "DEVLOG [research:mattpocock-skills]", "trigger": "build-knowledge-index.sh → KNOWLEDGE.md", "refresh": "/retro Шаг 5.5", "detection": "Stop hook research detection", "owner": "методология" }
+    ],
     "deferred": [
-      {
-        "text": "Маркировка behavioral anchors как явных `[anchor]` комментариев",
-        "reason": "отдельный PR, не блокирует текущий рефакторинг",
-        "tag": "deferred"
-      },
-      {
-        "text": "CLAUDE_LONG.md миграция избыточного rationale из plan.md",
-        "reason": "отдельный /plan при необходимости",
-        "tag": "deferred"
-      }
+      { "text": "Реализация конкретного engineering-skill (tdd-style, writing-great-skills)", "reason": "отдельный /plan после /vision review", "tag": "deferred" },
+      { "text": "/vision strategy оценка «ось или фича» для engineering-discipline", "reason": "следующий стратегический цикл", "tag": "deferred" },
+      { "text": "grill-me reusable-блок extraction", "reason": "требует анализа пересечения с /plan Шаг 0", "tag": "deferred" },
+      { "text": "Портфельный эффект engineering-skills (Ось 7 Layer 1, другие consumers)", "reason": "другая стратегическая плоскость", "tag": "out-of-scope" }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {
@@ -240,7 +274,7 @@
   "last_deploy": {
     "date": "2026-06-19",
     "status": "ok",
-    "phase": "G-119 fix: /opinion council signal в format template — v6.7.2"
+    "phase": "vision-review batch×16 + mattpocock-skills research + R-034/R-035/R-031 false-green fix — v6.7.4"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
