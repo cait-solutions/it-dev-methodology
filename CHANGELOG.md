@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.6.7 — feat: /opinion Council Protocol — [council] marker + 5 advisors under the hood (2026-06-18)
+
+**Consumer-facing changes:**
+
+- `commands/opinion.md` → новый **Шаг 2.5 Council Protocol**: добавь `[council]` к вопросу для активации 5 советников «под капотом» (Ценность · North Star · Горизонт · Скептик · Деятель). Вывод: 2 строки сигнала (grid + главное расхождение). Enrichment правила: Скептик ❌ → «Что меня беспокоит» обязан включить находку; Деятель ⚠️/❌ → «Условия» обязан включить action gap.
+- Существующий `/opinion` формат не изменён — команда работает без `[council]` как прежде.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/commands/opinion.md`.
+- 🟡 **Перезапусти Claude Code сессию** после sync чтобы обновлённая команда была в контексте.
+
+---
+
 ## v6.6.2 — feat: mermaid URL rules — bare URL only + L2 agent mandate (2026-06-18)
 
 **Consumer-facing changes:**
