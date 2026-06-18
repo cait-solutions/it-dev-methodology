@@ -47,6 +47,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/pull` | **Fast** | (никогда — это git fetch + ff-only pull) | Consumer-only команда. Pull всех workspace repos (кроме it-dev-methodology) ff-only. Показывает preview входящих коммитов. Skip если history diverged |
 | `/scope-out` | **Fast** | Пользователь просит интерпретировать backlog (приоритизация / кластеризация по темам) → Default | Запуск `scope-view.sh` + показ URL — no reasoning. Эфемерная Mermaid-визуализация отложенного scope (PRODUCT-GAPS/AGENT-GAPS/ROADMAP/recommendations). Не пишет файлы |
 | `/doc-audit` | **Fast** | Интерпретация результатов (приоритизация WARN-долга) или диагностика FAIL-причин → Default; системная причина → отдельный /diagnose (Capable) | Запуск `doc-audit.sh` + представление Summary — детерминированный прогон валидаторов, no reasoning. `--fix` обновляет только mermaid-ссылки |
+| `/research` | **Default** | Conflicting sources requiring deep reasoning; стратегический вопрос с нетривиальным trade-off анализом | Interactive structured research (≤3 checkpoints). Фиксирует вывод в DEVLOG `[research:X]`. Fast НЕ рекомендуется — synthesis требует reasoning |
 | `/push-consumers` | **Default** | (никогда — drift-таблица + batch sync. Fast если ≤2 консьюмера) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Доставка обновлений методологии консьюмерам. Запускается вручную после релизов |
 
 ---
