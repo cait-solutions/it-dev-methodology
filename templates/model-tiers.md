@@ -49,6 +49,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/doc-audit` | **Fast** | Интерпретация результатов (приоритизация WARN-долга) или диагностика FAIL-причин → Default; системная причина → отдельный /diagnose (Capable) | Запуск `doc-audit.sh` + представление Summary — детерминированный прогон валидаторов, no reasoning. `--fix` обновляет только mermaid-ссылки |
 | `/research` | **Default** | Conflicting sources requiring deep reasoning; стратегический вопрос с нетривиальным trade-off анализом | Interactive structured research (≤3 checkpoints). Фиксирует вывод в DEVLOG `[research:X]`. Fast НЕ рекомендуется — synthesis требует reasoning |
 | `/push-consumers` | **Default** | (никогда — drift-таблица + batch sync. Fast если ≤2 консьюмера) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Доставка обновлений методологии консьюмерам. Запускается вручную после релизов |
+| `/opinion` | **Default** | Вопрос затрагивает несколько сервисов с конфликтующими сигналами; глубокий стратегический trade-off | Лёгкий opinion-flow: читает VISION.md + PRODUCT.md + DEVLOG, формирует committed verdict. Fast ❌ — North Star extraction требует reasoning |
 
 ---
 
