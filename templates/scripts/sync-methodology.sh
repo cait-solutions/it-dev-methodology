@@ -954,6 +954,7 @@ else
   check_artifact_subst "docs/adr/README.md"               "templates/adr/README.template.md"              "$_pname"
   check_artifact       "inbox/README.md"                  "templates/inbox/README.template.md"
   check_artifact_subst ".claude/rules/README.md"          "templates/.claude/rules/README.template.md" "$_pname"
+  check_artifact_subst "external-sources.md"              "templates/external-sources.template.md"     "$_pname"
 fi
 
 # ---------------------------------------------------------------------------
