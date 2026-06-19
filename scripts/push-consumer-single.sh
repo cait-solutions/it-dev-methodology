@@ -39,7 +39,22 @@ fi
 CONSUMER_NAME="$(basename "$CONSUMER_PATH")"
 
 # ---------------------------------------------------------------------------
-# 1. Sync with manifest
+# 1. Pre-flight dirty check on .claude/ BEFORE sync (closes a17ecc1 class).
+#    WHY before sync: after sync all written files appear as M (modified) —
+#    a post-sync dirty check would always fire. This check detects parallel
+#    sessions that have uncommitted .claude/ work BEFORE we overwrite anything.
+# ---------------------------------------------------------------------------
+PRE_DIRTY=$(git -C "$CONSUMER_PATH" status --short -- .claude/ 2>/dev/null \
+            | grep -v "^$" | head -1)
+if [ -n "$PRE_DIRTY" ]; then
+  echo "  ⚠️  $CONSUMER_NAME: dirty .claude/ перед синком — пропуск (паралельна сесія?)" >&2
+  echo "      Грязний: $PRE_DIRTY" >&2
+  echo "      Вирішіть: /sync-audit Gap 17, потім повторіть /push-consumers" >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Sync with manifest
 # ---------------------------------------------------------------------------
 echo "→ Синкаю $CONSUMER_NAME..."
 MANIFEST_OUT=$(bash "$METH_DIR/scripts/sync-methodology.sh" "$CONSUMER_PATH" --print-changed 2>&1)
@@ -59,31 +74,32 @@ echo "  ✅ sync → ${NEW_VER:-unknown}"
 CHANGED_PATHS=$(echo "$MANIFEST_OUT" | grep "^CHANGED:" | sed 's/^CHANGED://' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
 
 # ---------------------------------------------------------------------------
-# 2. Nothing to commit?
+# 3. Nothing to commit?
 # ---------------------------------------------------------------------------
 if [ -z "$CHANGED_PATHS" ]; then
-  echo "  ℹ️  $CONSUMER_NAME: манифест пустой — нечего коммитить"
+  echo "  ℹ️  $CONSUMER_NAME: нічого не змінилось — коміт не потрібен"
   exit 0
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Symmetric dirty-check on manifest paths only (closes a17ecc1 class)
-# ---------------------------------------------------------------------------
-DIRTY=$(git -C "$CONSUMER_PATH" status --short $CHANGED_PATHS 2>/dev/null \
-        | grep -v "^$" | head -1)
-if [ -n "$DIRTY" ]; then
-  echo "  ⚠️  $CONSUMER_NAME: dirty manifest-путь (параллельная сессия?) — пропуск commit+push" >&2
-  echo "      Грязный: $DIRTY" >&2
-  exit 1
-fi
-
-# ---------------------------------------------------------------------------
-# 4. Git commit — explicit pathspec only (NEVER git add, closes a17ecc1)
+# 4. Git add + commit — explicit pathspec only (closes a17ecc1).
+#    git add $CHANGED_PATHS stages ONLY sync-written files (tracks new untracked too).
+#    git commit $CHANGED_PATHS commits ONLY those paths — even if another session
+#    staged other files, our pathspec commit won't capture them.
 # ---------------------------------------------------------------------------
 MSG="sync methodology ${NEW_VER:-?}"
 # shellcheck disable=SC2086
+git -C "$CONSUMER_PATH" add -- $CHANGED_PATHS 2>/dev/null || true
+
+STAGED=$(git -C "$CONSUMER_PATH" diff --cached --name-only 2>/dev/null | grep -v "^$" | head -1)
+if [ -z "$STAGED" ]; then
+  echo "  ℹ️  $CONSUMER_NAME: нічого нового для коміту (вже актуально)"
+  exit 0
+fi
+
+# shellcheck disable=SC2086
 if ! git -C "$CONSUMER_PATH" commit $CHANGED_PATHS -m "$MSG" 2>/dev/null; then
-  echo "  ℹ️  $CONSUMER_NAME: нечего коммитить (уже актуально)"
+  echo "  ℹ️  $CONSUMER_NAME: коміт нічого не змінив (вже актуально)"
   exit 0
 fi
 echo "  ✅ commit: '$MSG'"
@@ -95,7 +111,7 @@ echo "  ✅ commit: '$MSG'"
 # ---------------------------------------------------------------------------
 CLAUDE_LOCAL="$METH_DIR/CLAUDE.local.md"
 if ! bash "$METH_DIR/scripts/check-gh-account.sh" "$CONSUMER_PATH" "$CLAUDE_LOCAL"; then
-  echo "  ❌ $CONSUMER_NAME: push пропущен — gh-account check failed (см. вывод выше)" >&2
+  echo "  ❌ $CONSUMER_NAME: push пропущений — gh-account check failed (дивись вище)" >&2
   exit 1
 fi
 
@@ -117,13 +133,13 @@ echo "  ❌ $CONSUMER_NAME: push failed (exit $PUSH_EXIT):" >&2
 echo "$PUSH_ERR" | head -5 | sed 's/^/      /' >&2
 
 if echo "$PUSH_ERR" | grep -qiE 'repository not found|not found|does not exist|404'; then
-  echo "  → 404: репо не существует на remote. Проверь: git -C \"$CONSUMER_PATH\" remote -v" >&2
+  echo "  → 404: репо не існує на remote. Перевір: git -C \"$CONSUMER_PATH\" remote -v" >&2
 elif echo "$PUSH_ERR" | grep -qiE '403|permission|denied|forbidden'; then
   ACTIVE=$(gh api user -q .login 2>/dev/null || echo "unknown")
-  echo "  → 403: wrong gh account (активен: $ACTIVE). Запусти check-gh-account.sh вручную." >&2
+  echo "  → 403: wrong gh account (активний: $ACTIVE). Запусти check-gh-account.sh вручну." >&2
 elif echo "$PUSH_ERR" | grep -qiE 'GH006|protected branch'; then
-  echo "  → Branch protection: нужен PR. Push-only не разрешён." >&2
+  echo "  → Branch protection: потрібен PR. Push-only не дозволений." >&2
 elif echo "$PUSH_ERR" | grep -qiE 'network|resolve|timed out'; then
-  echo "  → Сеть недоступна. Повтори позже." >&2
+  echo "  → Мережа недоступна. Повтори пізніше." >&2
 fi
 exit 1
