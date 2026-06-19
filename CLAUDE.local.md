@@ -61,22 +61,33 @@ Dog-fooding: methodology itself uses team-mode to validate the branching contrac
 ```yaml
 auto_commit_consumers:
   - path: ../erp-documentantion
-    branch: ai-dev              # team/GitLab, integration=develop, pr_tool=manual — push в ai-dev, MR делает человек
+    # team/GitLab, integration=develop, pr_tool=manual — push в ai-dev, MR делает человек
+    branch: ai-dev
   - path: ../it-dev-methodology-documentation
-    branch: ai-dev              # agent_branch=ai-dev — push в ai-dev (не main напрямую)
+    # agent_branch=ai-dev — push в ai-dev (не main напрямую)
+    branch: ai-dev
   - path: ../ai-assistant-documentation
-    branch: ai-dev              # agent_branch=ai-dev; gh_account=IDK-IDK (repo owner, switch before push)
+    # agent_branch=ai-dev; gh_account=IDK-IDK (repo owner, switch before push)
+    branch: ai-dev
     gh_account: IDK-IDK
   - path: ../client-matz-documentation
-    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
-  - path: ../ebay-template-documentation
-    branch: main                # ebay: CLAUDE.local.md anomaly — keep main until resolved
+    # team-mode, agent_branch=ai-dev (switched 2026-06-17)
+    branch: ai-dev
+  - path: ../../eBay-template folder/ebay-template-documentation
+    # workspace canonical clone; GitLab code.nexchance.de; resolved duplicate 2026-06-19
+    branch: ai-dev
   - path: ../lead-gen-documentation
-    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
+    # team-mode, agent_branch=ai-dev (switched 2026-06-17)
+    branch: ai-dev
   - path: ../shopware-frontend-documentation
-    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
-  - path: ../social-promo-documentation
-    branch: ai-dev              # team-mode, agent_branch=ai-dev (switched 2026-06-17)
+    # team-mode, agent_branch=ai-dev (switched 2026-06-17)
+    branch: ai-dev
+  - path: ../../Social Promo folder/social-promo-documentation
+    # workspace canonical clone; GitLab code.nexchance.de; resolved duplicate 2026-06-19
+    branch: ai-dev
+  - path: ../../URAI/legal_ai_assistant-documentation
+    # legal AI assistant project; agent_branch=ai-dev (added 2026-06-19)
+    branch: ai-dev
 ```
 
 > **`branch` ДОЛЖЕН совпадать с `agent_branch` из `CLAUDE.local.md ## Branching` целевого репо** (closes G-117 branch-mismatch класс): `/push-consumers` коммитит в текущую ветку и пушит в этот `branch`. Если репо работает через `ai-dev` (team/MR-workflow), а whitelist указывает `main` → прямой push в main отклоняется (non-ff / protected). При `agent_branch=ai-dev` → push в `ai-dev`, MR/PR в main делает человек. Репо без `agent_branch` (solo на main) → `branch: main`.
