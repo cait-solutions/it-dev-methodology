@@ -2,7 +2,7 @@
 name: secrets-management
 description: Knowledge-domain skill для управления секретами проекта (API tokens, credentials, repo PATs). Активируй когда пользователь упоминает токены, secrets, утечку токена, ротацию, compromised credential, как добавить секрет, где хранятся ключи, как настроить Vault/keyring/AWS Secrets, что делать если ключ попал в commit, secrets-manifest, .env files, GitHub PAT, ANTHROPIC_API_KEY, OS keyring, credential helper, или связанные темы. Описывает 4-слойную защиту (gitignore + pre-commit hook + /review detector + tool deny), threat model, rotation workflow per provider, compromise response runbook, external secret manager integration (Vault/AWS/Azure), OS hardening recommendations. Не выполняет операции сам — направляет к scripts/with-secret.sh, scripts/set-secret.sh, /secrets команде. Требует наличия .claude/secrets-manifest.yaml в проекте.
 metadata:
-  version: 1.1.0
+  version: 1.2.0
   type: knowledge-skill
   auto_generated: false
   methodology_version: v4.34.0
@@ -133,49 +133,64 @@ secrets:
 
 При `type: file` `validate-secrets.sh` проверяет **две** вещи: (1) env-var задан в `.env`, (2) файл существует по этому пути. Содержимое файла НЕ матчится token-detector'ом (`token_pattern: null`).
 
-**Канонический workflow (GCP/Vertex service account JSON):**
+### ⚡ Ключевое различие value vs file — кто пишет
 
+| | value-секрет (токен, key, пароль) | **file-секрет** (`type: file`) |
+|---|---|---|
+| Что в `.env` | **сам секрет** | **путь** к файлу (`.gcp/x.json`) |
+| Путь — секрет? | — | **НЕТ** (секрет внутри файла) |
+| Кто пишет в `.env` | **пользователь** (`set-secret.sh` — значение не должно попасть в transcript) | **агент сам** (путь не секрет → безопасен в tool input) |
+
+Это снимает Command-first нарушение: для **value** юзер вынужденно запускает скрипт; для **file** агент делает всё сам — юзеру ноль скриптов.
+
+### 🤖 Agent procedure — добавление file-секрета (агент выполняет САМ)
+
+> Активируется когда пользователь просит добавить GCP/Vertex JSON, service account, сертификат и т.п. **Агент НЕ инструктирует юзера запускать скрипты** — выполняет шаги 1-4 сам, юзеру остаётся только шаг 5 (положить файл).
+
+**Шаг 1 — `Edit` `.claude/secrets-manifest.yaml` (агент, ОБЯЗАТЕЛЬНО ПЕРВЫМ).** Добавить/раскомментировать запись с `type: file`:
 ```yaml
-# 1. Объявить в .claude/secrets-manifest.yaml (раскомментировать GCP-группу из template):
-secrets:
-  - key: GOOGLE_CLOUD_PROJECT          # type: value (default) — это просто project id
-    purpose: "GCP project id"
-    # ...
   - key: GOOGLE_APPLICATION_CREDENTIALS
     type: file                          # ← значение в .env = ПУТЬ, не содержимое
     purpose: "Path to GCP service account JSON (Application Default Credentials)"
     sensitivity: high
     token_pattern: null
-  - key: GOOGLE_CLOUD_LOCATION         # type: value — регион (europe-west1 и т.п.)
 ```
+⛔ **Порядок критичен:** manifest с `type: file` ДО шага 2. Иначе `set-secret.sh` допишет запись-стаб БЕЗ `type: file` → `validate-secrets.sh` примет ключ за `type:value` → проверка существования файла не сработает (тихо). Manifest Edit не заблокирован (deny покрывает только `.env`).
 
+**Шаг 2 — записать ПУТЬ в `.env` (агент вызывает скрипт сам — это реализация, не инструкция юзеру):**
 ```bash
-# 2. Положить JSON в .gcp/ — директория УЖЕ в .gitignore (доставляется sync'ом, zero-config):
-#    .gcp/<project>-<hash>.json
-#    (если файл был staged до обновления .gitignore: git rm --cached .gcp/<file>.json)
+bash scripts/set-secret.sh GOOGLE_APPLICATION_CREDENTIALS .gcp/<project>.json --no-confirm
+```
+Путь — не секрет → допустим в argv. `set-secret.sh` в allowlist `bash_protect.py` (не блокируется). Точная форма `bash scripts/set-secret.sh` обязательна (allowlist-regex). Агент НЕ читает `.env` (Read запрещён) — `set-secret.sh` пишет атомарно с бэкапом.
 
-# 3. Записать ПУТЬ (не содержимое) — пользователь запускает сам:
-bash scripts/set-secret.sh GOOGLE_APPLICATION_CREDENTIALS
-#    На запрос значения ввести путь: .gcp/<project>-<hash>.json
-
-# 4. Проверить:
-bash scripts/validate-secrets.sh        # type:file → 📄 ... ✓ если файл на месте
-
-# 5. Использовать (agent-safe): SDK сам читает путь из env-var, агент не видит содержимое:
-bash scripts/with-secret.sh GOOGLE_APPLICATION_CREDENTIALS -- py gen.py
-#    google-cloud-aiplatform / любой Google SDK подхватывает GOOGLE_APPLICATION_CREDENTIALS
-#    как Application Default Credentials автоматически.
+**Шаг 3 — проверить gitignore (агент):**
+```bash
+git check-ignore .gcp/<project>.json    # печатает путь = игнорится ✓; пусто → .gcp/ не в .gitignore
 ```
 
-**⛔ Безопасность — то же что для value-секретов, плюс file-специфика:**
-- Агент НЕ читает JSON напрямую (`cat .gcp/*.json` → попадёт в transcript). Путь в `.env` — ОК (не секрет); содержимое файла — секрет.
-- `.gcp/` gitignored by-construction → JSON не коммитится. Не класть credential-файлы вне gitignored директорий.
-- `with-secret.sh GOOGLE_APPLICATION_CREDENTIALS -- cmd` инжектит **путь** в env subprocess — SDK сам открывает файл, путь в stdout не утекает как секрет (это и не секрет — секрет внутри файла).
+**Шаг 4 — валидировать (агент):**
+```bash
+bash scripts/validate-secrets.sh        # type:file → 📄 ... ✓ когда файл на месте (или ❌ FILE NOT FOUND до шага 5)
+```
+
+**Шаг 5 — единственный ручной шаг ЮЗЕРА:** «Положи JSON в `.gcp/<project>.json`» (`.gcp/` gitignored by-construction; если файл был staged до .gitignore: `git rm --cached`).
+
+**Использование** (agent-safe, путь читает SDK сам):
+```bash
+bash scripts/with-secret.sh GOOGLE_APPLICATION_CREDENTIALS -- py gen.py   # SDK подхватывает ADC из env-var
+```
+
+### ⛔ HARD-GUARD — граница path/value (НЕ размывать)
+
+- ✅ **type:file** → агент пишет **путь** в `.env` сам (шаги 1-4). Путь не секрет.
+- ❌ **value-секрет** (токен/key/пароль) → агент **НИКОГДА не пишет сам**. Остаётся user-run `set-secret.sh` — значение утекло бы в transcript. Агент только печатает юзеру команду для ручного запуска.
+- ❌ Агент НЕ читает содержимое JSON (`cat .gcp/*.json`) — оно секрет.
 
 **Few-shot:**
-✅ Vertex AI image-gen: объявить `GOOGLE_APPLICATION_CREDENTIALS` с `type: file`, JSON в `.gcp/`, запуск через `with-secret.sh ... -- py script.py`.
-❌ Класть JSON вне репо и хардкодить абсолютный путь в коде — теряется validate-secrets проверка + не переносимо между машинами. Канон: `.gcp/` внутри проекта (gitignored).
-❌ Просить пользователя вставить содержимое JSON в чат / в `.env` как строку — это file-секрет, хранится файлом, в `.env` только путь.
+✅ «Добавь Vertex service account JSON» → агент: Edit manifest (`type:file`) → `set-secret.sh KEY .gcp/x.json` → `git check-ignore` → `validate-secrets.sh` → «положи JSON в .gcp/x.json». Ноль скриптов юзеру.
+❌ Агент юзеру: «запусти `bash scripts/set-secret.sh GOOGLE_APPLICATION_CREDENTIALS`» — нарушение Command-first для file-кейса (путь не секрет, агент делает сам).
+❌ Агент пишет value-секрет сам: `set-secret.sh GITHUB_PAT ghp_xxx` — ❌ значение в argv → transcript → утечка. Value → user-run.
+❌ `set-secret.sh` ДО Edit manifest → запись без `type:file` → validate не проверяет файл (тихо).
 
 ---
 
