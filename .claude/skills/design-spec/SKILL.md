@@ -6,7 +6,7 @@ metadata:
   type: workflow-skill
   auto_generated: false
   methodology_version: v5.56.0
-  synced_at: "2026-06-16"
+  synced_at: "2026-06-19"
   source: https://github.com/cait-solutions/it-dev-methodology
   banner: "Synced from methodology-platform v5.56.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
@@ -41,6 +41,18 @@ metadata:
 ```
 
 **При (b) — сначала прочитать существующий файл целиком** и выполнить Anti-Loss проверку (Шаг 4).
+
+**Context-entry mode detection (SYS-002, closes G-104):** ПЕРЕД переходом к Шагу 2 — оценить контекст текущего запроса:
+
+- **Interview mode** (стандарт): пользователь ещё не предоставил контекст → задавать вопросы Шага 2 итерационно.
+- **Synth mode** (closes G-104): пользователь уже предоставил **всю ключевую информацию** (сервис + фича + компоненты + ограничения) в запросе — либо явно через готовый текст, либо через PRODUCT.md / design-doc / PRD. Признак: ≥ 3 пункта из Шага 2 уже известны из запроса.
+
+При **synth mode** — предложить пользователю:
+```
+Я вижу что контекст уже есть: <сервис>, <фича>, <N компонентов>.
+Перейти сразу к генерации (synth mode) или уточнить дополнительно? (synth / уточнить)
+```
+При `synth` — пропустить Шаг 2 и перейти к Шагу 3 напрямую с имеющимся контекстом.
 
 ---
 
@@ -128,6 +140,7 @@ related_plan: "<task-id>"
 - **Описание:** <что>
 - **Аргументация:** <механизм, альтернативы, почему>
 - **Пример:** <однострочный сценарий>
+- **Source:** [real code file:line | ADR-NNN | external doc | TBD: verify before Final (OQ-N)]
 - **Диаграмма:** <mermaid или skip-причина — см. правило ниже>
 
 ## 3. Ограничения и допущения
@@ -143,6 +156,8 @@ New v. 1.0 = <N> characters
 ```
 
 **Запрет финализации:** автоматически помечать как `status: "Draft"`. Финализация (`status: "Final"`) — только по явной команде пользователя после checklist (Шаг 5).
+
+**Early source + ADR check (SYS-002, closes pre-Шаг-5 drift):** при генерации каждого §2.N — заполнить поле `Source:` немедленно, не откладывать на Шаг 5. Если механизм §2.N очевидно противоречит известному ADR → создать Open Question сразу (`OQ-N: конфликт с ADR-NNN — уточнить перед Final`), не ждать финализации. Шаг 5 Anti-Hallucination gate **подтверждает** источники, а не обнаруживает их впервые.
 
 ### Правило per-component диаграмм (Closes G-120)
 
@@ -167,6 +182,8 @@ New v. 1.0 = <N> characters
 **Диаграмма:**
 
 <!-- mermaid-link-placeholder -->
+
+https://mermaid.live/edit#pako:eNpFzc0KwjAQBOBXCXOuETzm3DfQYy5Lsv2BJtG4a5HSdzdFxDl-DDMbQokMh2Epa5ioirn15myeQsL9TGOldHpdDuGHcg4_9Nm0WGvRIXFNNMe2snnIxIk9nEfkgXQRj711SKVc3znASVXuoPf4f_ji_gH0iy-U
 
 ```mermaid
 flowchart TD / stateDiagram-v2 / sequenceDiagram

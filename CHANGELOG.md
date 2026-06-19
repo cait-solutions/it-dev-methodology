@@ -4,6 +4,29 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.8.0 — feat: skills/web-design/SKILL.md — bold aesthetic direction для web-интерфейсов (2026-06-19)
+
+**Consumer-facing changes:**
+
+- `skills/web-design/SKILL.md` — новый Knowledge-domain skill. **Auto-activation** по ключевым словам: "дизайн", "стиль", "тема", "цветовая схема", "типографика", "UI", "лендинг", "компонент с нуля". НЕ активируется при: CSS-баг-фикс в одном свойстве, backend-задача без UI.
+
+**Что даёт:**
+- Шаг 0 Brand context check — сначала читает MARKETING.md / brand.md / PRODUCT.md
+- 3 pre-code вопроса для определения aesthetic direction до первого CSS-класса
+- 7 named directions (Dark Editorial, Geometric Brutalism, Warm Minimal, Neon Cyberpunk, Swiss, Surreal, High-Contrast Editorial) — открытый список, не закрытый enum
+- Типографика: запрет Inter/Roboto/Arial/Space Grotesk по умолчанию + таблица замен по direction
+- Цвет: 3-роль палитра + правило острого акцента
+- Пространство: asymmetry, diagonal rhythm, negative space как элемент
+- Texture & Depth: grain overlay, gradient mesh, hover states с character
+- Never-create list: 4 anti-patterns
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` скопирует `.claude/skills/web-design/SKILL.md`
+- 🟡 **Перезапусти Claude Code сессию** после sync — skill загрузится через auto-discovery
+- Если хочешь проверить установку: `ls .claude/skills/web-design/`
+
+---
+
 ## v6.7.4 — feat: /vision review batch×16 + [research:mattpocock-skills] + P-011 + R-034/R-035/R-031 false-green confirmed (2026-06-19)
 
 **Consumer-facing changes:** нет (methodology-internal — IDEAS/PRODUCT-GAPS/ROADMAP/triggers.json).

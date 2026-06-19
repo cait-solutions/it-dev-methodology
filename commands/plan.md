@@ -1274,6 +1274,8 @@ bash scripts/update-mermaid-links.sh _tmp_draft-maps.md
 
 <!-- mermaid-link-placeholder -->
 
+https://mermaid.live/edit#pako:eNqrVkrOT0lVslKyyU0tyk3MTNG9sOvCvgtb7JR0lKAiQMnqGKWSjNTc1BglqxillNS0xNKckhilWqCaxNKS_ODKvGQlq5Ki0lQdpdKClMSSVJfMxPSixFyIYC0AVKskyQ
+
 ```mermaid
 <mermaid-код>
 ```
