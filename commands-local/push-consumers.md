@@ -37,6 +37,70 @@ Pre-flight model check: спросить только если Capable (Opus) а
 
 ---
 
+## Шаг Phase 0 — North Star Bootstrap (pre-sync, v7.0.0)
+
+**Цель:** убедиться что каждый consumer имеет заполненный North Star до отправки обновлений методологии. Без North Star `/roadmap` не может приоритизировать по ценности, а PORTFOLIO.md (Layer 2) остаётся заблокированным (VISION Ось 8).
+
+**Когда:** только при `COMMIT_PUSH=true` (дефолт). При `--sync-only` → **пропустить** (write-операция не нужна).
+
+**PRESERVE semantics (ОБЯЗАТЕЛЬНО):** NORTH-STAR.md — project-owned. Агент записывает ТОЛЬКО если файл содержит шаблонные placeholder'ы (`<например:`). Заполненные или кастомные значения — не трогать никогда.
+
+**Discovery:** тот же список consumer repos что Шаг 2. Выполняется ДО pull и init.
+
+**Для каждого consumer из workspace:**
+
+1. **Проверить наличие и заполненность:**
+   ```bash
+   NS_PATH="<consumer-path>/NORTH-STAR.md"
+   # grep -F для literal string (не интерпретировать < > как редирект)
+   placeholder_count=$(grep -cF "<например:" "$NS_PATH" 2>/dev/null || echo "0")
+   ns_exists=false; [[ -f "$NS_PATH" ]] && ns_exists=true
+   ```
+   - `ns_exists=false` → файл отсутствует → спросить
+   - `placeholder_count > 0` → placeholder присутствует → спросить
+   - `placeholder_count = 0` AND `ns_exists=true` → заполнен → `✅ <repo>: North Star OK` → пропустить
+
+2. **Если не заполнен:**
+   ```
+   ⚠️ <repo>: NORTH-STAR.md не заполнен.
+      North Star нужен для /roadmap приоритизации (VISION Ось 8).
+      Заполнить сейчас? (y / skip)
+        y     — задам несколько вопросов (аналогично /roadmap Шаг 1)
+        skip  — пропустить (⚠️ появится в NS-колонке /pull-consumers)
+   ```
+
+3. **При `y` — Q&A (по одному вопросу, Recommendation-first rule):**
+
+   Q1: «Главная метрика ценности? [рекомендуется: MRR/выручка для коммерческого проекта]»
+   Q2: «project_role: growth или enabling? [рекомендуется: growth если проект напрямую продаёт; enabling если инструмент/инфраструктура]»
+   Q3: «Target и горизонт? [можно: `<не задан>` — не блокирует]»
+   Q4: «Baseline / текущее значение? [опционально — нажми Enter чтобы пропустить]»
+
+4. **Write NORTH-STAR.md (write-if-empty):**
+   - Заменить placeholder-значения в таблицах на введённые ответы
+   - ⛔ PRESERVE: если строка НЕ содержит `<например:` — не трогать (кастомный fill)
+   - Дата создания в нижней строке: `*Создан: YYYY-MM-DD.*`
+   - **NO auto-commit** — файл попадёт в commit Шага 5 как часть manifest-scope (если NORTH-STAR.md в списке changed)
+   - Показать: `✅ <repo>: NORTH-STAR.md заполнен.`
+
+5. **При `skip`:** продолжить. NS-колонка в `/pull-consumers` покажет ⚠️.
+
+6. **Anti-friction (после 2-го `skip` подряд):** показать один раз:
+   ```
+   Пропустить North Star для всех оставшихся? (y / n)
+   ```
+   Закрывает Pre-Mortem риск (32 вопроса при 8 consumers).
+
+**После обхода всех consumers:**
+```
+North Star bootstrap: ✅ X заполнено / ⏭ Y пропущено
+```
+→ продолжить к Шагу 0.5
+
+⛔ **Batch defaults запрещены:** авто-заполнять без Q&A нельзя. Forcing function — интерактивность делает заполнение осмысленным.
+
+---
+
 ## Шаг 0.5 — Consumer Pull (ff-only, pre-dirty-check)
 
 **Цель:** подтянуть remote commits перед dirty-check. Если другая сессия уже синкнула и запушила изменения — pull приводит локальный репо в актуальное состояние → dirty-check видит чистое дерево. Закрывает G-118 (perpetual dirty loop — sync писал tracked файлы без commit, dirty-guard пропускал репо, loop повторялся).

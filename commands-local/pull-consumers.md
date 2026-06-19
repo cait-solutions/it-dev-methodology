@@ -316,6 +316,45 @@ done
 
 ---
 
+## Шаг 3.7 — Compact health indicators (v7.0.0)
+
+**Зачем:** быстрый снимок adoption health без полного аудита. North Star status и ROADMAP visual — ключевые индикаторы готовности портфеля к приоритизации (`/roadmap`) и aggregation (VISION Ось 8, Layer 2).
+
+**Только для `[marker]` consumers.** `[no-marker]` — пропустить тихо.
+
+Для каждого `[marker]` консьюмера:
+
+1. **North Star check:**
+   ```bash
+   NS_STATUS="❌"  # нет файла
+   NS_PATH="<consumer-path>/NORTH-STAR.md"
+   if [[ -f "$NS_PATH" ]]; then
+     # -F для literal string (< > не интерпретируются shell'ом внутри grep -F)
+     if grep -qF "<например:" "$NS_PATH" 2>/dev/null; then
+       NS_STATUS="⚠️"   # placeholder присутствует — не заполнен
+     else
+       NS_STATUS="✅"   # заполнен (нет <например:)
+     fi
+   fi
+   ```
+
+2. **ROADMAP visual check:**
+   ```bash
+   ROAD_VIS="❌"
+   # two-repo: ROADMAP.md в doc_repo_path; single-repo: корень проекта
+   ROADMAP="<consumer-path>/ROADMAP.md"
+   [[ -f "$ROADMAP" ]] || ROADMAP="<doc_repo_path>/ROADMAP.md"
+   if [[ -f "$ROADMAP" ]]; then
+     grep -qF "## Визуальный roadmap" "$ROADMAP" 2>/dev/null && ROAD_VIS="✅" || ROAD_VIS="⚠️"
+   fi
+   ```
+
+3. Сохранить `NS_STATUS` + `ROAD_VIS` для drift-таблицы в Шаге 4.
+
+⛔ Read-only. Не записывать NORTH-STAR.md здесь. Для интерактивного заполнения → Phase 0 в `/push-consumers`.
+
+---
+
 ## Шаг 4 — Report
 
 Вывести структурированный отчёт пользователю, включая **drift-колонку** (closes PLAN-05 visibility):
@@ -324,15 +363,19 @@ done
 ## Pull Consumers Report — <ISO date>
 Discovery: workspace file (It dev methodology.code-workspace) — 8 repos, 4 with marker, 4 no-marker
 
-Drift summary (methodology v5.41.0):
-| Репо | ver | synced | Δ minor | LAR | Freshness | Статус |
-|---|---|---|---|---|---|---|
-| erp-documentantion | v4.47.5 | 2026-06-01 | +94 | ✅ | 🟡 2 warn | [drift] |
-| it-dev-documentation | v4.45.0 | 2026-06-01 | +96 | ❌ | — | [drift] |
-| ... | ... | ... | ... | ... | ... | ... |
+Drift summary (methodology v7.0.0):
+| Репо | ver | synced | Δ minor | NS | LAR | Freshness | RV | Статус |
+|---|---|---|---|---|---|---|---|---|
+| erp-documentantion | v4.47.5 | 2026-06-01 | +94 | ⚠️ | ✅ | 🟡 2 warn | ✅ | [drift] |
+| it-dev-documentation | v4.45.0 | 2026-06-01 | +96 | ❌ | ❌ | — | ⚠️ | [drift] |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... |
 Запустить /push-consumers чтобы доставить обновления.
+Phase 0 (/push-consumers) заполнит ⚠️/❌ North Stars интерактивно.
 
-LAR = наличие LIVING-ARTIFACTS.md (✅ / ❌); Freshness = результат validate-maps-coverage.sh --report (🟢 0/0 / 🟡 N warn / 🔴 N err / — нет карт).
+NS = North Star (✅ заполнен / ⚠️ placeholder / ❌ нет файла);
+LAR = наличие LIVING-ARTIFACTS.md (✅ / ❌);
+Freshness = результат validate-maps-coverage.sh --report (🟢 0/0 / 🟡 N warn / 🔴 N err / — нет карт);
+RV = ROADMAP visual section (✅ секция есть / ⚠️ нет секции / ❌ нет файла).
 
 ### [marker] erp-documentantion (gitlab/ai-dev) — v4.47.5
 ✓ Pulled abc123 → def456 (12 commits since 2026-05-25)

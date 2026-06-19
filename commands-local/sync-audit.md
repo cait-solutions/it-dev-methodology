@@ -1,4 +1,7 @@
 # /sync-audit — Audit methodology adoption gaps
+> **LOCAL-ONLY — moved from commands/ in v7.0.0. No longer delivered to consumers.**
+> Methodology owner only. Write-on-demand gaps (14/17/18) remain here.
+> Consumer diagnostics: Step 3.7 in /pull-consumers (compact) + Step 7 in /push-consumers (full).
 
 > **Цель:** проверить какие features methodology (накопившиеся при обновлениях) **не применены** к этому проекту, и **самостоятельно починить** то что чинится детерминированно.
 >
