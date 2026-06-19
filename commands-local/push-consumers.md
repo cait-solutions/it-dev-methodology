@@ -309,25 +309,15 @@ else
   continue
 fi
 
-# 5. Push с gh-account проверкой
-REMOTE_URL=$(git -C <consumer-path> remote get-url origin 2>/dev/null || true)
-OWNER=""
-case "$REMOTE_URL" in
-  https://github.com/*)
-    OWNER="${REMOTE_URL#https://github.com/}"; OWNER="${OWNER%%/*}"
-    ACTIVE=$(gh api user -q .login 2>/dev/null || echo "")
-    if [ "$ACTIVE" != "$OWNER" ]; then
-      if gh auth status 2>/dev/null | grep -q "account $OWNER "; then
-        gh auth switch --user "$OWNER" >/dev/null 2>&1 && \
-          echo "  🔄 gh account: $ACTIVE → $OWNER"
-      else
-        echo "  ⚠️  gh: аккаунт '$OWNER' не залогинен (активен: $ACTIVE)"
-        echo "      Push пропущен. Залогинься: gh auth login --user $OWNER"
-        continue
-      fi
-    fi
-    ;;
-esac
+# 5. Push с gh-account проверкой через check-gh-account.sh
+# check-gh-account.sh читает EXPLICIT gh_account из CLAUDE.local.md whitelist — не URL-derived owner.
+# Приоритет: whitelist gh_account > fallback к URL owner (backward compat).
+# validate-gh-accounts gate в deploy-push.sh гарантирует что gh_account заполнен заранее.
+METH_SCRIPTS="$(cd "$(dirname "$0")/../scripts" 2>/dev/null && pwd || echo "scripts")"
+if ! bash "$METH_SCRIPTS/check-gh-account.sh" "<consumer-abs-path>"; then
+  echo "  ❌ push пропущен — gh-account check failed (см. вывод выше)"
+  continue
+fi
 
 BRANCH=<branch-from-whitelist>  # из auto_commit_consumers для этого репо
 PUSH_ERR=$(git -C <consumer-path> push origin HEAD:"$BRANCH" 2>&1)

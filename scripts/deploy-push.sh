@@ -301,6 +301,16 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
       exit 1
     fi
   fi
+  # GH-accounts gate (P-012 / v6.9.0): gh_account обязателен для github.com repos в whitelist.
+  # Без этого поля /push-consumers угадывает owner из URL (ненадёжно) → wrong account → 403.
+  # Gate graceful-skip если скрипт отсутствует (migration window).
+  if [ -f "scripts/validate-gh-accounts.sh" ]; then
+    echo "▶ GH-accounts gate (methodology-platform)..."
+    if ! bash scripts/validate-gh-accounts.sh; then
+      echo "❌ BLOCKED: добавь gh_account для github.com repos в CLAUDE.local.md → повтори деплой." >&2
+      exit 1
+    fi
+  fi
   echo "▶ Maps-coverage gate (methodology-platform)..."
   # tee-pattern: show output in realtime AND capture for WARN count (G-119 surfacing)
   _MAPS_TMP="$(mktemp)"

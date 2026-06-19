@@ -66,6 +66,7 @@ auto_commit_consumers:
   - path: ../it-dev-methodology-documentation
     # agent_branch=ai-dev — push в ai-dev (не main напрямую)
     branch: ai-dev
+    gh_account: cait-solutions
   - path: ../ai-assistant-documentation
     # agent_branch=ai-dev; gh_account=IDK-IDK (repo owner, switch before push)
     branch: ai-dev
