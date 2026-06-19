@@ -50,6 +50,7 @@ Centralized model recommendation registry. Команды читают этот 
 | `/research` | **Default** | Conflicting sources requiring deep reasoning; стратегический вопрос с нетривиальным trade-off анализом | Interactive structured research (≤3 checkpoints). Фиксирует вывод в DEVLOG `[research:X]`. Fast НЕ рекомендуется — synthesis требует reasoning |
 | `/push-consumers` | **Default** | (никогда — drift-таблица + batch sync. Fast если ≤2 консьюмера) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Доставка обновлений методологии консьюмерам. Запускается вручную после релизов |
 | `/opinion` | **Default** | Вопрос затрагивает несколько сервисов с конфликтующими сигналами; глубокий стратегический trade-off | Лёгкий opinion-flow: читает VISION.md + PRODUCT.md + DEVLOG, формирует committed verdict. Fast ❌ — North Star extraction требует reasoning |
+| `/opinion+` | **Capable** | (always Capable — 7 параллельных external советников + синтез требуют deep reasoning) | High-stakes режим /opinion: 7 независимых external sub-agents (5 Council ролей + Альтернативщик + Complexity tax), каждый в своём контексте. Для необратимых решений. Fast/Default ❌ — синтез 7 независимых вердиктов требует reasoning |
 
 ---
 
