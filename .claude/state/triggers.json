@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-19",
-      "plans_since": 0
+      "plans_since": 1
     },
     "last_retro": {
       "date": "2026-06-19",
-      "plans_since": 1
+      "plans_since": 2
     },
     "last_product_review": {
       "date": "2026-06-19",
-      "plans_since": 0
+      "plans_since": 1
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 41
+      "plans_since": 42
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 8
+      "plans_since": 9
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 43
+      "plans_since": 44
     },
     "last_architecture_audit": {
       "date": "2026-06-19",
-      "plans_since": 0,
+      "plans_since": 1,
       "recommendations": [
         {
           "id": "R-034",
@@ -151,24 +151,30 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-19T22:00:00",
-    "task_id": "web-design-skill",
-    "service": "methodology-platform (новый skills/web-design/SKILL.md → all consumers via sync)",
+    "task_id": "gh-account-gate",
+    "service": "methodology-platform (validate-gh-accounts.sh + check-gh-account.sh + deploy-push.sh gate + push-consumers Шаг 5)",
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "Brand context check как первый структурный шаг в skill (читать MARKETING.md если есть)", "status": "done", "skip_reason": null },
-      { "text": "Aesthetic direction list — open-ended примеры, не closed enum (чтобы не устарел через год)", "status": "done", "skip_reason": null },
-      { "text": "CHANGELOG.md — запись consumer-facing нового skill", "status": "done", "skip_reason": null }
+      { "text": "NEW scripts/validate-gh-accounts.sh — gate в deploy-push.sh, mandatory gh_account для github.com repos", "status": "pending", "skip_reason": null },
+      { "text": "NEW scripts/check-gh-account.sh — explicit whitelist mapping вместо URL-derived owner в push-consumers Шаг 5", "status": "pending", "skip_reason": null },
+      { "text": "scripts/deploy-push.sh + templates/ — добавить validate-gh-accounts gate внутрь methodology guard", "status": "pending", "skip_reason": null },
+      { "text": "commands-local/push-consumers.md Шаг 5 — заменить inline gh-account logic на check-gh-account.sh вызов", "status": "pending", "skip_reason": null },
+      { "text": "DEVLOG — [opinion:gh-account-gate] + [feat:script][domain:git-push] entries", "status": "pending", "skip_reason": null },
+      { "text": "PRODUCT-GAPS.md — добавить P-012", "status": "pending", "skip_reason": null },
+      { "text": "LIVING-ARTIFACTS.md — добавить строки для двух новых scripts", "status": "pending", "skip_reason": null },
+      { "text": "VERSION bump (minor)", "status": "pending", "skip_reason": null }
     ],
     "sustainment": [
-      { "artifact": "skills/web-design/SKILL.md (канон)", "trigger": "дизайн-тренды изменились; brand guidance методологии изменилась", "refresh": "ручной PR в methodology", "detection": "validate-delivery.sh parity; /review downstream check", "owner": "методология" },
-      { "artifact": ".claude/skills/web-design/SKILL.md (self-apply + consumer copy)", "trigger": "sync-methodology.sh", "refresh": "sync-methodology.sh при каждом /deploy", "detection": "validate-delivery.sh; /sync-audit Gap delta", "owner": "методология (sync)" },
-      { "artifact": "USER-MAP.md (новый skill-узел)", "trigger": "новая capability добавлена (Maps Standard PR-coupling)", "refresh": "обновляется в этом /code Шаг 5", "detection": "mermaid-links auto; /product-check plans_since ≥ 5", "owner": "методология" },
-      { "artifact": "LIVING-ARTIFACTS.md (новая строка)", "trigger": "добавлен новый механизм (Шаг 97 rule)", "refresh": "/code Шаг 5", "detection": "validate-lar.sh; /retro", "owner": "методология" }
+      { "artifact": "scripts/validate-gh-accounts.sh", "trigger": "при добавлении нового consumer repo в whitelist", "refresh": "не требует — логика универсальная", "detection": "validate-script-parity.sh (intersection-only → нет флага); deploy gate smoke test", "owner": "методология" },
+      { "artifact": "scripts/check-gh-account.sh", "trigger": "при добавлении нового consumer repo в whitelist", "refresh": "не требует — логика универсальная", "detection": "validate-script-parity.sh; push-consumers flow smoke", "owner": "методология" },
+      { "artifact": "validate-gh-accounts gate в deploy-push.sh", "trigger": "каждый deploy методологии", "refresh": "при изменении deploy-push.sh (dual-copy sync ADR-014)", "detection": "deploy-push.sh запуск = smoke test самого gate", "owner": "методология" },
+      { "artifact": "CLAUDE.local.md gh_account per-entry", "trigger": "добавление нового consumer repo", "refresh": "владелец вручную при добавлении", "detection": "validate-gh-accounts.sh gate при деплое", "owner": "пользователь" }
     ],
     "deferred": [
-      { "text": "/design explicit команда", "reason": "после сигнала об reliability auto-activation; достаточна auto-activation", "tag": "deferred" },
-      { "text": "PRODUCT.md skills-layer секция (## Логика компонентов)", "reason": "skills layer работает без неё; отдельный PR", "tag": "out-of-scope" }
+      { "text": "URL validation (gh api) — warn-only, не блокирует deploy", "reason": "network может быть offline; error обнаруживается при push (403); friction > benefit", "tag": "deferred" },
+      { "text": "GitLab repos auth coverage", "reason": "gh CLI не управляет GitLab; другой класс auth", "tag": "out-of-scope" },
+      { "text": "Унификация с _ensure_gh_account в deploy-push.sh", "reason": "нет третьего caller; преждевременная абстракция", "tag": "deferred" }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {
