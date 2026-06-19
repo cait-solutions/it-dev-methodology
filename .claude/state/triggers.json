@@ -151,29 +151,29 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-19T00:00:00",
-    "task_id": "opinion-followup-pull-warning",
-    "service": "methodology-platform (commands/opinion.md + commands/pull.md + scripts/consumer-pull.sh + templates/scripts/consumer-pull.sh)",
-    "mode": "Full",
+    "task_id": "sync-audit-decomp-north-star-bootstrap",
+    "service": "methodology-platform (commands/ → commands-local/sync-audit.md + commands-local/push-consumers.md Phase 0 + commands-local/pull-consumers.md Шаг 3.7 + VERSION v7.0.0)",
+    "mode": "Lite",
     "code_run": true,
     "commitments": [
-      { "text": "commands/opinion.md — Шаг 3: переименовать + добавить /plan proposal блок с criteria (verdict ❌/⚠️ + Деятель=structural)", "status": "done", "skip_reason": null },
-      { "text": "commands/pull.md — Шаг 1: workspace_file check → active WARN block с инструкцией вместо passive checklist", "status": "done", "skip_reason": null },
-      { "text": "scripts/consumer-pull.sh — строки 62–66: echo ⚠️ warning при auto-fallback (workspace_file не задан)", "status": "done", "skip_reason": null },
-      { "text": "scripts/consumer-pull.sh — safe-reset handler: ff-only fail → grep sync-commits → reset если только sync (из pull-safe-reset)", "status": "done", "skip_reason": null },
-      { "text": "templates/scripts/consumer-pull.sh — идентичные изменения (ADR-014 dual-copy parity)", "status": "done", "skip_reason": null },
-      { "text": "VERSION bump (minor — consumer-facing behavior: warning + safe-reset)", "status": "done", "skip_reason": null },
-      { "text": "DEVLOG — [feat:command][feat:script][domain:sync-divergence] запись (оба изменения)", "status": "pending", "skip_reason": null },
-      { "text": "Encoding check: проверить echo кириллицы в new warning на Windows cp1252 — при проблеме заменить на ASCII", "status": "done", "skip_reason": "existing script already uses Cyrillic + emoji (❌ ✓ ⚠) — no encoding issue" }
+      { "text": "commands/sync-audit.md — удалить из commands/ (больше не доставляется consumers)", "status": "done", "skip_reason": null },
+      { "text": "commands-local/sync-audit.md — создать с LOCAL-ONLY header (v7.0.0 migration note)", "status": "done", "skip_reason": null },
+      { "text": "commands-local/pull-consumers.md — Шаг 3.7: compact health indicators (NS + RV checks)", "status": "done", "skip_reason": null },
+      { "text": "commands-local/pull-consumers.md — Шаг 4 drift-table: NS + RV колонки + footer legend", "status": "done", "skip_reason": null },
+      { "text": "commands-local/push-consumers.md — Phase 0: North Star bootstrap Q&A (write-if-empty PRESERVE, 4 вопроса, anti-friction)", "status": "done", "skip_reason": null },
+      { "text": "VERSION bump v6.9.4 → v7.0.0 (major: consumer-facing command removal per CLAUDE.md)", "status": "done", "skip_reason": null },
+      { "text": "DEVLOG — [feat:command][opinion:sync-audit-two-masters][opinion:north-star-bootstrap][domain:sync] запись", "status": "done", "skip_reason": null },
+      { "text": "ROADMAP Done — новая строка sync-audit-decomp-north-star-bootstrap", "status": "done", "skip_reason": null }
     ],
     "sustainment": [
-      { "artifact": "commands/opinion.md", "trigger": "/opinion запуск", "refresh": "при смене criteria следующим /plan", "detection": "/review parity check", "owner": "методология" },
-      { "artifact": "scripts/consumer-pull.sh · templates/scripts/consumer-pull.sh", "trigger": "/pull command execution", "refresh": "dual-copy sync ADR-014 при deploy", "detection": "validate-script-parity.sh gate в deploy-push.sh", "owner": "методология" }
+      { "artifact": "commands-local/sync-audit.md", "trigger": "methodology owner /sync-audit запуск", "refresh": "при смене gap-checks следующим /plan", "detection": "не синхронизируется → drift risk минимален", "owner": "методология" },
+      { "artifact": "commands-local/pull-consumers.md (Шаг 3.7)", "trigger": "/pull-consumers еженедельно", "refresh": "при новых health-indicators следующим /plan", "detection": "/review parity", "owner": "методология" },
+      { "artifact": "commands-local/push-consumers.md (Phase 0)", "trigger": "/push-consumers при COMMIT_PUSH=true", "refresh": "при изменении NORTH-STAR.md format следующим /plan", "detection": "/review parity", "owner": "методология" }
     ],
     "deferred": [
-      { "text": "L4 workspace_file enforcement — обязательное поле", "reason": "нет graceful path для consumers без VSCode workspace", "tag": "deferred" },
-      { "text": "new-project-init.sh bootstrap вопрос про workspace_file", "reason": "отдельный /plan с graceful path design", "tag": "deferred" },
-      { "text": "L4 /plan auto-trigger hook в /opinion", "reason": "over-engineering для текущего масштаба", "tag": "deferred" },
-      { "text": "[?] inline /plan proposal", "reason": "lightweight path — не нужен /plan proposal там", "tag": "deferred" }
+      { "text": "push-consumers Шаг 7 full upgrade (16 checks from sync-audit)", "reason": "отдельный /plan", "tag": "deferred" },
+      { "text": "sync-methodology.sh explicit delete старых consumer copies sync-audit.md", "reason": "auto-cleanup happens on next /push-consumers via lines 688-702; separate /plan для явной migration", "tag": "deferred" },
+      { "text": "SYS-1..SYS-10 backlog (gap-analysis-systemic-8-sys)", "reason": "deferred from prior plan, still in _last_plan_session_backup", "tag": "deferred" }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {
@@ -278,8 +278,8 @@
   "last_deploy": {
     "date": "2026-06-19",
     "status": "ok",
-    "phase": "gh-account-gate: validate-gh-accounts.sh + check-gh-account.sh — P-012 structural enforcement — v6.9.0",
-    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/257"
+    "phase": "opinion Follow-up Proposal + pull workspace WARN + safe-reset — v6.9.4",
+    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/261"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
