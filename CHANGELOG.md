@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.2.2 — feat: migration детектит рудиментарный GITHUB_PAT required:true в secrets-manifest (2026-06-19)
+
+**Consumer-facing changes:**
+- **`scripts/migrations/v7.2.2-manifest-pat-rudiment.sh`** (NEW) — format-миграция (MODE=report) для класса init-once drift. Детектит рудиментарную активную запись `GITHUB_PAT` с `required: true` в `.claude/secrets-manifest.yaml`. Причина: манифест создаётся ОДИН РАЗ при init и consumer-owned (PRESERVE — sync не перезаписывает); старый шаблон поставлял `GITHUB_PAT required:true`, в v6.x шаблон вычищен (P-005), но фикс не доезжает до уже инициализированных консьюмеров. Рудимент даёт вечный false-positive «1 required secret missing» в `/secrets --audit`, хотя push не требует PAT (G-083: gh credential helper / GitLab токен). `report`-mode (НЕ auto): secrets-manifest — самый чувствительный PRESERVE-артефакт, авто-правка запрещена; решение за владельцем.
+- Запускается автоматически через существующий `scripts/migrations/_runner.sh` в `/sync-audit` Шаг 1.5 → выводит `REPORT:` строку с инструкцией.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` доставит миграцию. При следующем `/sync-audit` runner выведет `REPORT:` если рудимент найден.
+- 🟡 **Если REPORT показан:** открой `.claude/secrets-manifest.yaml`, убери запись `GITHUB_PAT` (если push через gh helper / GitLab) ИЛИ поставь `required: false`, затем закоммить. После этого `/sync-audit` перестанет репортить (detect само-очищается). Если реально используешь PAT-в-credential-helper — оставь как есть.
+
+---
+
 ## v7.2.1 — feat: file-секреты agent-managed + fix validate-secrets field-collapse bug (2026-06-19)
 
 **Consumer-facing changes:**
@@ -14,18 +26,6 @@ Consumer migration guide. Каждый milestone = что добавилось +
 **Что делать consumers:**
 - 🟢 **Автоматически:** `sync-methodology.sh` обновит skill + `scripts/validate-secrets.sh`. Никаких действий — `validate-secrets.sh` теперь корректно проверяет file-секреты.
 - 🟡 **При добавлении GCP/Vertex JSON:** просто скажи агенту обычными словами («добавь Vertex service account JSON») — агент сделает всё, кроме размещения файла в `.gcp/`.
-
----
-
-## v7.2.0 — feat: migration детектит рудиментарный GITHUB_PAT required:true в secrets-manifest (2026-06-19)
-
-**Consumer-facing changes:**
-- **`scripts/migrations/v7.2.0-manifest-pat-rudiment.sh`** (NEW) — format-миграция (MODE=report) для класса init-once drift. Детектит рудиментарную активную запись `GITHUB_PAT` с `required: true` в `.claude/secrets-manifest.yaml`. Причина: манифест создаётся ОДИН РАЗ при init и consumer-owned (PRESERVE — sync не перезаписывает); старый шаблон поставлял `GITHUB_PAT required:true`, в v6.x шаблон вычищен (P-005), но фикс не доезжает до уже инициализированных консьюмеров. Рудимент даёт вечный false-positive «1 required secret missing» в `/secrets --audit`, хотя push не требует PAT (G-083: gh credential helper / GitLab токен). `report`-mode (НЕ auto): secrets-manifest — самый чувствительный PRESERVE-артефакт, авто-правка запрещена; решение за владельцем.
-- Запускается автоматически через существующий `scripts/migrations/_runner.sh` в `/sync-audit` Шаг 1.5 → выводит `REPORT:` строку с инструкцией.
-
-**Что делать consumers:**
-- 🟢 **Автоматически:** `sync-methodology.sh` доставит миграцию. При следующем `/sync-audit` runner выведет `REPORT:` если рудимент найден.
-- 🟡 **Если REPORT показан:** открой `.claude/secrets-manifest.yaml`, убери запись `GITHUB_PAT` (если push через gh helper / GitLab) ИЛИ поставь `required: false`, затем закоммить. После этого `/sync-audit` перестанет репортить (detect само-очищается). Если реально используешь PAT-в-credential-helper — оставь как есть.
 
 ---
 
