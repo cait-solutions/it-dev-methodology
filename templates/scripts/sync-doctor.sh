@@ -146,7 +146,9 @@ _settings=".claude/settings.json"
 if [ -f "$_settings" ]; then
   _hook_names=$(
     {
-      grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.(py|sh)' "$_settings" 2>/dev/null \
+      grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.py' "$_settings" 2>/dev/null \
+        | sed 's#\.claude/hooks/##'
+      grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.sh' "$_settings" 2>/dev/null \
         | sed 's#\.claude/hooks/##'
       grep -oE 'run-hook\.sh [A-Za-z0-9_.-]+\.py' "$_settings" 2>/dev/null \
         | sed 's#run-hook\.sh ##'
