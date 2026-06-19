@@ -291,6 +291,14 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
       echo "⚡ Script-parity: SKIP (not methodology-platform) — OK."
     fi
   fi
+  # Schema↔skill parity detector (G-120): новое поле consumer-facing schema без зеркала
+  # в парном knowledge-skill (SKILL.md) → механизм невидим агенту в runtime. L3 DETECT
+  # (token-presence, не семантика) → severity=warn (surfaced, не блок) чтобы не brittle и
+  # без whitelist-slope. Escalate вручную: SCHEMA_SKILL_SEVERITY=error.
+  if [ -f "scripts/validate-schema-skill-parity.sh" ]; then
+    echo "▶ Schema↔skill parity detector (methodology-platform)..."
+    bash scripts/validate-schema-skill-parity.sh || true   # warn-severity → не блокирует деплой
+  fi
   # Validator-harness gate (PLAN-03 / G-112): proof-of-rejection — доказать что сами
   # валидаторы отклоняют плохой ввод, прежде чем доверять их PASS в maps-coverage.
   # Guard: if [ -f ... ] — graceful skip если harness не установлен (migration-window).

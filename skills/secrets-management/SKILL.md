@@ -2,7 +2,7 @@
 name: secrets-management
 description: Knowledge-domain skill для управления секретами проекта (API tokens, credentials, repo PATs). Активируй когда пользователь упоминает токены, secrets, утечку токена, ротацию, compromised credential, как добавить секрет, где хранятся ключи, как настроить Vault/keyring/AWS Secrets, что делать если ключ попал в commit, secrets-manifest, .env files, GitHub PAT, ANTHROPIC_API_KEY, OS keyring, credential helper, или связанные темы. Описывает 4-слойную защиту (gitignore + pre-commit hook + /review detector + tool deny), threat model, rotation workflow per provider, compromise response runbook, external secret manager integration (Vault/AWS/Azure), OS hardening recommendations. Не выполняет операции сам — направляет к scripts/with-secret.sh, scripts/set-secret.sh, /secrets команде. Требует наличия .claude/secrets-manifest.yaml в проекте.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
   type: knowledge-skill
   auto_generated: false
   methodology_version: v4.34.0
@@ -92,6 +92,11 @@ secrets:
 - Используй distinct hostnames через `~/.ssh/config` или `/etc/hosts` aliases (e.g. `github-work.com`)
 - ИЛИ wait для schema v3 с `account_filter` field (future)
 
+### `gh_account` + `keychain_backend` — два опциональных поля
+
+- **`gh_account`** (per-entry, optional) — имя `gh` CLI аккаунта, требуемого для репо (github.com remotes через gh credential helper). `/pull-consumers` pre-flight: если активный `gh` аккаунт ≠ этому значению → warning + команда `gh auth switch`. Multi-account сценарий (личный + work на одном github.com). Omit для не-GitHub / PAT-only. Пример: `gh_account: "cait-solutions"`.
+- **`keychain_backend`** (config-блок, optional, default `false`) — opt-in OS keychain как at-rest-encrypted storage ПЕРЕД `.env`. `with-secret.sh` сначала смотрит keychain: macOS `security` (из коробки), Linux `secret-tool` (libsecret, DE-dependent), Windows DPAPI (ограниченно). Fall-through на `.env` если keychain недоступен/пуст. Рекомендуется на macOS/Windows; на Linux headless — `false`. Store (macOS): `security add-generic-password -s it-dev-methodology -a KEY -w VALUE`.
+
 ### `git_remote: true` — SSOT для git-remote (v5.22.0, closes P-006)
 
 **Проблема:** `git remote origin` и manifest — два источника правды о том «куда пушить». При bootstrap remote мог быть выставлен дефолтным github-паттерном, а реальный repo — на другом хосте (GitLab). Push стучался по неверному remote (404), хотя manifest содержал правильный `service_url`.
@@ -112,6 +117,65 @@ secrets:
 **Авто-определение без флага:** если `git_remote: true` не стоит ни у одного секрета, но ровно один `service_url` оканчивается на `.git` — он считается git-remote автоматически. Несколько `.git` без флага → неоднозначно, fallback на текущий `git remote` (graceful). Ставь флаг у ОДНОГО секрета (того что для push).
 
 **Актуальность источника:** manifest ведущий, remote выравнивается под него при каждом push-расхождении → SSOT не устаревает (рассинхрон ловится в момент push, предлагается фикс).
+
+---
+
+## File-type secrets — credential-файлы (v6.4.7+, GCP/Vertex/AWS)
+
+**Когда:** секрет — это **файл на диске**, а не строка-токен. Типичный случай: GCP service account JSON (Vertex AI, Gemini через Vertex, n8n GCP-нодa), TLS-сертификат, AWS credentials-файл. UI таких сервисов часто не принимает credential как строку — нужен путь к файлу.
+
+**Механизм — поле `type` в manifest-записи:**
+
+| `type` | Что в `.env` | Пример |
+|---|---|---|
+| `value` (default) | сам секрет (токен/пароль/API-key) | `GITHUB_PAT=ghp_xxx` |
+| `file` | **путь к файлу** с credentials (не содержимое) | `GOOGLE_APPLICATION_CREDENTIALS=.gcp/proj-abc.json` |
+
+При `type: file` `validate-secrets.sh` проверяет **две** вещи: (1) env-var задан в `.env`, (2) файл существует по этому пути. Содержимое файла НЕ матчится token-detector'ом (`token_pattern: null`).
+
+**Канонический workflow (GCP/Vertex service account JSON):**
+
+```yaml
+# 1. Объявить в .claude/secrets-manifest.yaml (раскомментировать GCP-группу из template):
+secrets:
+  - key: GOOGLE_CLOUD_PROJECT          # type: value (default) — это просто project id
+    purpose: "GCP project id"
+    # ...
+  - key: GOOGLE_APPLICATION_CREDENTIALS
+    type: file                          # ← значение в .env = ПУТЬ, не содержимое
+    purpose: "Path to GCP service account JSON (Application Default Credentials)"
+    sensitivity: high
+    token_pattern: null
+  - key: GOOGLE_CLOUD_LOCATION         # type: value — регион (europe-west1 и т.п.)
+```
+
+```bash
+# 2. Положить JSON в .gcp/ — директория УЖЕ в .gitignore (доставляется sync'ом, zero-config):
+#    .gcp/<project>-<hash>.json
+#    (если файл был staged до обновления .gitignore: git rm --cached .gcp/<file>.json)
+
+# 3. Записать ПУТЬ (не содержимое) — пользователь запускает сам:
+bash scripts/set-secret.sh GOOGLE_APPLICATION_CREDENTIALS
+#    На запрос значения ввести путь: .gcp/<project>-<hash>.json
+
+# 4. Проверить:
+bash scripts/validate-secrets.sh        # type:file → 📄 ... ✓ если файл на месте
+
+# 5. Использовать (agent-safe): SDK сам читает путь из env-var, агент не видит содержимое:
+bash scripts/with-secret.sh GOOGLE_APPLICATION_CREDENTIALS -- py gen.py
+#    google-cloud-aiplatform / любой Google SDK подхватывает GOOGLE_APPLICATION_CREDENTIALS
+#    как Application Default Credentials автоматически.
+```
+
+**⛔ Безопасность — то же что для value-секретов, плюс file-специфика:**
+- Агент НЕ читает JSON напрямую (`cat .gcp/*.json` → попадёт в transcript). Путь в `.env` — ОК (не секрет); содержимое файла — секрет.
+- `.gcp/` gitignored by-construction → JSON не коммитится. Не класть credential-файлы вне gitignored директорий.
+- `with-secret.sh GOOGLE_APPLICATION_CREDENTIALS -- cmd` инжектит **путь** в env subprocess — SDK сам открывает файл, путь в stdout не утекает как секрет (это и не секрет — секрет внутри файла).
+
+**Few-shot:**
+✅ Vertex AI image-gen: объявить `GOOGLE_APPLICATION_CREDENTIALS` с `type: file`, JSON в `.gcp/`, запуск через `with-secret.sh ... -- py script.py`.
+❌ Класть JSON вне репо и хардкодить абсолютный путь в коде — теряется validate-secrets проверка + не переносимо между машинами. Канон: `.gcp/` внутри проекта (gitignored).
+❌ Просить пользователя вставить содержимое JSON в чат / в `.env` как строку — это file-секрет, хранится файлом, в `.env` только путь.
 
 ---
 

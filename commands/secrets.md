@@ -127,7 +127,7 @@ See also: skills/secrets-management/SKILL.md (full runbook)
 Показать help screen (выше).
 
 ### `/secrets --audit`
-Запустить `bash scripts/validate-secrets.sh`. Audit table + warnings (expiry, rotation, how_to_obtain freshness, missing v2 fields). **Не показывает значения.**
+Запустить `bash scripts/validate-secrets.sh`. Audit table + warnings (expiry, rotation, how_to_obtain freshness, missing v2 fields). Для записей `type: file` (GCP/Vertex JSON, сертификаты) дополнительно проверяет что файл существует по пути из `.env` (`📄 ... ✓` / `❌ FILE NOT FOUND`). **Не показывает значения.**
 
 ### `/secrets --list`
 Запустить `bash scripts/secrets-show.sh`. Tabular: KEY / SERVICE / URL / LOGIN / STATUS. **Не показывает значения.**
@@ -151,6 +151,8 @@ To add KEY, run yourself (do not paste value into chat):
 How to obtain value (from manifest):
 <how_to_obtain content if KEY declared>
 ```
+**Для `type: file` ключей** (GCP service account JSON, сертификаты): на запрос значения вводится **путь к файлу** (`.gcp/<project>.json`), не содержимое. Файл кладётся в gitignored директорию (`.gcp/`), `.env` хранит только путь. См. skill `secrets-management` § File-type secrets.
+
 **Агент НЕ выполняет** — only prints instruction.
 
 ### `/secrets --edit KEY`
