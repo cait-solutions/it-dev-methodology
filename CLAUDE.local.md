@@ -86,8 +86,9 @@ auto_commit_consumers:
     # workspace canonical clone; GitLab code.nexchance.de; resolved duplicate 2026-06-19
     branch: ai-dev
   - path: ../../URAI/legal_ai_assistant-documentation
-    # legal AI assistant project; agent_branch=ai-dev (added 2026-06-19)
+    # legal AI assistant project; repo owner=cait-deployer; remote=cait-deployer/legal_ai_assistant-documentation
     branch: ai-dev
+    gh_account: cait-deployer
 ```
 
 > **`branch` ДОЛЖЕН совпадать с `agent_branch` из `CLAUDE.local.md ## Branching` целевого репо** (closes G-117 branch-mismatch класс): `/push-consumers` коммитит в текущую ветку и пушит в этот `branch`. Если репо работает через `ai-dev` (team/MR-workflow), а whitelist указывает `main` → прямой push в main отклоняется (non-ff / protected). При `agent_branch=ai-dev` → push в `ai-dev`, MR/PR в main делает человек. Репо без `agent_branch` (solo на main) → `branch: main`.
