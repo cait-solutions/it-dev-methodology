@@ -102,14 +102,19 @@ bash scripts/consumer-pull.sh
 
 **Если repo уже актуален** — одна строка «✓ up to date».
 
-**Если история разошлась (ff-only не прошёл):**
+**Если история разошлась (ff-only не прошёл):** скрипт различает два случая по составу опережающих коммитов (`origin/<branch>..<branch>`):
 
-```
-✗ SKIP — ff-only failed (история разошлась)
-   git log --oneline --graph origin/<branch>...<branch>
-```
-
-Разрешить вручную: `git rebase origin/<branch>` или спросить пользователя.
+- **Только sync-коммиты** (`sync methodology v*`) → авто-safe-reset на `origin/<branch>` (это локальные `sync methodology` коммиты от `/push-consumers`, безопасно сбрасываются — dirty-check перед этим уже пройден):
+  ```
+  ↩  safe-reset: только sync-коммиты — сброс на origin/<branch>
+  ```
+- **Есть хоть один не-sync коммит** → ✗ SKIP + список опережающих коммитов (рабочую историю автоматически не трогаем):
+  ```
+  ✗ SKIP — ff-only failed (история разошлась)
+     <ahead-коммиты>
+     git log --oneline --graph origin/<branch>...<branch>
+  ```
+  Разрешить вручную: `git rebase origin/<branch>` или спросить пользователя.
 
 **Если fetch вернул 403 / auth error:**
 - GitHub: `gh auth login` → повторить `/pull`
