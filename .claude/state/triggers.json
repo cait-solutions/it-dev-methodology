@@ -14,15 +14,15 @@
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 40
+      "plans_since": 41
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 7
+      "plans_since": 8
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 42
+      "plans_since": 43
     },
     "last_architecture_audit": {
       "date": "2026-06-19",
@@ -150,26 +150,25 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-19T21:00:00",
-    "task_id": "mattpocock-skills-analysis",
-    "service": "methodology-platform (analysis → IDEAS/PRODUCT-GAPS/DEVLOG)",
+    "completed_at": "2026-06-19T22:00:00",
+    "task_id": "web-design-skill",
+    "service": "methodology-platform (новый skills/web-design/SKILL.md → all consumers via sync)",
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "Cross-link трёх записей: IDEAS ↔ PRODUCT-GAPS ↔ DEVLOG [research:mattpocock-skills]", "status": "done", "skip_reason": null },
-      { "text": "В DEVLOG verdict явно пометить reject-паттерны (to-issues/install/git-guardrails/pre-commit/migrate) с номерами Границ — чтобы будущие сессии не пере-предлагали", "status": "done", "skip_reason": null },
-      { "text": "При записи IDEAS пометить grill-me как «требует анализа пересечения с /plan Шаг 0/99.3»", "status": "done", "skip_reason": null }
+      { "text": "Brand context check как первый структурный шаг в skill (читать MARKETING.md если есть)", "status": "pending", "skip_reason": null },
+      { "text": "Aesthetic direction list — open-ended примеры, не closed enum (чтобы не устарел через год)", "status": "pending", "skip_reason": null },
+      { "text": "CHANGELOG.md — запись consumer-facing нового skill", "status": "pending", "skip_reason": null }
     ],
     "sustainment": [
-      { "artifact": "IDEAS.md запись (engineering-discipline skill layer)", "trigger": "/vision review читает", "refresh": "при review → reviewed/converted", "detection": "/retro Шаг 6 IDEAS captured", "owner": "методология" },
-      { "artifact": "PRODUCT-GAPS.md P-NNN (skills marketing-перекос)", "trigger": "/vision review / /retro Шаг 2а.2", "refresh": "при конверсии в ROADMAP", "detection": "/retro PRODUCT-GAPS signal High≥3", "owner": "методология" },
-      { "artifact": "DEVLOG [research:mattpocock-skills]", "trigger": "build-knowledge-index.sh → KNOWLEDGE.md", "refresh": "/retro Шаг 5.5", "detection": "Stop hook research detection", "owner": "методология" }
+      { "artifact": "skills/web-design/SKILL.md (канон)", "trigger": "дизайн-тренды изменились; brand guidance методологии изменилась", "refresh": "ручной PR в methodology", "detection": "validate-delivery.sh parity; /review downstream check", "owner": "методология" },
+      { "artifact": ".claude/skills/web-design/SKILL.md (self-apply + consumer copy)", "trigger": "sync-methodology.sh", "refresh": "sync-methodology.sh при каждом /deploy", "detection": "validate-delivery.sh; /sync-audit Gap delta", "owner": "методология (sync)" },
+      { "artifact": "USER-MAP.md (новый skill-узел)", "trigger": "новая capability добавлена (Maps Standard PR-coupling)", "refresh": "обновляется в этом /code Шаг 5", "detection": "mermaid-links auto; /product-check plans_since ≥ 5", "owner": "методология" },
+      { "artifact": "LIVING-ARTIFACTS.md (новая строка)", "trigger": "добавлен новый механизм (Шаг 97 rule)", "refresh": "/code Шаг 5", "detection": "validate-lar.sh; /retro", "owner": "методология" }
     ],
     "deferred": [
-      { "text": "Реализация конкретного engineering-skill (tdd-style, writing-great-skills)", "reason": "отдельный /plan после /vision review", "tag": "deferred" },
-      { "text": "/vision strategy оценка «ось или фича» для engineering-discipline", "reason": "следующий стратегический цикл", "tag": "deferred" },
-      { "text": "grill-me reusable-блок extraction", "reason": "требует анализа пересечения с /plan Шаг 0", "tag": "deferred" },
-      { "text": "Портфельный эффект engineering-skills (Ось 7 Layer 1, другие consumers)", "reason": "другая стратегическая плоскость", "tag": "out-of-scope" }
+      { "text": "/design explicit команда", "reason": "после сигнала об reliability auto-activation; достаточна auto-activation", "tag": "deferred" },
+      { "text": "PRODUCT.md skills-layer секция (## Логика компонентов)", "reason": "skills layer работает без неё; отдельный PR", "tag": "out-of-scope" }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {

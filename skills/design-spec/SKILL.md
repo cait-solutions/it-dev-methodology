@@ -183,6 +183,8 @@ New v. 1.0 = <N> characters
 
 <!-- mermaid-link-placeholder -->
 
+https://mermaid.live/edit#pako:eNpFzc0KwjAQBOBXCXOuETzm3DfQYy5Lsv2BJtG4a5HSdzdFxDl-DDMbQokMh2Epa5ioirn15myeQsL9TGOldHpdDuGHcg4_9Nm0WGvRIXFNNMe2snnIxIk9nEfkgXQRj711SKVc3znASVXuoPf4f_ji_gH0iy-U
+
 ```mermaid
 flowchart TD / stateDiagram-v2 / sequenceDiagram
     ...
