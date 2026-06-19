@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.1.2 — feat: file-type secrets knowledge + schema↔skill parity detector (closes G-120) (2026-06-19)
+
+**Consumer-facing changes:**
+- **`skills/secrets-management/SKILL.md`** — новая секция «File-type secrets — credential-файлы». Документирует паттерн `type: file` для cloud credential JSON (GCP service account / Vertex AI / Gemini-via-Vertex / n8n GCP-нода, TLS-сертификаты, AWS creds-файлы): объявление в manifest, хранение в gitignored `.gcp/`, `set-secret` хранит ПУТЬ не содержимое, использование через `with-secret.sh GOOGLE_APPLICATION_CREDENTIALS -- cmd` (SDK сам читает env-var как Application Default Credentials). До этого механизм `type: file` (v6.4.7) был только в validator+template+`.gitignore` — агент при вопросе о JSON-credential не знал supported паттерн и re-derive'ил с нуля. Плюс краткое покрытие `gh_account` + `keychain_backend` (закрыты при dog-food прогоне нового detector'а).
+- **`commands/secrets.md`** — `--audit` отмечает file-existence check для `type: file` записей; `--add` отмечает что для file-ключей вводится путь, не содержимое.
+- **`scripts/validate-schema-skill-parity.sh`** (NEW) — детектор drift: capability-поле в consumer-facing schema-template без зеркала в парном `SKILL.md`. L3 detect (token-presence), severity=warn (`SCHEMA_SKILL_SEVERITY=error` для блока), declarative pairs-карта в шапке. Запускается как detector в `deploy-push.sh` + ось `/review`.
+- **`commands/review.md`** — новая ось «Schema↔skill parity» (исполняет detector pre-merge).
+- **`CLAUDE.md`** — новый MUST «Schema→skill parity»: capability-поле consumer-facing schema → апдейт парного knowledge-skill в том же PR. Enforcement честно помечен L3 detect (detector + /review), не overclaim.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/skills/secrets-management/SKILL.md` + `.claude/commands/secrets.md`. Знание доступно агенту сразу после sync. (Detector + review-ось — methodology-internal, на консьюмера не влияют.)
+- 🟡 **При использовании GCP/Vertex/Gemini:** раскомментировать GCP-группу в `.claude/secrets-manifest.yaml`, создать `.gcp/` (уже gitignored), положить JSON, `bash scripts/set-secret.sh GOOGLE_APPLICATION_CREDENTIALS` (ввести путь). Детали — skill `secrets-management` § File-type secrets.
+
+---
+
 ## v7.0.0 — feat: /opinion+ council mode (7 external советников) (2026-06-19)
 
 **Consumer-facing changes:**

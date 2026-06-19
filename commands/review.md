@@ -318,6 +318,17 @@ Disposition: [fix now / deferred + DEVLOG entry / backlog → IDEAS.md / irrelev
 - [ ] Изменён bootstrap: новый файл создаётся? → хотя бы одна команда на него ссылается?
 - Несоответствие → 🔴 CRITICAL (команда сломана на свежем проекте)
 
+**Schema↔skill parity** (только methodology-platform; PR трогает consumer-facing schema-template):
+
+> **Класс G-120** «механизм заведён в data-слой schema-template, но не зеркалирован в парный knowledge-skill (SKILL.md) → невидим агенту в runtime, агент re-derive'ит с нуля» (type:file v6.4.7 доставлен в validator+template+.gitignore, но `secrets-management/SKILL.md` молчал). Дополняет deploy-time detector (`validate-schema-skill-parity.sh`, WARN) pre-merge осью.
+
+- PR трогает `templates/secrets-manifest.yaml.template` (или иной schema-template из declarative-карты в `validate-schema-skill-parity.sh`)? Нет → `N/A — schema-template не тронут`.
+- Если да → **ОБЯЗАТЕЛЬНО исполнить** (реальный запуск, не prose):
+  ```bash
+  bash scripts/validate-schema-skill-parity.sh
+  ```
+- Новое capability-поле в schema-template **без** упоминания в парном SKILL.md → 🔴 **fix now**: опиши поле в skill в этом же PR (CLAUDE.md MUST «Schema→skill parity»). Pure-config / non-agent-knowledge поле → допустимо оставить (detector WARN, не блок). ⛔ **Detection-guard:** скрипт отсутствует (migration window) → check невалиден, НЕ PASS: 🔵 «schema↔skill parity не проверен — `validate-schema-skill-parity.sh` отсутствует».
+
 **Hook-wiring parity** (только для methodology-platform tasks; PR трогает `templates/.claude/hooks/`):
 
 > **Класс** «fix есть в методологии, но не активировался у консьюмера — тихий fail» (erp 2026-06-06: hook-файл добавлен, но не wired в settings → hook мёртв у всех консьюмеров, ничто не ловило на dev-стороне). **Прямое направление:** file → нет wiring. Комплементарно `check_hook_health` в `auto-update-watchdog.py` (runtime у консьюмера, обратное направление settings→missing file) и sync G-075 — здесь dev-time gate на источнике.
