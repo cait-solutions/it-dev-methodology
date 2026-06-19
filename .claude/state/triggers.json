@@ -151,29 +151,23 @@
   },
   "last_plan_session": {
     "completed_at": "2026-06-19T00:00:00",
-    "task_id": "sync-audit-decomp-north-star-bootstrap",
-    "service": "methodology-platform (commands/ → commands-local/sync-audit.md + commands-local/push-consumers.md Phase 0 + commands-local/pull-consumers.md Шаг 3.7 + VERSION v7.0.0)",
-    "mode": "Lite",
+    "task_id": "push-consumer-single-gitignored-commit-fix",
+    "service": "methodology-platform (scripts/push-consumer-single.sh + templates/scripts/push-consumer-single.sh)",
+    "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "commands/sync-audit.md — удалить из commands/ (больше не доставляется consumers)", "status": "done", "skip_reason": null },
-      { "text": "commands-local/sync-audit.md — создать с LOCAL-ONLY header (v7.0.0 migration note)", "status": "done", "skip_reason": null },
-      { "text": "commands-local/pull-consumers.md — Шаг 3.7: compact health indicators (NS + RV checks)", "status": "done", "skip_reason": null },
-      { "text": "commands-local/pull-consumers.md — Шаг 4 drift-table: NS + RV колонки + footer legend", "status": "done", "skip_reason": null },
-      { "text": "commands-local/push-consumers.md — Phase 0: North Star bootstrap Q&A (write-if-empty PRESERVE, 4 вопроса, anti-friction)", "status": "done", "skip_reason": null },
-      { "text": "VERSION bump v6.9.4 → v7.0.0 (major: consumer-facing command removal per CLAUDE.md)", "status": "done", "skip_reason": null },
-      { "text": "DEVLOG — [feat:command][opinion:sync-audit-two-masters][opinion:north-star-bootstrap][domain:sync] запись", "status": "done", "skip_reason": null },
-      { "text": "ROADMAP Done — новая строка sync-audit-decomp-north-star-bootstrap", "status": "done", "skip_reason": null }
+      { "text": "scripts/push-consumer-single.sh — commit trackable staged subset (git diff --cached -- $CHANGED_PATHS) вместо raw git commit $CHANGED_PATHS; empty-guard перед commit", "status": "done", "skip_reason": null },
+      { "text": "templates/scripts/push-consumer-single.sh — идентичный фикс (ADR-014 dual-copy parity)", "status": "skipped", "skip_reason": "templates-копии нет: push-consumer-single.sh owner-only (драйвит LOCAL-ONLY /push-consumers), не синкается консьюмерам → dual-copy неприменим" },
+      { "text": "VERSION bump v7.0.1 → v7.0.2 (consumer-facing delivery-path fix)", "status": "done", "skip_reason": null },
+      { "text": "DEVLOG — [fix:push-consumer-single][domain:git-push] silent-non-commit на gitignored pathspec", "status": "done", "skip_reason": null },
+      { "text": "CHANGELOG — v7.0.2 запись (delivery fix)", "status": "skipped", "skip_reason": "не consumer-facing: owner-only скрипт, консьюмеры не получают этот файл → CHANGELOG (consumer migration) неприменим" }
     ],
     "sustainment": [
-      { "artifact": "commands-local/sync-audit.md", "trigger": "methodology owner /sync-audit запуск", "refresh": "при смене gap-checks следующим /plan", "detection": "не синхронизируется → drift risk минимален", "owner": "методология" },
-      { "artifact": "commands-local/pull-consumers.md (Шаг 3.7)", "trigger": "/pull-consumers еженедельно", "refresh": "при новых health-indicators следующим /plan", "detection": "/review parity", "owner": "методология" },
-      { "artifact": "commands-local/push-consumers.md (Phase 0)", "trigger": "/push-consumers при COMMIT_PUSH=true", "refresh": "при изменении NORTH-STAR.md format следующим /plan", "detection": "/review parity", "owner": "методология" }
+      { "artifact": "scripts/push-consumer-single.sh · templates/scripts/push-consumer-single.sh", "trigger": "/push-consumers Шаг 5 Режим B (per consumer)", "refresh": "dual-copy parity ADR-014 при deploy", "detection": "validate-script-parity.sh gate в deploy-push.sh", "owner": "методология" }
     ],
     "deferred": [
-      { "text": "push-consumers Шаг 7 full upgrade (16 checks from sync-audit)", "reason": "отдельный /plan", "tag": "deferred" },
-      { "text": "sync-methodology.sh explicit delete старых consumer copies sync-audit.md", "reason": "auto-cleanup happens on next /push-consumers via lines 688-702; separate /plan для явной migration", "tag": "deferred" },
-      { "text": "SYS-1..SYS-10 backlog (gap-analysis-systemic-8-sys)", "reason": "deferred from prior plan, still in _last_plan_session_backup", "tag": "deferred" }
+      { "text": "sync-methodology.sh --print-managed (явный manifest-universe для commit-scope)", "reason": "текущий re-report поведения достаточен для heal; отдельный /plan если понадобится", "tag": "deferred" },
+      { "text": "push-consumers Шаг 7 full upgrade (16 checks from sync-audit)", "reason": "из v7.0.0 плана, отдельный /plan", "tag": "deferred" }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {

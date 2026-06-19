@@ -83,26 +83,44 @@ fi
 
 # ---------------------------------------------------------------------------
 # 4. Git add + commit — explicit pathspec only (closes a17ecc1).
-#    git add $CHANGED_PATHS stages ONLY sync-written files (tracks new untracked too).
-#    git commit $CHANGED_PATHS commits ONLY those paths — even if another session
-#    staged other files, our pathspec commit won't capture them.
+#    git add $CHANGED_PATHS stages ONLY sync-written files (tracks new untracked too);
+#    gitignored manifest entries (.claude/commands/*, .claude/hooks/*, .claude/skills/*
+#    are DERIVED copies, gitignored in consumers) are silently skipped by `git add`.
+#
+#    COMMIT scope = trackable staged subset of OUR manifest, computed via
+#    `git diff --cached --name-only -- $CHANGED_PATHS`:
+#      • pathspec `-- $CHANGED_PATHS` keeps parallel-safety (never another session's
+#        staged work — only our manifest paths), preserving the a17ecc1 guarantee;
+#      • unlike `git commit <pathspec>`, `git diff -- <pathspec>` does NOT abort on
+#        gitignored/untracked entries — it silently drops them and returns exit 0.
+#    WHY (closes silent-non-commit, domain:git-push): the previous
+#    `git commit $CHANGED_PATHS` passed gitignored paths as pathspec → git aborted the
+#    WHOLE commit ("pathspec '.claude/commands/...' did not match any file(s) known to
+#    git") → exit non-zero → treated as "already up to date" → tracked files (CLAUDE.md,
+#    scripts/*) silently never committed/pushed across the consumer fleet.
 # ---------------------------------------------------------------------------
 MSG="sync methodology ${NEW_VER:-?}"
 # shellcheck disable=SC2086
 git -C "$CONSUMER_PATH" add -- $CHANGED_PATHS 2>/dev/null || true
 
-STAGED=$(git -C "$CONSUMER_PATH" diff --cached --name-only 2>/dev/null | grep -v "^$" | head -1)
-if [ -z "$STAGED" ]; then
-  echo "  ℹ️  $CONSUMER_NAME: нічого нового для коміту (вже актуально)"
+# shellcheck disable=SC2086
+COMMIT_PATHS=$(git -C "$CONSUMER_PATH" diff --cached --name-only -- $CHANGED_PATHS 2>/dev/null | grep -v "^$")
+if [ -z "$COMMIT_PATHS" ]; then
+  echo "  ℹ️  $CONSUMER_NAME: немає trackable змін для коміту (manifest = derived/gitignored або вже актуально)"
   exit 0
 fi
 
+COMMIT_ERR="$(mktemp 2>/dev/null || echo "/tmp/commit_err_$$")"
 # shellcheck disable=SC2086
-if ! git -C "$CONSUMER_PATH" commit $CHANGED_PATHS -m "$MSG" 2>/dev/null; then
-  echo "  ℹ️  $CONSUMER_NAME: коміт нічого не змінив (вже актуально)"
-  exit 0
+if ! git -C "$CONSUMER_PATH" commit $COMMIT_PATHS -m "$MSG" 2>"$COMMIT_ERR"; then
+  echo "  ❌ $CONSUMER_NAME: commit failed:" >&2
+  cat "$COMMIT_ERR" 2>/dev/null | head -3 | sed 's/^/      /' >&2
+  rm -f "$COMMIT_ERR" 2>/dev/null || true
+  exit 1
 fi
-echo "  ✅ commit: '$MSG'"
+rm -f "$COMMIT_ERR" 2>/dev/null || true
+N_FILES=$(echo "$COMMIT_PATHS" | grep -c . )
+echo "  ✅ commit: '$MSG' (${N_FILES} файлів)"
 
 # ---------------------------------------------------------------------------
 # 5. gh-account check (closes P-012 / P-013 / domain:git-push)
