@@ -279,8 +279,8 @@
   "last_deploy": {
     "date": "2026-06-19",
     "status": "ok",
-    "phase": "skills/web-design/SKILL.md — bold aesthetic direction skill, auto-delivered to all consumers — v6.8.0",
-    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/254"
+    "phase": "gh-account-gate: validate-gh-accounts.sh + check-gh-account.sh — P-012 structural enforcement — v6.9.0",
+    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/257"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
