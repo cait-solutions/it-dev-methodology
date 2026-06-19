@@ -4,6 +4,16 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.9.1 — feat: /code Шаг 5 draft-maps cleanup rule (2026-06-19)
+
+**Consumer-facing changes:**
+- `/code` Шаг 5: новый пункт — `rm -f _tmp_draft-maps-*.md` после финализации living maps. Наличие файлов = сигнал что PR-coupling не закрыт. Ad-hoc previews удаляются сразу.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/commands/code.md`
+
+---
+
 ## v6.8.0 — feat: skills/web-design/SKILL.md — bold aesthetic direction для web-интерфейсов (2026-06-19)
 
 **Consumer-facing changes:**
