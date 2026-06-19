@@ -156,9 +156,9 @@
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "Brand context check как первый структурный шаг в skill (читать MARKETING.md если есть)", "status": "pending", "skip_reason": null },
-      { "text": "Aesthetic direction list — open-ended примеры, не closed enum (чтобы не устарел через год)", "status": "pending", "skip_reason": null },
-      { "text": "CHANGELOG.md — запись consumer-facing нового skill", "status": "pending", "skip_reason": null }
+      { "text": "Brand context check как первый структурный шаг в skill (читать MARKETING.md если есть)", "status": "done", "skip_reason": null },
+      { "text": "Aesthetic direction list — open-ended примеры, не closed enum (чтобы не устарел через год)", "status": "done", "skip_reason": null },
+      { "text": "CHANGELOG.md — запись consumer-facing нового skill", "status": "done", "skip_reason": null }
     ],
     "sustainment": [
       { "artifact": "skills/web-design/SKILL.md (канон)", "trigger": "дизайн-тренды изменились; brand guidance методологии изменилась", "refresh": "ручной PR в methodology", "detection": "validate-delivery.sh parity; /review downstream check", "owner": "методология" },
@@ -273,7 +273,8 @@
   "last_deploy": {
     "date": "2026-06-19",
     "status": "ok",
-    "phase": "vision-review batch×16 + mattpocock-skills research + R-034/R-035/R-031 false-green fix — v6.7.4"
+    "phase": "skills/web-design/SKILL.md — bold aesthetic direction skill, auto-delivered to all consumers — v6.8.0",
+    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/254"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
