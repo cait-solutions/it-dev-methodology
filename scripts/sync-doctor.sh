@@ -56,7 +56,7 @@ done
 # ---------------------------------------------------------------------------
 if [ -z "$METHODOLOGY_PATH" ]; then
   if [ -f "CLAUDE.local.md" ]; then
-    _mpath=$(grep "methodology_path:" CLAUDE.local.md 2>/dev/null | head -1 | sed 's/.*methodology_path:[[:space:]]*//' | tr -d '[:space:]"'"'"')
+    _mpath=$(grep "methodology_path:" CLAUDE.local.md 2>/dev/null | head -1 | sed 's/.*methodology_path:[[:space:]]*//' | tr -d "[:space:]\"'")
     if [ -n "$_mpath" ] && [ "$_mpath" != "null" ]; then
       METHODOLOGY_PATH="$_mpath"
     fi
@@ -144,16 +144,10 @@ fi
 # ---------------------------------------------------------------------------
 _settings=".claude/settings.json"
 if [ -f "$_settings" ]; then
-  _hook_names=$(
-    {
-      grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.py' "$_settings" 2>/dev/null \
-        | sed 's#\.claude/hooks/##'
-      grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.sh' "$_settings" 2>/dev/null \
-        | sed 's#\.claude/hooks/##'
-      grep -oE 'run-hook\.sh [A-Za-z0-9_.-]+\.py' "$_settings" 2>/dev/null \
-        | sed 's#run-hook\.sh ##'
-    } | sort -u
-  )
+  _py_hooks=$(grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.py' "$_settings" 2>/dev/null | sed 's#\.claude/hooks/##')
+  _sh_hooks=$(grep -oE '\.claude/hooks/[A-Za-z0-9_.-]+\.sh' "$_settings" 2>/dev/null | sed 's#\.claude/hooks/##')
+  _rh_hooks=$(grep -oE 'run-hook\.sh [A-Za-z0-9_.-]+\.py' "$_settings" 2>/dev/null | sed 's#run-hook\.sh ##')
+  _hook_names=$(printf '%s\n%s\n%s' "$_py_hooks" "$_sh_hooks" "$_rh_hooks" | grep -v '^$' | sort -u)
   HOOKS_STATUS="PASS"
   for _h in $_hook_names; do
     [ -z "$_h" ] && continue
