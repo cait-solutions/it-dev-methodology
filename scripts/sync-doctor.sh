@@ -248,8 +248,8 @@ if [ "$JSON_MODE" -eq 1 ]; then
     echo '{"error":"Python not found — cannot produce JSON output"}' >&2
     exit 2
   fi
-  _healthy="true"
-  [ "$FAILS" -gt 0 ] && _healthy="false"
+  _healthy="True"
+  [ "$FAILS" -gt 0 ] && _healthy="False"
   _missing_list=$(echo "$HOOKS_MISSING" | tr ' ' '\n' | grep -v '^$' | sed 's/^/"/;s/$/"/' | tr '\n' ',' | sed 's/,$//')
   [ -z "$_missing_list" ] && _missing_list=""
   "$PYTHON" - <<PYEOF
