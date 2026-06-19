@@ -151,9 +151,9 @@ To add KEY, run yourself (do not paste value into chat):
 How to obtain value (from manifest):
 <how_to_obtain content if KEY declared>
 ```
-**Для `type: file` ключей** (GCP service account JSON, сертификаты): на запрос значения вводится **путь к файлу** (`.gcp/<project>.json`), не содержимое. Файл кладётся в gitignored директорию (`.gcp/`), `.env` хранит только путь. См. skill `secrets-management` § File-type secrets.
+**Агент НЕ выполняет** (для value-секретов) — only prints instruction. Значение токена/key не должно попасть в transcript.
 
-**Агент НЕ выполняет** — only prints instruction.
+**Исключение — `type: file` секреты** (GCP/Vertex JSON, сертификаты): значение в `.env` = **путь** (не секрет) → **агент выполняет добавление САМ** (Edit manifest `type:file` → `set-secret.sh KEY .gcp/x.json` → check-ignore → validate), юзер только кладёт файл в `.gcp/`. Полная процедура — skill `secrets-management` § Agent procedure. Не печатать юзеру «запусти set-secret.sh» для file-кейса.
 
 ### `/secrets --edit KEY`
 Показать пользователю:

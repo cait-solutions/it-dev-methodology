@@ -79,7 +79,7 @@ PLACEHOLDER_RE='^(changeme|your[-_]?token|paste[-_]?here|TODO|xxx+|placeholder|<
 _parse_manifest() {
   awk '
     /^[[:space:]]*-[[:space:]]*key:[[:space:]]*/ {
-      if (cur_key) print cur_key "\t" cur_req "\t" cur_sn "\t" cur_url "\t" cur_rot "\t" cur_exp "\t" cur_ver "\t" cur_typ
+      if (cur_key) print cur_key "\037" cur_req "\037" cur_sn "\037" cur_url "\037" cur_rot "\037" cur_exp "\037" cur_ver "\037" cur_typ
       cur_key=$0; sub(/^[[:space:]]*-[[:space:]]*key:[[:space:]]*/, "", cur_key)
       gsub(/[[:space:]"'"'"']/, "", cur_key)
       cur_req="false"; cur_sn=""; cur_url=""; cur_rot=""; cur_exp=""; cur_ver=""; cur_typ="value"
@@ -110,7 +110,7 @@ _parse_manifest() {
       cur_typ=$0; sub(/^[[:space:]]*type:[[:space:]]*/, "", cur_typ)
       gsub(/[[:space:]"'"'"']/, "", cur_typ)
     }
-    END { if (cur_key) print cur_key "\t" cur_req "\t" cur_sn "\t" cur_url "\t" cur_rot "\t" cur_exp "\t" cur_ver "\t" cur_typ }
+    END { if (cur_key) print cur_key "\037" cur_req "\037" cur_sn "\037" cur_url "\037" cur_rot "\037" cur_exp "\037" cur_ver "\037" cur_typ }
   ' "$MANIFEST"
 }
 
@@ -170,7 +170,7 @@ total_required=0
 declared_keys=""
 warns=0
 
-while IFS=$'\t' read -r key req sn url rot exp ver typ; do
+while IFS=$'\037' read -r key req sn url rot exp ver typ; do
   [[ -z "$key" ]] && continue
   declared_keys="$declared_keys $key"
   loc=$(_locate "$key")
