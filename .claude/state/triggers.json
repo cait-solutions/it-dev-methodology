@@ -272,8 +272,8 @@
   "last_deploy": {
     "date": "2026-06-19",
     "status": "ok",
-    "phase": "opinion Follow-up Proposal + pull workspace WARN + safe-reset — v6.9.4",
-    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/261"
+    "phase": "push-consumer-single.sh gitignored-pathspec commit fix — v7.0.2 (PR #264); delivered to 8/9 consumers",
+    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/264"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",

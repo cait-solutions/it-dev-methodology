@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.0.0 — feat: /opinion+ council mode (7 external советников) (2026-06-19)
+
+**Consumer-facing changes:**
+- `/opinion+` — новый high-stakes режим команды `/opinion`. Те же 5 Council-советников + 2 (Альтернативщик · Complexity tax) запускаются как **7 независимых external sub-agents** (чистый контекст → structural independence, не симуляция в одном контексте). North Star передаётся в каждый sub-agent prompt. Синтез 7 вердиктов в enriched committed verdict.
+- Триггер строгий: только необратимые / высокие ставки (удаление команды, breaking change, major bump, security, framing-bias в конце длинного диалога). Для рутины — solo `/opinion`.
+- Graceful fallback → solo `/opinion` если Agent tool недоступен. ⛔ не вызывать внутри другой команды.
+- `model-tiers.md`: `/opinion+` = Capable tier (всегда).
+- `/opinion` (solo) и `[?]` inline — без изменений; DEVLOG-тег остаётся единым `[opinion:X]`.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `.claude/commands/opinion.md` + `.claude/model-tiers.md`. Новых действий не требуется — режим доступен сразу после sync.
+
+---
+
 ## v6.9.4 — feat: /pull workspace_file WARN + safe-reset + /opinion Follow-up Proposal (2026-06-19)
 
 **Consumer-facing changes:**
