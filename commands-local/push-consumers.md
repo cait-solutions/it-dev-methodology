@@ -37,6 +37,36 @@ Pre-flight model check: спросить только если Capable (Opus) а
 
 ---
 
+## Шаг 0.5 — Consumer Pull (ff-only, pre-dirty-check)
+
+**Цель:** подтянуть remote commits перед dirty-check. Если другая сессия уже синкнула и запушила изменения — pull приводит локальный репо в актуальное состояние → dirty-check видит чистое дерево. Закрывает G-118 (perpetual dirty loop — sync писал tracked файлы без commit, dirty-guard пропускал репо, loop повторялся).
+
+**Применяется:** только при `COMMIT_PUSH=true` (дефолт). При `--sync-only` — **пропустить** (нет commit+push → нет риска loop; pull не нужен для read-only синка).
+
+**Для каждого whitelisted repo** (из `auto_commit_consumers`):
+
+```bash
+BRANCH=<branch-from-whitelist>  # из auto_commit_consumers для этого репо
+PULL_OUT=$(git -C <consumer-path> pull --ff-only origin "$BRANCH" 2>&1)
+PULL_EXIT=$?
+```
+
+**Интерпретация результата:**
+- exit 0, вывод `"Already up to date."` → тихо продолжить (no-op)
+- exit 0, вывод содержит `"Fast-forward"` → показать: `  📥 <имя>: pulled from remote (fast-forward)`
+- exit ≠ 0 (diverged / conflict / network error) → ⚠️ warn + **пропустить repo** (НЕ abort батча):
+  ```
+  ⚠️ <имя>: pull --ff-only failed → repo пропущен (diverged или network)
+     Причина: <PULL_OUT первые 2 строки>
+     Реши вручную: git -C <path> pull [--rebase] origin <branch>
+  ```
+
+**Репо без remote origin** (локальный git без push настроенного remote): пропустить pull тихо (не ошибка).
+
+**Инвариант:** `--ff-only` обязателен. Никогда не делать `git pull` (без флага), не делать `--rebase`. Если нельзя fast-forward → warn+skip — пользователь сам решает конфликт.
+
+---
+
 ## Шаг 1.5 — Guard: dirty .claude/ pre-check
 
 **Цель:** предупредить перед батч-синком если в whitelisted consumer repo есть грязные `.claude/` файлы. Работает для обоих режимов (`COMMIT_PUSH=true` и `--sync-only`).
@@ -361,9 +391,86 @@ Sync: 5/5 ✅  |  Commit+Push: 4/4 whitelisted ✅  |  Init: 1 🆕  |  Проп
 
 ---
 
+## Шаг 7 — Post-sync adoption audit sweep
+
+**Условие:** выполняется только если Шаг 5 успешно синкнул ≥1 консьюмера. Пропускается тихо если Шаг 5 = 0 синков или если передан `--sync-only`.
+
+**Цель:** немедленно после синка показать adoption gaps каждого консьюмера — чтобы pre-flight tax при последующем открытии репо = 0.
+
+**Для каждого успешно синкнутого консьюмера:**
+
+```bash
+METH_PATH="$(pwd)"   # запускается из корня methodology repo
+DOCTOR_OUT=$( (cd "<consumer-path>" && bash "$METH_PATH/scripts/sync-doctor.sh" --json --methodology-path "$METH_PATH") 2>&1 )
+DOCTOR_EXIT=$?       # 0=PASS, 1=FAIL, 2=error/invalid-JSON
+```
+
+**Интерпретация:**
+- exit 0 → все секции PASS → пометить `✅`
+- exit 1 → есть FAIL секции → извлечь имена секций → записать как gap
+- exit 2 или нечитаемый вывод → `⚠️ doctor error` — пропустить репо, не abort батча
+
+**Агрегированная gap-таблица (выводить всегда, даже если все ✅):**
+
+```
+=== Post-sync adoption audit (sync-doctor) ===
+
+| Репо                        | version | hooks | secrets | deps | Overall |
+|-----------------------------|---------|-------|---------|------|---------|
+| erp-documentantion          | ✅      | ✅    | ⚠️ FAIL | ✅   | ⚠️      |
+| ai-assistant-documentation  | ✅      | ⚠️ FAIL | ✅    | ✅   | ⚠️      |
+| it-dev-methodology-docs     | ✅      | ✅    | ✅      | ✅   | ✅      |
+```
+
+**Gap-список (если есть FAIL):**
+
+```
+Gaps требующие /plan:
+  • erp-documentantion — [secrets]: secrets-manifest.yaml отсутствует
+  • ai-assistant-documentation — [hooks]: run-hook.sh не найден на диске
+
+→ /plan для каждого gap выше (per-repo, per-category)
+```
+
+**Если все ✅:**
+
+```
+✅ Все консьюмеры adoption-healthy — дополнительные /plan не нужны.
+```
+
+**Авто-переход к Шагу 8 (без отдельного запроса):**
+
+После вывода gap-таблицы — немедленно перейти к Шагу 8 (/pull-consumers). Не спрашивать подтверждения. Пользователь явно выбрал `/push-consumers` → весь workflow (sync → audit → pull) выполняется как единая операция.
+
+---
+
+## Шаг 8 — Auto /pull-consumers (без запроса)
+
+**Выполняется автоматически** сразу после Шага 7.
+
+**Цель:** получить свежие consumer-authored данные (AGENT-GAPS, DEVLOG, IDEAS) — нужны как контекст для `/plan` на фиксы из gap-таблицы Шага 7.
+
+**Логика порядка:** push = methodology → consumers (Шаг 5) → audit (Шаг 7) → pull = consumer-authored данные → methodology owner (этот шаг). Только после pull owner видит полную картину: что доставлено + что consumers сами накопили.
+
+Выполнить `/pull-consumers` полностью (весь её workflow: discovery → git pull → diff артефактов → отчёт).
+
+По завершении — показать:
+
+```
+=== /push-consumers + /pull-consumers завершены ===
+
+Следующий шаг:
+  /plan per gap — по таблице adoption audit выше (если есть ⚠️)
+  Данные для анализа: gap-таблица (Шаг 7) + consumer-diff (Шаг 8 выше)
+```
+
+**Если `--sync-only`:** Шаг 8 пропускается (нет commit/push → pull не нужен).
+
+---
+
 ## Когда запускать
 
-- **После каждого релиза** методологии (рекомендация в `/deploy` финале). Дефолт = zero-step deploy: sync + commit + push для всех whitelisted в одном прогоне.
-- **Перед `/retro`** — убедиться что консьюмеры на свежей версии
-- **`--sync-only`** — когда нужно только доставить файлы без коммита (редкий случай: ручная проверка diff перед коммитом)
+- **После каждого релиза** методологии (рекомендация в `/deploy` финале). Дефолт = zero-step deploy: sync + commit + push + audit для всех whitelisted в одном прогоне.
+- **Перед `/retro`** — убедиться что консьюмеры на свежей версии и adoption-healthy
+- **`--sync-only`** — когда нужно только доставить файлы без коммита (Шаг 7 пропускается)
 - ❌ НЕ запускать автоматически — manual trigger only (решение владельца)
