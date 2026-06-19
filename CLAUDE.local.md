@@ -87,7 +87,7 @@ auto_commit_consumers:
     # workspace canonical clone; GitLab code.nexchance.de; resolved duplicate 2026-06-19
     branch: ai-dev
   - path: ../../URAI/legal_ai_assistant-documentation
-    # legal AI assistant project; repo owner=cait-deployer; remote=cait-deployer/legal_ai_assistant-documentation
+    # legal AI assistant project; repo owner=cait-deployer; remote URL confirmed 2026-06-19: https://github.com/cait-deployer/legal_ai_assistant-documentation.git (was wrong cait-solutions/urai-legal-ai-assistant-documentation.git → fixed)
     branch: ai-dev
     gh_account: cait-deployer
 ```

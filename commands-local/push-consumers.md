@@ -270,80 +270,26 @@ fi
 
 ### Режим B (DEFAULT — commit+push, только whitelisted репо)
 
+Для каждого консьюмера — **один вызов скрипта** (L4 structural fix, closes P-013):
+
 ```bash
-echo "→ Синкаю <имя> (was <ver>)..."
-
-# 1. Sync с манифестом
-MANIFEST=$(bash scripts/sync-methodology.sh <consumer-path> --print-changed 2>&1)
-SYNC_EXIT=$?
-CHANGED_PATHS=$(echo "$MANIFEST" | grep "^CHANGED:" | sed 's/^CHANGED://' | tr '\n' ' ')
-
-if [ $SYNC_EXIT -ne 0 ]; then
-  echo "  ❌ <имя>: sync failed (exit $SYNC_EXIT) — пропуск commit+push"
-  continue  # к следующему консьюмеру
-fi
-
-NEW_VER=$(grep "methodology:" <consumer-path>/.claude/.version | sed 's/methodology: //')
-echo "  ✅ sync: <ver> → $NEW_VER"
-
-# 2. Проверить что CHANGED_PATHS не пустой
-if [ -z "$CHANGED_PATHS" ]; then
-  echo "  ℹ️  <имя>: манифест пустой — нечего коммитить"
-  continue
-fi
-
-# 3. Symmetric dirty-check: проверить грязность ТОЛЬКО по manifest-путям
-DIRTY=$(git -C <consumer-path> status --short $CHANGED_PATHS 2>/dev/null | grep -v "^$" | head -1)
-if [ -n "$DIRTY" ]; then
-  echo "  ⚠️  <имя>: dirty manifest-путь (параллельная сессия?) — пропуск commit+push"
-  echo "      Грязный путь: $DIRTY"
-  continue
-fi
-
-# 4. Git commit — ТОЛЬКО manifest-пути (explicit pathspec, не git add .)
-MSG="sync methodology $NEW_VER"
-if git -C <consumer-path> commit $CHANGED_PATHS -m "$MSG" 2>/dev/null; then
-  echo "  ✅ commit: '$MSG'"
-else
-  echo "  ℹ️  <имя>: нечего коммитить (уже актуально)"
-  continue
-fi
-
-# 5. Push с gh-account проверкой через check-gh-account.sh
-# check-gh-account.sh читает EXPLICIT gh_account из CLAUDE.local.md whitelist — не URL-derived owner.
-# Приоритет: whitelist gh_account > fallback к URL owner (backward compat).
-# validate-gh-accounts gate в deploy-push.sh гарантирует что gh_account заполнен заранее.
-METH_SCRIPTS="$(cd "$(dirname "$0")/../scripts" 2>/dev/null && pwd || echo "scripts")"
-if ! bash "$METH_SCRIPTS/check-gh-account.sh" "<consumer-abs-path>"; then
-  echo "  ❌ push пропущен — gh-account check failed (см. вывод выше)"
-  continue
-fi
-
-BRANCH=<branch-from-whitelist>  # из auto_commit_consumers для этого репо
-PUSH_ERR=$(git -C <consumer-path> push origin HEAD:"$BRANCH" 2>&1)
-PUSH_EXIT=$?
-if [ $PUSH_EXIT -eq 0 ]; then
-  echo "  ✅ push → $BRANCH"
-else
-  echo "  ❌ push failed (exit $PUSH_EXIT):"
-  echo "$PUSH_ERR" | head -5 | sed 's/^/      /'
-  # Classify common errors
-  if echo "$PUSH_ERR" | grep -qiE '403|permission|denied|forbidden'; then
-    echo "  → Проверь gh-аккаунт: gh api user -q .login"
-    echo "  → Нужен: gh auth switch --user $OWNER"
-  elif echo "$PUSH_ERR" | grep -qiE 'GH006|protected branch'; then
-    echo "  → Branch protection: нужен PR. Push-only не разрешён для этого репо."
-  elif echo "$PUSH_ERR" | grep -qiE 'network|resolve|timed out'; then
-    echo "  → Сеть недоступна. Повтори позже."
-  fi
-fi
+bash scripts/push-consumer-single.sh "<consumer-abs-path>" "<branch-from-whitelist>"
 ```
 
-**Invariants Режима B:**
-- ❌ НИКОГДА не делать `git add` перед commit — только explicit pathspec из манифеста.
-- ❌ НИКОГДА не делать push если commit вернул ненулевой exit (нет ничего пушить).
+Скрипт атомарно выполняет: sync (--print-changed) → symmetric dirty-check → manifest-scope commit → `check-gh-account.sh` (explicit whitelist lookup) → push с error classification.
+
+**❌ НЕ реализовывать логику push inline** — это обходит `check-gh-account.sh` (P-013). Каждая новая сессия должна вызывать скрипт, не воссоздавать логику.
+
+**Интерпретация exit code:**
+- exit 0 → `  ✅ <имя>: sync + commit + push` (или `ℹ️ нечего коммитить` — тоже exit 0)
+- exit 1 → `  ❌ <имя>: failed (см. вывод скрипта)` — continue к следующему (не abort батча)
+- exit 2 → usage error (не должен случиться при правильном вызове)
+
+**Invariants (проверяются внутри скрипта):**
+- ❌ НИКОГДА не делать `git add` — только explicit pathspec из манифеста.
+- ❌ НИКОГДА не делать push если commit вернул ненулевой exit.
 - ❌ НИКОГДА не делать push в репо вне `auto_commit_consumers` whitelist.
-- ❌ Fail одного консьюмера → продолжить остальных (не abort батча).
+- ❌ Fail одного консьюмера → continue к следующему (не abort батча).
 
 ---
 
