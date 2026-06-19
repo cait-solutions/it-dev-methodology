@@ -44,11 +44,24 @@ Claude Code hooks используют относительные пути. Ес
 ## Шаг 1 — Pre-flight
 
 - [ ] Нет незакоммиченных изменений в текущем репо: `git status --short` = пусто
-- [ ] `.code-workspace` указан в `CLAUDE.local.md ## Consumers → workspace_file`
+- [ ] `workspace_file` в `CLAUDE.local.md ## Consumers` — проверить:
 
 ```bash
 grep -A3 '## Consumers' CLAUDE.local.md | grep 'workspace_file:'
 ```
+
+**Если `workspace_file` не задан (пустой вывод команды выше):**
+
+```
+⚠️ workspace_file не настроен в CLAUDE.local.md ## Consumers.
+   consumer-pull.sh использует автодетект: ls ../*.code-workspace
+   Автодетект может найти не тот workspace или не найти ничего.
+   Для надёжного multi-repo pull: добавь workspace_file явно.
+
+   Продолжить? (y — с автодетектом / добавить workspace_file сначала)
+```
+
+Показать предупреждение и ждать ответа. Если `y` — запустить `consumer-pull.sh`. Иначе — помочь добавить `workspace_file`: пример строки `workspace_file: ../It dev methodology.code-workspace` в секцию `## Consumers` в `CLAUDE.local.md`.
 
 ---
 
