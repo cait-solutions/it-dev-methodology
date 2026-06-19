@@ -62,6 +62,9 @@ WORKSPACE_FILE_REL=$(_get_field "$CONFIG" "Consumers" "workspace_file" "")
 if [[ -n "$WORKSPACE_FILE_REL" ]]; then
   WORKSPACE_FILE="$(cd "$REPO_ROOT" && cd "$(dirname "$WORKSPACE_FILE_REL")" 2>/dev/null && pwd)/$(basename "$WORKSPACE_FILE_REL")"
 else
+  echo "⚠  workspace_file не настроен в CLAUDE.local.md ## Consumers"
+  echo "   Использую автодетект: ls ../*.code-workspace"
+  echo "   Для надёжного multi-repo pull: добавь workspace_file явно."
   WORKSPACE_FILE=$(ls "$REPO_ROOT"/../*.code-workspace 2>/dev/null | head -1 || true)
 fi
 
@@ -194,12 +197,22 @@ while IFS= read -r repo_path; do
   fi
 
   # Pull --ff-only
-  pull_out=$(git -C "$repo_path" pull --ff-only origin "$branch" 2>&1 | _sanitize || true)
-  pull_exit=$?
+  pull_exit=0
+  pull_out=$(git -C "$repo_path" pull --ff-only origin "$branch" 2>&1 | _sanitize) || pull_exit=$?
   if [[ $pull_exit -ne 0 ]]; then
-    echo "   ✗ SKIP — ff-only failed (история разошлась)"
-    echo "      git log --oneline --graph origin/${branch}...${branch}"
-    ERRORS=$((ERRORS + 1))
+    ahead_msgs=$(git -C "$repo_path" log --oneline "origin/${branch}..${branch}" 2>/dev/null || true)
+    if [[ -n "$ahead_msgs" ]] && ! echo "$ahead_msgs" | grep -qv "sync methodology v"; then
+      echo "   ↩  safe-reset: только sync-коммиты — сброс на origin/${branch}"
+      git -C "$repo_path" reset --hard "origin/${branch}" 2>&1 | _sanitize
+      PULLED=$((PULLED + 1))
+    else
+      echo "   ✗ SKIP — ff-only failed (история разошлась)"
+      if [[ -n "$ahead_msgs" ]]; then
+        echo "$ahead_msgs" | head -3 | sed 's/^/        /'
+      fi
+      echo "      git log --oneline --graph origin/${branch}...${branch}"
+      ERRORS=$((ERRORS + 1))
+    fi
     continue
   fi
 
