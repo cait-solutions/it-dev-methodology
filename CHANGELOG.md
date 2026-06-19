@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v6.9.4 — feat: /pull workspace_file WARN + safe-reset + /opinion Follow-up Proposal (2026-06-19)
+
+**Consumer-facing changes:**
+- `consumer-pull.sh`: workspace_file не задан → явное `⚠` предупреждение об автодетекте (было: тихий fallback).
+- `consumer-pull.sh`: ff-only failed → safe-reset если все ahead-коммиты `sync methodology v*` → `git reset --hard`. Иначе SKIP с выводом non-sync коммитов.
+- `/pull` Шаг 1: пассивный checklist → активный WARN block с ожиданием y/n.
+- `/opinion` Шаг 3: Follow-up Proposal — добавлен блок B для `/plan` при verdict=❌/⚠️ + Деятель=структурный фикс + архитектурный вопрос.
+
+**Что делать consumers:**
+- 🟡 `sync-methodology.sh` обновит `.claude/commands/pull.md`, `.claude/commands/opinion.md`, `scripts/consumer-pull.sh`
+
+---
+
 ## v6.9.1 — feat: /code Шаг 5 draft-maps cleanup rule (2026-06-19)
 
 **Consumer-facing changes:**

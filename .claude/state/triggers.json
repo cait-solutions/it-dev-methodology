@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-19",
-      "plans_since": 1
+      "plans_since": 3
     },
     "last_retro": {
       "date": "2026-06-19",
-      "plans_since": 2
+      "plans_since": 4
     },
     "last_product_review": {
       "date": "2026-06-19",
-      "plans_since": 1
+      "plans_since": 3
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 42
+      "plans_since": 44
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 9
+      "plans_since": 11
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 44
+      "plans_since": 46
     },
     "last_architecture_audit": {
       "date": "2026-06-19",
-      "plans_since": 1,
+      "plans_since": 3,
       "recommendations": [
         {
           "id": "R-034",
@@ -150,31 +150,30 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-19T22:00:00",
-    "task_id": "gh-account-gate",
-    "service": "methodology-platform (validate-gh-accounts.sh + check-gh-account.sh + deploy-push.sh gate + push-consumers Шаг 5)",
+    "completed_at": "2026-06-19T00:00:00",
+    "task_id": "opinion-followup-pull-warning",
+    "service": "methodology-platform (commands/opinion.md + commands/pull.md + scripts/consumer-pull.sh + templates/scripts/consumer-pull.sh)",
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "NEW scripts/validate-gh-accounts.sh — gate в deploy-push.sh, mandatory gh_account для github.com repos", "status": "pending", "skip_reason": null },
-      { "text": "NEW scripts/check-gh-account.sh — explicit whitelist mapping вместо URL-derived owner в push-consumers Шаг 5", "status": "pending", "skip_reason": null },
-      { "text": "scripts/deploy-push.sh + templates/ — добавить validate-gh-accounts gate внутрь methodology guard", "status": "pending", "skip_reason": null },
-      { "text": "commands-local/push-consumers.md Шаг 5 — заменить inline gh-account logic на check-gh-account.sh вызов", "status": "pending", "skip_reason": null },
-      { "text": "DEVLOG — [opinion:gh-account-gate] + [feat:script][domain:git-push] entries", "status": "pending", "skip_reason": null },
-      { "text": "PRODUCT-GAPS.md — добавить P-012", "status": "pending", "skip_reason": null },
-      { "text": "LIVING-ARTIFACTS.md — добавить строки для двух новых scripts", "status": "pending", "skip_reason": null },
-      { "text": "VERSION bump (minor)", "status": "pending", "skip_reason": null }
+      { "text": "commands/opinion.md — Шаг 3: переименовать + добавить /plan proposal блок с criteria (verdict ❌/⚠️ + Деятель=structural)", "status": "done", "skip_reason": null },
+      { "text": "commands/pull.md — Шаг 1: workspace_file check → active WARN block с инструкцией вместо passive checklist", "status": "done", "skip_reason": null },
+      { "text": "scripts/consumer-pull.sh — строки 62–66: echo ⚠️ warning при auto-fallback (workspace_file не задан)", "status": "done", "skip_reason": null },
+      { "text": "scripts/consumer-pull.sh — safe-reset handler: ff-only fail → grep sync-commits → reset если только sync (из pull-safe-reset)", "status": "done", "skip_reason": null },
+      { "text": "templates/scripts/consumer-pull.sh — идентичные изменения (ADR-014 dual-copy parity)", "status": "done", "skip_reason": null },
+      { "text": "VERSION bump (minor — consumer-facing behavior: warning + safe-reset)", "status": "done", "skip_reason": null },
+      { "text": "DEVLOG — [feat:command][feat:script][domain:sync-divergence] запись (оба изменения)", "status": "pending", "skip_reason": null },
+      { "text": "Encoding check: проверить echo кириллицы в new warning на Windows cp1252 — при проблеме заменить на ASCII", "status": "done", "skip_reason": "existing script already uses Cyrillic + emoji (❌ ✓ ⚠) — no encoding issue" }
     ],
     "sustainment": [
-      { "artifact": "scripts/validate-gh-accounts.sh", "trigger": "при добавлении нового consumer repo в whitelist", "refresh": "не требует — логика универсальная", "detection": "validate-script-parity.sh (intersection-only → нет флага); deploy gate smoke test", "owner": "методология" },
-      { "artifact": "scripts/check-gh-account.sh", "trigger": "при добавлении нового consumer repo в whitelist", "refresh": "не требует — логика универсальная", "detection": "validate-script-parity.sh; push-consumers flow smoke", "owner": "методология" },
-      { "artifact": "validate-gh-accounts gate в deploy-push.sh", "trigger": "каждый deploy методологии", "refresh": "при изменении deploy-push.sh (dual-copy sync ADR-014)", "detection": "deploy-push.sh запуск = smoke test самого gate", "owner": "методология" },
-      { "artifact": "CLAUDE.local.md gh_account per-entry", "trigger": "добавление нового consumer repo", "refresh": "владелец вручную при добавлении", "detection": "validate-gh-accounts.sh gate при деплое", "owner": "пользователь" }
+      { "artifact": "commands/opinion.md", "trigger": "/opinion запуск", "refresh": "при смене criteria следующим /plan", "detection": "/review parity check", "owner": "методология" },
+      { "artifact": "scripts/consumer-pull.sh · templates/scripts/consumer-pull.sh", "trigger": "/pull command execution", "refresh": "dual-copy sync ADR-014 при deploy", "detection": "validate-script-parity.sh gate в deploy-push.sh", "owner": "методология" }
     ],
     "deferred": [
-      { "text": "URL validation (gh api) — warn-only, не блокирует deploy", "reason": "network может быть offline; error обнаруживается при push (403); friction > benefit", "tag": "deferred" },
-      { "text": "GitLab repos auth coverage", "reason": "gh CLI не управляет GitLab; другой класс auth", "tag": "out-of-scope" },
-      { "text": "Унификация с _ensure_gh_account в deploy-push.sh", "reason": "нет третьего caller; преждевременная абстракция", "tag": "deferred" }
+      { "text": "L4 workspace_file enforcement — обязательное поле", "reason": "нет graceful path для consumers без VSCode workspace", "tag": "deferred" },
+      { "text": "new-project-init.sh bootstrap вопрос про workspace_file", "reason": "отдельный /plan с graceful path design", "tag": "deferred" },
+      { "text": "L4 /plan auto-trigger hook в /opinion", "reason": "over-engineering для текущего масштаба", "tag": "deferred" },
+      { "text": "[?] inline /plan proposal", "reason": "lightweight path — не нужен /plan proposal там", "tag": "deferred" }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {
