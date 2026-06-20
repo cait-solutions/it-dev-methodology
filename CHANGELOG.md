@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.4.0 — feat: команда /scan-sources — сканирование внешних источников знаний (2026-06-20)
+
+**Consumer-facing changes:**
+- **`commands/scan-sources.md`** (NEW) — команда для работы с реестром `external-sources.md`: сканировать новый материал с YouTube/Telegram/repo-каналов, анализировать research-логикой (WebFetch/WebSearch + verdict) и захватывать decision-relevant выводы в `[research:X]` (DEVLOG) + IDEAS. Режимы (natural-language): `scan` (дефолт), `add <url>`, `покажи всё`, `убери <X>`, `только <канал>`. Ручной запуск (не автоматизирует мониторинг — Границы 3/5). Scope v1 = публичные URL.
+- **`external-sources.template.md`** (CHANGED) — добавлена колонка `last_scanned` (watermark «что нового» per-источник). Старый реестр без колонки читается graceful — `/scan-sources` дополняет при первом скане.
+- **`model-tiers.md`** (CHANGED) — строка `/scan-sources` (Default tier).
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` доставит команду `/scan-sources` + обновлённый `external-sources.md` (колонка `last_scanned`). 
+- 🟢 **Чтобы пользоваться:** добавь свои domain-источники — `/scan-sources добавь <url>` — затем `/scan-sources` для скана. Реестр `external-sources.md` у каждого проекта свой (методологические источники не синкаются обратно — Граница 1).
+
+---
+
 ## v7.3.4 — fix: /doc-audit SKIP (exit 2) больше не классифицируется как FAIL (2026-06-20)
 
 **Consumer-facing changes:**
