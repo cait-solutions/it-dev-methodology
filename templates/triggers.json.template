@@ -24,7 +24,8 @@
     "code_skipped": 0,
     "product_review_skipped": 0,
     "product_check_skipped": 0,
-    "product_vision_skipped": 0
+    "product_vision_skipped": 0,
+    "opinion_skipped": 0
   },
   "last_plan_session": {
     "completed_at": null,

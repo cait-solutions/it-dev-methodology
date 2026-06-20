@@ -181,6 +181,21 @@ git log <production_branch>..HEAD --oneline
 - Trigger-chain 🔴 → минимум 🔵 Recommendation «механизм требует ручного запуска — встроить в <команда>?».
 - Если ни один класс не проверен явно (агент написал общее «completeness OK») → 🔵 Recommendation "Completeness audit не выполнен по классам — пройти 7 пунктов".
 
+**Decision-review gate (closes «high-stakes план пропустил council», opinion:mandatory-council 2026-06-20) — objective diff-signal, independent pass:**
+
+Это **реальные зубы** decision-validation: /review — отдельный проход (не тот же flow, что /plan), и судит по **самому diff** (объективно), а не по самооценке планирующего агента → ломает циркулярность self-gate в /plan.
+
+- Сработал если diff **объективно** вводит хотя бы одно: новый hook (`templates/.claude/hooks/*` добавлен) · новый `scripts/*` механизм · блокирующее поведение (PreToolUse `exit 2` / hard-block) · breaking-change схемы (удаление/переименование поля в `*.template` / `triggers.json`) · смена core-инварианта (parallel-safety / security / branching-contract) · ≥3 затронутых компонента.
+- Если сработал → проверить наличие decision-review record:
+  - `triggers.json → last_plan_session.opinion_done == true` (council запущен), ИЛИ
+  - `[opinion:*]` запись в DEVLOG за период этой задачи, ИЛИ
+  - `skipped_warnings.opinion_skipped` инкрементирован (осознанный skip с named-причиной).
+  - **Любое из трёх есть** → ✅ (запущен либо осознанно пропущен — не тихо).
+  - **Ничего нет** → 🔴 **fix now**: «High-stakes изменение (<какой diff-признак>) без decision-review и без зафиксированного skip. Запусти `/opinion+` (Capable) ДО merge ЛИБО зафиксируй явный skip с причиной (`skipped_warnings.opinion_skipped`). Технические гейты (Self-Lint/Confidence) не покрывают decision-level «тот ли механизм/слой» — framing-bias single-agent.» Блокирует merge.
+- Diff не вводит ничего из списка → `decision-review: N/A — нет high-stakes сигнала в diff`.
+
+⛔ Уровень честно: **L3** (procedural, /review — отдельный проход; нет хука физически блокирующего merge). Не 100%-гарантия, но **независимый объективный** cross-check сильнее self-gate в /plan. Skip-rate (`skipped_warnings.opinion_skipped`) мониторит `/retro` → Ось 1 data-driven hardening если пропуски накопятся. **Соответствует Граница 8** (срабатывает на узкий high-stakes subset, не blanket).
+
 **Consumer-reach gate (SYS-006, closes Кластер E):** если diff трогает `commands/` или `templates/`:
 - Прочитать `.claude/state/triggers.json` → `last_plan_session.consumer_reach_declared` (defensive: `.get(...)`).
 - Поле `true` → ✅ consumer-reach был явно задекларирован в /plan.

@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.4.1 — feat: decision-review gate для high-stakes планов (council не пропускается тихо) (2026-06-20)
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** — Шаг -3: новый soft-триггер «high-stakes decision-review». Если план вводит новый механизм/хук/блокирующее поведение / breaking-change схемы / смену core-инварианта / ≥3 компонента / необратимое → рекомендует `/opinion+` (council) ПЕРЕД /code. Keyed off уже-вычисленных Risk Tier + sustainment[] (не свежее суждение). Острый negative-list (typo/один-файл/doc → никогда). **НЕ blanket** (VISION Граница 8). Skip разрешён но **с named-причиной + трассировкой** (`skipped_warnings.opinion_skipped++`) — не тихо. Confidence #1 получил sub-check «mechanism feasibility verified by READING» (ловит класс «механизм опирается на непроверенный платформенный примитив»).
+- **`commands/review.md`** — Шаг 3: **Decision-review gate** (реальные «зубы») — независимый проход по **объективному diff-сигналу**: diff вводит new-mechanism/breaking/core-invariant + нет opinion-record (запущен / DEVLOG `[opinion:*]` / зафиксированный skip) → 🔴 блок merge. Ломает циркулярность self-gate (судит по diff, не по самооценке плана).
+- **`commands/retro.md`** — мониторинг `opinion_skipped` rate: ≥3 пропуска за период → 🟡 сигнал к Ось-1 hardening (soft→hard по данным, не преждевременно).
+- **`templates/triggers.json.template`** — `skipped_warnings.opinion_skipped` (additive, graceful `.get or 0`).
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `commands/plan.md`, `review.md`, `retro.md`; `merge_triggers_json` дозальёт `opinion_skipped`. Действий не требуется. Эффект: high-stakes планы (новый механизм/breaking/core-invariant) теперь получают рекомендацию independent council-review, а `/review` ловит пропуск по diff. Обычные/Lite планы не затронуты.
+
+---
+
 ## v7.4.0 — feat: команда /scan-sources — сканирование внешних источников знаний (2026-06-20)
 
 **Consumer-facing changes:**
