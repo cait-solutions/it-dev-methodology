@@ -3,6 +3,11 @@
 # clone-consumer.sh — clone a consumer repo using credential helper, never
 # putting token in URL or shell history.
 #
+# MAINTAINER-INTERNAL (scripts/-only): НЕ доставляется консьюмерам — клонирование
+# consumer-репов из workspace методолога это maintainer-операция (у консьюмера нет
+# consumers/<name>.yaml). Снят из templates/scripts/ как orphan-в-delivery
+# (consumer-delivery-hygiene v7.x.0). parity intersection-only → scripts/-only legit.
+#
 # Reads consumer config from consumers/<name>.yaml (repo URL, target path).
 #
 # Usage:
