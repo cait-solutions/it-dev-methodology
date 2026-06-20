@@ -63,7 +63,13 @@ _run() {
   warns="$(grep -c "$warn_pat" "$tmp" 2>/dev/null)"
   [ -z "$warns" ] && warns=0
   rm -f "$tmp"
-  if [ "$rc" -ne 0 ]; then
+  if [ "$rc" -eq 2 ]; then
+    # Exit 2 = SKIP (axis not applicable: no docs/services, not a git repo, нет входа).
+    # Methodology validators use exit 2 for "не применимо" — это НЕ ошибка. Без этой
+    # ветки SKIP ложно классифицировался как FAIL (doc-freshness на two-repo без сервисов).
+    SUMMARY="${SUMMARY}
+  ⚪ SKIP  ${axis} — не применимо (exit 2)"
+  elif [ "$rc" -ne 0 ]; then
     TOTAL_ERRORS=$((TOTAL_ERRORS+1))
     SUMMARY="${SUMMARY}
   🔴 FAIL  ${axis} — exit ${rc} (см. вывод выше)"
