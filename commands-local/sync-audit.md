@@ -2,6 +2,19 @@
 > **LOCAL-ONLY — moved from commands/ in v7.0.0. No longer delivered to consumers.**
 > Methodology owner only. Write-on-demand gaps (14/17/18) remain here.
 > Consumer diagnostics: Step 3.7 in /pull-consumers (compact) + Step 7 in /push-consumers (full).
+>
+> ⚠️ **Деприкейшн v7.0.0 был ЧАСТИЧНЫМ (corrected 2026-06-20):** sync-audit НЕ перенесён полностью — он остаётся owner-home для Gap 14 (init) / Gap 17 (dirty) / Gap 18; pull/push **делегируют сюда** («запусти /sync-audit Gap 14/17»). Нарратив «всё через pull-consumers» неверен.
+
+> ## 🧭 Owner-side decision-tree — куда класть новый механизм (closes boundary-confusion 2026-06-20)
+> Прежде чем добавить новую owner-side проверку/механизм — выбери слой по вопросу:
+>
+> | Вопрос | Куда | Триггер |
+> |---|---|---|
+> | On-demand **диагностика** adoption-gap'а в текущем репо (что методология предлагает vs применено)? | **`/sync-audit` Gap N** (этот файл) | владелец вручную |
+> | **Portfolio-итерация** по всем consumer-репо (pull обновлений / push sync)? | **`/pull-consumers`** / **`/push-consumers`** | batch по workspace |
+> | **Format-drift в consumer-owned артефакте** (init-once файл застрял на старом формате, sync не трансформирует)? | **`scripts/migrations/v*.sh`** (runner в /sync-audit Шаг 1.5) | auto (idempotent) или report |
+>
+> ⛔ Не дублируй: gap-detection ≠ migration ≠ portfolio-iteration. Пример (2026-06-20): рудимент `GITHUB_PAT required:true` в init-once манифесте = **format-drift → migration** (`v7.2.x-manifest-pat-rudiment.sh`), НЕ новый Gap здесь.
 
 > **Цель:** проверить какие features methodology (накопившиеся при обновлениях) **не применены** к этому проекту, и **самостоятельно починить** то что чинится детерминированно.
 >

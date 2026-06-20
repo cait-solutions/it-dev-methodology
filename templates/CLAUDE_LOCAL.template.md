@@ -99,9 +99,9 @@ Switch to `team` when the project has >1 developer or requires a review gate.
 
 **Concurrent sessions (isolation axis — orthogonal to mode):**
 - **`worktree_isolation: off`** (default): single working tree. Safe for one developer, one session at a time. No change vs prior behavior.
-- **`worktree_isolation: auto`**: enable when running **multiple Claude Code sessions** (one developer, M sessions) **or** **multiple developers** on the same repo. Each session runs in its own git worktree on a `{branch_namespace}` branch — sessions cannot silently overwrite each other. Coordinate file ownership via `AGENTS.md` (one file, one owner). **Before enabling:** run `git worktree add ../wt-test -b wt-test` once to confirm worktree works on your platform (Git Bash/Windows may need git ≥ 2.5), then `git worktree remove ../wt-test && git branch -D wt-test`.
+- **`worktree_isolation: auto`**: set when running **multiple Claude Code sessions** or **multiple developers** on the same repo. ⚠️ **`auto` does NOT auto-create the worktree** — the methodology has no actor that runs `git worktree add`. You (or the agent) must **actually create the worktree** for each session; only then is dirty-collision impossible by-construction. Without a real worktree, two sessions share one tree and the floor protections apply: `git commit <pathspec>` (L3 — multi-file index-capture only, NOT same-file interleave) + monotonic VERSION-bump in `deploy-push.sh` (L4 — version race). **Same-file hand-edit of CHANGELOG/DEVLOG by two sessions is NOT structurally prevented** (by-construction fix = `changelog.d/`/`DEVLOG.d/` fragment-files, separate effort). `AGENTS.md` is an optional human-coordination doc (L1 read-and-claim), not an enforcement layer. **Before relying on worktrees:** run `git worktree add ../wt-test -b wt-test` once (Git Bash/Windows may need git ≥ 2.5), then `git worktree remove ../wt-test && git branch -D wt-test`.
 
-See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) § Concurrent-Session Isolation and `AGENTS.md` for the four-layer model.
+See [ADR-002](docs/adr/ADR-002-branching-mode-contract.md) § Concurrent-Session Isolation (regulator-levels amended 2026-06-20).
 
 ---
 
