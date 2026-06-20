@@ -96,9 +96,12 @@ bash scripts/consumer-pull.sh
 Скрипт для каждого repo из workspace:
 1. Проверяет uncommitted changes — skip если есть
 2. Читает `agent_branch` из `CLAUDE.local.md ## Branching` репо (default: `ai-dev`)
-3. `git fetch origin <agent_branch>`
-4. Показывает входящие коммиты
-5. `git pull --ff-only origin <agent_branch>` — без merge-сюрпризов
+3. `git fetch origin` — **все ветки** (нужно для branch-audit)
+4. **Branch audit** — для каждой локальной ветки с upstream показывает `ahead/behind` vs remote. Только **divergent** ветки (`⚠ main: ahead N, behind M`); in-sync молчат. Информирует, **не фиксит** (см. ниже)
+5. Показывает входящие коммиты agent-ветки
+6. `git pull --ff-only origin <agent_branch>` — без merge-сюрпризов
+
+> **Почему fetch всех веток, но pull только agent-ветки:** divergence других веток (например `main` отстала пока работа идёт в `ai-dev`) была **невидима** — скрипт тянул только `agent_branch`. Теперь audit показывает её. Но автоматически другие ветки **не двигаются** — намеренная отстающая ветка не должна молча перетираться. Для подтягивания divergent ветки → `git checkout <ветка> && git pull --ff-only` или `/pull --current` на ней.
 
 **Если repo уже актуален** — одна строка «✓ up to date».
 
@@ -125,6 +128,7 @@ bash scripts/consumer-pull.sh
 ## Шаг 3 — После pull
 
 - [ ] Все нужные repos показали «✓ pulled» или «✓ up to date»?
+- [ ] **Branch audit:** есть ветки `⚠ ahead/behind` в summary? Это divergent НЕ-agent ветки (типично `main` пока работа в `ai-dev`) — реши вручную если нужно подтянуть: `git checkout <ветка> && git pull --ff-only`. Отстающая `main` при работе через `ai-dev` — норма, не требует action.
 - [ ] Есть repos с ошибками? Проверь вывод — типичные причины указаны там
 - [ ] Если нужно запушить локальные изменения → `/push` или `/push-merge`
 

@@ -4,6 +4,16 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.3.0 — feat: /pull branch audit — divergence других веток теперь видна (2026-06-20)
+
+**Consumer-facing changes:**
+- **`scripts/consumer-pull.sh`** (CHANGED) — `/pull` теперь делает `git fetch origin` (**все** ветки) вместо одной agent-ветки, и перед pull показывает **branch audit**: для каждой локальной ветки с upstream — `ahead/behind` vs remote. Только divergent ветки (`⚠ main: ahead N, behind M`); in-sync молчат. Закрывает класс «другие ветки молча отстают»: раньше `/pull` тянул только `agent_branch` (`ai-dev`), а `main` могла отстать на N коммитов незаметно. Audit **информирует, не фиксит** — намеренно отстающую ветку не перетираем (auto-update других веток отвергнут: риск потери). Pull/safe-reset agent-ветки — без изменений.
+- Summary получил строку `⚠ N ветк(а/и) разошлись с remote` с подсказкой как подтянуть вручную.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` доставит обновлённый `consumer-pull.sh`. Следующий `/pull` покажет divergent ветки.
+- 🟢 **Ничего настраивать не нужно** — поведение аддитивное, старый workflow не ломается. Отстающая `main` при работе через `ai-dev` — норма (не требует action); audit просто делает её видимой.
+
 ## v7.2.2 — feat: migration детектит рудиментарный GITHUB_PAT required:true в secrets-manifest (2026-06-19)
 
 **Consumer-facing changes:**
