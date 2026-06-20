@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.3.1 — fix: /doc-audit lar-axis hang (redundant full-scan + no timeout) (2026-06-20)
+
+**Consumer-facing changes:**
+- **`templates/scripts/validate-lar.sh`** (CHANGED) — `/doc-audit` и `/sync-audit` Gap 10 (через `validate-lar.sh`) зависали на оси `lar`: маркер `auto:diagram-freshness` re-run'ил полный скан карт (`validate-maps-coverage.sh --report`), который `/doc-audit` уже прогоняет отдельной осью. На медленной/сетевой ФС cold-cache это могло вешать весь аудит. Фикс: (1) `auto:diagram-freshness` → **no-op** (freshness уже покрыт осью maps-coverage + per-row `auto:mermaid-*`; enum-значение сохранено для обратной совместимости — старые LAR-строки с маркером не падают); (2) все делегирующие `auto:*` маркеры обёрнуты в **timeout-guard** (`LAR_MARKER_TIMEOUT=60`, override через env; graceful если `timeout` недоступен).
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` доставит обновлённый `validate-lar.sh`. `/doc-audit` и `/sync-audit` перестанут зависать на `lar`.
+- 🟡 **Опционально:** если в вашей `LIVING-ARTIFACTS.md` Detection-ячейка содержит `auto:diagram-freshness` — можно убрать маркер (он теперь no-op). Freshness карт проверяет ось maps-coverage в `/doc-audit`.
+
+---
+
 ## v7.3.0 — feat: /pull branch audit — divergence других веток теперь видна (2026-06-20)
 
 **Consumer-facing changes:**

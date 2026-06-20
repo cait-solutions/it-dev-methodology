@@ -137,6 +137,23 @@ EXISTS_ONLY=0
 # Resolve script dir for sibling validators
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Timeout budget (seconds) for nested sub-validator delegation. Any auto:* marker
+# that delegates to another validator runs under this cap so a slow/hung sub-scan
+# cannot block the whole LAR run (and, via doc-audit, the whole audit).
+# Configurable: override LAR_MARKER_TIMEOUT in the environment. Default 60s.
+LAR_MARKER_TIMEOUT="${LAR_MARKER_TIMEOUT:-60}"
+
+# _with_timeout <cmd...> — run a sub-validator under LAR_MARKER_TIMEOUT.
+# Graceful: if `timeout` is unavailable (some minimal shells), run unguarded
+# (no worse than the historical behaviour). Exit 124 = timed out.
+_with_timeout() {
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$LAR_MARKER_TIMEOUT" "$@"
+    else
+        "$@"
+    fi
+}
+
 _resolve_path() {
     local p="$1"
     if [ -f "$ROOT_ABS/$p" ] || [ -d "$ROOT_ABS/$p" ]; then
@@ -160,8 +177,10 @@ _run_marker() {
             ;;
         auto:mermaid-links)
             if [ -n "$resolved" ] && [ -f "$SCRIPT_DIR/validate-mermaid-links.sh" ]; then
-                out=$(bash "$SCRIPT_DIR/validate-mermaid-links.sh" "$resolved" 2>&1)
-                if echo "$out" | grep -qE "MISSING|STALE"; then
+                out=$(_with_timeout bash "$SCRIPT_DIR/validate-mermaid-links.sh" "$resolved" 2>&1)
+                if [ $? -eq 124 ]; then
+                    echo "[WARN]  auto:mermaid-links: $artifact_path — sub-validator timed out (>${LAR_MARKER_TIMEOUT}s), skipped"
+                elif echo "$out" | grep -qE "MISSING|STALE"; then
                     echo "[WARN]  auto:mermaid-links: $artifact_path — $(echo "$out" | grep -E "MISSING|STALE" | head -1)"
                 fi
             else
@@ -171,8 +190,10 @@ _run_marker() {
             ;;
         auto:mermaid-syntax)
             if [ -n "$resolved" ] && [ -f "$SCRIPT_DIR/validate-mermaid-syntax.sh" ]; then
-                out=$(bash "$SCRIPT_DIR/validate-mermaid-syntax.sh" "$resolved" 2>&1)
-                if echo "$out" | grep -qE "\[WARN\]|\[ERROR\]"; then
+                out=$(_with_timeout bash "$SCRIPT_DIR/validate-mermaid-syntax.sh" "$resolved" 2>&1)
+                if [ $? -eq 124 ]; then
+                    echo "[WARN]  auto:mermaid-syntax: $artifact_path — sub-validator timed out (>${LAR_MARKER_TIMEOUT}s), skipped"
+                elif echo "$out" | grep -qE "\[WARN\]|\[ERROR\]"; then
                     echo "[WARN]  auto:mermaid-syntax: $artifact_path — $(echo "$out" | grep -E "\[WARN\]|\[ERROR\]" | head -1)"
                 fi
             else
@@ -181,37 +202,44 @@ _run_marker() {
             AUTO_CHECKED=$((AUTO_CHECKED+1))
             ;;
         auto:diagram-freshness)
-            if [ -f "$SCRIPT_DIR/validate-maps-coverage.sh" ]; then
-                out=$(bash "$SCRIPT_DIR/validate-maps-coverage.sh" --report 2>&1)
-                if echo "$out" | grep -qE "\[WARN\].*diagram-freshness|\[ERROR\].*diagram-freshness"; then
-                    echo "[WARN]  auto:diagram-freshness: $(echo "$out" | grep -E "diagram-freshness.*—" | head -1)"
-                fi
-            else
-                echo "[WARN]  auto:diagram-freshness: validate-maps-coverage.sh not found"
-            fi
+            # DEPRECATED (v7.2.3, no-op): historically re-ran `validate-maps-coverage.sh
+            # --report` here — a FULL repo scan that doc-audit already runs as its own
+            # maps-coverage axis. On a Drive-backed Windows FS that cold re-scan took
+            # >2min and hung the whole audit (doc-audit lar-hang). Diagram freshness is
+            # already covered by the maps-coverage axis (in doc-audit) and by per-row
+            # auto:mermaid-* markers. Kept as a recognised enum value (no-op) so consumer
+            # LAR rows that still carry the marker don't error after sync — just remove it.
             AUTO_CHECKED=$((AUTO_CHECKED+1))
             ;;
         auto:date-coupling=*)
             local glob_pattern="${marker#auto:date-coupling=}"
             if [ -n "$resolved" ] && [ -f "$resolved" ]; then
-                artifact_ts=$(git -C "$ROOT_ABS" log -1 --format="%at" -- "$artifact_path" 2>/dev/null)
-                # Find newest code file matching glob
-                newest_ts=0
-                _tmpglob=$(mktemp)
-                find "$ROOT_ABS" -path "$ROOT_ABS/$glob_pattern" -type f 2>/dev/null > "$_tmpglob"
-                while IFS= read -r code_file; do
-                    code_ts=$(git -C "$ROOT_ABS" log -1 --format="%at" -- "$code_file" 2>/dev/null)
-                    if [ -n "$code_ts" ] && [ "$code_ts" -gt "$newest_ts" ] 2>/dev/null; then
-                        newest_ts="$code_ts"
+                # The find + per-file `git log` loop walks the whole repo glob — on a
+                # Drive-backed FS this can be slow (same hazard class as the diagram-freshness
+                # hang). Cap the entire scan under LAR_MARKER_TIMEOUT; on timeout, warn + skip.
+                dc_out=$(_with_timeout bash -c '
+                    artifact_ts=$(git -C "$1" log -1 --format="%at" -- "$2" 2>/dev/null)
+                    newest_ts=0
+                    _tmpglob=$(mktemp)
+                    find "$1" -path "$1/$3" -type f 2>/dev/null > "$_tmpglob"
+                    while IFS= read -r code_file; do
+                        code_ts=$(git -C "$1" log -1 --format="%at" -- "$code_file" 2>/dev/null)
+                        if [ -n "$code_ts" ] && [ "$code_ts" -gt "$newest_ts" ] 2>/dev/null; then
+                            newest_ts="$code_ts"
+                        fi
+                    done < "$_tmpglob"
+                    rm -f "$_tmpglob"
+                    if [ -n "$artifact_ts" ] && [ "$newest_ts" -gt 0 ] 2>/dev/null; then
+                        delta=$((newest_ts - artifact_ts))
+                        if [ "$delta" -gt 86400 ] 2>/dev/null; then
+                            echo "STALE $((delta/86400))"
+                        fi
                     fi
-                done < "$_tmpglob"
-                rm -f "$_tmpglob"
-                # If artifact is older by more than 1 day (86400s) — STALE
-                if [ -n "$artifact_ts" ] && [ "$newest_ts" -gt 0 ] 2>/dev/null; then
-                    delta=$((newest_ts - artifact_ts))
-                    if [ "$delta" -gt 86400 ] 2>/dev/null; then
-                        echo "[WARN]  auto:date-coupling: $artifact_path is older than code glob '$glob_pattern' by $((delta/86400))d"
-                    fi
+                ' _ "$ROOT_ABS" "$artifact_path" "$glob_pattern" 2>/dev/null)
+                if [ $? -eq 124 ]; then
+                    echo "[WARN]  auto:date-coupling: $artifact_path — scan timed out (>${LAR_MARKER_TIMEOUT}s), skipped"
+                elif [ "${dc_out%% *}" = "STALE" ]; then
+                    echo "[WARN]  auto:date-coupling: $artifact_path is older than code glob '$glob_pattern' by ${dc_out##* }d"
                 fi
             fi
             AUTO_CHECKED=$((AUTO_CHECKED+1))
