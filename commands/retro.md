@@ -40,6 +40,11 @@
    - `skipped_warnings.*` — сколько warnings игнорировано
    - `agent_gaps_open_count` — для сигнала в Шаге 2а
 
+**Decision-review skip-rate (Ось 1 data-driven hardening, opinion:mandatory-council 2026-06-20):** прочитать `skipped_warnings.opinion_skipped` (defensive: `.get(...) or 0`). Это число high-stakes планов, где агент пропустил `/opinion+` decision-review (soft-триггер /plan Шаг -3). Интерпретация:
+- `0-1` → 🟢 норма (триггер soft by design, эпизодический skip ОК).
+- `≥3` за период → 🟡 **сигнал к hardening**: soft-рекомендация систематически пропускается → рассмотреть усиление (например /code Шаг 0 hard-block при `opinion_skipped`-без-причины, ИЛИ объективный diff-detect перенести раньше в /code). Это и есть Ось 1 переход soft→hard **по данным**, не преждевременно. Зафиксировать в DEVLOG `[retro]` как кандидата на /plan.
+- ⛔ Без этих данных hardening был бы преждевременным (dead-rule риск, урок v4.7.1). Skip-rate — то измеримое, что разблокирует решение «твердеть или нет».
+
 ---
 
 ## Шаг 2 — Повторяющиеся проблемы в DEVLOG
