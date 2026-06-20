@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.3.3 — docs: честные regulator-levels parallel-session изоляции (closes «объявили L4, построили L1») (2026-06-20)
+
+**Consumer-facing changes:**
+- **`templates/CLAUDE_LOCAL.template.md`** — поле `worktree_isolation: auto` переописано **честно**: оно **НЕ создаёт worktree автоматически** (методология не имеет актора `git worktree add`); изоляция by-construction только при реально созданном worktree. Без него две сессии делят дерево → floor = pathspec-commit (L3, multi-file) + monotonic VERSION-bump (L4, version race). **Same-file hand-edit CHANGELOG/DEVLOG двумя сессиями структурно НЕ предотвращён** (by-construction фикс = `changelog.d/`/`DEVLOG.d/` fragment-files — отдельный план). `AGENTS.md` = опциональный coordination-doc (L1), не enforcement.
+- Methodology-internal (не доставляется консьюмерам): CLAUDE.md parallel-rule reframe, ADR-002 amendment (Layer 2 L4→L1 correction), `/sync-audit` owner-side decision-tree (sync-audit vs pull/push vs migrations).
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `CLAUDE_LOCAL.template.md` — никаких действий. Изменение **только уточняет** что `worktree_isolation` реально гарантирует (не добавляет/не убирает механизм). Если запускаешь multi-session — создавай worktree вручную (`git worktree add`), `auto` сам этого не делает.
+
+---
+
 ## v7.3.1 — fix: /doc-audit lar-axis hang (redundant full-scan + no timeout) (2026-06-20)
 
 **Consumer-facing changes:**

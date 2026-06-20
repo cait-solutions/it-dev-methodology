@@ -119,7 +119,15 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 
 **Commit-discipline (parallel-safe):** коммить через explicit pathspec — `git commit <пути> -m`, НЕ `git add <file>` + bare `git commit`. Bare commit коммитит **весь staging-индекс**, включая файлы застейдженные параллельной сессией → захват чужой работы (инцидент a17ecc1). Перед commit: `git diff --cached --name-only` → staged ⊆ `/plan` Шаг 1 scope. Деталь: [/code Шаг 2](commands/code.md), [ADR-002 § Index-capture](../it-dev-methodology-documentation/docs/adr/ADR-002-branching-mode-contract.md).
 
-**Parallel-session rule:** при рутинной параллельной работе (≥2 сессии одновременно) — `worktree_isolation: auto` в `CLAUDE.local.md`. Каждая сессия получает изолированный worktree+ветку (`ai-dev/<task>`), dirty-коллизия невозможна by-construction. Consumers: аналогично — включать `auto` при multi-session workflow (см. USER-MAP + ADR-002). `worktree_isolation: off` достаточен только при гарантированно одной сессии.
+**Parallel-session rule (честные regulator-levels — closes «объявили L4, построили L1» класс):** при рутинной параллельной работе (≥2 сессии) — `worktree_isolation: auto` в `CLAUDE.local.md`. ⚠️ **`auto` НЕ создаёт worktree автоматически** — методология не имеет актора, запускающего `git worktree add`; изоляция требует, чтобы агент/пользователь **реально создал worktree** (opt-in, Windows-verified-once). Только при созданном worktree dirty-коллизия невозможна by-construction (отдельные деревья → отдельные копии VERSION/CHANGELOG/DEVLOG → merge через PR).
+
+**Floor для non-worktree случая** (две сессии в ОДНОМ дереве — частый реальный случай):
+- `git commit <pathspec>` discipline — **L3** (защищает от multi-file index-capture a17ecc1, НЕ от same-file interleave).
+- monotonic VERSION-bump в `deploy-push.sh` — **L4** для version-race (единая точка аллокации на merge; работает через Bash/git, не Edit-tool).
+- ⛔ **Структурно НЕ закрыто:** hand-edit одного CHANGELOG/DEVLOG двумя сессиями (захват чужой записи). By-construction фикс = fragment-files (`changelog.d/`, `DEVLOG.d/`) — отдельный план; **не** строить «сторожем» (lock-hook отвергнут /opinion+ 2026-06-20: PreToolUse не видит Bash-запись + `session_id` непроверен — см. DEVLOG).
+- `AGENTS.md` = prompt-coordination doc (**L1** read-and-claim), НЕ L4-enforcement как ошибочно заявлял ADR-002 (исправлено amendment 2026-06-20).
+
+Consumers: `auto` + **ручное** создание worktree при multi-session. `off` достаточен только при гарантированно одной сессии.
 
 **Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
 
