@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.3.4 — fix: /doc-audit SKIP (exit 2) больше не классифицируется как FAIL (2026-06-20)
+
+**Consumer-facing changes:**
+- **`templates/scripts/doc-audit.sh`** (CHANGED) — `_run()` теперь различает exit 2 (SKIP, «ось не применима») от exit 1 (реальный FAIL). Раньше **любой** ненулевой exit классифицировался как 🔴 FAIL → на two-repo проектах без `docs/services/` ось `doc-freshness` (legit exit 2 SKIP) давала ложный FAIL и `/doc-audit` завершался exit 1 «обнаружил ошибки». Теперь: exit 2 → ⚪ SKIP, не инкрементит счётчик ошибок. Фикс универсален — покрывает все 12 валидаторов методологии, использующих exit 2 для SKIP.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` доставит обновлённый `doc-audit.sh`. `/doc-audit` перестанет показывать ложный FAIL на неприменимых осях.
+- 🟢 **Ничего настраивать не нужно** — поведение чисто корректирующее, exit 0/1 (PASS/FAIL) не изменились.
+
+---
+
 ## v7.3.3 — docs: честные regulator-levels parallel-session изоляции (closes «объявили L4, построили L1») (2026-06-20)
 
 **Consumer-facing changes:**
