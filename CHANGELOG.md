@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.8.2 — feat: derived-слой коммитится у консьюмера (self-contained clone — команды на remote) (2026-06-21)
+
+**Consumer-facing changes:**
+- **`.gitignore.template`** — `.claude/commands/`, `.claude/hooks/`, `.claude/model-tiers.md` БОЛЬШЕ НЕ игнорируются → коммитятся в consumer-репо. Свежий `git clone` имеет рабочие команды/хуки **сразу**, без ручного `sync-methodology.sh`. Ignored остаётся только runtime-local: `.claude/.version` + `.claude/state/`.
+- **`migrations/v7.8.2-uningore-derived-layer.sh`** (NEW, MODE=auto) — расклеивает `.gitignore` уже-инициализированных консьюмеров (убирает 3 строки). Self-applying на следующем sync. Guard: methodology-platform не трогается.
+- **`new-project-init.sh`** — финальное сообщение обновлено: команды коммитятся, sync только для обновлений.
+- Команды/хуки остаются **derived** (DO NOT edit — канон в it-dev-methodology, sync перезатирает).
+
+**Actions:** автоматически — ничего. При следующем sync (или `/push-consumers` от владельца) миграция расклеит `.gitignore` и закоммитит команды на remote в одном проходе. Уже-применённая (applied-list) — no-op.
+
+**Priority:** 🟡 (меняет git-tracked состав consumer-репо: после первого sync команды/хуки появятся в `git status` как новые tracked-файлы; это ожидаемо — закоммитятся «sync methodology v7.8.2»).
+
+**Известный остаток (deferred):** banner `<!-- Synced: DATE -->` + VERSION churn'ятся каждый sync → committed команды дают full-tree restamp-diff на каждый sync (не только изменённые). Acceptable (один commit per sync, корректный version-tracking). Banner-stabilization — отдельный future-фикс.
+
+---
+
 ## v7.8.1 — fix: старые auto-миграции декларируют migration_changed_paths (settings.json авто-коммитится) (2026-06-21)
 
 **Consumer-facing changes:**

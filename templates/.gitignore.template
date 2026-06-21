@@ -9,11 +9,12 @@ it-dev-methodology/
 # Claude Code — local user settings (per CLAUDE.md, not shared with team)
 .claude/settings.local.json
 
-# Methodology runtime — synced from it-dev-methodology, not project-owned.
-# Run scripts/sync-methodology.sh after each git clone to restore these locally.
-.claude/commands/
-.claude/hooks/
-.claude/model-tiers.md
+# Methodology runtime layer — synced from it-dev-methodology.
+# commands/, hooks/, model-tiers.md (+ skills/, agents/) ARE committed (v7.8.2+):
+# a fresh `git clone` of this repo must have working commands/hooks WITHOUT a manual
+# sync step. They stay derived (canon = it-dev-methodology) — DO NOT edit directly,
+# sync overwrites them. Only the per-clone version marker + per-developer runtime
+# counters stay local (rewritten every sync / machine-specific → committing = noise):
 .claude/.version
 
 # Methodology local state — per-developer counters, not shared
