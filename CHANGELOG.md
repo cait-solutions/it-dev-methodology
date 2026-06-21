@@ -4,6 +4,32 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.7.0 — refactor: /opinion и /opinion+ слиты в одну команду (дефолт = council 7/7) (2026-06-21)
+
+**Consumer-facing changes:**
+- **`commands/opinion.md`** — `/opinion` теперь **по умолчанию** запускает council из **7 независимых external советников** (бывшее поведение `/opinion+`): 5 Council-ролей + Альтернативщик + Complexity tax, каждый в чистом контексте → structural independence. Отдельный режим `/opinion+` убран как пользовательский выбор; суффикс `+` сохранён как **legacy-алиас** (старый ввод не ломается). Inline `[?]` остаётся **лёгким** (5 советников симулируются в одном контексте, ~секунды) — авто-детект `[?]` не спавнит 7 sub-agents (VISION Граница 8). Graceful fallback: если Agent tool недоступен → симуляция 5 в контексте.
+- **`commands/plan.md` / `commands/review.md` / `commands/retro.md`** — high-stakes decision-review триггер/gate/skip-rate ссылаются теперь на `/opinion` (council 7/7) вместо `/opinion+`.
+- **`templates/model-tiers.md`** — `/opinion` → **Capable** (council-7 дефолт требует deep reasoning для синтеза); строка `/opinion+` удалена.
+
+**Actions:**
+1. `bash scripts/sync-methodology.sh .` (или обычный sync) — получить v7.7.0.
+2. Поведение: явный `/opinion` = 7 external (~30-60 сек, Capable); inline `[?]` = лёгкий solo (без изменений).
+
+**Priority:** 🟢 (UX-консолидация — старый `/opinion+` ввод работает как алиас, verdict-формат и `[opinion:X]` тег без изменений).
+
+---
+
+## v7.7.0 — feat: actor-burden check (забота о пользователе) — методология не вешает remembered-обязанности на человека (2026-06-21)
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** — Шаг 1.5 Actor-discovery-path получил **actor-burden sub-check**: если решение требует от человека ПОМНИТЬ повторяющееся действие («не забывай X каждый раз / при ≥N») при наличии агентского/структурного актора → нарушение Ось 1. Дефолт: human-remember = красный флаг, назови структурный актор или обоснуй. Освобождены: one-time setup, бизнес/security-решения, осознанный opt-in. Не отдельное правило — вложено в существующий check (cut-not-add).
+- **`commands/review.md`** — Шаг 3 ПРЕДУПРЕЖДЕНИЯ: actor-burden **eyes-check** (семантическая, не token-grep — честно помечена как eyes, не L3-structural). PR вводит remembered-human-obligation при наличии структурного актора → 🟡.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` обновит `commands/plan.md` + `review.md`. Эффект: планы, перекладывающие на пользователя «помни сам», ловятся на author-time. Действий не требуется.
+
+---
+
 ## v7.6.0 — fix: consumer-delivery hygiene — снятие maintainer-only рудиментов + forward-closedness (2026-06-20)
 
 **Consumer-facing changes:**

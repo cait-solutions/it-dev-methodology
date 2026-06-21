@@ -191,7 +191,7 @@ git log <production_branch>..HEAD --oneline
   - `[opinion:*]` запись в DEVLOG за период этой задачи, ИЛИ
   - `skipped_warnings.opinion_skipped` инкрементирован (осознанный skip с named-причиной).
   - **Любое из трёх есть** → ✅ (запущен либо осознанно пропущен — не тихо).
-  - **Ничего нет** → 🔴 **fix now**: «High-stakes изменение (<какой diff-признак>) без decision-review и без зафиксированного skip. Запусти `/opinion+` (Capable) ДО merge ЛИБО зафиксируй явный skip с причиной (`skipped_warnings.opinion_skipped`). Технические гейты (Self-Lint/Confidence) не покрывают decision-level «тот ли механизм/слой» — framing-bias single-agent.» Блокирует merge.
+  - **Ничего нет** → 🔴 **fix now**: «High-stakes изменение (<какой diff-признак>) без decision-review и без зафиксированного skip. Запусти `/opinion` (council 7/7, Capable) ДО merge ЛИБО зафиксируй явный skip с причиной (`skipped_warnings.opinion_skipped`). Технические гейты (Self-Lint/Confidence) не покрывают decision-level «тот ли механизм/слой» — framing-bias single-agent.» Блокирует merge.
 - Diff не вводит ничего из списка → `decision-review: N/A — нет high-stakes сигнала в diff`.
 
 ⛔ Уровень честно: **L3** (procedural, /review — отдельный проход; нет хука физически блокирующего merge). Не 100%-гарантия, но **независимый объективный** cross-check сильнее self-gate в /plan. Skip-rate (`skipped_warnings.opinion_skipped`) мониторит `/retro` → Ось 1 data-driven hardening если пропуски накопятся. **Соответствует Граница 8** (срабатывает на узкий high-stakes subset, не blanket).
@@ -227,6 +227,11 @@ git log <production_branch>..HEAD --oneline
 - [ ] **Negative / edge:** что происходит при невалидном входе — назван **конкретный** edge (пустой / wrong-type / отсутствует) и его реакция? Связь с Pre-Mortem сценарием 3 из /plan — те же edge-входы протестированы?
 - [ ] **Regression для bugfix:** воспроизведён ли исходный баг ДО фикса (доказательство что фикс адресует реальную причину, не симптом)?
 - [ ] **methodology-platform smoke-test:** изменение в команде/скрипте → есть ли дешёвый способ верифицировать без полного /deploy? (`grep` что новый пункт виден в файле; запуск bash-скрипта с показом expected output; `validate-*.sh` прошёл). Если изменение чисто текстовое в команде — `N/A — prompt-rule, верифицируется применением`.
+
+**Actor-burden / забота о пользователе (eyes-check, closes G-121):**
+- [ ] Вводит ли PR (текст плана/команды/доки/рекомендация) **remembered-обязанность для человека** — «не забывай делать X каждый раз / при ≥N» — при том что существует агентский/структурный актор (хук / команда / git-механизм / валидатор)? → 🟡 Warning: нарушение Ось 1, переназначить на структурный/агентский актор ИЛИ обосновать почему его нет.
+- Освобождены: one-time setup, решения принципиально требующие человека (бизнес/security), осознанный opt-in.
+- ⚠️ Это **eyes-check** (семантическая оценка, не token-grep) — читай глазами, не полагайся на автоматику. Не L3-structural.
 
 **Prompt engineering (если менялся промпт):**
 - Доменное ограничение или кейс-ограничение?
