@@ -1,0 +1,19 @@
+# .gitattributes — {{PROJECT_NAME}}
+#
+# Доставляется методологией (sync-methodology.sh / new-project-init.sh).
+# Parallel-safety: union merge-драйвер для append-heavy журналов/реестров —
+# при 3-way merge (PR) обе стороны добавленных записей СОХРАНЯЮТСЯ by-construction
+# (closes G-117 / a17ecc1 same-file interleave для worktree/PR-пути).
+#
+# `union` — встроенный драйвер git, доп. настройка не требуется. Работает при
+# true 3-way merge (не squash). Shared-tree same-branch → используй worktree.
+#
+# Single-repo консьюмер: все файлы локальны. Two-repo: CHANGELOG в code-repo,
+# журналы/реестры в doc-repo — строки для отсутствующих файлов безвредны.
+# Свои append-heavy файлы добавляй той же строкой `<file> merge=union`.
+
+CHANGELOG.md merge=union
+DEVLOG.md merge=union
+AGENT-GAPS.md merge=union
+PRODUCT-GAPS.md merge=union
+IDEAS.md merge=union

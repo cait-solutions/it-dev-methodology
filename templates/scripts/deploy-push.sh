@@ -390,6 +390,13 @@ _bump_version_monotonic() {
 }
 _bump_version_monotonic
 
+# Log-merge section-count guard (G-117 companion): WARN if union merge-driver
+# regressed (append-log sections shrank vs HEAD). Non-blocking — surfaces only.
+if [ -f "scripts/validate-log-merge.sh" ]; then
+  bash scripts/validate-log-merge.sh HEAD >/dev/null 2>&1 || \
+    echo "⚠️  validate-log-merge: проверь секции журналов (union merge-driver?)" >&2
+fi
+
 # Pre-push: SSOT alignment (closes P-006) — сверить remote с manifest ДО push.
 _check_remote_alignment
 
