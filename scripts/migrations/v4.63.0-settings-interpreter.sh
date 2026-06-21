@@ -67,3 +67,12 @@ migration_apply() {
   mv "$tmp" "$settings" || { rm -f "$tmp"; return 1; }
   return 0
 }
+
+# Declare touched path for the runner's commit manifest (v7.8.0 a17ecc1-safe bridge):
+# sync run_migrations() парсит MIGRATED:<path> → _track_changed → _auto_commit_sync коммитит
+# explicit pathspec. Без неё вывод миграции оставался dirty-uncommitted на consumer self-sync.
+# settings.json — methodology-delivered infra (MERGE), безопасно авто-коммитить (check-ignore
+# filter пропустит у консьюмеров где он gitignored).
+migration_changed_paths() {
+  echo ".claude/settings.json"
+}

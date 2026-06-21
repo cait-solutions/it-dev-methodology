@@ -4,6 +4,18 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.8.1 — fix: старые auto-миграции декларируют migration_changed_paths (settings.json авто-коммитится) (2026-06-21)
+
+**Consumer-facing changes:**
+- **`migrations/v4.63.0-settings-interpreter.sh` + `v4.64.0-iteration-watchdog-wire.sh`** — добавлен `migration_changed_paths()` → `.claude/settings.json`. Их вывод теперь авто-коммитится через v7.8.0 manifest-bridge на consumer self-sync (раньше оставался dirty-uncommitted → блокировал следующий sync dirty-check'ом).
+- **`v4.37.0-mermaid-bare-url`** намеренно НЕ декларирует пути: трогает project-owned карты (`docs/`, `*.md`) — авто-коммит чужих карт нарушает «sync не редактирует project-owned content» (Граница 7). Остаётся для human-review.
+
+**Actions:** автоматически — ничего. При следующем sync, если эти миграции ещё не применены, их вывод закоммитится сам. Уже-применённые (applied-list) — no-op.
+
+**Priority:** 🟢 (идемпотентно; закрывает остаточный dirty-settings.json после v7.8.0).
+
+---
+
 ## v7.8.0 — feat: миграции self-применяются на каждом sync (init + update самодостаточны) (2026-06-21)
 
 **Consumer-facing changes:**
