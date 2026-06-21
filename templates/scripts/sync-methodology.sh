@@ -101,7 +101,18 @@ fi
 # Helps agents that used a wrong URL after cloning or manual setup.
 # ---------------------------------------------------------------------------
 if [[ -f "$TARGET_DIR/CLAUDE.local.md" ]]; then
-  _config_url="$( (grep "^origin_url:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null || true) | head -1 | sed 's/^origin_url:[[:space:]]*//' | tr -d '\r')"
+  # Parse origin_url: strip key prefix AND any trailing inline comment ( # ... ) — a
+  # filled value that kept the template's comment must not poison the URL (independent
+  # clobber path, closes G-???). tr -d '\r' for CRLF.
+  _config_url="$( (grep "^origin_url:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null || true) | head -1 | sed -e 's/^origin_url:[[:space:]]*//' -e 's/[[:space:]]*#.*$//' -e 's/[[:space:]]*$//' | tr -d '\r')"
+  # PLACEHOLDER GUARD (L4 — by construction): an unfilled template value
+  # (https://github.com/<owner>/<repo>.git) must NEVER overwrite a real remote.
+  # A real git URL can never contain both '<' and '>', so this rejects ALL <...>
+  # placeholders, not a brittle literal match. Empty → also skip.
+  case "$_config_url" in
+    ""|*"<"*">"*)
+      _config_url="" ;;
+  esac
   if [[ -n "$_config_url" ]] && git -C "$TARGET_DIR" rev-parse --git-dir > /dev/null 2>&1; then
     _current_url="$(git -C "$TARGET_DIR" remote get-url origin 2>/dev/null || true)"
     if [[ -n "$_current_url" && "$_current_url" != "$_config_url" ]]; then
