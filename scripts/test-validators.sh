@@ -108,6 +108,50 @@ assert_exit 1 "consumer-delivery-orphan" -- env CONSUMER_DELIVERY_SEVERITY=error
 # Скрипт с `# delivery-allow:` маркером не флагуется → даже под error → exit 0.
 assert_exit 0 "consumer-delivery-clean" -- env CONSUMER_DELIVERY_SEVERITY=error bash scripts/validate-consumer-delivery.sh --root "$FX/delivery-clean"
 
+# ── Test 7: migrations-self-apply bridge (a17ecc1-safe) ──────────────────────────
+# Consumer-shaped дерево (НЕТ templates/ commands/ — опасный путь, который GUARD
+# методологии никогда не проходит на self-apply). Проверяет 3 вещи разом:
+#  (1) _runner применяет auto-миграцию в consumer-shaped дереве (GUARD danger-path);
+#  (2) migration_changed_paths → _runner эмитит MIGRATED:<path>;
+#  (3) explicit-pathspec commit MIGRATED-путей НЕ захватывает parallel-staged файл (a17ecc1).
+RAN=$((RAN+1))
+T7="$(mktemp -d)"
+CLEANUP_DIRS="$CLEANUP_DIRS $T7"
+(
+  cd "$T7" || exit 9
+  git init -q && git config user.email t@t && git config user.name t || exit 9
+  mkdir -p docs scripts/migrations
+  printf 'OLD-FORMAT\n' > docs/fixture.md
+  git add -A && git commit -qm init || exit 9
+  # fake auto-migration с migration_changed_paths
+  cat > scripts/migrations/v0.0.0-fixture.sh <<'MIG'
+MIGRATION_TARGET_VERSION="v0.0.0"; MIGRATION_ID="fixture-transform"; MIGRATION_MODE="auto"
+migration_describe(){ echo "fixture"; }
+migration_detect(){ grep -q "OLD-FORMAT" "$1/docs/fixture.md" 2>/dev/null; }
+migration_apply(){ sed 's/OLD-FORMAT/NEW-FORMAT/' "$1/docs/fixture.md" > "$1/docs/fixture.md.t" && mv "$1/docs/fixture.md.t" "$1/docs/fixture.md"; }
+migration_changed_paths(){ echo "docs/fixture.md"; }
+MIG
+  cp "$METHODOLOGY_ROOT/scripts/migrations/_runner.sh" scripts/migrations/_runner.sh
+  # parallel session стейджит неотносящийся файл (a17ecc1-ловушка)
+  printf 'parallel-work\n' > docs/PARALLEL.md && git add docs/PARALLEL.md
+  # run runner, собрать MIGRATED-пути (как делает sync run_migrations)
+  out="$(bash scripts/migrations/_runner.sh . 2>&1)"
+  echo "$out" | grep -q "MIGRATED:docs/fixture.md" || { echo "no MIGRATED emit"; exit 1; }
+  grep -q "NEW-FORMAT" docs/fixture.md || { echo "migration not applied"; exit 1; }
+  # имитировать explicit-pathspec commit MIGRATED-путей (как _auto_commit_sync)
+  git add -- docs/fixture.md && git commit -q -m "migrate" -- docs/fixture.md || exit 1
+  # a17ecc1 assert: PARALLEL.md НЕ должен попасть в коммит (всё ещё staged, uncommitted)
+  git diff --cached --name-only | grep -q "docs/PARALLEL.md" || { echo "PARALLEL captured!"; exit 1; }
+  exit 0
+)
+MIG_EXIT=$?
+if [ "$MIG_EXIT" -ne 0 ]; then
+  echo "[FAIL] migrations-selfapply-bridge — ожидался exit 0, получен $MIG_EXIT (MIGRATED-emit / apply / a17ecc1-capture)"
+  FAILS=$((FAILS+1))
+else
+  echo "[ok]   migrations-selfapply-bridge — apply + MIGRATED-emit + parallel-файл не захвачен"
+fi
+
 # ── Positive control ─────────────────────────────────────────────────────────────
 # validate-triggers.sh на чистом triggers.json → exit 0.
 # Ловит «harness всегда видит non-zero» вырожденность.

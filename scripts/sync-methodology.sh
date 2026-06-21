@@ -617,6 +617,44 @@ PYEOF
   fi
 }
 
+# run_migrations: apply pending format/rudiment migrations on the consumer tree
+# after files are synced. Closes the "migrations delivered but never run consumer-side"
+# class (IDEAS 2026-06-20): sync copied migrations/ but only maintainer /push-consumers
+# ran _runner.sh. Now every consumer sync (init + auto-update-watchdog self-sync) applies them.
+#
+# a17ecc1-safe commit-bridge (per /opinion council 7/7): _runner.sh emits MIGRATED:<path>
+# for each HEALED auto-migration → we _track_changed those exact paths → existing
+# _auto_commit_sync commits them via EXPLICIT pathspec. NO git-status snapshot-delta
+# (that would re-introduce index-overcapture — the council's ❌ verdict).
+#
+# CONSUMER-ONLY (IS_SELF_APPLY=false): on self-apply this would auto-modify methodology-owned
+# artifacts without /review → violates VISION Граница 7 (методология не модифицирует себя
+# автоматически). Methodology maintains its own artifacts via /code, not migration self-apply.
+#
+# Visible, NOT swallowed (`|| true` rejected by council): HEALED/REPORT/runner-exit shown.
+# report-mode migrations are NOT auto-applied (runner skips apply) — they surface for a human.
+run_migrations() {
+  local target="$1"
+  local runner="$METHODOLOGY_DIR/scripts/migrations/_runner.sh"
+  [[ -f "$runner" ]] || return 0   # старый clone без migrations/ — graceful skip
+  echo "→ migrations/"
+  local _out _rc
+  _out="$(bash "$runner" "$target" 2>&1)"; _rc=$?
+  # Видимый вывод (HEALED применено / REPORT требует человека / итог). MIGRATED: — внутренний.
+  printf '%s\n' "$_out" | grep -E '^(HEALED|REPORT|MIGRATIONS_DONE)' | sed 's/^/  /' || true
+  # Собрать MIGRATED:<path> в манифест → existing _auto_commit_sync закоммитит explicit pathspec.
+  while IFS= read -r _line; do
+    case "$_line" in
+      MIGRATED:*) _track_changed "${_line#MIGRATED:}" ;;
+    esac
+  done <<EOF
+$_out
+EOF
+  # _runner всегда exit 0 (idempotent contract); ненулевой = инфра-сбой → видимо, не блок sync.
+  [[ "$_rc" -ne 0 ]] && echo "  ⚠️  migrations runner exit $_rc — см. вывод выше (sync продолжен)"
+  return 0
+}
+
 # check_artifact: add file from template if missing; never overwrite.
 check_artifact() {
   local dest_rel="$1"
@@ -1017,6 +1055,15 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Migrations — apply pending format/rudiment migrations on consumer tree.
+# CONSUMER-ONLY (Граница 7): self-apply не запускает (методология не само-модифицируется авто).
+# Размещено ПЕРЕД --auto-commit: MIGRATED:<path> → SYNC_CHANGED_FILES → один manifest-commit.
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]]; then
+  run_migrations "$TARGET_DIR"
+fi
+
+# ---------------------------------------------------------------------------
 # .gitignore check: warn if methodology runtime entries are missing.
 # Does not auto-modify — consumer owns their .gitignore.
 # ---------------------------------------------------------------------------
@@ -1067,19 +1114,23 @@ if [[ "$AUTO_COMMIT" == "true" ]] && [[ ${#SYNC_CHANGED_FILES[@]} -gt 0 ]]; then
   _auto_commit_sync() {
     local _wd
     _wd="$(cd "$TARGET_DIR" && pwd)" || return 0
-    # Filter: keep only non-gitignored, existing files
+    # Filter: keep non-gitignored manifest files. Include a path if it exists OR
+    # it is tracked-but-deleted (migration git rm — e.g. rudiment removal): такие
+    # пути не -f, но их удаление надо закоммитить. Иначе пропускаем (template missing).
     local _to_add=()
     for _f in "${SYNC_CHANGED_FILES[@]}"; do
       git -C "$_wd" check-ignore -q "$_f" 2>/dev/null && continue
-      [ -f "$_wd/$_f" ] || continue
-      _to_add+=("$_f")
+      if [ -f "$_wd/$_f" ] || git -C "$_wd" ls-files --error-unmatch -- "$_f" >/dev/null 2>&1; then
+        _to_add+=("$_f")
+      fi
     done
     [[ ${#_to_add[@]} -eq 0 ]] && return 0
     git -C "$_wd" add -- "${_to_add[@]}" 2>/dev/null || return 0
-    local _staged
-    _staged=$(git -C "$_wd" diff --cached --name-only 2>/dev/null | tr '\n' ' ' | xargs 2>/dev/null || true)
-    [[ -z "$_staged" ]] && return 0
-    git -C "$_wd" commit -- $_staged -m "chore: sync methodology $VERSION" 2>/dev/null \
+    # ⛔ EXPLICIT pathspec commit (a17ecc1-safe): коммитим ТОЛЬКО manifest-пути,
+    # НЕ весь staged-индекс (прежний `git commit -- $_staged` мог захватить файл,
+    # застейдженный параллельной сессией). Если среди _to_add нет staged-изменений →
+    # commit вернёт non-zero → || true (нечего коммитить, корректно).
+    git -C "$_wd" commit -- "${_to_add[@]}" -m "chore: sync methodology $VERSION" 2>/dev/null \
       && echo "  ✅ auto-commit: sync methodology $VERSION" \
       || true
   }
