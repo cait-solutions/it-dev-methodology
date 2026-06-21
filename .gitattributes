@@ -1,0 +1,20 @@
+# .gitattributes — methodology-platform (code repo)
+#
+# Parallel-safety: append-heavy журналы получают встроенный git merge-драйвер
+# `union` — при 3-way merge обе стороны добавленных строк СОХРАНЯЮТСЯ, конфликт-
+# маркеры не появляются, ничья запись не теряется by-construction.
+#
+# Закрывает класс G-117 / a17ecc1 (same-file interleave) для worktree/PR-пути:
+# две сессии на разных ветках (ai-dev/<task>) добавляют разные блоки в верх
+# CHANGELOG → merge через PR → union держит оба.
+#
+# ВАЖНО (verified 2026-06-20): работает ТОЛЬКО при настоящем 3-way merge.
+# `deploy-push.sh` использует `gh pr merge --merge` (merge-commit, не squash) →
+# драйвер срабатывает. Если merge-стратегию сменят на squash/rebase — union не
+# вызовется (детект: validate-log-merge.sh section-count guard).
+# Ограничение: shared-tree same-branch (две сессии в ОДНОМ дереве) union не
+# покрывает — там нет merge; для этого случая → worktree_isolation (отдельные деревья).
+#
+# `union` — встроенный драйвер git, доп. настройка в .git/config НЕ требуется.
+
+CHANGELOG.md merge=union

@@ -834,6 +834,31 @@ if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/script
 fi
 
 # ---------------------------------------------------------------------------
+# .gitattributes — parallel-safety: union merge-driver for append-heavy logs
+# (closes G-117 same-file interleave for worktree/PR path). Idempotent: appends
+# any MISSING `merge=union` lines to the consumer's .gitattributes, preserving
+# existing entries (never clobbers a hand-managed .gitattributes). Consumer-only:
+# self-apply repo already owns its canonical .gitattributes. The `union` driver
+# is built into git — no .git/config setup needed.
+# ---------------------------------------------------------------------------
+if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -f "$METHODOLOGY_DIR/templates/.gitattributes.template" ]]; then
+  dest_ga="$TARGET_DIR/.gitattributes"
+  added_ga=0
+  while IFS= read -r ga_line; do
+    case "$ga_line" in ''|\#*) continue ;; esac          # skip blanks + comments
+    if [[ ! -f "$dest_ga" ]] || ! grep -Fqx "$ga_line" "$dest_ga" 2>/dev/null; then
+      [[ -f "$dest_ga" ]] || printf '# .gitattributes — managed by it-dev-methodology (parallel-safety: merge=union)\n' > "$dest_ga"
+      printf '%s\n' "$ga_line" >> "$dest_ga"
+      added_ga=1
+    fi
+  done < "$METHODOLOGY_DIR/templates/.gitattributes.template"
+  if [[ "$added_ga" == "1" ]]; then
+    _track_changed ".gitattributes"
+    echo "→ .gitattributes (union merge-driver lines ensured)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Model tiers registry — canonical reference, always overwrite.
 # ---------------------------------------------------------------------------
 if [[ -f "$METHODOLOGY_DIR/templates/model-tiers.md" ]]; then

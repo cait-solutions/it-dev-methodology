@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 #
 # sync-doctor.sh — READ-ONLY health snapshot of methodology install.
-# DUAL-COPY: канон scripts/sync-doctor.sh — менять синхронно с templates/scripts/sync-doctor.sh (ADR-014).
+# MAINTAINER-INTERNAL (scripts/-only): НЕ доставляется консьюмерам — вызывается
+# только maintainer-командами /push-consumers + /sync-audit (commands-local/, не синкаются).
+# Снят из templates/scripts/ как orphan-в-delivery (consumer-delivery-hygiene v7.x.0):
+# ни одна consumer-facing команда его не зовёт. parity intersection-only → scripts/-only legit.
 #
 # Checks (always printed, even if N/A):
 #   version  — consumer-vs-clone (раздельно от clone-vs-remote — закрывает G-107 conflation)

@@ -16,6 +16,8 @@
 | `mermaid-missing-link.md` | `validate-mermaid-links.sh` | `:115-126` MISSING_LINK → errors += 1 | 1 | wave-1 |
 | `parity-divergent/` sandbox | `validate-script-parity.sh` | `:36` `diff -q` → exit 1 при drift | 1 | wave-1 |
 | `delivery-empty-settings/` | `validate-delivery.sh` | `:77-83` 0 hook-refs detection-guard | 1 | wave-1 |
+| `delivery-orphan/` | `validate-consumer-delivery.sh` | orphan-скрипт без consumer-ссылки (severity=error) | 1 | wave-1 |
+| `delivery-clean/` | `validate-consumer-delivery.sh` | `delivery-allow:` маркер → не флагуется (positive control) | 0 | wave-1 |
 | `mermaid-missing-annotation.md` | `validate-maps-coverage.sh` | `:465-466` `_freshness_finding` нет аннотации | 0 (WARN) | wave-2 |
 
 **wave-1:** активные assertions в `test-validators.sh` (assert_exit 1/0).

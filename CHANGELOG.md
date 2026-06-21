@@ -4,6 +4,20 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.5.0 — feat: parallel-safety merge=union для append-heavy журналов (closes G-117 same-file interleave) (2026-06-20)
+
+**Consumer-facing changes:**
+- **`.gitattributes`** (NEW) — встроенный git merge-драйвер `union` для append-heavy журналов/реестров (`CHANGELOG.md`, `DEVLOG.md`, `AGENT-GAPS.md`, `PRODUCT-GAPS.md`, `IDEAS.md`). При 3-way merge (PR) обе стороны добавленных записей **сохраняются by-construction** — две параллельные сессии на разных ветках больше не теряют чужую запись (closes G-117 / a17ecc1 same-file interleave для worktree/PR-пути). Verified: 0 конфликт-маркеров, оба блока сохранены. `union` — встроен в git, настройка не нужна.
+- **`templates/.gitattributes.template`** (NEW) + `sync-methodology.sh` — идемпотентная доставка: дозаливает отсутствующие `merge=union` строки в consumer `.gitattributes`, не трогая существующие.
+- **`scripts/validate-log-merge.sh`** (NEW, dual-copy) — section-count guard: WARN если число секций журнала уменьшилось vs baseline (детект что union не сработал из-за смены merge-стратегии на squash). Wired в `deploy-push.sh` (warn, не блок).
+- **`CLAUDE.md`** — Parallel-session rule: union задокументирован как L4 для separate-branch/PR-пути; честно указана граница (shared-tree same-branch → нужен worktree). fragment-files отвергнут /opinion+ council 7/7.
+
+**Что делать consumers:**
+- 🟢 **Автоматически:** `sync-methodology.sh` дозальёт `merge=union` строки в `.gitattributes` (создаст если нет). Эффект сразу: параллельные ветки/worktree больше не теряют записи журналов при merge.
+- 🟡 **Условие срабатывания:** union работает при **true 3-way merge** (не squash). Если твой PR-merge = squash → union не вызывается; для параллельной работы используй worktree (отдельные деревья).
+
+---
+
 ## v7.4.1 — feat: decision-review gate для high-stakes планов (council не пропускается тихо) (2026-06-20)
 
 **Consumer-facing changes:**

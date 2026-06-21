@@ -99,6 +99,15 @@ fi
 #          delivery-empty-settings/templates/.claude/hooks/ (пустая директория)
 assert_exit 1 "delivery-empty-settings" -- bash scripts/validate-delivery.sh --root "$FX/delivery-empty-settings"
 
+# ── Test 6: consumer-delivery orphan ─────────────────────────────────────────────
+# validate-consumer-delivery.sh должен обнаружить orphan-скрипт в templates/scripts/
+# (нет ссылки в commands/ / hooks/ / др. скрипте) под severity=error → exit 1.
+assert_exit 1 "consumer-delivery-orphan" -- env CONSUMER_DELIVERY_SEVERITY=error bash scripts/validate-consumer-delivery.sh --root "$FX/delivery-orphan"
+
+# ── Test 6b: consumer-delivery clean (positive control + allow-marker) ───────────
+# Скрипт с `# delivery-allow:` маркером не флагуется → даже под error → exit 0.
+assert_exit 0 "consumer-delivery-clean" -- env CONSUMER_DELIVERY_SEVERITY=error bash scripts/validate-consumer-delivery.sh --root "$FX/delivery-clean"
+
 # ── Positive control ─────────────────────────────────────────────────────────────
 # validate-triggers.sh на чистом triggers.json → exit 0.
 # Ловит «harness всегда видит non-zero» вырожденность.
