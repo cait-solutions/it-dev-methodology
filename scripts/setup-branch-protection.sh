@@ -70,6 +70,12 @@ PROTECTED_BRANCH="$INTEGRATION_BRANCH"
 
 ORIGIN_URL=$(_get_remotes_field "origin_url" "$(git remote get-url origin 2>/dev/null || true)")
 [[ -z "$ORIGIN_URL" ]] && ORIGIN_URL=$(git remote get-url origin 2>/dev/null || true)
+# Placeholder guard (L4): an unfilled origin_url (https://github.com/<owner>/<repo>.git)
+# must not feed the GitHub branch-protection API. A real URL never contains both '<' and
+# '>', so fall back to the actual git remote when the configured value is a placeholder.
+case "$ORIGIN_URL" in
+  *"<"*">"*) ORIGIN_URL=$(git remote get-url origin 2>/dev/null || true) ;;
+esac
 
 DOC_REPO_PATH="$(awk '/^doc_repo_path:/{gsub(/.*doc_repo_path:[[:space:]]*/,""); gsub(/[[:space:]]*#.*/,""); gsub(/\r/,""); print}' "$CONFIG" 2>/dev/null | head -1)"
 DOC_REPO_PATH="${DOC_REPO_PATH:-../it-dev-methodology-documentation}"

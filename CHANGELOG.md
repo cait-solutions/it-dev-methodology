@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.8.3 — fix: new-consumer full-init + all-repos delivery (remote-clobber + gh-account whitelist) (2026-06-21)
+
+**Consumer-facing changes:**
+- **`sync-methodology.sh`** (dual-copy) — origin_url auto-correct теперь **(a)** strip'ает trailing inline-comment при парсинге и **(b)** НЕ перезаписывает реальный remote если origin_url — незаполненный placeholder (`<owner>/<repo>`). Закрывает remote-clobber: свежий консьюмер больше не теряет свой git remote на первом sync.
+- **`new-project-init.sh`** — при init автозаполняет `origin_url` + `push_token_owner` в CLAUDE.local.md из живого `git remote get-url origin` (PRESERVE: только если placeholder). Новый консьюмер push-ready без ручных правок remote.
+
+**Maintainer-side (scripts-only, не доставляется консьюмерам):**
+- **`check-gh-account.sh`** — исправлен awk dead-code: gh_account из whitelist резолвился только для ПОСЛЕДНЕЙ записи (все остальные молча падали в URL-fallback). Теперь резолвится любая запись + match по абсолютному пути (nested-консьюмеры). Regression-test `test-check-gh-account.sh`.
+- **`setup-branch-protection.sh`** — placeholder-guard на origin_url (та же clobber-class).
+- **`/push-consumers`** — onboarding-flow: discovered+inited+не-в-whitelist репо → add/sync/never prompt (append в whitelist) → «update ALL» by-construction.
+
+**Actions:** автоматически — ничего. Существующие консьюмеры получают sync-fix при следующем sync. Уже-склоббленный remote (если был) лечится один раз: `git -C <consumer> remote set-url origin <real-url>`.
+
+**Priority:** 🟡 (закрывает класс «свежий консьюмер не пушится отсюда без ручных правок»).
+
+---
+
 ## v7.8.2 — feat: derived-слой коммитится у консьюмера (self-contained clone — команды на remote) (2026-06-21)
 
 **Consumer-facing changes:**

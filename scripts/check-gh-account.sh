@@ -49,42 +49,71 @@ _get_gh_account_from_whitelist() {
       sub(/^[^:]*:[[:space:]]*/, "", entry_path)
       sub(/[[:space:]]*#.*$/,     "", entry_path)
       gsub(/^[[:space:]]+|[[:space:]]+$/, "", entry_path)
-      entry_gh = ""
       in_target = (entry_path == target)
+      next
     }
+    # Emit IMMEDIATELY on the gh_account line while in the target entry.
+    # (Was a deferred print on the NEXT path line — dead code: the path rule reset
+    # in_target before the deferred print ran, so only the LAST entry ever resolved.
+    # Closes the fleet-wide whitelist false-negative.)
     /^[[:space:]]+gh_account:/ && in_target {
       gh = $0
       sub(/^[^:]*:[[:space:]]*/, "", gh)
       sub(/[[:space:]]*#.*$/,     "", gh)
       gsub(/^[[:space:]]+|[[:space:]]+$/, "", gh)
-      entry_gh = gh
+      print gh
+      exit
     }
-    # When a new entry starts, output the previous if it was the target
-    /^  - path:/ && in_target && entry_gh != "" { print entry_gh; exit }
-    END { if (in_target && entry_gh != "") print entry_gh }
   ' "$config"
 }
 
-# Normalize consumer path for comparison with whitelist entries (relative to methodology dir)
-METHODOLOGY_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-# Compute relative path from methodology dir to consumer path
-# (whitelist stores paths like ../it-dev-methodology-documentation)
-REL_PATH=""
-if [ -d "$CONSUMER_PATH" ]; then
-  ABS_CONSUMER="$(cd "$CONSUMER_PATH" && pwd)"
-  # Try to compute a relative path by removing methodology dir prefix
-  # Works if consumer is a sibling: METHODOLOGY_DIR/../consumer → ../consumer
-  PARENT="$(cd "$METHODOLOGY_DIR/.." && pwd)"
-  if [ "${ABS_CONSUMER#$PARENT/}" != "$ABS_CONSUMER" ]; then
-    SIBLING="${ABS_CONSUMER#$PARENT/}"
-    REL_PATH="../$SIBLING"
-  fi
+# List all auto_commit_consumers '- path:' values (raw, as written in whitelist).
+_list_whitelist_paths() {
+  local config="$1"
+  [ -f "$config" ] || return
+  awk '
+    /^```yaml/ && !in_block { in_block=1; next }
+    /^```/ && in_block       { in_block=0; in_consumers=0; next }
+    !in_block                { next }
+    /auto_commit_consumers:/ { in_consumers=1; next }
+    !in_consumers            { next }
+    /^  - path:/ {
+      ep=$0; sub(/^[^:]*:[[:space:]]*/,"",ep); sub(/[[:space:]]*#.*$/,"",ep)
+      gsub(/^[[:space:]]+|[[:space:]]+$/,"",ep)
+      print ep
+    }
+  ' "$config"
+}
+
+# Internal test hook — hermetic regression testing of the whitelist parser with NO gh
+# side-effects: check-gh-account.sh --lookup-whitelist <exact-entry-path> <config-file>
+# Prints the gh_account for an exact whitelist '- path:' value (or empty), then exits.
+if [ "$CONSUMER_PATH" = "--lookup-whitelist" ]; then
+  _get_gh_account_from_whitelist "${2:-}" "${3:-}"
+  exit 0
 fi
 
-# Look up gh_account in whitelist
+# Match consumer to a whitelist entry by resolving BOTH to absolute paths.
+# (The old sibling-only relative match silently missed nested consumers such as
+#  ../../URAI/legal_ai_assistant-documentation → empty REL_PATH → whitelist never queried.)
+METHODOLOGY_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 GH_ACCOUNT=""
-if [ -n "$REL_PATH" ]; then
-  GH_ACCOUNT="$(_get_gh_account_from_whitelist "$REL_PATH" "$CONFIG")"
+if [ -d "$CONSUMER_PATH" ]; then
+  ABS_CONSUMER="$(cd "$CONSUMER_PATH" && pwd)"
+  _matched_entry=""
+  # Process-substitution (NOT `_list... | while`) so $_matched_entry survives the loop:
+  # a pipe runs the while-body in a subshell in Bash 3.2 and the assignment is lost.
+  while IFS= read -r _entry; do
+    [ -n "$_entry" ] || continue
+    _abs_entry="$( cd "$METHODOLOGY_DIR" 2>/dev/null && cd "$_entry" 2>/dev/null && pwd )"
+    if [ -n "$_abs_entry" ] && [ "$_abs_entry" = "$ABS_CONSUMER" ]; then
+      _matched_entry="$_entry"
+      break
+    fi
+  done < <(_list_whitelist_paths "$CONFIG")
+  if [ -n "$_matched_entry" ]; then
+    GH_ACCOUNT="$(_get_gh_account_from_whitelist "$_matched_entry" "$CONFIG")"
+  fi
 fi
 
 # Fallback: if not in whitelist or no gh_account, derive from remote URL owner

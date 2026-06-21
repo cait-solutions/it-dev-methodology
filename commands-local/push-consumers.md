@@ -303,6 +303,37 @@ exclude_paths:
 
 Затем пропустить в текущем и всех будущих прогонах (тот же механизм что `/sync-audit` Gap 14 never-flow).
 
+**`[inited, not-whitelisted]` — onboarding в whitelist (closes «update ALL = только те, кого вспомнили внести»):**
+
+Консьюмер **обнаружен** в workspace И **имеет** `.claude/` (инициализирован), но **отсутствует** в `auto_commit_consumers` → по конструкции получит только sync, без commit/push (молчаливый sync-only bucket). Discovery (Шаг 2) и push-gating (whitelist) — два раздельных списка; их рассинхрон делает «обновить ВСЕ» = «обновить всех, кого вручную внесли». Для каждого такого репо — per-repo prompt **до** батч-подтверждения Шага 4:
+
+```
+⚠️ [inited, not-whitelisted]: <repo>
+   Инициализирован методологией, но НЕ в auto_commit_consumers → push невозможен.
+
+   add   — добавить в whitelist (предложу branch + gh_account), затем включить в commit+push батч
+   sync  — только sync в этом прогоне (останется не-whitelisted)
+   never — exclude_paths (как Gap 14 never-flow)
+
+Выбор для <repo>: (add / sync / never)
+```
+
+**При `add` (Recommendation-first):**
+1. Прочитать `<repo>/CLAUDE.local.md ## Branching` → `agent_branch`. Предложить его как `branch:` (дефолт). ⚠️ **G-117 branch-mismatch:** whitelist `branch` ДОЛЖЕН равняться `agent_branch` целевого репо — если у репо solo-on-main, branch=`main`; если team/ai-dev → `ai-dev` (и push в `main` делает человек через PR).
+2. Определить `gh_account`: предложить owner из `git -C <repo> remote get-url origin` (сегмент после хоста). Подтвердить у владельца (это его решение — какой gh-аккаунт имеет write-доступ).
+3. **Append** запись в `CLAUDE.local.md ## auto_commit_consumers` (explicit pathspec edit, не нарушая human-форматирование/комментарии блока):
+   ```yaml
+     - path: <relative-path>
+       branch: <agent_branch>
+       gh_account: <owner>
+   ```
+4. Включить репо в батч Шага 4 со статусом `[onboarded → sync+commit+push]`.
+
+**При `sync`:** оставить как `[not-whitelisted]` — только sync в этом прогоне (Шаг 5 Режим A).
+**При `never`:** добавить в `exclude_paths` (тот же flow что выше).
+
+> **NB:** этот же drift («inited + не в whitelist») стоит сюрфейсить и в `/sync-audit` отдельным Gap — тогда онбординг доступен и вне `/push-consumers`. Кандидат на отдельный план (не блок этого).
+
 ---
 
 ## Шаг 4 — Одно подтверждение на весь батч

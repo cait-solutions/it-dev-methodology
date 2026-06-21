@@ -380,6 +380,34 @@ if [[ ! -d "$TARGET_DIR/.git" ]]; then
   echo "  ✓ git initialized"
 fi
 
+# ---------------------------------------------------------------------------
+# Fill push-critical config from the live git remote (closes the new-consumer
+# remote-clobber class). The template ships origin_url / push_token_owner as
+# <owner>/<repo> placeholders; if a real 'origin' remote exists, substitute the real
+# values so sync-methodology.sh never auto-corrects a real remote to a placeholder.
+# PRESERVE: only rewrite lines that are STILL the unfilled placeholder (re-run safe).
+# tmp+mv (no sed -i — Git Bash/Windows CRLF quirk). Bash 3.2 safe.
+# ---------------------------------------------------------------------------
+_cl="$TARGET_DIR/CLAUDE.local.md"
+if [[ -f "$_cl" ]]; then
+  _real_remote="$( ( cd "$TARGET_DIR" && git remote get-url origin 2>/dev/null ) || true )"
+  if [[ -n "$_real_remote" ]]; then
+    # owner = first path segment after host; handles https:// and git@host: forms
+    _slug="$(printf '%s' "$_real_remote" | sed -e 's#^git@[^:]*:##' -e 's#^https\{0,1\}://[^/]*/##' -e 's#\.git$##')"
+    _owner="$(printf '%s' "$_slug" | cut -d/ -f1)"
+    if grep -q '^origin_url:.*<owner>.*<repo>' "$_cl" 2>/dev/null; then
+      sed "s#^origin_url:.*#origin_url: $_real_remote#" "$_cl" > "$_cl.tmp" && mv "$_cl.tmp" "$_cl"
+      echo "  ✓ CLAUDE.local.md: origin_url ← $_real_remote (from live remote)"
+    fi
+    if grep -q '^push_token_owner: <github-username-with-write-access>' "$_cl" 2>/dev/null; then
+      sed "s#^push_token_owner:.*#push_token_owner: $_owner#" "$_cl" > "$_cl.tmp" && mv "$_cl.tmp" "$_cl"
+      echo "  ✓ CLAUDE.local.md: push_token_owner ← $_owner"
+    fi
+  else
+    echo "  - CLAUDE.local.md: no 'origin' remote yet → origin_url left as placeholder (set remote + re-run init, or fill manually before /push)"
+  fi
+fi
+
 echo ""
 echo "✅ Project '$PROJECT_NAME' bootstrapped at $TARGET_DIR"
 echo ""
