@@ -327,6 +327,40 @@ sync_skills() {
       done
     done
   fi
+
+  # ── skills-local/ — maintainer-only skills (mirror of commands-local/). ──
+  # NOT synced to consumers: the glob above iterates skills/* only — skills-local/
+  # is a SEPARATE dir, structurally invisible to consumer sync (L4 closedness).
+  # ⛔ Если меняешь итерацию skills/ на recursive (find / **/) — добавь явный
+  #    exclude skills-local/ (тот же инвариант что commands-local/, см. NOTE в commands section).
+  # Copied to .claude/skills/ ТОЛЬКО при self-apply (методология использует свои
+  # maintainer-skills) — точно как commands-local/ self-apply блок. README.md в
+  # skills-local/ не является skill-dir (это файл) → glob */ его не подхватит → zero scaffolding.
+  if [[ "$IS_SELF_APPLY" == "true" ]] && [[ -d "$METHODOLOGY_DIR/skills-local" ]]; then
+    if compgen -G "$METHODOLOGY_DIR/skills-local/*/" > /dev/null 2>&1; then
+      echo "→ skills-local/ (self-apply only)"
+      mkdir -p "$target/.claude/skills"
+      for skill_dir in "$METHODOLOGY_DIR/skills-local"/*/; do
+        [[ -d "$skill_dir" ]] || continue
+        skill_name="$(basename "$skill_dir")"
+        dest_dir="$target/.claude/skills/$skill_name"
+        mkdir -p "$dest_dir"
+        if [[ -f "$skill_dir/SKILL.md" ]]; then
+          inject_skill_banner "$skill_dir/SKILL.md" "$dest_dir/SKILL.md"
+          _track_changed ".claude/skills/$skill_name/SKILL.md"
+          echo "  ✓ $skill_name/SKILL.md (local)"
+        fi
+        for extra in "$skill_dir"/*; do
+          [[ -f "$extra" ]] || continue
+          fname="$(basename "$extra")"
+          [[ "$fname" == "SKILL.md" ]] && continue
+          cp "$extra" "$dest_dir/$fname"
+          _track_changed ".claude/skills/$skill_name/$fname"
+          echo "  ✓ $skill_name/$fname (local)"
+        done
+      done
+    fi
+  fi
 }
 
 # sync_claude_canonical: overwrite CLAUDE.md with canonical methodology rules.
