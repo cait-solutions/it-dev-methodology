@@ -59,3 +59,12 @@ migration_apply() {
   done
   return 0
 }
+
+# Declare touched paths for the runner's commit manifest (a17ecc1-safe explicit
+# pathspec). sync-methodology.sh run_migrations() парсит MIGRATED:<path> → _track_changed
+# → _auto_commit_sync коммитит удаление explicit pathspec (tracked-but-deleted path).
+# Без этого удаление git rm не попадёт в manifest-commit на consumer self-sync.
+migration_changed_paths() {
+  echo "scripts/clone-consumer.sh"
+  echo "scripts/sync-doctor.sh"
+}

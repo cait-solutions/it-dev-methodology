@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.8.0 — feat: миграции self-применяются на каждом sync (init + update самодостаточны) (2026-06-21)
+
+**Consumer-facing changes:**
+- **`sync-methodology.sh`** теперь запускает `_runner.sh` после копирования файлов → format-migrations и rudiment-removal **применяются автоматически на каждом sync** (init + consumer self-sync через auto-update-watchdog), не только при maintainer `/push-consumers`. Раньше миграции **копировались, но не выполнялись** consumer-side (IDEAS 2026-06-20).
+- **a17ecc1-safe commit-bridge:** в `--auto-commit` режиме изменения миграций коммитятся через **explicit pathspec** (миграция декларирует `migration_changed_paths()` → `_runner` эмитит `MIGRATED:<path>` → manifest). `_auto_commit_sync` ужесточён: коммитит ТОЛЬКО manifest-пути (не весь staged-индекс) + поддерживает tracked-deleted пути (rudiment removal).
+- **Граница 7:** на self-apply методологии миграции НЕ запускаются (методология не само-модифицируется авто). report-mode миграции не авто-применяются — всплывают человеку.
+- **migration contract:** новая опциональная `migration_changed_paths()` — миграция декларирует тронутые пути для commit-manifest.
+
+**Actions:**
+1. `bash scripts/sync-methodology.sh .` (или обычный sync / auto-update-watchdog) — миграции применятся автоматически.
+2. (авто) Любой pending-миграции (формат/рудименты) применятся на следующем sync; HEALED/REPORT видны в выводе.
+
+**Priority:** 🟢 (идемпотентно — applied-list short-circuit; повторный sync = 0 изменений).
+
+---
+
 ## v7.7.0 — refactor: /opinion и /opinion+ слиты в одну команду (дефолт = council 7/7) (2026-06-21)
 
 **Consumer-facing changes:**

@@ -57,7 +57,7 @@ for mig in "$MIG_DIR"/v*.sh; do
   [ -f "$mig" ] || continue
   # Source in a subshell-safe way: reset contract vars, then source.
   MIGRATION_TARGET_VERSION=""; MIGRATION_ID=""; MIGRATION_MODE="auto"
-  unset -f migration_describe migration_detect migration_apply 2>/dev/null || true
+  unset -f migration_describe migration_detect migration_apply migration_changed_paths 2>/dev/null || true
   # shellcheck disable=SC1090
   . "$mig"
   [ -n "$MIGRATION_ID" ] || continue
@@ -81,6 +81,17 @@ for mig in "$MIG_DIR"/v*.sh; do
         _mark_applied "$MIGRATION_ID"
         HEALED="$HEALED|$MIGRATION_ID — $desc"
         echo "HEALED: $MIGRATION_ID — $desc"
+        # Emit touched paths for the caller's commit manifest (a17ecc1-safe:
+        # explicit pathspec declared by the migration, NOT reconstructed via
+        # git-status snapshot-delta). sync-methodology.sh run_migrations()
+        # parses MIGRATED:<path> → _track_changed → existing _auto_commit_sync.
+        # Optional contract fn — миграции без неё (self-staging типа v7.6.0 git rm)
+        # просто не эмитят (их изменения уже staged, commit штатным flow).
+        if command -v migration_changed_paths >/dev/null 2>&1 || declare -f migration_changed_paths >/dev/null 2>&1; then
+          for _mp in $(migration_changed_paths "$ROOT" 2>/dev/null); do
+            [ -n "$_mp" ] && echo "MIGRATED:$_mp"
+          done
+        fi
       else
         echo "REPORT: $MIGRATION_ID — $desc (auto-apply FAILED, needs manual check)"
         REPORTED="$REPORTED|$MIGRATION_ID"
