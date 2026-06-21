@@ -2,6 +2,10 @@
 #
 # secrets-cleanup-backups.sh — remove .env.backup-* older than retention.
 #
+# delivery-allow: легит ручной tool очистки .env-бэкапов — reactive cleanup без
+#   повседневного command-entry (decision consumer-delivery-hygiene 2026-06-20).
+#   validate-consumer-delivery.sh пропускает его по этому маркеру.
+#
 # Retention configurable in CLAUDE.local.md ## Secrets.backup_retention_hours
 # (default 24h). Also called automatically at end of set-secret.sh.
 #
