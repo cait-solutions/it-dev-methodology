@@ -392,15 +392,20 @@ stale-копии maintainer-only скриптов (`clone-consumer.sh`, `sync-do
 bash scripts/migrations/_runner.sh "<consumer-abs-path>"
 
 # 2. Закоммитить ТОЛЬКО staged-удаление (explicit pathspec — закрывает index-capture a17ecc1).
+#    ⛔ -m ДО `--` (иначе `--` делает -m и сообщение pathspec'ами → "did not match any file").
 #    Если ни один файл не застейджен (parallel-сессия уже снесла / уже чисто) → no-op, пропустить репо.
 staged=$(git -C "<consumer-abs-path>" diff --cached --name-only -- scripts/clone-consumer.sh scripts/sync-doctor.sh)
 if [ -n "$staged" ]; then
-  git -C "<consumer-abs-path>" commit -- scripts/clone-consumer.sh scripts/sync-doctor.sh \
-    -m "chore: remove maintainer-only delivery rudiments (methodology v7.6.0)"
-  # 3. Push ff-only с одной fetch-retry; non-ff (parallel-сессия запушила) → skip+warn, НЕ force.
-  git -C "<consumer-abs-path>" push origin "<branch-from-whitelist>" 2>/dev/null \
+  git -C "<consumer-abs-path>" commit -m "chore: remove maintainer-only delivery rudiments (methodology v7.6.0)" \
+    -- scripts/clone-consumer.sh scripts/sync-doctor.sh
+  # 3. Сначала gh-аккаунт по whitelist (P-012/P-013, не угадывать из URL):
+  bash scripts/check-gh-account.sh "<consumer-abs-path>" || echo "  ⚠️ <имя>: gh-account check failed — push пропущен"
+  # 4. Push ff-only через HEAD:<branch> (НЕ `push origin <branch>` — упадёт "src refspec does not
+  #    match any" если локальная ветка ≠ <branch>; HEAD:<branch> пушит текущий HEAD в remote-ветку).
+  #    Одна fetch-retry; non-ff (parallel-сессия запушила) → skip+warn, НЕ force.
+  git -C "<consumer-abs-path>" push origin HEAD:"<branch-from-whitelist>" 2>/dev/null \
     || { git -C "<consumer-abs-path>" fetch origin "<branch>" --quiet; \
-         git -C "<consumer-abs-path>" push origin "<branch>" 2>/dev/null \
+         git -C "<consumer-abs-path>" push origin HEAD:"<branch>" 2>/dev/null \
          || echo "  ⚠️ <имя>: push non-ff (parallel-сессия?) — пропускаю, не форсирую"; }
 fi
 ```
