@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.6.0 — fix: consumer-delivery hygiene — снятие maintainer-only рудиментов + forward-closedness (2026-06-20)
+
+**Consumer-facing changes:**
+- **`scripts/clone-consumer.sh`, `scripts/sync-doctor.sh`** — БОЛЬШЕ НЕ доставляются (сняты из `templates/scripts/`). Это maintainer-only операции (клонирование consumer-репов / диагностика sync — зовутся только командами владельца методологии). Stale-копии в твоём `scripts/` будут сняты автоматически миграцией при следующем `/sync-audit`.
+- **`scripts/validate-consumer-delivery.sh`** (NEW, dual-copy) — детектор orphan-скриптов в delivery: `templates/scripts/*` без consumer-facing ссылки = maintainer-only. severity=warn (default), `CONSUMER_DELIVERY_SEVERITY=error` для блока. Ось в `/doc-audit`. Маркер `# delivery-allow: <причина>` исключает легит ручные tools.
+- **migration `v7.6.0-remove-consumer-delivery-rudiments`** — self-applying идемпотентная чистка stale-копий (GUARD: не трогает methodology-platform канон).
+
+**Actions:**
+1. `bash scripts/sync-methodology.sh .` (или обычный sync) — получить v7.6.0.
+2. (авто) При следующем `/sync-audit` миграция снимет `scripts/clone-consumer.sh` + `scripts/sync-doctor.sh` если присутствуют. Твои собственные скрипты не затрагиваются.
+
+**Priority:** 🟢 (косметическая чистка delivery — рудименты безвредны, миграция идемпотентна).
+
+---
+
 ## v7.5.0 — feat: parallel-safety merge=union для append-heavy журналов (closes G-117 same-file interleave) (2026-06-20)
 
 **Consumer-facing changes:**

@@ -99,6 +99,9 @@ fi
 # 1. Dual-copy parity (G-122) — methodology-platform only, внутри guard
 _run "parity (dual-copy scripts↔templates)" '^\[ERROR\]' scripts/validate-script-parity.sh
 
+# 1b. Consumer-delivery hygiene — orphan-в-templates/scripts (methodology-platform only, warn)
+_run "consumer-delivery (orphan scripts)" '^\[WARN\]' scripts/validate-consumer-delivery.sh
+
 # 2. Maps coverage + diagram-freshness + node-readability (report-режим, не gate)
 _run "maps-coverage (+freshness +node-readability)" '^\[WARN\]' scripts/validate-maps-coverage.sh --report
 

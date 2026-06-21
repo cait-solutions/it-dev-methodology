@@ -65,6 +65,7 @@ bash scripts/doc-audit.sh --doc-root ../it-dev-methodology-documentation --fix
 | Ось | Что проверяет | Severity |
 |---|---|---|
 | parity | dual-copy `scripts/` ↔ `templates/scripts/` идентичны (G-122; только methodology-platform) | FAIL |
+| consumer-delivery | `templates/scripts/*` без consumer-facing ссылки (commands/hooks/др.скрипт) = maintainer-only orphan; `delivery-allow:` маркер исключает (только methodology-platform) | WARN |
 | maps-coverage | команды/skills/скрипты присутствуют в картах; diagram-freshness; node-readability (G-121); **map-staleness** | FAIL/WARN |
 | ↳ map-staleness | компонент изменён в git позже карты, которая его описывает (через LAR «Связанные артефакты») → сверь стрелки/labels диаграммы (v6.1.0) | WARN |
 | mermaid-links | mermaid.live URL соответствует коду диаграммы (оба репо) | FAIL |

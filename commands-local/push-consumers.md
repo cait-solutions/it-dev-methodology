@@ -111,21 +111,25 @@ North Star bootstrap: ✅ X заполнено / ⏭ Y пропущено
 
 ```bash
 BRANCH=<branch-from-whitelist>  # из auto_commit_consumers для этого репо
+PREV_SHA=$(git -C <consumer-path> rev-parse HEAD 2>/dev/null)   # baseline ДО pull — для NEW-колонок Шага 2.5
 PULL_OUT=$(git -C <consumer-path> pull --ff-only origin "$BRANCH" 2>&1)
 PULL_EXIT=$?
+HEAD_SHA=$(git -C <consumer-path> rev-parse HEAD 2>/dev/null)   # состояние ПОСЛЕ pull
 ```
 
 **Интерпретация результата:**
-- exit 0, вывод `"Already up to date."` → тихо продолжить (no-op)
-- exit 0, вывод содержит `"Fast-forward"` → показать: `  📥 <имя>: pulled from remote (fast-forward)`
-- exit ≠ 0 (diverged / conflict / network error) → ⚠️ warn + **пропустить repo** (НЕ abort батча):
+- exit 0, вывод `"Already up to date."` → тихо продолжить (no-op); `PULL_OK=true`
+- exit 0, вывод содержит `"Fast-forward"` → показать: `  📥 <имя>: pulled from remote (fast-forward)`; `PULL_OK=true`
+- exit ≠ 0 (diverged / conflict / network error) → ⚠️ warn + **пропустить repo** (НЕ abort батча); `PULL_OK=false`:
   ```
   ⚠️ <имя>: pull --ff-only failed → repo пропущен (diverged или network)
      Причина: <PULL_OUT первые 2 строки>
      Реши вручную: git -C <path> pull [--rebase] origin <branch>
   ```
 
-**Репо без remote origin** (локальный git без push настроенного remote): пропустить pull тихо (не ошибка).
+**Репо без remote origin** (локальный git без push настроенного remote): пропустить pull тихо (не ошибка); `PULL_OK=false`.
+
+**Сохранить per-repo** `PREV_SHA` / `HEAD_SHA` / `PULL_OK` — используются Шагом 2.5 для вычисления `NEW gaps` / `NEW devlog` из уже-подтянутого диапазона (без нового fetch). При `PULL_OK=false` (failed / diverged / нет origin) baseline недоступен → колонки покажут `—`, не ложный `0`.
 
 **Инвариант:** `--ff-only` обязателен. Никогда не делать `git pull` (без флага), не делать `--rebase`. Если нельзя fast-forward → warn+skip — пользователь сам решает конфликт.
 
@@ -174,7 +178,7 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null | head -1
 
 ---
 
-## Шаг 2 — Drift-таблица
+## Шаг 2.5 — Drift-таблица
 
 Для каждого обнаруженного репо:
 
@@ -189,16 +193,30 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null | head -1
    - `[no-marker]` — репо есть в workspace, `.claude/.version` отсутствует
    - `[not-initialized]` — нет `.claude/` вообще
    - `[skip: dirty]` — см. Шаг 3
+5. **NEW gaps / NEW devlog (pre-push consumer-authored visibility):** для whitelisted репо где Шаг 0.5 выполнил pull (`PULL_OK=true`) — вычислить число новых consumer-authored записей из уже-подтянутого диапазона `PREV_SHA..HEAD_SHA` (данные локальны после Шага 0.5, **нового fetch не требуется**):
+   ```bash
+   # AGENT-GAPS (корень И docs/) — новые Gap-ID: в диапазоне pull
+   NEW_GAPS=$(git -C <consumer-path> diff "$PREV_SHA..$HEAD_SHA" -- AGENT-GAPS.md docs/AGENT-GAPS.md 2>/dev/null \
+     | grep -cE '^\+Gap-ID:' || echo 0)
+   # DEVLOG (корень И docs/) — новые записи (заголовки ## 20…)
+   NEW_DEVLOG=$(git -C <consumer-path> diff "$PREV_SHA..$HEAD_SHA" -- DEVLOG.md docs/DEVLOG.md 2>/dev/null \
+     | grep -cE '^\+## 20' || echo 0)
+   ```
+   - `PULL_OK=false` (pull failed / diverged / нет origin) ИЛИ **не-whitelisted** репо (только sync, без pull) → `NEW_GAPS="—"`, `NEW_DEVLOG="—"` (baseline недоступен — не показывать ложный `0`).
+   - Файл отсутствует у консьюмера → `git diff` по несуществующему пути пуст → `0` (корректно: нет файла = нет новых).
+   - `PREV_SHA == HEAD_SHA` (уже актуально) → diff пуст → `0` (корректно).
 
 **Пример drift-таблицы:**
 
-| Репо | Consumer ver | Synced | Δ | Статус |
-|---|---|---|---|---|
-| erp-documentantion | v4.47.5 | 2026-06-01 | +94 minor | [drift] |
-| it-dev-methodology-documentation | v4.45.0 | 2026-06-01 | +96 minor | [drift] |
-| ai-assistant-documentation | v4.10.6 | 2026-05-27 | +131 minor | [drift] |
-| ebay-template-documentation | v4.60.0 | 2026-06-04 | +81 minor | [drift] |
-| lead-gen-documentation | — | — | — | [not-initialized] |
+| Репо | Consumer ver | Synced | Δ | NEW gaps | NEW devlog | Статус |
+|---|---|---|---|---|---|---|
+| erp-documentantion | v4.47.5 | 2026-06-01 | +94 minor | 2 | 5 | [drift] |
+| it-dev-methodology-documentation | v4.45.0 | 2026-06-01 | +96 minor | 0 | 1 | [drift] |
+| ai-assistant-documentation | v4.10.6 | 2026-05-27 | +131 minor | — | — | [skip: pull failed] |
+| ebay-template-documentation | v4.60.0 | 2026-06-04 | +81 minor | 0 | 0 | [drift] |
+| lead-gen-documentation | — | — | — | — | — | [not-initialized] |
+
+> **NEW gaps / NEW devlog** = consumer-authored записи, появившиеся в диапазоне Шага 0.5 ff-pull (`PREV_SHA..HEAD_SHA`) — то что консьюмер накопил с момента последнего локального состояния владельца. Видны **до** подтверждения push (Шаг 4) → последний checkpoint перед пропагацией методологии на fleet. `—` = pull не выполнялся (не-whitelisted / failed / нет origin). Полный **контент** этих записей — в Шаге 8 (`/pull-consumers`); здесь только счётчик-сигнал.
 
 ---
 
@@ -294,16 +312,18 @@ exclude_paths:
 ```
 Drift-таблица (methodology vX.Y.Z):
 
-| Репо | ver | Δ | Статус | Commit+Push |
-|---|---|---|---|---|
-| erp-documentantion | v4.47.5 | +94 | [drift] → обновить | ✅ whitelisted |
-| it-dev-documentation | v4.45.0 | +96 | [drift] → обновить | ✅ whitelisted |
-| some-other | v5.0.0 | +3 | [drift] → обновить | ⚠️ не в whitelist — только sync |
-| lead-gen | — | — | [initialized → sync] | ✅ whitelisted |
-| shopware | — | — | [not-initialized, skipped] | — |
+| Репо | ver | Δ | NEW gaps | NEW devlog | Статус | Commit+Push |
+|---|---|---|---|---|---|---|
+| erp-documentantion | v4.47.5 | +94 | 2 | 5 | [drift] → обновить | ✅ whitelisted |
+| it-dev-documentation | v4.45.0 | +96 | 0 | 1 | [drift] → обновить | ✅ whitelisted |
+| some-other | v5.0.0 | +3 | — | — | [drift] → обновить | ⚠️ не в whitelist — только sync |
+| lead-gen | — | — | — | — | [initialized → sync] | ✅ whitelisted |
+| shopware | — | — | — | — | [not-initialized, skipped] | — |
 
 Будет обновлено: 4 | Пропущено: 1 (skipped)
 Будет сделан commit+push: 3 (whitelisted) | Только sync: 1 (not in whitelist)
+
+ℹ️ NEW gaps/devlog (Шаг 2.5) — consumer-authored записи с момента последнего pull. Ненулевые = консьюмер что-то накопил; просмотри ДО подтверждения, если хочешь придержать push (полный контент — Шаг 8).
 
 Продолжить? (y/n/список через запятую для выборочного)
 ```
@@ -354,6 +374,46 @@ bash scripts/push-consumer-single.sh "<consumer-abs-path>" "<branch-from-whiteli
 - ❌ НИКОГДА не делать push если commit вернул ненулевой exit.
 - ❌ НИКОГДА не делать push в репо вне `auto_commit_consumers` whitelist.
 - ❌ Fail одного консьюмера → continue к следующему (не abort батча).
+
+---
+
+## Шаг 5.6 — One-time delivery-rudiment sweep (parallel-safe)
+
+**Условие:** выполняется только для whitelisted репо где Шаг 5 Режим B прошёл. Цель — снять
+stale-копии maintainer-only скриптов (`clone-consumer.sh`, `sync-doctor.sh`), снятых из
+`templates/scripts/` в v7.6.0. Sync **не удаляет** removed-upstream скрипты → нужна явная чистка.
+Распространяется и pull-путём (миграция применяется на consumer `/sync-audit`); этот шаг — push-сторона.
+
+**Per-whitelisted-consumer (parallel-safe, идемпотентно):**
+
+```bash
+# 1. Применить миграции (включая remove-consumer-delivery-rudiments) — git rm стейджит удаление.
+#    _runner.sh — КАНОНИЧЕСКИЙ механизм, не реимплементировать inline (как push-consumer-single.sh, P-013).
+bash scripts/migrations/_runner.sh "<consumer-abs-path>"
+
+# 2. Закоммитить ТОЛЬКО staged-удаление (explicit pathspec — закрывает index-capture a17ecc1).
+#    Если ни один файл не застейджен (parallel-сессия уже снесла / уже чисто) → no-op, пропустить репо.
+staged=$(git -C "<consumer-abs-path>" diff --cached --name-only -- scripts/clone-consumer.sh scripts/sync-doctor.sh)
+if [ -n "$staged" ]; then
+  git -C "<consumer-abs-path>" commit -- scripts/clone-consumer.sh scripts/sync-doctor.sh \
+    -m "chore: remove maintainer-only delivery rudiments (methodology v7.6.0)"
+  # 3. Push ff-only с одной fetch-retry; non-ff (parallel-сессия запушила) → skip+warn, НЕ force.
+  git -C "<consumer-abs-path>" push origin "<branch-from-whitelist>" 2>/dev/null \
+    || { git -C "<consumer-abs-path>" fetch origin "<branch>" --quiet; \
+         git -C "<consumer-abs-path>" push origin "<branch>" 2>/dev/null \
+         || echo "  ⚠️ <имя>: push non-ff (parallel-сессия?) — пропускаю, не форсирую"; }
+fi
+```
+
+**Parallel-safety инварианты (≥2 сессии /push-consumers одновременно):**
+- ✅ **Idempotent no-op:** оба рудимента отсутствуют → миграция SKIP → нет staged → репо пропущен (нет пустого коммита, нет push). Покрывает «parallel-сессия уже снесла».
+- ✅ **Explicit pathspec** — коммитятся только 2 удаляемых файла, не весь индекс (a17ecc1).
+- ✅ **ff-only + fetch-retry-once**, иначе skip+warn. ❌ Никакого force, не блокировать другую сессию.
+- ✅ Dirty-check по этим 2 путям (`diff --cached -- <2 пути>`), не по всему дереву.
+
+**Граница read-only:** только whitelisted `*-documentation` репы (CLAUDE.local.md `auto_commit_consumers`).
+Код-репы консьюмеров **не трогаются** — они самочистятся миграцией на своём `/sync-audit`. Финальный
+push — после твоего подтверждения (Шаг 4 батч-confirm покрывает).
 
 ---
 
