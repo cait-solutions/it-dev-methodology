@@ -26,7 +26,7 @@
 
 **Mid-task escalation:** нет (анализ в /plan не требует mid-task переоценки как /code)
 
-**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом анализа. См. `.claude/model-tiers.md` секция Pre-flight model check.
+**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier. При mismatch — пауза + рекомендация перед началом анализа (порог и формат: `.claude/model-tiers.md § Pre-flight model check`; under-powered — любая ступень вниз → громкий STOP-advisory).
 
 ---
 
