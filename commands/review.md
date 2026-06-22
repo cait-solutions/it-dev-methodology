@@ -31,7 +31,7 @@
 
 **Mid-task escalation:** **да — Шаг 3.5 Complexity reassessment** (если найден class-bug или security gap)
 
-**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier для review. Если mismatch ≥ 2 ступени — пауза + рекомендация перед началом review.
+**Pre-flight model check:** **да — при старте команды** спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии) и сравни с Default tier для review. При mismatch — пауза + рекомендация перед началом review (порог и формат: `.claude/model-tiers.md § Pre-flight model check`; under-powered — любая ступень вниз → громкий STOP-advisory).
 
 ---
 

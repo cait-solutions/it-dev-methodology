@@ -26,7 +26,7 @@
 **Upgrade to Capable tier if:** 60+ DEVLOG entries за период; множественные skip-rate alerts (≥3 триггеров с skip > 50%)
 **Downgrade to Fast tier if:** < 10 DEVLOG entries за период (мало данных)
 **Mid-task escalation:** нет (single-pass analysis)
-**Pre-flight model check:** **да** — спроси какая модель активна или используй подтверждённую в сессии. Если mismatch ≥ 2 ступени — пауза + рекомендация.
+**Pre-flight model check:** **да** — спроси какая модель активна или используй подтверждённую в сессии. При mismatch — пауза + рекомендация (порог и формат: `.claude/model-tiers.md § Pre-flight model check`; under-powered — любая ступень вниз).
 
 ---
 

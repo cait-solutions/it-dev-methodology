@@ -25,7 +25,7 @@
 
 **Mid-task escalation:** нет (single-pass ранжирование).
 
-**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй подтверждённую в сессии), сравни с Default. Mismatch ≥ 2 ступени → пауза + рекомендация. См. `.claude/model-tiers.md`.
+**Pre-flight model check:** **да** — спроси пользователя какая модель активна (или используй подтверждённую в сессии), сравни с Default. При mismatch → пауза + рекомендация (порог и формат: `.claude/model-tiers.md § Pre-flight model check`; under-powered — любая ступень вниз).
 
 ---
 
