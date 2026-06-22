@@ -217,11 +217,13 @@ Details: [CLAUDE_LONG.md § Level-4 framework](CLAUDE_LONG.md).
 
 ## Model tier rule
 
-Каждая команда методологии MUST содержать секцию `## Рекомендуемая модель` (5 полей: Default tier / Upgrade / Downgrade / Mid-task escalation / Pre-flight model check).
+Каждая команда методологии MUST содержать секцию `## Рекомендуемая модель` с **6 полями**: Default tier / **Extended (UI settings): effort + thinking** / Upgrade / Downgrade / Mid-task escalation / Pre-flight model check.
 
-Канон: [.claude/model-tiers.md](.claude/model-tiers.md). При добавлении новой команды → добавь строку в матрицу + секцию в command-файл; `/review` блокирует merge без обеих.
+**Рекомендации трёхмерны (closes blind-effort/thinking класс):** любая рекомендация модели — в каждой команде И в любой динамической точке где агент предлагает следующий шаг (`/plan`/`/code` после `/opinion`, trigger-вопросы, mid-task escalation) — ОБЯЗАНА быть в формате `tier · effort · thinking`, не только tier. Tier выбирает модель; **Effort** (слайдер Low/Medium/High) + **Thinking** (toggle ON/OFF) — UI-настройки рядом с выбором модели, которые пользователь выставляет для оптимального reasoning. Рекомендация только по tier («Sonnet»/«Opus») оставляет пользователя настраивать effort/thinking вслепую. Дефолты класса + task-shape модификаторы (deep-reasoning / `[critical]` → High+ON; mechanical → Low+OFF) — канон [.claude/model-tiers.md](.claude/model-tiers.md) § Effort & Thinking.
 
-Pre-flight check **спрашивает пользователя** о текущей модели (не self-detect — system prompt unreliable). Подтверждённое значение переиспользуется в сессии.
+Канон: [.claude/model-tiers.md](.claude/model-tiers.md). При добавлении новой команды → добавь строку в матрицу (включая колонки Effort/Thinking) + секцию в command-файл; `/review` блокирует merge без обеих, и flag'ает секцию `## Рекомендуемая модель` без строки effort+thinking (🔵).
+
+Pre-flight check **спрашивает пользователя** о текущей модели (не self-detect — system prompt unreliable). Подтверждённое значение переиспользуется в сессии. Effort/thinking — advisory тонкая настройка (как tier, выставляется пользователем в UI; auto-switch невозможен).
 
 Когда Anthropic переименовывает модели — обнови **только** Mapping таблицу в `model-tiers.md`.
 

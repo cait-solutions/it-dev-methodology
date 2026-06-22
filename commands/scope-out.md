@@ -17,6 +17,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** (запуск скрипта + показ URL — mechanical) / **High** · thinking: **ON** (интерпретация backlog — приоритизация/кластеризация). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Fast tier (Haiku)** — команда детерминированная: запуск скрипта + представление результата, reasoning минимальный.
 
 **Upgrade to Default (Sonnet) if:** пользователь просит интерпретировать backlog (приоритизация, кластеризация по темам, «что закрыть первым») — это reasoning поверх визуализации.

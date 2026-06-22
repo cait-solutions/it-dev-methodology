@@ -20,6 +20,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — ретроспективный анализ паттернов = reasoning. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** Default tier (см. `.claude/model-tiers.md`) — тактический анализ.
 **Upgrade to Capable tier if:** 60+ DEVLOG entries за период; множественные skip-rate alerts (≥3 триггеров с skip > 50%)
 **Downgrade to Fast tier if:** < 10 DEVLOG entries за период (мало данных)

@@ -8,6 +8,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** — git-операция + чек-листы (mechanical). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — команда это git-операция + чек-листы, не reasoning.
 **Upgrade:** не требуется.
 **Pre-flight model check:** нет (Fast tier — минимально допустимый для этой команды).

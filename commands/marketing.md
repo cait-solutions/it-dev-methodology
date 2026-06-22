@@ -8,6 +8,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** (навигация) / **High** · thinking: **ON** (autodraft — генерация из PRODUCT/VISION). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** Fast (Haiku) — навигация и чтение state, без reasoning-heavy анализа.
 
 **Upgrade to Default (Sonnet) if:**

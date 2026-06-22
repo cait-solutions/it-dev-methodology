@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.9.0 — feat: трёхмерные рекомендации моделей (tier · effort · thinking) (2026-06-22)
+
+**Consumer-facing changes:**
+- **`model-tiers.md`** — новая секция **«## Effort & Thinking (extended UI settings)»**: канонический формат рекомендации `<Tier> · effort: <Low|Medium|High> · thinking: <ON|OFF>`, дефолты по классу команды (reasoning → High+ON · mechanical → Low+OFF · mixed → Medium+ON), task-shape модификаторы (deep-reasoning / `[critical]` → High+ON независимо от tier). Per-command матрица получила колонки **Effort** + **Thinking**. Output-format `/plan` и Pre-flight обновлены на трёхмерный формат.
+- **Все команды** (`## Рекомендуемая модель`) — добавлена строка `**Extended (UI settings):** effort: … · thinking: …`. Теперь рекомендация модели в каждой команде — трёхмерная, не только tier.
+- **Динамические точки** — `/plan` (блок «Recommended models», trigger-вопросы, Шаг 99.5, финальное сообщение), `/code` (mid-task escalation), `/opinion` (предложение `/plan`) выводят рекомендацию в формате `tier · effort · thinking`.
+- **`/review`** — новый checklist-detect: секция `## Рекомендуемая модель` без строки effort+thinking → 🔵 (L3 detect).
+
+**Зачем:** UI Claude Code экспонирует рядом с выбором модели слайдер **Effort** (Low/Med/High) + toggle **Thinking** (ON/OFF). Рекомендация только по tier («Sonnet»/«Opus») оставляла пользователя настраивать их вслепую. Теперь агент всегда даёт оптимальные настройки перед `/plan` и `/code`.
+
+**Actions:** автоматически — ничего (аддитивно, graceful read; старый консьюмер не падает). Изменения приходят при следующем sync. Effort/thinking — advisory (как tier), выставляются пользователем в UI.
+
+**Priority:** 🟢 (UX/guidance улучшение, не breaking).
+
+---
+
 ## v7.8.3 — fix: new-consumer full-init + all-repos delivery (remote-clobber + gh-account whitelist) (2026-06-21)
 
 **Consumer-facing changes:**

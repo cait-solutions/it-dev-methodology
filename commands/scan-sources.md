@@ -22,6 +22,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — cross-source synthesis «что нового decision-relevant» = reasoning. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Default** (Sonnet) — WebFetch/WebSearch + synthesis + structured DEVLOG-захват достаточно.
 **Upgrade to Capable if:** ≥3 источника с conflicting сигналами требуют cross-source reasoning; стратегический вывод с нетривиальным trade-off.
 **Downgrade to Fast:** ❌ НЕ рекомендуется — synthesis «что полезно» требует reasoning.

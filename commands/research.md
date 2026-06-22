@@ -15,6 +15,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — synthesis выводов из источников = reasoning. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Default** (Sonnet) — WebSearch + synthesis + structured output достаточно.
 **Upgrade to Capable if:** Conflicting sources requiring deep reasoning; стратегический вопрос с нетривиальным trade-off анализом.
 **Downgrade to Fast:** НЕ рекомендуется — synthesis требует reasoning.

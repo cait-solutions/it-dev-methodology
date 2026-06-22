@@ -25,6 +25,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** (Способность B/D — pattern analysis / semantic review) / **Medium** · thinking: **ON** (только Способность A — drift detection). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Capable tier** обязателен **если активна Способность B** (gap pattern analysis требует Level 4+ ladder reasoning).
 Если активна только Способность A (только drift detection) — Default tier достаточен.
 

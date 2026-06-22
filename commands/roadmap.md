@@ -13,6 +13,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — RICE-приоритизация + синтез ранжирования = reasoning. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier (Sonnet)** — основной выбор. Оценка Impact/Effort + синтез ранжирования требуют reasoning.
 
 **Upgrade to Capable (Opus) if:**

@@ -8,6 +8,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** — деплой = детерминированные чек-листы (mechanical). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — деплой это чек-листы, structured smoke test, обновление DEVLOG
 **Upgrade to Default tier if:** smoke test failed → нужен диагностический анализ; regression detected at after-effects check
 **Downgrade:** (всегда Fast — это минимально допустимый)
