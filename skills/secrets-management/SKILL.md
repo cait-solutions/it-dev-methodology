@@ -217,6 +217,10 @@ bash scripts/set-secret.sh GITHUB_PAT
 # Interactive: prompts service_name, URL, login, expires_at, value (read -s), re-paste
 ```
 
+> ⚠️ **`set-secret.sh` запускается в ЛЮБОМ интерактивном TTY — git bash specifically НЕ требуется** (closes G-122). Это bash 3.2 скрипт; `read -s` (скрытый ввод значения) работает во встроенном терминале VSCode (Ctrl+\`, любой profile), Windows Terminal, PowerShell с `bash`, или git bash. Реальное трение пользователя — переключение в **отдельное окно** git bash, а не сам скрипт; встроенный терминал его снимает. **НЕ инструктируй «открой git bash»** — говори «запусти в терминале». Через `/secrets --add` агент сам пишет manifest-декларацию (метаданные не секрет) и печатает готовую строку — пользователю остаётся ввести только значение в скрытый prompt.
+>
+> ❌ **НЕ оборачивать `set-secret.sh` в VSCode Task** для «one-click»: VSCode shell-task использует variable-substitution, а не интерактивный stdin → `read -s` падает как в non-tty CI-режиме (set-secret.sh: «stdin is not a tty»). Отвергнуто /opinion council 7/7 2026-06-22 (см. [opinion:secrets-task-launch] DEVLOG).
+
 ### View metadata (без значения)
 ```bash
 bash scripts/secrets-show.sh                    # table
