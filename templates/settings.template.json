@@ -125,7 +125,8 @@
         "hooks": [
           { "type": "command", "command": "sh .claude/hooks/hook-liveness.sh" },
           { "type": "command", "command": "sh .claude/hooks/maps-freshness-liveness.sh" },
-          { "type": "command", "command": "sh .claude/hooks/run-hook.sh auto-update-watchdog.py" }
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh auto-update-watchdog.py" },
+          { "type": "command", "command": "sh .claude/hooks/run-hook.sh model-detect.py" }
         ]
       }
     ]

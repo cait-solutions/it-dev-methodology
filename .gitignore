@@ -75,6 +75,12 @@ docs/architecture/
 .claude/settings.json
 .claude/agents/
 
+# Runtime-local model detection state (per-session, not shared)
+# Regenerated on each SessionStart by model-detect.py hook.
+# Consumer repos: also gitignored via templates/.gitignore.template
+.claude/state/session-model.json
+.claude/state/probe.log
+
 # Claude Code derivative files (restored by: bash scripts/new-project-init.sh .)
 .claude/commands/
 .claude/hooks/

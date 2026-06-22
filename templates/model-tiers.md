@@ -90,9 +90,19 @@ Centralized model recommendation registry. Команды читают этот 
 
 При старте **любой** команды агент обязан выполнить:
 
-### Шаг 1: спросить пользователя о текущей модели
+### Шаг 1: определить текущую модель (autodetect-first)
 
-⛔ **Не полагаться на self-identification** через system prompt — он может быть stale (например, если пользователь переключил модель в UI mid-session, system prompt не обновится).
+**Приоритет источников (waterfall):**
+
+1. **Auto-detected (предпочтительно):** прочитать `.claude/state/session-model.json` → поле `tier`.
+   - Файл пишется `model-detect.py` SessionStart хуком автоматически (v7.11.0+).
+   - `stale: false` → использовать `tier` как confirmed; **НЕ** спрашивать пользователя.
+   - `stale: true` (после /clear, resume, compact: `model` поле отсутствовало в payload) → использовать как hint → перейти к пункту 2.
+   - Файл отсутствует (старый consumer без v7.11.0+) → перейти к пункту 2.
+
+2. **Спросить пользователя (fallback):** если autodetect недоступен или stale.
+
+⛔ **Не полагаться на self-identification** через system prompt — он может быть stale (пользователь мог переключить модель в UI mid-session, system prompt не обновится).
 
 Агент задаёт **один короткий вопрос** в начале команды:
 
@@ -102,11 +112,11 @@ Pre-flight check: на какой модели сейчас работаешь?
 
   a) Haiku 4.5 (Fast tier)
   b) Sonnet 4.6 — Default или 1M context (Default или Extended tier)
-  c) Opus 4.7 — 1M context (Capable tier)
+  c) Opus 4.8 — 1M context (Capable tier)
   d) другая — укажи
 ```
 
-**Если пользователь явно подтвердил модель в этой сессии ранее** — можно использовать его ответ; повторно не спрашивать.
+**Если пользователь явно подтвердил модель в этой сессии ранее** — использовать его ответ; повторно не спрашивать.
 
 ### Шаг 2: сравнить с Default tier команды
 
@@ -199,9 +209,13 @@ Pre-flight check — advisory. Пользователь решает. Auto-switc
 | Fast tier | Haiku 4.5 | `claude-haiku-4-5` |
 | Default tier | Sonnet 4.6 (Default) | `claude-sonnet-4-6` |
 | Extended tier | Sonnet 4.6 (1M context) | `claude-sonnet-4-6` with `extended-context` option |
-| Capable tier | Opus 4.7 (1M context) | `claude-opus-4-7` |
+| Capable tier | Opus 4.8 (1M context) | `claude-opus-4-8` |
 
-**Last review:** 2026-05-16
+**Last review:** 2026-06-22
+
+**Auto-detect (v7.11.0+):** `model-detect.py` SessionStart хук пишет `.claude/state/session-model.json`
+с tier через substring-match (`opus`→Capable, `sonnet`→Default, `haiku`→Fast, `fable`→Capable).
+Tier читается Pre-flight шагом 1 вместо вопроса пользователю (если `stale: false`).
 
 ---
 
