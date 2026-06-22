@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.11.0 — feat: model-detect SessionStart hook — автодетект tier без вопроса (2026-06-22)
+
+**Consumer-facing changes:**
+- **`model-detect.py` SessionStart хук** — авто-определяет текущую модель из payload при старте сессии → пишет `.claude/state/session-model.json` с полями `{model, tier, source, stale, detected_at, session_id}`.
+- **`session-model.json` → Pre-flight autodetect-first** — команды читают этот файл вместо вопроса пользователю. `stale: false` (startup/transcript) → используется как confirmed tier. `stale: true` (после /clear, resume, compact: `model` отсутствовал) → fallback to user-ask как раньше.
+- **`model-tiers.md` Pre-flight Шаг 1** — переработан: waterfall autodetect→user-ask. Opus 4.7 → 4.8 в Mapping-таблице.
+- **`model-probe.py` (temporary)** — временный диагностический хук, дампит полный payload в `probe.log` для верификации структуры SessionStart. Не wired в template — wired в локальном settings.json для одной сессии верификации.
+
+**Зачем:** закрывает пользовательское трение Pre-flight вопроса «на какой модели?» — теперь команды знают tier без участия пользователя при stale=false. Actor-burden rule: было `human-remember`-обязанность (человек должен был помнить, что его спросят), стало structural-actor (хук пишет → команды читают). Phase 1 only — UserPromptSubmit blocking hook отложен до /retro-evidence (Ось 1 data-driven enforcement).
+
+**Actions (при sync):**
+1. Новый хук-файл `.claude/hooks/model-detect.py` будет доставлен sync'ом автоматически.
+2. `settings.json` обновится: SessionStart получит `model-detect.py` вызов.
+3. `.claude/state/session-model.json` — создаётся автоматически при старте следующей сессии. Gitignored (`.claude/state/` уже в `.gitignore.template`).
+4. **Ничего ручного не требуется** — аддитивно, graceful, старый consumer без хука продолжает работать (Pre-flight fallback to user-ask).
+
+**Priority:** 🟢 (UX improvement, не breaking; аддитивное поле в state).
+
 ## v7.10.1 — fix: добавление секрета — убран миф «нужен git bash» + /secrets --add ведёт сам (2026-06-22)
 
 **Consumer-facing changes:**
