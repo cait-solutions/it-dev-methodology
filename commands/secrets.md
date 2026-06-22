@@ -60,6 +60,9 @@
 
   📝 Добавить новый секрет
      bash scripts/set-secret.sh KEY                  (interactive: service, URL, login, value)
+     ▸ Запускай в ЛЮБОМ терминале — встроенный VSCode-терминал (Ctrl+`), Windows Terminal,
+       git bash. Отдельный git bash открывать НЕ нужно. Через /secrets --add агент сам
+       пишет manifest и даёт готовую строку — тебе остаётся только ввести значение.
 
      ⚠️  KEY — это имя которое ТЫ придумываешь для каждого сервиса (UPPER_SNAKE_CASE).
          Каждый сервис = отдельный вызов с уникальным именем:
@@ -118,7 +121,10 @@ Files:
   ~/.config/it-dev/secrets.env          shared values (optional)
   .claude/secrets-manifest.yaml         declarations + metadata (committed)
 
-See also: skills/secrets-management/SKILL.md (full runbook)
+See also: secrets-management — knowledge-skill (full runbook: threat-model, rotation,
+         compromise-response, Vault/AWS, type:file). Активируется АВТОМАТИЧЕСКИ когда ты
+         говоришь о секретах/утечке/ротации — вызывать её отдельно НЕ нужно. Для действий
+         (add/list/rotate/scrub) — только эта команда /secrets.
 ```
 
 ---
@@ -138,22 +144,29 @@ See also: skills/secrets-management/SKILL.md (full runbook)
 Запустить `bash scripts/secrets-show.sh KEY`. Detailed view одного entry. **Не показывает значение.**
 
 ### `/secrets --add KEY` (или `/secrets --setup KEY`)
-Показать пользователю команду для interactive add:
+
+**Шаг 1 — агент делает САМ** (метаданные не секрет, Edit разрешён): записать/обновить декларацию KEY в `.claude/secrets-manifest.yaml` — `service_name`, `service_url`, `login`, `how_to_obtain`. Имя KEY агент **предлагает сам** по конвенции `PROVIDER_[PROJECT]_[TYPE]` (пользователю не держать в голове именование). Это снимает actor-burden: всё кроме значения готовит агент.
+
+**Шаг 2 — показать пользователю готовую строку для ввода ТОЛЬКО значения:**
 ```
-To add KEY, run yourself (do not paste value into chat):
+✅ Декларация KEY записана в manifest (service/url/login). Осталось ввести значение.
+
+Запусти в ЛЮБОМ интерактивном терминале — отдельный git bash НЕ нужен:
+встроенный терминал VSCode (Ctrl+`), Windows Terminal, или git bash:
+
     bash scripts/set-secret.sh KEY
 
-Скрипт спросит:
-  - Service name (e.g. "GitHub", "GitLab Nexchance")
-  - Service URL (e.g. https://github.com)
-  - Login (optional username/email)
-  - Expires at (optional ISO date)
-  - Value (hidden via read -s, re-paste confirm)
+Скрипт скрыто (read -s) спросит значение + re-paste confirm → атомарно запишет в .env
+(метаданные уже в manifest — нажимай Enter чтобы оставить их как есть).
+
+⛔ Значение НЕ вставляй в чат — только в скрытый prompt скрипта.
 
 How to obtain value (from manifest):
 <how_to_obtain content if KEY declared>
 ```
-**Агент НЕ выполняет** (для value-секретов) — only prints instruction. Значение токена/key не должно попасть в transcript.
+**Агент НЕ вводит значение** (для value-секретов) — оно не должно попасть в transcript. Но manifest + именование агент делает сам (Шаг 1).
+
+⛔ **НЕ говорить «открой git bash»** — `set-secret.sh` это bash 3.2, работает в **любом TTY** включая встроенный терминал VSCode (Ctrl+\`). Боль «нужен именно git bash» — миф; реальное трение = переключение в отдельное окно, которого встроенный терминал не требует (closes G-122).
 
 **Исключение — `type: file` секреты** (GCP/Vertex JSON, сертификаты): значение в `.env` = **путь** (не секрет) → **агент выполняет добавление САМ** (Edit manifest `type:file` → `set-secret.sh KEY .gcp/x.json` → check-ignore → validate), юзер только кладёт файл в `.gcp/`. Полная процедура — skill `secrets-management` § Agent procedure. Не печатать юзеру «запусти set-secret.sh» для file-кейса.
 

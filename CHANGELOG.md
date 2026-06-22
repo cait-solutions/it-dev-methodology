@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.10.1 — fix: добавление секрета — убран миф «нужен git bash» + /secrets --add ведёт сам (2026-06-22)
+
+**Consumer-facing changes:**
+- **`/secrets --add KEY`** — переработан flow: агент **сам пишет manifest-декларацию** (service/url/login — не секрет) + предлагает имя KEY по конвенции, затем печатает **готовую строку** для ввода только значения. Раньше просто показывал «run `set-secret.sh` yourself».
+- **`/secrets` help-screen + `secrets-management` skill** — явно: `set-secret.sh` запускается в **ЛЮБОМ интерактивном TTY** (встроенный терминал VSCode `Ctrl+\``, Windows Terminal, PowerShell с bash, git bash) — **отдельный git bash НЕ нужен**. Реальное трение было «переключение в отдельное окно», не сам скрипт.
+- **`/secrets` See-also** — уточнено что `secrets-management` это **авто-активируемый knowledge-skill** (не отдельное действие): для действий нужна только команда `/secrets`.
+
+**Зачем:** closes G-122 — система секретов была оптимизирована под threat-model, но launch-ergonomics не обдумана; пользователь считал что нужен именно git bash. `/opinion` council 7/7 (2026-06-22) отверг доставку `.vscode/tasks.json` (VSCode shell-task ≠ интерактивный TTY → `read -s` падает; + QB10 нарушение; + непропорционально) в пользу doc-only фикса. Корень = ложное убеждение, не отсутствие механизма.
+
+**Actions:** автоматически — ничего (doc/instruction-only, приходит при следующем sync).
+
+**Priority:** 🟢 (UX/guidance, не breaking).
+
 ## v7.10.0 — feat: UX/user-effort учёт в /plan и /opinion (2026-06-22)
 
 **Consumer-facing changes:**
