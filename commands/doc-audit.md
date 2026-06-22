@@ -24,6 +24,8 @@ Cadence-аудиты /doc-audit **не заменяет** — semantic ≠ mecha
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** (прогон валидаторов — mechanical) / **High** · thinking: **ON** (интерпретация WARN-долга / диагностика FAIL). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Fast tier (Haiku)** — команда детерминированная: запуск скрипта + представление результатов, reasoning минимальный.
 
 **Upgrade to Default (Sonnet) if:** пользователь просит интерпретировать результаты (приоритизация WARN-долга, «что чинить первым»), или найденные FAIL требуют диагностики причин.

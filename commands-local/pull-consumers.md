@@ -10,6 +10,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** — diff parsing + report (mechanical). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Fast tier (Haiku)** — структурное чтение файлов + diff parsing + report generation. Никакого reasoning. См. [.claude/model-tiers.md](../.claude/model-tiers.md).
 
 Pre-flight model check: spросить пользователя только если текущая = Capable (Opus) — рекомендовать downgrade для экономии токенов.

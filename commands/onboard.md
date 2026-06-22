@@ -8,6 +8,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** (legacy-handover — анализ кода = reasoning) / **Low** · thinking: **OFF** (new-dev read mode — навигация). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** Default tier (см. `.claude/model-tiers.md`)
 **Upgrade to Capable tier if:** legacy domain handover с risk map для AI-агента (требует глубокого анализа существующего кода чтобы определить Forbidden / Approval-required операции)
 **Downgrade to Fast tier if:** new developer mode — pure reading walkthrough, без анализа

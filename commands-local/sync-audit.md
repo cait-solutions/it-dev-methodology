@@ -43,6 +43,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** — checklist + grep + report (mechanical). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier (Sonnet)** — checklist + grep + report. Reasoning минимальный.
 **Upgrade to Capable** не требуется (нет архитектурного анализа).
 **Pre-flight model check:** да — спроси какая модель активна. Если на Capable — это over-powered, рекомендация Default для cost-savings.

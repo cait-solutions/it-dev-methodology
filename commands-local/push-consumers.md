@@ -12,6 +12,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Medium** · thinking: **ON** — drift-таблица + оценка что доставить (лёгкое суждение). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier** — читаем версии, вызываем sync-methodology.sh, собираем отчёт.
 **Fast tier** если ≤2 консьюмера и с `--sync-only` (без commit/push).
 Pre-flight model check: спросить только если Capable (Opus) активен — не нужен.

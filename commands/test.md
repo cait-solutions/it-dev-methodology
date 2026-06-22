@@ -10,6 +10,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — генерация тестов = понимание acceptance criteria (reasoning). Баг не сходится за N итераций → deep-reasoning, остаётся High+ON. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Strategy:** Default (Sonnet) — основной выбор для генерации и запуска тестов.
 
 **Default tier (Sonnet):** Достаточна для генерации E2E/contract/visual тестов, запуска, разбора результатов, записи в CODE-GAPS.

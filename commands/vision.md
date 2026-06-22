@@ -25,6 +25,8 @@
 
 ## Рекомендуемая модель (per-mode)
 
+**Extended (UI settings):** все режимы /vision — reasoning/синтез → effort: **High** · thinking: **ON**. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 Каждый режим — свой tier. Pre-flight model check **обязателен во всех трёх** — спроси пользователя какая модель активна (или используй ранее подтверждённую в сессии); при mismatch ≥ 2 ступени — пауза + рекомендация.
 
 | Режим | Default tier | Upgrade | Downgrade | Mid-task escalation |

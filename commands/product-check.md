@@ -10,6 +10,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** — структурное сравнение текста с кодом (mechanical checklist). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Fast tier** (см. `.claude/model-tiers.md`) — структурное сравнение текста с кодом, deterministic checklist
 **Upgrade:** (всегда Fast — обычно достаточно)
 **Downgrade:** (всегда Fast — это минимум)

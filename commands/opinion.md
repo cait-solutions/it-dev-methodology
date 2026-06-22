@@ -18,6 +18,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — синтез 7 вердиктов council = максимальная глубина reasoning. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Capable** (Opus) — синтез 7 независимых external-вердиктов + North Star extraction требуют deep reasoning. Council-7 — дефолт, поэтому Capable обязателен.
 **Upgrade:** уже на верхнем tier для команды.
 **Downgrade to Default/Fast:** ❌ НЕ рекомендуется для явного `/opinion` — синтез council требует reasoning. (Лёгкий путь `[?]` не запускает команду и pre-flight не триггерит — он исполняется на текущей модели сессии.)
@@ -218,9 +220,12 @@ North Star проекта (из VISION.md): <ось + принцип, извле
 ```
 📋 Деятель указал структурный фикс. Предлагаю запустить /plan:
    /plan <краткое описание что исправить>
+   Рекомендуемая модель: Default (Sonnet) · effort: High · thinking: ON — план = архитектурный анализ + синтез (deep reasoning). Upgrade до Capable (Opus) если [contract]+threat model / multi-service / class-bug. См. .claude/model-tiers.md § Effort & Thinking.
 
 (skip — не планировать; следующее действие = автоматическое подтверждение)
 ```
+
+> **Обязательно (трёхмерная рекомендация):** предлагая `/plan` (или любой следующий шаг), агент ВСЕГДА даёт модель в формате `tier · effort · thinking` — не только tier. Effort (слайдер) + Thinking (toggle) пользователь выставляет в UI рядом с выбором модели.
 
 **Implicit confirmation (opt-out):** то же что в пункте A — если пользователь не написал `skip` / `n` / `нет` / `отменить` → продолжение работы = согласие.
 

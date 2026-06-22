@@ -8,6 +8,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — реализация = синтез изменений + поиск побочных эффектов (deep reasoning). Mid-task escalation (Шаг 1.5) повышает tier+effort при усложнении. См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Strategy:** наследуется из `/plan`. Default (Sonnet) — основной выбор.
 
 **Default tier (Sonnet):** Наследуется из `/plan`. Используется для большинства /code работ.
@@ -143,7 +145,7 @@
 ```
 ⚠️ Сложность задачи выше плановой оценки.
    Текущая модель: <current model name>
-   Рекомендуемая: <upgrade tier> (см. .claude/model-tiers.md)
+   Рекомендуемая: <upgrade tier> · effort: High · thinking: ON (см. .claude/model-tiers.md § Effort & Thinking)
    Причина: <конкретно что обнаружено>
 
 Варианты:

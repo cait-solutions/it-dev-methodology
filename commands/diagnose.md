@@ -30,6 +30,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **High** · thinking: **ON** — root-cause analysis по гипотезам = deep reasoning (task-shape модификатор). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Capable tier** (см. `.claude/model-tiers.md`) — диагностика всегда требует complex reasoning по гипотезам
 **Upgrade:** (всегда Capable — это уже верх)
 **Downgrade to Default tier if:** (никогда — диагностика сложна по определению)

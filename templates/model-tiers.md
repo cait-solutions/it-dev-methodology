@@ -21,36 +21,68 @@ Centralized model recommendation registry. Команды читают этот 
 
 ---
 
+## Effort & Thinking (extended UI settings)
+
+> **Зачем эта секция:** выбор модели (tier) — только **одно** из трёх измерений настройки. Claude Code UI экспонирует рядом с выбором модели ещё два регулятора: **Effort** (слайдер `Low / Medium / High`) и **Thinking** (toggle `ON / OFF`). Tier выбирает *какую модель*, effort+thinking настраивают *глубину рассуждения*. Рекомендация только по tier («Sonnet»/«Opus») оставляет пользователя настраивать effort/thinking вслепую — поэтому **любая** рекомендация модели в методологии обязана быть трёхмерной.
+
+**Канонический формат рекомендации (везде где агент рекомендует модель):**
+
+```
+<Tier> (<current model>) · effort: <Low|Medium|High> · thinking: <ON|OFF>
+```
+
+Пример: `Default (Sonnet) · effort: High · thinking: ON` · `Fast (Haiku) · effort: Low · thinking: OFF`.
+
+**Дефолты по классу команды:**
+
+| Класс задачи | Effort | Thinking | Почему |
+|---|---|---|---|
+| **Reasoning / синтез** (план, код, ревью, диагностика, стратегия, исследование) | **High** | **ON** | архитектурный анализ, синтез решения, поиск побочных эффектов выигрывают от extended thinking |
+| **Mixed / лёгкое суждение** (drift-таблицы, batch-операции с оценкой) | **Medium** | **ON** | есть суждение, но не глубокий синтез |
+| **Mechanical / checklist** (git-операции, структурное сравнение, прогон валидаторов) | **Low** | **OFF** | детерминированные шаги — thinking не добавляет ценности, только cost/latency |
+
+**Task-shape модификаторы (перекрывают дефолт класса — применять ПАРНО с tier-upgrade/downgrade):**
+
+- **Deep-reasoning detector** → `effort: High · thinking: ON` (вместе с upgrade до Capable): visual/CSS-баг, race condition, нетривиальный алгоритм, баг не сошедшийся за N итераций, root-cause analysis, `[contract]` + нетривиальный threat-model. Задача маленькая по scope, глубокая по reasoning → High+ON обязательны.
+- **Risk Tier `[critical]` / high-stakes** (auth / payment / data integrity / 3+ consumers / необратимое) → `effort: High · thinking: ON` независимо от tier.
+- **Pure mechanical** (чек-лист, git push/pull, прогон готового валидатора) → `effort: Low · thinking: OFF` даже если сессия запущена на Capable-модели — thinking на детерминированном шаге = waste.
+
+**Природа (как у tier):** effort+thinking — **advisory**, выставляются пользователем в UI. Агент **рекомендует**, не переключает (auto-switch невозможен — требует UI-действия, как и смена модели). Mismatch-детект (Pre-flight) остаётся tier-based; effort/thinking — тонкая настройка, не блок.
+
+---
+
 ## Per-command recommendations
 
-| Команда | Recommended tier | Upgrade to Capable if | Notes |
+> Колонки **Effort** / **Thinking** = дефолт класса команды (task-shape модификаторы выше могут перекрыть).
+
+| Команда | Recommended tier | Effort | Thinking | Upgrade to Capable if | Notes |
 |---|---|---|---|
-| `/plan` | **Default** | `[contract]` + threat model; multi-service refactor; 50+ файлов в scope | ❌ Не downgrade to Fast — требуется reasoning и синтез |
-| `/code` | **Default** (inherits from `/plan`) | new class bug discovered mid-task; 50+ файлов в scope обнаружено после верификации | ❌ Не downgrade to Fast — даже на < 20 строк |
-| `/review` | **Default** (никогда не ниже) | `[security]` + новый endpoint; обнаружен class-bug при review | ✅ Rule: review_tier ≥ Default всегда. Требуется reasoning для консистентности |
-| `/deploy` | Fast | smoke test failed; regression detected at after-effects | (always Fast — это чек-листы) |
-| `/retro` | Default | 60+ DEVLOG entries за период; multiple skip-rate alerts | < 10 entries — тактическая ретроспектива проекта; pattern analysis делегируется /architecture-audit |
-| `/architecture-audit` | **Default** (только Способность A) или **Capable** (если Способность B/D активна) | gap pattern analysis (≥ 3 AGENT-GAPS, Способность B) активирует Capable обязательно; cross-project aggregation (C) — Capable; diagram semantic review (D — сравнение узлов/связей всех карт с реальностью) — Capable обязательно; multi-service + 10+ сервисов; 30%+ drift detected | Capability matrix в самой команде. Только drift detection (A) — Default. AGENT-GAPS / Level 4+ ladder (B) ИЛИ semantic diagram review (D) — Capable hard-block |
-| `/vision strategy` | **Capable** | (always Capable — стратегическая работа требует deep reasoning) | (никогда не downgrade) |
-| `/vision review` | Default | 20+ unreviewed IDEAS за период | < 5 IDEAS |
-| `/vision sync` | Default | 10+ inbox файлов И 5+ открытых OQ; Type C конфликт обнаружен | (always Default) |
-| `/product-check` | Fast | (always Fast — структурное сравнение текста с кодом) | (always Fast) |
-| `/diagnose` | **Capable** | 3+ failed hypotheses (нужно искать unusual root cause) | (никогда — диагностика всегда сложна) |
-| `/onboard` | Default | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
-| `/sync-audit` | **Default** | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare); `--doctor` режим — Default всегда достаточен (read-only снимок, no reasoning) |
-| `/pull-consumers` | **Fast** | (никогда — git fetch + diff parsing + report, no reasoning) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Запускается вручную перед /retro или анализом методологии |
-| `/marketing` | **Fast** | Первый запуск (нет MARKETING.md) → Default (autodraft требует чтения PRODUCT/VISION + генерацию) | Навигация + прогресс state — no reasoning. Только если объясняет skill → Default |
-| `/roadmap` | **Default** | 15+ кандидатов одновременно; enabling-проект с нетривиальным leverage через несколько growth-проектов | Value-ranked приоритизация по North Star (RICE: (Impact×Confidence)/Effort). Аналитическая — оценка Impact/Effort + синтез ранжирования. ❌ Не downgrade to Fast |
-| `/test` | **Default** | Логический/visual баг не сходится (reasoning-depth, N≥3 итераций); property-based для нетривиальной логики; L2 regression на большом приложении | Генерация E2E/contract/visual тестов требует понимания acceptance criteria. Fast допустим только для запуска готового suite без генерации |
-| `/push-merge` | **Fast** | (никогда — это git-операция + чек-листы) | Consumer-only команда. Push ai-dev → develop/main с platform detection (GitHub/GitLab). Solo = push напрямую; team = URL для MR/PR |
-| `/push` | **Fast** | (никогда — это git push без merge) | Consumer-only команда. Push ai-dev → origin/ai-dev без merge, без MR/PR, без вопросов |
-| `/pull` | **Fast** | (никогда — это git fetch + ff-only pull) | Consumer-only команда. Pull всех workspace repos (кроме it-dev-methodology) ff-only. Показывает preview входящих коммитов. Skip если history diverged |
-| `/scope-out` | **Fast** | Пользователь просит интерпретировать backlog (приоритизация / кластеризация по темам) → Default | Запуск `scope-view.sh` + показ URL — no reasoning. Эфемерная Mermaid-визуализация отложенного scope (PRODUCT-GAPS/AGENT-GAPS/ROADMAP/recommendations). Не пишет файлы |
-| `/doc-audit` | **Fast** | Интерпретация результатов (приоритизация WARN-долга) или диагностика FAIL-причин → Default; системная причина → отдельный /diagnose (Capable) | Запуск `doc-audit.sh` + представление Summary — детерминированный прогон валидаторов, no reasoning. `--fix` обновляет только mermaid-ссылки |
-| `/research` | **Default** | Conflicting sources requiring deep reasoning; стратегический вопрос с нетривиальным trade-off анализом | Interactive structured research (≤3 checkpoints). Фиксирует вывод в DEVLOG `[research:X]`. Fast НЕ рекомендуется — synthesis требует reasoning |
-| `/scan-sources` | **Default** | ≥3 источника с conflicting сигналами требуют cross-source reasoning; стратегический вывод с нетривиальным trade-off | Скан реестра `external-sources.md` (WebFetch/WebSearch + verdict). Анализ «что нового decision-relevant» → `[research:X]` + IDEAS. Fast НЕ рекомендуется — synthesis требует reasoning |
-| `/push-consumers` | **Default** | (никогда — drift-таблица + batch sync. Fast если ≤2 консьюмера) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Доставка обновлений методологии консьюмерам. Запускается вручную после релизов |
-| `/opinion` | **Capable** | (always Capable — council 7/7 дефолт: 7 независимых external советников + синтез требуют deep reasoning) | Council-7 по умолчанию: 7 независимых external sub-agents (5 Council ролей + Альтернативщик + Complexity tax), каждый в своём чистом контексте → structural independence. `/opinion+` = legacy-алиас. Лёгкий inline `[?]` (5 симулируемых в контексте) не запускает команду → pre-flight не триггерит, исполняется на текущей модели сессии. Fast/Default ❌ — синтез 7 вердиктов требует reasoning |
+| `/plan` | **Default** | High | ON | `[contract]` + threat model; multi-service refactor; 50+ файлов в scope | ❌ Не downgrade to Fast — требуется reasoning и синтез |
+| `/code` | **Default** (inherits from `/plan`) | High | ON | new class bug discovered mid-task; 50+ файлов в scope обнаружено после верификации | ❌ Не downgrade to Fast — даже на < 20 строк |
+| `/review` | **Default** (никогда не ниже) | High | ON | `[security]` + новый endpoint; обнаружен class-bug при review | ✅ Rule: review_tier ≥ Default всегда. Требуется reasoning для консистентности |
+| `/deploy` | Fast | Low | OFF | smoke test failed; regression detected at after-effects | (always Fast — это чек-листы) |
+| `/retro` | Default | High | ON | 60+ DEVLOG entries за период; multiple skip-rate alerts | < 10 entries — тактическая ретроспектива проекта; pattern analysis делегируется /architecture-audit |
+| `/architecture-audit` | **Default** (только Способность A) или **Capable** (если Способность B/D активна) | High *(Medium если только A)* | ON | gap pattern analysis (≥ 3 AGENT-GAPS, Способность B) активирует Capable обязательно; cross-project aggregation (C) — Capable; diagram semantic review (D — сравнение узлов/связей всех карт с реальностью) — Capable обязательно; multi-service + 10+ сервисов; 30%+ drift detected | Capability matrix в самой команде. Только drift detection (A) — Default. AGENT-GAPS / Level 4+ ladder (B) ИЛИ semantic diagram review (D) — Capable hard-block |
+| `/vision strategy` | **Capable** | High | ON | (always Capable — стратегическая работа требует deep reasoning) | (никогда не downgrade) |
+| `/vision review` | Default | High | ON | 20+ unreviewed IDEAS за период | < 5 IDEAS |
+| `/vision sync` | Default | High | ON | 10+ inbox файлов И 5+ открытых OQ; Type C конфликт обнаружен | (always Default) |
+| `/product-check` | Fast | Low | OFF | (always Fast — структурное сравнение текста с кодом) | (always Fast) |
+| `/diagnose` | **Capable** | High | ON | 3+ failed hypotheses (нужно искать unusual root cause) | (никогда — диагностика всегда сложна) |
+| `/onboard` | Default | High *(handover)* / Low *(new-dev read → Fast)* | ON *(handover)* / OFF *(read)* | legacy domain handover с risk map для AI | new developer mode (читает только) → Fast |
+| `/sync-audit` | **Default** | Low | OFF | (никогда — это checklist + grep + report) | Fast допустим только для read-only mode без disposition (rare); `--doctor` режим — Default всегда достаточен (read-only снимок, no reasoning) |
+| `/pull-consumers` | **Fast** | Low | OFF | (никогда — git fetch + diff parsing + report, no reasoning) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Запускается вручную перед /retro или анализом методологии |
+| `/marketing` | **Fast** | Low *(навигация)* / High *(autodraft)* | OFF *(навигация)* / ON *(autodraft)* | Первый запуск (нет MARKETING.md) → Default (autodraft требует чтения PRODUCT/VISION + генерацию) | Навигация + прогресс state — no reasoning. Только если объясняет skill → Default |
+| `/roadmap` | **Default** | High | ON | 15+ кандидатов одновременно; enabling-проект с нетривиальным leverage через несколько growth-проектов | Value-ranked приоритизация по North Star (RICE: (Impact×Confidence)/Effort). Аналитическая — оценка Impact/Effort + синтез ранжирования. ❌ Не downgrade to Fast |
+| `/test` | **Default** | High | ON | Логический/visual баг не сходится (reasoning-depth, N≥3 итераций); property-based для нетривиальной логики; L2 regression на большом приложении | Генерация E2E/contract/visual тестов требует понимания acceptance criteria. Fast допустим только для запуска готового suite без генерации |
+| `/push-merge` | **Fast** | Low | OFF | (никогда — это git-операция + чек-листы) | Consumer-only команда. Push ai-dev → develop/main с platform detection (GitHub/GitLab). Solo = push напрямую; team = URL для MR/PR |
+| `/push` | **Fast** | Low | OFF | (никогда — это git push без merge) | Consumer-only команда. Push ai-dev → origin/ai-dev без merge, без MR/PR, без вопросов |
+| `/pull` | **Fast** | Low | OFF | (никогда — это git fetch + ff-only pull) | Consumer-only команда. Pull всех workspace repos (кроме it-dev-methodology) ff-only. Показывает preview входящих коммитов. Skip если history diverged |
+| `/scope-out` | **Fast** | Low *(High если интерпретация backlog)* | OFF *(ON если интерпретация)* | Пользователь просит интерпретировать backlog (приоритизация / кластеризация по темам) → Default | Запуск `scope-view.sh` + показ URL — no reasoning. Эфемерная Mermaid-визуализация отложенного scope (PRODUCT-GAPS/AGENT-GAPS/ROADMAP/recommendations). Не пишет файлы |
+| `/doc-audit` | **Fast** | Low *(High если интерпретация/диагностика)* | OFF *(ON если интерпретация)* | Интерпретация результатов (приоритизация WARN-долга) или диагностика FAIL-причин → Default; системная причина → отдельный /diagnose (Capable) | Запуск `doc-audit.sh` + представление Summary — детерминированный прогон валидаторов, no reasoning. `--fix` обновляет только mermaid-ссылки |
+| `/research` | **Default** | High | ON | Conflicting sources requiring deep reasoning; стратегический вопрос с нетривиальным trade-off анализом | Interactive structured research (≤3 checkpoints). Фиксирует вывод в DEVLOG `[research:X]`. Fast НЕ рекомендуется — synthesis требует reasoning |
+| `/scan-sources` | **Default** | High | ON | ≥3 источника с conflicting сигналами требуют cross-source reasoning; стратегический вывод с нетривиальным trade-off | Скан реестра `external-sources.md` (WebFetch/WebSearch + verdict). Анализ «что нового decision-relevant» → `[research:X]` + IDEAS. Fast НЕ рекомендуется — synthesis требует reasoning |
+| `/push-consumers` | **Default** | Medium | ON | (никогда — drift-таблица + batch sync. Fast если ≤2 консьюмера) | LOCAL-ONLY команда (lives в `commands-local/`, не sync'ится консьюмерам). Доставка обновлений методологии консьюмерам. Запускается вручную после релизов |
+| `/opinion` | **Capable** | High | ON | (always Capable — council 7/7 дефолт: 7 независимых external советников + синтез требуют deep reasoning) | Council-7 по умолчанию: 7 независимых external sub-agents (5 Council ролей + Альтернативщик + Complexity tax), каждый в своём чистом контексте → structural independence. `/opinion+` = legacy-алиас. Лёгкий inline `[?]` (5 симулируемых в контексте) не запускает команду → pre-flight не триггерит, исполняется на текущей модели сессии. Fast/Default ❌ — синтез 7 вердиктов требует reasoning |
 
 ---
 
@@ -82,15 +114,17 @@ Pre-flight check: на какой модели сейчас работаешь?
 
 ### Шаг 3: пауза + рекомендация если mismatch
 
+Рекомендация **трёхмерна** (`tier · effort · thinking`). Mismatch-**детект** срабатывает по tier (≥2 ступени, см. ниже); effort/thinking всегда сообщаются как тонкая настройка (не блок — пользователь выставляет слайдер Effort + toggle Thinking в UI рядом с моделью).
+
 ```
 ⚠️ Mismatch текущей модели и рекомендации для этой команды.
    Текущая: <user-confirmed model> (<current tier>)
-   Рекомендуется: <recommended tier> для /<command>
+   Рекомендуется: <recommended tier> · effort: <X> · thinking: <Y> для /<command>
    Причина mismatch: over-powered (cost waste) | under-powered (quality risk)
 
 Варианты:
   a) Продолжить на текущей модели (зафиксируется как accepted risk в DEVLOG)
-  b) Переключиться: смени модель в UI Claude Code → новая сессия для чистого контекста
+  b) Переключиться: смени модель + выстави effort/thinking в UI Claude Code → новая сессия для чистого контекста
   c) Прервать выполнение
 ```
 
@@ -140,18 +174,18 @@ Pre-flight check — advisory. Пользователь решает. Auto-switc
 
 ## Output format в `/plan`
 
-`/plan` Шаг 3 (План реализации) обязан включать блок:
+`/plan` Шаг 3 (План реализации) обязан включать блок. **Каждая рекомендация — трёхмерная** (`tier · effort · thinking`, см. § Effort & Thinking):
 
 ```markdown
 ## Recommended models
 
-**For /code (immediate next):** <tier> — <reasoning из конкретной задачи>
-**For /review after /code:** <tier>
+**For /code (immediate next):** <Tier> · effort: <Low|Medium|High> · thinking: <ON|OFF> — <reasoning из конкретной задачи>
+**For /review after /code:** <Tier> · effort: <Low|Medium|High> · thinking: <ON|OFF>
 **For triggered commands** (если были предложены в Шаге -3.2):
-  - /<command-name>: <tier> — <typical для этой команды + override если задача нетипичная>
+  - /<command-name>: <Tier> · effort: <X> · thinking: <Y> — <typical для команды + override если задача нетипичная>
 
 **Mid-task escalation signals для /code:**
-  - <конкретные условия из этой задачи которые сигнализируют upgrade>
+  - <конкретные условия из этой задачи которые сигнализируют upgrade tier + effort/thinking>
 ```
 
 ---

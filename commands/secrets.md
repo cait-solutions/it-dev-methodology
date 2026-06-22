@@ -8,6 +8,8 @@
 
 ## Рекомендуемая модель
 
+**Extended (UI settings):** effort: **Low** · thinking: **OFF** — CLI wrapper над secrets-скриптами (mechanical). См. `.claude/model-tiers.md` § Effort & Thinking.
+
 **Default tier:** **Fast tier** — простой CLI wrapper. **Upgrade:** нет. **Pre-flight check:** Capable (Opus) → 🟡 over-powered → рекомендация Fast.
 
 ---
