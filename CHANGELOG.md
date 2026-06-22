@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.11.1 — fix: model-rec правило явно покрывает свободный чат + few-shot (G-123) (2026-06-22)
+
+**Consumer-facing changes:**
+- **`commands/review.md` Model-rec 3-измерения** — добавлен eyes-check `Free-chat coverage (G-123)`: при diff на `CLAUDE.md ## Model tier rule` /review проверяет что правило явно называет свободный чат + содержит free-chat few-shot (❌/✅). Нет → 🔵 Suggestion.
+
+**Зачем:** закрывает G-123 (prompt-gap: CLAUDE.md примеры были command-scoped → агент не давал 3D рекомендацию в свободном чате). `Рекомендации трёхмерны` теперь явно включает «свободный чат» с конкретным few-shot.
+
+**Actions (при sync):**
+1. `commands/review.md` обновится автоматически.
+2. Никаких ручных шагов не требуется.
+
+---
+
 ## v7.11.0 — feat: model-detect SessionStart hook — автодетект tier без вопроса (2026-06-22)
 
 **Consumer-facing changes:**

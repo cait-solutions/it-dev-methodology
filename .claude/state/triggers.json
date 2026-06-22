@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-19",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_retro": {
       "date": "2026-06-19",
-      "plans_since": 4
+      "plans_since": 1
     },
     "last_product_review": {
       "date": "2026-06-19",
-      "plans_since": 3
+      "plans_since": 4
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 44
+      "plans_since": 45
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 11
+      "plans_since": 12
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 46
+      "plans_since": 47
     },
     "last_architecture_audit": {
       "date": "2026-06-19",
-      "plans_since": 3,
+      "plans_since": 4,
       "recommendations": [
         {
           "id": "R-034",
@@ -130,8 +130,10 @@
     "gap4_fixed": "2026-06-11"
   },
   "session_gap_counter": {
-    "session_marker": "2026-06-17T00:00:00",
-    "counts": {}
+    "session_marker": "2026-06-22T00:00:00",
+    "counts": {
+      "prompt-gap": 1
+    }
   },
   "per_service": {},
   "queues": {
@@ -150,24 +152,93 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-19T00:00:00",
-    "task_id": "push-consumer-single-gitignored-commit-fix",
-    "service": "methodology-platform (scripts/push-consumer-single.sh + templates/scripts/push-consumer-single.sh)",
+    "completed_at": "2026-06-22T12:00:00Z",
+    "task_id": "G-123-freechat-model-rec",
+    "service": "methodology-platform",
+    "mode": "Full",
+    "code_run": true,
+    "commitments": [],
+    "sustainment": [],
+    "deferred": [
+      {
+        "text": "L4 structural enforcement для free-chat",
+        "reason": "R-036 feasibility 45%, requires SessionStart hook",
+        "tag": "deferred"
+      }
+    ]
+  },
+  "_last_plan_session_G123_prev": {
+    "completed_at": "2026-06-21T10:00:00Z",
+    "task_id": "migrations-self-apply",
+    "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
     "commitments": [
-      { "text": "scripts/push-consumer-single.sh — commit trackable staged subset (git diff --cached -- $CHANGED_PATHS) вместо raw git commit $CHANGED_PATHS; empty-guard перед commit", "status": "done", "skip_reason": null },
-      { "text": "templates/scripts/push-consumer-single.sh — идентичный фикс (ADR-014 dual-copy parity)", "status": "skipped", "skip_reason": "templates-копии нет: push-consumer-single.sh owner-only (драйвит LOCAL-ONLY /push-consumers), не синкается консьюмерам → dual-copy неприменим" },
-      { "text": "VERSION bump v7.0.1 → v7.0.2 (consumer-facing delivery-path fix)", "status": "done", "skip_reason": null },
-      { "text": "DEVLOG — [fix:push-consumer-single][domain:git-push] silent-non-commit на gitignored pathspec", "status": "done", "skip_reason": null },
-      { "text": "CHANGELOG — v7.0.2 запись (delivery fix)", "status": "skipped", "skip_reason": "не consumer-facing: owner-only скрипт, консьюмеры не получают этот файл → CHANGELOG (consumer migration) неприменим" }
+      {
+        "text": "sync run_migrations(): запускает _runner.sh; captured exit + видимый вывод HEALED/REPORT (НЕ || true глотание). Non-fatal но visible.",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "Migration contract: optional migration_changed_paths() — миграция декларирует тронутые пути; _runner эмитит MIGRATED:<path> для HEALED auto-миграций (council a17ecc1-safe канал, НЕ git-status-delta)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "sync собирает MIGRATED:-пути → _track_changed → существующий _auto_commit_sync коммитит explicit pathspec. Snapshot-diff выкинут полностью.",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "report-mode: не авто-применяется (runner уже skip apply), всплывает в sync-выводе человеку (Граница 7 self-apply protection)",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "v7.6.0-remove-consumer-delivery-rudiments: добавить migration_changed_paths() декларирующий 2 пути рудиментов",
+        "status": "done",
+        "skip_reason": null
+      },
+      {
+        "text": "GUARD: оставить + consumer-shaped fixture test (Деятель) в test-validators — тестит path где templates/commands отсутствуют (опасный путь)",
+        "status": "done",
+        "skip_reason": null
+      }
     ],
     "sustainment": [
-      { "artifact": "scripts/push-consumer-single.sh · templates/scripts/push-consumer-single.sh", "trigger": "/push-consumers Шаг 5 Режим B (per consumer)", "refresh": "dual-copy parity ADR-014 при deploy", "detection": "validate-script-parity.sh gate в deploy-push.sh", "owner": "методология" }
+      {
+        "artifact": "run_migrations() в sync-methodology.sh (dual-copy)",
+        "trigger": "каждый sync (init/update/maintainer)",
+        "refresh": "sync доставляет себя; ADR-014 parity",
+        "detection": "validate-script-parity.sh; test-validators.sh",
+        "owner": "методология"
+      },
+      {
+        "artifact": "commit-bridge в --auto-commit",
+        "trigger": "auto-update-watchdog sync",
+        "refresh": "sync доставляет",
+        "detection": "code-review; runtime test",
+        "owner": "методология"
+      },
+      {
+        "artifact": "_runner.sh (trigger расширен: + sync)",
+        "trigger": "sync + push-consumers + sync-audit",
+        "refresh": "applied-list idempotent",
+        "detection": "/doc-audit; HEALED/REPORT вывод",
+        "owner": "методология"
+      }
     ],
     "deferred": [
-      { "text": "sync-methodology.sh --print-managed (явный manifest-universe для commit-scope)", "reason": "текущий re-report поведения достаточен для heal; отдельный /plan если понадобится", "tag": "deferred" },
-      { "text": "push-consumers Шаг 7 full upgrade (16 checks from sync-audit)", "reason": "из v7.0.0 плана, отдельный /plan", "tag": "deferred" }
+      {
+        "text": "Удаление Шаг 5.6 sweep дубля в push-consumers",
+        "reason": "idempotent backstop, не срочно",
+        "tag": "deferred"
+      },
+      {
+        "text": "Active-management reframe (read-only→активно управляем код-репами)",
+        "reason": "VISION-axis shift — отдельный /plan + /vision + /opinion (captured IDEAS 2026-06-21)",
+        "tag": "out-of-scope"
+      }
     ]
   },
   "_last_plan_session_backup_gap_analysis": {
@@ -270,10 +341,9 @@
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-19",
+    "date": "2026-06-20",
     "status": "ok",
-    "phase": "push-consumer-single.sh gitignored-pathspec commit fix — v7.0.2 (PR #264); delivered to 8/9 consumers",
-    "pr": "https://github.com/cait-solutions/it-dev-methodology/pull/264"
+    "phase": "/scan-sources command v7.4.0 (PR #276 merged)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
