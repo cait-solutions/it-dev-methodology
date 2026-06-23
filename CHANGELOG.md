@@ -4,6 +4,24 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.14.0 — fix: consumer-pull.sh — резолвер ветки вместо жёсткого ai-dev (2026-06-23)
+
+**Consumer-facing changes:**
+- **`consumer-pull.sh`** (dual-copy `scripts/` + `templates/scripts/`) — `/pull` больше **не падает** на репо без ветки `ai-dev`. Резолвер target-ветки: `agent_branch` используется только если её ref реально существует (local или `origin/<branch>`) И HEAD уже на ней; иначе тянется **текущая** ветка. Раньше скрипт делал `checkout ai-dev`-or-SKIP → репо на `develop`/`main`/feature молча пропускались (9 из 13 за раз).
+- **Убран агрессивный auto-switch** — `/pull` не уводит разработчика с его рабочей ветки; divergence agent-ветки по-прежнему виден в branch-audit секции.
+- **fetch-сбой больше не проглатывается** — auth/network ошибка fetch теперь даёт явный `✗ SKIP — fetch failed` (раньше `|| true` в пайпе делал проверку мёртвой → ложное «up to date»).
+- **clean-check видит untracked** (`git status --porcelain`): tracked-dirty → SKIP; untracked-only → предупреждение + продолжение.
+- **upstream-check** — нет `origin/<target>` → аккуратный SKIP «нет remote-tracking» вместо ложного «up to date».
+- **SAFE-RESET громче** — `reset --hard` печатает SHA отбрасываемых sync-коммитов.
+
+**Зачем:** платформа = 13+ микросервисов на разных ветках (`develop`/`dev`/`main`), не у всех есть `ai-dev`. Жёсткое допущение «все на ai-dev» ломало `/pull` для большинства → ручной «подтяну сам».
+
+**Actions (при sync):** `consumer-pull.sh` обновится автоматически. Поведение `/pull` улучшается прозрачно — ничего настраивать не нужно.
+
+**Priority:** 🟡 (исправляет частые SKIP в `/pull`; multi-repo workspaces).
+
+---
+
 ## v7.13.2 — docs: Artifact Storage Rule — forward-only / grandfather оговорка (2026-06-23)
 
 **Consumer-facing changes:**
