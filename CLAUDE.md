@@ -280,6 +280,32 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 ---
 
+## Artifact Storage Rule
+
+Единое правило **где живут артефакты**. Полная таксономия и владельцы — в **ARTIFACT-MAP** (data-lineage viewpoint); здесь — правило раскладки в одну таблицу. Когда создаёшь артефакт — определи класс и положи в его дом:
+
+| Класс артефакта | Дом |
+|---|---|
+| Living-артефакт методологии (DEVLOG, IDEAS, ROADMAP, RISKS, *-GAPS, HYPOTHESES) | корень / `docs/…` (свои канонические дома) |
+| Пришло **извне** (VCD, чужой анализ, дамп) | `inbox/` → `_processed/` |
+| Durable-**спека** о продукте (ADR, design-spec, architecture) | `docs/adr` · `docs/architecture` · `docs/services/<svc>/` |
+| **Research-вывод** (короткий verdict) | `DEVLOG.md` строка `[research:X]` |
+| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** |
+| **Эфемерное** (черновик-превью, промежуточное) | scratchpad вне репо / gitignored `_tmp_*` (root-anchored) |
+
+**MUST:**
+- Продукт работы → `work/<stream>/`, где `<stream>` = направление работы. Один-направленный проект → `work/general/` или плоско в `work/`. **Структура папок = живой индекс** (`ls work/`); не вести ручной README-реестр.
+- Эфемерное никогда не оседает в корне репо — scratchpad или gitignored `_tmp_*`. (Этот репо дог-фудит: `_tmp_draft-maps.md` /plan-черновиков под root-anchored ignore + `validate-work-home.sh`.)
+- Границы: `inbox/` = вход (не мы); `docs/` = спека системы; `work/` = наш output. Research-вывод остаётся строкой в DEVLOG — **не дублировать** в `work/`.
+
+**MUST NOT:**
+- ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне) — это и есть хаос, который правило закрывает.
+- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в отдельный consumer-workspace (Ось 7).
+
+Enforcement: `validate-work-home.sh` (warn в `deploy-push.sh` methodology-gate — рецидив виден с дня 1; эскалация warn→error по evidence, Ось 1). Полный rationale, границы и migration — в `work/README.md`.
+
+---
+
 ## Maps Standard Rule
 
 Единый стандарт написания и поддержания **views** (карт и связанных артефактов) проекта. Основан на **arc42 multi-viewpoint** + Living Documentation principles + **C4-inspired diagram discipline** (нотация, не таксономия).
