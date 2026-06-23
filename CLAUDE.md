@@ -302,6 +302,8 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 - ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне) — это и есть хаос, который правило закрывает.
 - ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в отдельный consumer-workspace (Ось 7).
 
+**Forward-only (grandfather, closes [opinion:artifact-migration-scope] council 7/7):** правило применяется к **новым** артефактам. Существующие организованные папки (`docs/analysis/`, `docs/design/`, `contracts/`, `runbooks/` и т.п.) — **остаются на месте**, не мигрируются массово (часто это durable-спеки с входящими ссылками из ADR/living-артефактов — `git mv` порвёт их). Ретро-перенос в `work/` — только **реактивно** при подтверждённой боли «не могу найти» по конкретной папке. Детектор `validate-work-home.sh` сканирует **только корневой litter** (`-maxdepth 1`, scratch-паттерны), `docs/`-подпапки не трогает by-construction.
+
 Enforcement: `validate-work-home.sh` (warn в `deploy-push.sh` methodology-gate — рецидив виден с дня 1; эскалация warn→error по evidence, Ось 1). Полный rationale, границы и migration — в `work/README.md`.
 
 ---

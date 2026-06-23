@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.13.2 — docs: Artifact Storage Rule — forward-only / grandfather оговорка (2026-06-23)
+
+**Consumer-facing changes:**
+- **CLAUDE.md § Artifact Storage Rule** + `work/README` — добавлена **forward-only (grandfather)** оговорка: правило применяется к НОВЫМ артефактам; существующие организованные папки (`docs/analysis/`, `contracts/` и т.п.) **остаются на месте**, массовая миграция НЕ делается. Ретро-перенос — только реактивно, и его делает **владелец репо** (агент не двигает файлы консьюмера — Граница 4 / consumer-commit contract).
+
+**Зачем:** `/opinion` council 7/7 (`[opinion:artifact-migration-scope]`, вердикт ❌ на полную миграцию) — измерено: реальный litter ≈ 1 файл; «организованные» ad-hoc папки часто durable со входящими ссылками из ADR (erp `docs/analysis/` = 30 ссылок из 6 ADR), `git mv` их порвёт. Детектор и так сканирует только корневой litter, не `docs/`. Grandfather снимает split-brain без риска миграции.
+
+**Actions (при sync):** `CLAUDE.md` обновится автоматически. Ничего мигрировать не нужно.
+
+**Priority:** 🟢 (doc-уточнение, patch).
+
+---
+
 ## v7.13.0 — feat: Artifact Storage Rule — единый дом продуктов работы `work/<stream>/` (2026-06-23)
 
 **Consumer-facing changes:**

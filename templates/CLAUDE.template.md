@@ -111,6 +111,8 @@ For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLA
 - ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне) — это и есть хаос, который правило закрывает.
 - ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в отдельный consumer-workspace.
 
+**Forward-only (grandfather):** правило применяется к **новым** артефактам. Существующие организованные папки (`docs/analysis/`, `docs/design/`, `contracts/` и т.п.) — **остаются на месте**, не мигрируются массово (часто это durable-спеки с входящими ссылками — `git mv` их порвёт). Ретро-перенос в `work/` — только **реактивно** при подтверждённой боли «не могу найти» по конкретной папке. Детектор сканирует **только корневой litter**, `docs/`-подпапки не трогает.
+
 Enforcement: `validate-work-home.sh` (warn в `deploy-push.sh` — рецидив виден с дня 1; эскалация warn→error по evidence, Ось 1). Полный rationale, границы и migration существующих ad-hoc папок — в `work/README.md`.
 
 ---
