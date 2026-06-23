@@ -51,8 +51,10 @@ USER_CORRECTION_PATTERNS = [
     r"you didn.?t.{0,20}(also|as well|similarly)",
 ]
 
-# Research finding detection — fires when WebSearch was used AND verdict keyword found.
-# WebSearch-only (doc lookup) does NOT trigger; verdict-only (no search) does NOT trigger.
+# Research finding detection — two paths:
+# (1) WebSearch + verdict keyword → Source: <url>
+# (2) direct-experience: operational pattern + verdict keyword → Source: direct-experience
+# Neither path fires on a single signal alone (anti-noise: both signals required per path).
 # This covers incidental findings during any session (planned research uses /research command).
 VERDICT_KEYWORDS = [
     r"\bviable\b",
@@ -70,6 +72,24 @@ VERDICT_KEYWORDS = [
     r"\bnot.permitted\b",
     r"\bprohibited\b",
     r"\bavailable\b.{0,20}\bmarket\b",
+]
+
+# Operational finding detection — execution-based constraints discovered without WebSearch.
+# Requires BOTH an operational pattern AND a verdict keyword (anti-noise double requirement).
+# Examples: "iproyal не подходит для SMTP" + "not-viable" → direct-experience finding.
+OPERATIONAL_PATTERNS = [
+    r"\bне подходит для\b",
+    r"\bне работает\b.{0,60}\b(через|с|для)\b",
+    r"\b(заблокировал|забанил)\b",
+    r"\brate.?limit\b",
+    r"\bне поддерживает\b",
+    r"\bworkaround\b",
+    r"\bблокирует.{0,40}\b(порт|запрос|smtp|доступ|api)\b",
+    r"\bнедоступен\b",
+    r"\bdoes not (support|work|allow)\b",
+    r"\bnot (supported|working)\b.{0,40}\b(via|through|for|on)\b",
+    r"\b(blocked|banned).{0,40}\b(request|port|smtp|api|ip)\b",
+    r"\brate.?limit(ing|ed)?\b",
 ]
 
 GAPS_FILE = "AGENT-GAPS.md"
@@ -183,19 +203,32 @@ def main() -> None:
 
 
 def main_research(data: dict, last_assistant: str) -> None:
-    """Separate research watchdog — fires only when WebSearch + verdict keyword detected."""
-    websearch_used = check_websearch_used(data.get("transcript_path", ""))
-    if not websearch_used:
-        return
+    """Research watchdog — two paths:
+    (1) WebSearch + verdict keyword → Source: <url>
+    (2) direct-experience: operational pattern + verdict keyword → Source: direct-experience
+    Verdict keyword required for both paths (anti-noise gate).
+    """
     has_verdict = last_assistant and any(
         re.search(p, last_assistant, re.IGNORECASE) for p in VERDICT_KEYWORDS
     )
     if not has_verdict:
         return
+
+    websearch_used = check_websearch_used(data.get("transcript_path", ""))
+    if websearch_used:
+        source_hint = "<url>"
+    else:
+        has_operational = any(
+            re.search(p, last_assistant, re.IGNORECASE) for p in OPERATIONAL_PATTERNS
+        )
+        if not has_operational:
+            return
+        source_hint = "direct-experience"
+
     print(
-        "🔍 RESEARCH WATCHDOG: обнаружен WebSearch + verdict-вывод в этой сессии.\n"
+        "🔍 RESEARCH WATCHDOG: обнаружен вывод из исследования/опыта.\n"
         "Если вывод влияет на решение и ещё не записан — предложи строку в DEVLOG:\n"
-        "  [research:<slug>] → <что изучали>: <вывод>. <verdict>. Source: <url>\n"
+        f"  [research:<slug>] → <что изучали>: <вывод>. <verdict>. Source: {source_hint}\n"
         "  verdict: viable / not-viable / blocked / confirmed / conditional / unclear\n"
         "  Для planned research: /research команда"
     )

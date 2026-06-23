@@ -2,31 +2,31 @@
   "global": {
     "last_sync_vision": {
       "date": "2026-06-19",
-      "plans_since": 4
+      "plans_since": 6
     },
     "last_retro": {
       "date": "2026-06-19",
-      "plans_since": 1
+      "plans_since": 3
     },
     "last_product_review": {
       "date": "2026-06-19",
-      "plans_since": 4
+      "plans_since": 6
     },
     "last_product_check": {
       "date": "2026-05-27",
-      "plans_since": 45
+      "plans_since": 47
     },
     "last_product_vision": {
       "date": "2026-06-17",
-      "plans_since": 12
+      "plans_since": 14
     },
     "last_user_map_sync": {
       "date": "2026-05-27",
-      "plans_since": 47
+      "plans_since": 49
     },
     "last_architecture_audit": {
       "date": "2026-06-19",
-      "plans_since": 4,
+      "plans_since": 6,
       "recommendations": [
         {
           "id": "R-034",
@@ -152,17 +152,48 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-22T12:00:00Z",
-    "task_id": "G-123-freechat-model-rec",
+    "completed_at": "2026-06-23T20:00:00Z",
+    "task_id": "research-capture-direct-experience",
     "service": "methodology-platform",
     "mode": "Full",
     "code_run": true,
-    "commitments": [],
-    "sustainment": [],
+    "commitments": [
+      {
+        "text": "runtime test: test-1/2/3 manual verification после изменений (direct-exp path fires, single-pattern does not, WebSearch path unchanged)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "LIVING-ARTIFACTS.md: добавить/проверить строку для agent-gaps-watchdog.py OPERATIONAL_PATTERNS hook",
+        "status": "pending",
+        "skip_reason": null
+      }
+    ],
+    "sustainment": [
+      {
+        "artifact": "templates/.claude/hooks/agent-gaps-watchdog.py OPERATIONAL_PATTERNS",
+        "trigger": "Stop event (каждая сессия)",
+        "refresh": "ручной при drift паттернов; /retro skip-rate signal",
+        "detection": "/review parity; test-1/2/3 manual",
+        "owner": "методология"
+      },
+      {
+        "artifact": "CLAUDE.md Research-capture rule",
+        "trigger": "чтение агентом",
+        "refresh": "ручной (не синкается)",
+        "detection": "/review CLAUDE.md changes; /product-check",
+        "owner": "методология"
+      }
+    ],
     "deferred": [
       {
-        "text": "L4 structural enforcement для free-chat",
-        "reason": "R-036 feasibility 45%, requires SessionStart hook",
+        "text": "Consumers CLAUDE.md manual update",
+        "reason": "CLAUDE.md не синкается — consumer-owned; infrastructure gap",
+        "tag": "deferred"
+      },
+      {
+        "text": "Domain-specific pattern calibration",
+        "reason": "requires /retro evidence across workspaces",
         "tag": "deferred"
       }
     ]
@@ -341,9 +372,9 @@
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-20",
+    "date": "2026-06-23",
     "status": "ok",
-    "phase": "/scan-sources command v7.4.0 (PR #276 merged)"
+    "phase": "v7.14.0 consumer-pull branch resolver (PR #296)"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",
