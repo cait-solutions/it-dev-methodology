@@ -152,6 +152,12 @@ else
   echo "[ok]   migrations-selfapply-bridge — apply + MIGRATED-emit + parallel-файл не захвачен"
 fi
 
+# ── Test 8: work-home hygiene (artifact-storage-rule) ────────────────────────────
+# validate-work-home.sh должен флагать stray _tmp_* в корне fixture-дерева → exit 1;
+# чистое дерево (delivery-clean, нет scratch) → exit 0.
+assert_exit 1 "work-home-stray" -- bash scripts/validate-work-home.sh --root "$FX/work-home-stray"
+assert_exit 0 "work-home-clean" -- bash scripts/validate-work-home.sh --root "$FX/delivery-clean"
+
 # ── Positive control ─────────────────────────────────────────────────────────────
 # validate-triggers.sh на чистом triggers.json → exit 0.
 # Ловит «harness всегда видит non-zero» вырожденность.

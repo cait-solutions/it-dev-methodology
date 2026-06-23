@@ -30,6 +30,14 @@ Thumbs.db
 # Scratch files (mermaid URL generation via py scripts/mermaid-link.py)
 .tmp-mermaid.*
 
+# Ephemeral work artifacts in repo ROOT (Artifact Storage Rule, v7.13.0).
+# Root-anchored (leading /) — only repo root: fixtures/templates in subdirs unaffected,
+# validate-work-home.sh checks the same root-only scope. Durable products of work →
+# work/<stream>/ (tracked); ephemeral/scratch → here (gitignored) or scratchpad outside repo.
+/_tmp_*
+/.tmp-*
+/*.tmp
+
 # Project artifacts (NOT for methodology-platform consumers)
 # Canonical templates for consumers are in templates/
 # Restored by: bash scripts/sync-methodology.sh .

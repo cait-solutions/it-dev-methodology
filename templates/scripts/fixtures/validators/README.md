@@ -19,6 +19,7 @@
 | `delivery-orphan/` | `validate-consumer-delivery.sh` | orphan-скрипт без consumer-ссылки (severity=error) | 1 | wave-1 |
 | `delivery-clean/` | `validate-consumer-delivery.sh` | `delivery-allow:` маркер → не флагуется (positive control) | 0 | wave-1 |
 | `mermaid-missing-annotation.md` | `validate-maps-coverage.sh` | `:465-466` `_freshness_finding` нет аннотации | 0 (WARN) | wave-2 |
+| `work-home-stray/` | `validate-work-home.sh` | stray `_tmp_*` в корне fixture-дерева → exit 1 | 1 | wave-1 |
 
 **wave-1:** активные assertions в `test-validators.sh` (assert_exit 1/0).
 **wave-2:** фикстур готов, harness assertion отложена (WARN-severity → нельзя assert_exit 1 без изменения DIAGRAM_FRESHNESS_SEVERITY; расширить в отдельном /plan).

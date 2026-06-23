@@ -329,6 +329,13 @@ touch "$TARGET_DIR/inbox/_processed/.gitkeep"
 touch "$TARGET_DIR/inbox/_processed/rejected/.gitkeep"
 copy_with_subst "$METHODOLOGY_DIR/templates/inbox/README.template.md"  "$TARGET_DIR/inbox/README.md"
 
+# work/ — канонический дом продуктов работы (Artifact Storage Rule).
+# Структура папок = индекс; <stream> заводится по мере появления направлений.
+echo "→ work/"
+mkdir -p "$TARGET_DIR/work/_shared"
+touch "$TARGET_DIR/work/_shared/.gitkeep"
+copy_with_subst "$METHODOLOGY_DIR/templates/work/README.template.md"  "$TARGET_DIR/work/README.md"
+
 echo "→ sync-vision-reports/"
 touch "$TARGET_DIR/docs/sync-vision-reports/.gitkeep"
 echo "  ✓ docs/sync-vision-reports/ (placeholder)"

@@ -299,6 +299,13 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
     echo "▶ Schema↔skill parity detector (methodology-platform)..."
     bash scripts/validate-schema-skill-parity.sh || true   # warn-severity → не блокирует деплой
   fi
+  # Work-home hygiene detector (artifact-storage-rule): scratch/draft-файлы в корне вне work/.
+  # warn-severity (|| true) → НЕ блокирует деплой (Ось 5: эскалация warn→error по evidence
+  # рецидива, но счётчик-видимость работает с дня 1). Делает litter видимым на каждом деплое.
+  if [ -f "scripts/validate-work-home.sh" ]; then
+    echo "▶ Work-home hygiene detector (methodology-platform)..."
+    bash scripts/validate-work-home.sh || true
+  fi
   # Validator-harness gate (PLAN-03 / G-112): proof-of-rejection — доказать что сами
   # валидаторы отклоняют плохой ввод, прежде чем доверять их PASS в maps-coverage.
   # Guard: if [ -f ... ] — graceful skip если harness не установлен (migration-window).
