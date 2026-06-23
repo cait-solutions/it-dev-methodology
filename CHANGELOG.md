@@ -4,6 +4,26 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.13.0 — feat: Artifact Storage Rule — единый дом продуктов работы `work/<stream>/` (2026-06-23)
+
+**Consumer-facing changes:**
+- **CLAUDE.md § Artifact Storage Rule** (новая секция) — таблица «класс артефакта → дом». Продукт работы → `work/<stream>/`; эфемерное → scratchpad / gitignored `_tmp_*`; research-вывод остаётся строкой в DEVLOG; границы: `inbox/`=вход, `docs/`=спека, `work/`=наш output.
+- **`work/` scaffold** — `new-project-init.sh` создаёт `work/README.md` (из `templates/work/README.template.md`) + `work/_shared/.gitkeep`. Дом продуктов работы по направлениям. Плоско; структура папок = живой индекс (без ручного реестра).
+- **`validate-work-home.sh`** (новый, dual-copy `scripts/` + `templates/scripts/`) — warn-детектор: scratch/draft-файлы в корне репо вне `work/`. Wired в `deploy-push.sh` methodology-gate (warn, НЕ блок). Делает litter видимым на каждом деплое.
+- **`.gitignore` + `templates/.gitignore.template`** — root-anchored `/_tmp_*`, `/.tmp-*`, `/*.tmp` (эфемерное в корне не коммитится; подпапки не затрагиваются).
+- **ARTIFACT-MAP** — строка `work/<stream>/` в Artifact Reference.
+
+**Зачем:** продукты работы оседали хаотично (inbox / самодельный `docs/content/` / корень репо); при нескольких направлениях смешивались. Council 7/7 (⚠️) → срезано до flat `work/`, detector сразу (не отложен), таксономия в ARTIFACT-MAP (не дубль-дерево в CLAUDE.md), research остаётся в DEVLOG.
+
+**Actions (при sync):**
+1. `CLAUDE.md`, `.gitignore`, `validate-work-home.sh` обновятся автоматически.
+2. `new-project-init.sh` создаст `work/` при следующем init (idempotent — существующее сохраняется).
+3. Существующие ad-hoc папки (`docs/content/` и т.п.) — миграция **отдельным `/plan`** (НЕ авто; см. `work/README.md`).
+
+**Priority:** 🟢 (аддитивно, ничего не ломает; minor bump).
+
+---
+
 ## v7.12.0 — feat: яркий STOP-advisory при under-powered модели в Pre-flight (2026-06-22)
 
 **Consumer-facing changes:**

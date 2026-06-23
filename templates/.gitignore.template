@@ -74,3 +74,10 @@ dist/
 # Windows
 $RECYCLE.BIN/
 Desktop.ini
+
+# Ephemeral work artifacts in repo ROOT (Artifact Storage Rule).
+# Root-anchored (leading /) — only repo root, so files in subdirs are unaffected.
+# Durable products of work → work/<stream>/ (tracked); ephemeral/scratch → here or scratchpad.
+/_tmp_*
+/.tmp-*
+/*.tmp
