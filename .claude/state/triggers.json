@@ -152,19 +152,24 @@
     "product_vision_skipped": 0
   },
   "last_plan_session": {
-    "completed_at": "2026-06-23T20:00:00Z",
-    "task_id": "research-capture-direct-experience",
+    "completed_at": "2026-06-24T12:00:00Z",
+    "task_id": "post-push-ff-pull",
     "service": "methodology-platform",
-    "mode": "Full",
+    "mode": "Lite",
     "code_run": true,
     "commitments": [
       {
-        "text": "runtime test: test-1/2/3 manual verification после изменений (direct-exp path fires, single-pattern does not, WebSearch path unchanged)",
+        "text": "runtime тест после deploy: создать skill в lead-gen-documentation, проверить auto-activation в новой сессии",
         "status": "pending",
         "skip_reason": null
       },
       {
-        "text": "LIVING-ARTIFACTS.md: добавить/проверить строку для agent-gaps-watchdog.py OPERATIONAL_PATTERNS hook",
+        "text": "проверить mkdir -p .claude/skills/ в команде (на случай отсутствия папки у консьюмера без sync)",
+        "status": "pending",
+        "skip_reason": null
+      },
+      {
+        "text": "явная инструкция в команде про memory files как optional context (machine-local)",
         "status": "pending",
         "skip_reason": null
       }
@@ -372,9 +377,9 @@
   },
   "_note_plan_h": "freshness-batch-PLAN-H фактически задеплоен v5.48.0->v5.51.0 (DEVLOG 2026-06-12); прежний code_run:false был рассинхрон state, перезаписан этим планом",
   "last_deploy": {
-    "date": "2026-06-23",
+    "date": "2026-06-24",
     "status": "ok",
-    "phase": "v7.14.0 consumer-pull branch resolver (PR #296)"
+    "phase": "v7.18.5 post-push ff-pull in push-consumer-single.sh"
   },
   "last_auto_pull": {
     "at": "2026-06-11T13:58:38+00:00",

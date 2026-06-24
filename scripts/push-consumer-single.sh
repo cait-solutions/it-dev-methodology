@@ -144,6 +144,12 @@ rm -f "$PUSH_ERRFILE" 2>/dev/null || true
 
 if [ $PUSH_EXIT -eq 0 ]; then
   echo "  ✅ push → $BRANCH"
+  # Pull to confirm local stays current after push (ff-only: safe no-op if already equal,
+  # catches fast-forward updates from parallel sessions).
+  PULL_OUT=$(git -C "$CONSUMER_PATH" pull --ff-only origin "$BRANCH" 2>&1) || true
+  if echo "$PULL_OUT" | grep -q "Fast-forward"; then
+    echo "  📥 pull --ff-only: fast-forward applied"
+  fi
   exit 0
 fi
 
