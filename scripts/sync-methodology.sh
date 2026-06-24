@@ -73,6 +73,27 @@ if [[ "$_target_abs" == "$_method_abs" ]]; then
   IS_SELF_APPLY=true
 fi
 
+# Read commands_profile from consumer's CLAUDE.local.md (Branching yaml block).
+# commands_profile: full → deliver commands-local/ to this consumer (same as self-apply).
+# Use case: doc-repos or designated consumers that need the full maintainer command set.
+COMMANDS_PROFILE=""
+if [[ -f "$TARGET_DIR/CLAUDE.local.md" ]]; then
+  COMMANDS_PROFILE="$(awk '
+    /^```yaml/ { in_block=1; next }
+    /^```/     { in_block=0; next }
+    in_block && /commands_profile:/ {
+      val=$0; sub(/^[^:]*:[[:space:]]*/,"",val)
+      sub(/[[:space:]]*#.*/,"",val); gsub(/^[[:space:]]+|[[:space:]]+$/,"",val)
+      print val; exit
+    }
+  ' "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null || true)"
+fi
+# INCLUDE_LOCAL_CMDS: true when self-apply OR consumer opted into full profile.
+INCLUDE_LOCAL_CMDS=false
+if [[ "$IS_SELF_APPLY" == "true" ]] || [[ "$COMMANDS_PROFILE" == "full" ]]; then
+  INCLUDE_LOCAL_CMDS=true
+fi
+
 # ---------------------------------------------------------------------------
 # Auto-pull: keep methodology up to date before syncing.
 # Skipped for self-apply (methodology IS the source).
@@ -754,9 +775,11 @@ fi
 # Без этого блока /pull-consumers и другие maintainer-only команды unusable
 # даже в самой methodology-platform (closes G-051).
 # ---------------------------------------------------------------------------
-if [[ "$IS_SELF_APPLY" == "true" ]] && [[ -d "$METHODOLOGY_DIR/commands-local" ]]; then
+if [[ "$INCLUDE_LOCAL_CMDS" == "true" ]] && [[ -d "$METHODOLOGY_DIR/commands-local" ]]; then
   if compgen -G "$METHODOLOGY_DIR/commands-local/*.md" > /dev/null 2>&1; then
-    echo "→ commands-local/ (self-apply only)"
+    _local_label="self-apply only"
+    [[ "$COMMANDS_PROFILE" == "full" ]] && _local_label="commands_profile: full"
+    echo "→ commands-local/ ($_local_label)"
     for cmd in "$METHODOLOGY_DIR"/commands-local/*.md; do
       [[ -f "$cmd" ]] || continue
       name="$(basename "$cmd")"
@@ -775,7 +798,7 @@ for existing in "$TARGET_DIR"/.claude/commands/*.md; do
   name="$(basename "$existing")"
   exists_canonical=false
   [[ -f "$METHODOLOGY_DIR/commands/$name" ]] && exists_canonical=true
-  if [[ "$IS_SELF_APPLY" == "true" ]] && [[ -f "$METHODOLOGY_DIR/commands-local/$name" ]]; then
+  if [[ "$INCLUDE_LOCAL_CMDS" == "true" ]] && [[ -f "$METHODOLOGY_DIR/commands-local/$name" ]]; then
     exists_canonical=true
   fi
   if [[ "$exists_canonical" == "false" ]]; then
@@ -1045,8 +1068,9 @@ else
   check_artifact_subst "AGENTS.md"                        "templates/AGENTS.md.template"              "$_pname"
   check_artifact_subst "AGENT-GAPS.md"                    "templates/AGENT-GAPS.md.template"          "$_pname"
   check_artifact_subst "CODE-GAPS.md"                     "templates/CODE-GAPS.md.template"           "$_pname"
-  check_artifact_subst "docs/architecture/SYSTEM-MAP.md"  "templates/SYSTEM-MAP.template.md"          "$_pname"
-  check_artifact_subst "docs/product/USER-MAP.md"         "templates/USER-MAP.template.md"            "$_pname"
+  check_artifact_subst "docs/architecture/SYSTEM-MAP.md"         "templates/SYSTEM-MAP.template.md"            "$_pname"
+  check_artifact_subst "docs/architecture/LIVING-ARTIFACTS.md"   "templates/LIVING-ARTIFACTS.template.md"      "$_pname"
+  check_artifact_subst "docs/product/USER-MAP.md"                "templates/USER-MAP.template.md"              "$_pname"
   check_artifact_subst "docs/product/ARTIFACT-MAP.md"     "templates/ARTIFACT-MAP.template.md"        "$_pname"
   check_artifact_subst "docs/vision/AGENT_VISION.md"      "templates/vision/AGENT_VISION.template.md" "$_pname"
   check_artifact_subst "docs/vision/LONG_VISION_v1.md"    "templates/vision/LONG_VISION.template.md"  "$_pname"
