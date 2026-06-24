@@ -252,13 +252,16 @@ EOF
 inject_cmd_banner() {
   local src="$1"
   local dest="$2"
+  local name
+  name="$(basename "$src" .md)"
   local title
   title="$(grep -m1 '^# ' "$src" | sed 's|^# /[^ ]* — ||; s|^# ||')"
-  [[ -z "$title" ]] && title="$(basename "$src" .md)"
+  [[ -z "$title" ]] && title="$name"
   title="${title//\"/}"
   {
     cat <<EOF
 ---
+name: $name
 description: "$title"
 ---
 <!-- AUTO-GENERATED from methodology-platform $VERSION -->
@@ -269,6 +272,35 @@ description: "$title"
 
 EOF
     cat "$src"
+  } > "$dest"
+}
+
+# inject_cmd_as_skill: deliver a command as a .claude/skills/<name>/SKILL.md so it
+# appears in the Claude Code VSCode autocomplete as a slash command. Strips the
+# command's own frontmatter (lines 1-N up to and including closing ---) to avoid
+# duplicate frontmatter, then prepends a minimal skill frontmatter. The description
+# deliberately avoids trigger keywords to prevent auto-activation.
+inject_cmd_as_skill() {
+  local src="$1"
+  local dest="$2"
+  local name
+  name="$(basename "$src" .md)"
+  local title
+  title="$(grep -m1 '^# ' "$src" | sed 's|^# /[^ ]* — ||; s|^# ||')"
+  [[ -z "$title" ]] && title="$name"
+  title="${title//\"/}"
+  # Find the first line AFTER the closing --- of the frontmatter block
+  local body_start
+  body_start="$(awk 'NR==1 && /^---/{found=1; next} found && /^---/{print NR+1; exit}' "$src")"
+  [[ -z "$body_start" ]] && body_start=1
+  {
+    cat <<EOF
+---
+name: $name
+description: "Slash command /$name — $title. Вызывать явно. Не активировать автоматически."
+---
+EOF
+    tail -n +"$body_start" "$src"
   } > "$dest"
 }
 
@@ -841,6 +873,33 @@ for existing in "$TARGET_DIR"/.claude/commands/*.md; do
     rm "$existing"
   fi
 done
+
+# ---------------------------------------------------------------------------
+# Commands-as-skills: mirror every command to .claude/skills/<name>/SKILL.md so
+# it appears in the Claude Code VSCode autocomplete as a discoverable slash command.
+# .claude/commands/ is kept for CLI compat; .claude/skills/ enables VSCode discovery.
+# ---------------------------------------------------------------------------
+echo "→ skills/ (commands mirror)"
+for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
+  [[ -f "$cmd" ]] || continue
+  name="$(basename "$cmd" .md)"
+  skill_dir="$TARGET_DIR/.claude/skills/$name"
+  mkdir -p "$skill_dir"
+  inject_cmd_as_skill "$cmd" "$skill_dir/SKILL.md"
+  _track_changed ".claude/skills/$name/SKILL.md"
+  echo "  ✓ $name/SKILL.md"
+done
+if [[ "$INCLUDE_LOCAL_CMDS" == "true" ]] && [[ -d "$METHODOLOGY_DIR/commands-local" ]]; then
+  for cmd in "$METHODOLOGY_DIR"/commands-local/*.md; do
+    [[ -f "$cmd" ]] || continue
+    name="$(basename "$cmd" .md)"
+    skill_dir="$TARGET_DIR/.claude/skills/$name"
+    mkdir -p "$skill_dir"
+    inject_cmd_as_skill "$cmd" "$skill_dir/SKILL.md"
+    _track_changed ".claude/skills/$name/SKILL.md"
+    echo "  ✓ $name/SKILL.md (local)"
+  done
+fi
 
 # ---------------------------------------------------------------------------
 # Agent skeletons — only copy if missing in target. Per-project bodies are preserved.
