@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.19.0 — fix: guard от закоммиченных merge-conflict маркеров (2026-06-24)
+
+**Приоритет:** 🟡 RECOMMENDED (защита от порчи команд)
+
+**Consumer-facing changes:**
+- **`secrets-guard.py`** (PreToolUse commit-interceptor) — теперь **блокирует `git commit`**, если в staged-контенте есть git conflict-маркеры (`<<<<<<<` / `|||||||` / `>>>>>>>`, ровно 7 символов). Exit 2 + remediation. Бенчмарк нулевой (переиспользует уже читаемый `git diff --cached`). Бара `=======` НЕ матчится — чтобы не ловить Markdown setext-заголовки (no false positives).
+
+**Зачем:** инцидент — консьюнер закоммитил merge с **невырезанными конфликт-маркерами в 33 derived-файлах** (`.claude/commands/*.md`, hooks, model-tiers.md). Файл команды, начинающийся с `<<<<<<< HEAD`, **не парсится → "Unknown command"** для ВСЕХ slash-команд репо. Корень: banner-строка (`VERSION`/`SYNCED_AT`, line 1 каждого синканутого файла) конфликтует при любом cross-version 3-way merge; botched-резолв запёк маркеры. Этот guard ловит такой commit в момент создания.
+
+**Граница:** ловит agent-driven commit (через Claude Code PreToolUse) — это класс инцидента. Ручной `git commit` в терминале вне Claude Code не покрыт (актор методологии = агент). `--no-verify` обходит — но `/review` всё равно флагует маркеры.
+
+**Actions (при sync):** `secrets-guard.py` обновится автоматически через `sync-methodology.sh`. Ничего настраивать не нужно.
+
+**Recovery если маркеры уже закоммичены:** `grep -rn '^<<<<<<< \|^>>>>>>> \|^=======$' .claude/` → для синканутых файлов проще `sync-methodology.sh .` (регенерирует чистые копии) → commit.
+
+---
+
 ## v7.18.0 — /skill: создание domain-specific skills из накопленных наработок (2026-06-24)
 
 **Приоритет:** 🟢 NEW CAPABILITY

@@ -186,6 +186,46 @@ def check_commit(cmd):
     if not diff:
         return
 
+    # 1.5. Block git CONFLICT MARKERS in staged content (closes committed-conflict-
+    # marker class). Incident: org-company merge-commit 2e8b199 ("resolve remaining
+    # conflicts") was committed with <<<<<<< / ======= / >>>>>>> still in 33 derived
+    # files (.claude/commands/*.md, hooks, model-tiers.md) — banner-line (VERSION) of
+    # every synced file conflicts on any cross-version 3-way merge; a botched
+    # resolution baked the markers in → every slash-command unparseable → "Unknown
+    # command". This guard would have blocked that commit at exit 2.
+    # Keys on angle/pipe markers (exactly 7 chars + space or EOL) which are
+    # unambiguous git markers; bare ``=======`` is intentionally NOT matched (collides
+    # with Markdown setext headers / divider rules → false positives).
+    conflict_hits = []
+    cm_file = ""
+    for line in diff.splitlines():
+        if line.startswith("+++ b/"):
+            cm_file = line[len("+++ b/"):].strip()
+            continue
+        if not line.startswith("+") or line.startswith("+++"):
+            continue
+        if re.match(r'^(<{7}|>{7}|\|{7})(\s|$)', line[1:]):
+            conflict_hits.append((cm_file, line[1:][:60]))
+    if conflict_hits:
+        sys.stderr.write(
+            f"BLOCKED: staged content contains {len(conflict_hits)} git CONFLICT MARKER(s).\n"
+            "Committing these corrupts the file -- e.g. a .claude/commands/*.md that\n"
+            "starts with `<<<<<<< HEAD` no longer parses -> \"Unknown command\".\n"
+            "A merge was likely 'resolved' without actually removing the markers.\n\n"
+        )
+        for fname, snippet in conflict_hits[:8]:
+            sys.stderr.write(f"  {fname or '<unknown>'}: {snippet}\n")
+        if len(conflict_hits) > 8:
+            sys.stderr.write(f"  ... and {len(conflict_hits) - 8} more\n")
+        sys.stderr.write(
+            "\nRemediation:\n"
+            "  1. Find them:  grep -rn '^<<<<<<< \\|^>>>>>>> \\|^=======$' <staged files>\n"
+            "  2. Resolve each hunk: keep ONE side, delete the <<<<<<< / ======= / >>>>>>> lines.\n"
+            "  3. For synced .claude/ files: re-run sync-methodology.sh to regenerate clean copies.\n"
+            "  4. Re-stage and commit. (--no-verify bypasses this; /review still flags markers.)\n"
+        )
+        sys.exit(2)
+
     # Track current file in diff (for documentation softening).
     current_file = ""
     threshold = _get_threshold()
