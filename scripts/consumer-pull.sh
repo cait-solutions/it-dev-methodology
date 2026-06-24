@@ -243,7 +243,14 @@ while IFS= read -r repo_path; do
   # Check incoming
   incoming=$(git -C "$repo_path" log --oneline "${target}..origin/${target}" 2>/dev/null || true)
   if [[ -z "$incoming" ]]; then
-    echo "   ✓ up to date"
+    # Check if local is ahead of remote — ff-only sees "up to date" but push is needed
+    _local_ahead=$(git -C "$repo_path" rev-list --count "origin/${target}..${target}" 2>/dev/null || echo 0)
+    if [[ "$_local_ahead" -gt 0 ]]; then
+      echo "   ✓ up to date (локально впереди +${_local_ahead} коммит(ов) — нужен push, не pull)"
+      echo "      → /push-merge или /deploy"
+    else
+      echo "   ✓ up to date"
+    fi
     UP_TO_DATE=$((UP_TO_DATE + 1))
     continue
   fi
@@ -260,11 +267,14 @@ while IFS= read -r repo_path; do
       git -C "$repo_path" reset --hard "origin/${target}" 2>&1 | _sanitize
       PULLED=$((PULLED + 1))
     else
-      echo "   ✗ SKIP — ff-only failed (история разошлась)"
+      _remote_ahead=$(git -C "$repo_path" rev-list --count "${target}..origin/${target}" 2>/dev/null || echo 0)
+      _local_div=$(git -C "$repo_path" rev-list --count "origin/${target}..${target}" 2>/dev/null || echo 0)
+      echo "   ✗ SKIP — true divergence (local: +${_local_div} / remote: +${_remote_ahead})"
       if [[ -n "$ahead_msgs" ]]; then
         echo "$ahead_msgs" | head -3 | sed 's/^/        /'
       fi
-      echo "      git log --oneline --graph origin/${target}...${target}"
+      echo "      Рекомендация: git -C \"$repo_path\" merge origin/${target}"
+      echo "      Детали: git log --oneline --graph origin/${target}...${target}"
       ERRORS=$((ERRORS + 1))
     fi
     continue

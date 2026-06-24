@@ -85,6 +85,8 @@ production_branch: main             # protected — agent never commits here dir
 agent_branch: ai-dev                # AI branch (single source of truth, enforced by /code and /deploy).
                                     # Applies to all repo types — doc-repos and code-repos use the same name.
                                     # Differentiation comes from repo isolation, not branch naming.
+                                    # sync_methodology_target: ai-dev  — sync --auto-commit is blocked on
+                                    # production_branch by guard in sync-methodology.sh (closes sync-on-main class).
 worktree_isolation: off             # off (default) | auto  — isolation axis (orthogonal to mode)
 branch_namespace: ai-dev/<task>     # branch per concurrent session when worktree_isolation: auto
                                     # collaborative (recommended); ai-dev/<username>/<task> for per-dev attribution
