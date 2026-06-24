@@ -185,7 +185,7 @@ for f in "$TARGET_DIR"/.claude/commands/*.md; do
   if grep -qE '^(<{7}|>{7}|\|{7})([[:space:]]|$)' "$f" 2>/dev/null; then
     continue   # вне LOCAL_MODS → попадёт в обычный overwrite-путь → чистая регенерация
   fi
-  if ! head -1 "$f" 2>/dev/null | grep -q "AUTO-GENERATED from methodology-platform"; then
+  if ! grep -q "AUTO-GENERATED from methodology-platform" "$f" 2>/dev/null; then
     LOCAL_MODS+=("$(basename "$f")")
   fi
 done
@@ -235,6 +235,32 @@ inject_md_banner() {
   local dest="$2"
   {
     cat <<EOF
+<!-- AUTO-GENERATED from methodology-platform $VERSION -->
+<!-- Synced: $SYNCED_AT -->
+<!-- DO NOT EDIT — changes will be overwritten on next sync -->
+<!-- Modify via PR to https://github.com/cait-solutions/it-dev-methodology -->
+<!-- Emergency override: edit locally + open PR within 48h -->
+
+EOF
+    cat "$src"
+  } > "$dest"
+}
+
+# inject_cmd_banner: command files get YAML frontmatter on line 1 (required by
+# Claude Code VSCode extension for command discovery / autocomplete). Banner
+# goes AFTER frontmatter. Description is auto-extracted from the H1 heading.
+inject_cmd_banner() {
+  local src="$1"
+  local dest="$2"
+  local title
+  title="$(grep -m1 '^# ' "$src" | sed 's|^# /[^ ]* — ||; s|^# ||')"
+  [[ -z "$title" ]] && title="$(basename "$src" .md)"
+  title="${title//\"/}"
+  {
+    cat <<EOF
+---
+description: "$title"
+---
 <!-- AUTO-GENERATED from methodology-platform $VERSION -->
 <!-- Synced: $SYNCED_AT -->
 <!-- DO NOT EDIT — changes will be overwritten on next sync -->
@@ -419,7 +445,7 @@ sync_claude_canonical() {
   fi
 
   if [[ -f "$dest" ]]; then
-    if head -1 "$dest" 2>/dev/null | grep -q "AUTO-GENERATED from methodology-platform"; then
+    if grep -q "AUTO-GENERATED from methodology-platform" "$dest" 2>/dev/null; then
       # Already canonical format — update in place
       inject_md_banner "$src" "$dest"
       _track_changed "CLAUDE.md"
@@ -757,10 +783,10 @@ for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
   fi
   dest="$TARGET_DIR/.claude/commands/$name"
   old_body=""
-  [[ -f "$dest" ]] && old_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
-  inject_md_banner "$cmd" "$dest"
+  [[ -f "$dest" ]] && old_body="$(tail -n +10 "$dest" 2>/dev/null || true)"
+  inject_cmd_banner "$cmd" "$dest"
   _track_changed ".claude/commands/$name"
-  new_body="$(tail -n +7 "$dest" 2>/dev/null || true)"
+  new_body="$(tail -n +10 "$dest" 2>/dev/null || true)"
   if [[ "$old_body" != "$new_body" ]]; then
     old_lines=$(echo "$old_body" | wc -l)
     new_lines=$(echo "$new_body" | wc -l)
@@ -793,7 +819,7 @@ if [[ "$INCLUDE_LOCAL_CMDS" == "true" ]] && [[ -d "$METHODOLOGY_DIR/commands-loc
       [[ -f "$cmd" ]] || continue
       name="$(basename "$cmd")"
       dest="$TARGET_DIR/.claude/commands/$name"
-      inject_md_banner "$cmd" "$dest"
+      inject_cmd_banner "$cmd" "$dest"
       _track_changed ".claude/commands/$name"
       echo "  ✓ $name"
     done
