@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.18.0 — /skill: создание domain-specific skills из накопленных наработок (2026-06-24)
+
+**Приоритет:** 🟢 NEW CAPABILITY
+
+**Что добавилось:**
+- **Команда `/skill`** — структурирует накопленный operational knowledge (DEVLOG `[research:X]` + project-context) в `.claude/skills/<name>/SKILL.md` прямо в проекте консьюмера. Claude Code обнаруживает skill автоматически при следующей сессии. Sync-safe by-construction: sync не удаляет consumer-local files в `.claude/skills/`.
+
+**Actions (ничего не требуется — доставляется sync'ом):**
+```bash
+# Команда доставляется в .claude/commands/skill.md при следующем sync
+# Первое использование: /skill <описание фокуса>
+# Пример: /skill поиск контактов DE с учётом наработок по email enrichment
+```
+
+---
+
 ## v7.14.0 — fix: consumer-pull.sh — резолвер ветки вместо жёсткого ai-dev (2026-06-23)
 
 **Consumer-facing changes:**
