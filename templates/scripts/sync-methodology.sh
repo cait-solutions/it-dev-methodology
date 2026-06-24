@@ -176,6 +176,15 @@ echo ""
 LOCAL_MODS=()
 for f in "$TARGET_DIR"/.claude/commands/*.md; do
   [[ -f "$f" ]] || continue
+  # Conflict-markered file = CORRUPTION, not a legit local edit → must be overwritten
+  # (self-heal). Без этого banner на line-1 прячется за `<<<<<<< HEAD`, head-1 check
+  # ниже классифицирует файл как local-mod → non-interactive sync ПРЕСЕРВИТ порчу →
+  # команда остаётся непарсящейся («Unknown command»), plain re-sync не лечит.
+  # Ключим на угловые/pipe-маркеры (ровно 7 + пробел/EOL) — bare ======= НЕ трогаем
+  # (Markdown setext false-positive), консистентно с secrets-guard.py.
+  if grep -qE '^(<{7}|>{7}|\|{7})([[:space:]]|$)' "$f" 2>/dev/null; then
+    continue   # вне LOCAL_MODS → попадёт в обычный overwrite-путь → чистая регенерация
+  fi
   if ! head -1 "$f" 2>/dev/null | grep -q "AUTO-GENERATED from methodology-platform"; then
     LOCAL_MODS+=("$(basename "$f")")
   fi

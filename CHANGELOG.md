@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.19.1 — fix: sync self-heal corrupted command files (conflict markers) (2026-06-24)
+
+**Приоритет:** 🟡 RECOMMENDED (recovery-path robustness)
+
+**Consumer-facing changes:**
+- **`sync-methodology.sh`** (dual-copy) — файлы команд, содержащие git conflict-маркеры (`<<<<<<<`/`|||||||`/`>>>>>>>`, 7 симв), теперь **исключаются из local-mods detection** → попадают в обычный overwrite-путь и **регенерируются чисто** при `sync-methodology.sh .`. Раньше banner на line-1 прятался за `<<<<<<< HEAD`, head-1 проверка классифицировала файл как «locally modified» → non-interactive sync **ПРЕСЕРВИЛ порчу** → команда оставалась мёртвой, plain re-sync не лечил (требовался `SYNC_AUTO_YES=1`).
+
+**Зачем:** defense-in-depth к v7.19.0. Guard (v7.19.0) предотвращает commit маркеров; этот фикс — recovery-путь: если маркеры всё же попали (--no-verify, ручной терминальный merge, консьюнер на старой версии без guard), обычный `sync-methodology.sh .` теперь **сам лечит** corruption вместо тихого preserve. Bare `=======` не трогаем (Markdown setext false-positive), консистентно с guard.
+
+**Actions (при sync):** `sync-methodology.sh` обновится автоматически. Если у тебя сейчас «Unknown command» из-за маркеров — просто запусти `bash scripts/sync-methodology.sh .` (или owner: `sync-methodology.sh <repo>`) → файлы перегенерируются чисто.
+
+---
+
 ## v7.19.0 — fix: guard от закоммиченных merge-conflict маркеров (2026-06-24)
 
 **Приоритет:** 🟡 RECOMMENDED (защита от порчи команд)
