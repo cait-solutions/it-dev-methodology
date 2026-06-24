@@ -1120,10 +1120,35 @@ if [[ "$PRINT_CHANGED" == "true" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# --auto-commit: branch guard (closes sync-on-main class).
+# Skips auto-commit when the consumer repo is checked out on its production_branch.
+# Root cause: auto-update-watchdog calls --auto-commit at SessionStart regardless
+# of current branch → sync commits land on main if consumer started session there.
+# Guard: read production_branch from TARGET_DIR/CLAUDE.local.md (default: main),
+# compare with current branch. If match → warn to stderr + disable AUTO_COMMIT.
+# IS_SELF_APPLY=true is exempt (methodology-platform itself may live on main).
+# ---------------------------------------------------------------------------
+if [[ "$AUTO_COMMIT" == "true" ]] && [[ "$IS_SELF_APPLY" == "false" ]]; then
+  _prod_branch="$( (grep "^production_branch:" "$TARGET_DIR/CLAUDE.local.md" 2>/dev/null || true) \
+    | head -1 | sed 's/production_branch:[[:space:]]*//' | sed 's/#.*//' | tr -d '[:space:]\r' )"
+  _prod_branch="${_prod_branch:-main}"
+  _cur_branch="$(git -C "$TARGET_DIR" branch --show-current 2>/dev/null \
+    || git -C "$TARGET_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null \
+    || echo "")"
+  if [[ -n "$_cur_branch" ]] && \
+     { [[ "$_cur_branch" == "$_prod_branch" ]] || [[ "$_cur_branch" == "master" ]]; }; then
+    echo "  ⚠️  AUTO-COMMIT SKIPPED: repo is on '${_cur_branch}' (production_branch)." >&2
+    echo "     Sync applied (files written). To commit, switch to agent_branch first:" >&2
+    echo "     git -C \"$TARGET_DIR\" checkout ai-dev && bash scripts/sync-methodology.sh ." >&2
+    AUTO_COMMIT=false
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # --auto-commit: atomically commit sync output (closes P-003 dirty-tree class).
 # Filters gitignored paths (e.g. .claude/commands/ in consumers), stages the rest,
 # commits with explicit pathspec — no index-capture (a17ecc1 invariant preserved).
-# Graceful: any git error → silent skip (return 0 + || true at call site).
+# Graceful: any git error → silent skip (return 0 + || true at call side).
 # ---------------------------------------------------------------------------
 if [[ "$AUTO_COMMIT" == "true" ]] && [[ ${#SYNC_CHANGED_FILES[@]} -gt 0 ]]; then
   _auto_commit_sync() {
