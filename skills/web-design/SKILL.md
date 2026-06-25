@@ -1,14 +1,14 @@
 ---
 name: web-design
-description: Knowledge-domain skill для создания web-интерфейсов — задаёт bold aesthetic direction, избегает generic решений. Активируй когда: создаётся новый UI, страница, лендинг или компонент с нуля; пользователь спрашивает о дизайне, стиле, теме, цветовой схеме или типографике; начинается переработка существующего интерфейса. НЕ активируй при: баг-фикс в одном CSS-свойстве; backend-задача без UI; изменение одного класса в существующем дизайне.
+description: "Knowledge-domain skill для создания web-интерфейсов — задаёт bold aesthetic direction, избегает generic решений. Активируй когда: создаётся новый UI, страница, лендинг или компонент с нуля; пользователь спрашивает о дизайне, стиле, теме, цветовой схеме или типографике; начинается переработка существующего интерфейса; цель — сделать интерфейс лучше конкурентов или непревзойдённым по UX (product-quality goal). НЕ активируй при: баг-фикс в одном CSS-свойстве; backend-задача без UI; изменение одного класса в существующем дизайне."
 metadata:
-  version: 1.0.0
+  version: 1.1.0
   type: knowledge-skill
   auto_generated: false
-  methodology_version: v6.8.0
+  methodology_version: v7.19.6
   synced_at: "{{SYNCED_AT}}"
   source: https://github.com/cait-solutions/it-dev-methodology
-  banner: "Synced from methodology-platform v6.8.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
+  banner: "Synced from methodology-platform v7.19.6 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
 # web-design — Bold Aesthetic Direction для Web-интерфейсов
 

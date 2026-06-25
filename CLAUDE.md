@@ -141,6 +141,8 @@ Consumers: остаток держит агентская `/code` pathspec+commi
 
 **Architecture decision rule:** новая команда / шаблон / изменение `triggers.json` схемы → делегировать `architect` sub-agent. Сначала собственная рекомендация, потом architect. **NB:** architect вызывается **on-demand** через Claude Code auto-discovery (frontmatter `description`), не hard-wired обязательный pass — Claude Code делегирует когда уместно. `qa`/`security` суб-агенты доступны, но **только опционально** (например `/review` Шаг 3.5 при `[security]`/`[quality]` gap); фиксированный multi-agent конвейер отвергнут (VISION Граница 8). Rationale + примеры: [CLAUDE_LONG.md § Architecture decision rule](CLAUDE_LONG.md).
 
+**Opinion canonical practice:** для high-stakes планов (новый механизм / breaking change / `[critical]` Risk Tier) — `/opinion` перед `/code` = канонная практика. Это explicit opt-in (не hard-block): пользователь запускает явно. `/plan` Шаг -3 автоматически рекомендует `/opinion` при срабатывании high-stakes сигналов. Skip фиксируется в `skipped_warnings.opinion_skipped` → `/retro` показывает rate → data-driven hardening при необходимости.
+
 **Fix rule:**
 - Симптом или причина? Симптом → найди причину
 - Локальный или системный? Локальный без обоснования = красный флаг
@@ -282,6 +284,8 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 
 ## Artifact Storage Rule
 
+> ⚠️ **Термин-коллизия:** skill `/artifact-design` (Claude Code built-in) — это про HTML-страницы публикуемые на claude.ai через Artifact tool. Он **не относится** к методологическим артефактам (DEVLOG, ADR, ROADMAP, карты). Если нужно создать claude.ai-страницу — `/artifact-design`; если нужно понять где хранить doc-артефакт — это правило ниже.
+
 Единое правило **где живут артефакты**. Полная таксономия и владельцы — в **ARTIFACT-MAP** (data-lineage viewpoint); здесь — правило раскладки в одну таблицу. Когда создаёшь артефакт — определи класс и положи в его дом:
 
 | Класс артефакта | Дом |
@@ -290,17 +294,19 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 | Пришло **извне** (VCD, чужой анализ, дамп) | `inbox/` → `_processed/` |
 | Durable-**спека** о продукте (ADR, design-spec, architecture) | `docs/adr` · `docs/architecture` · `docs/services/<svc>/` |
 | **Research-вывод** (короткий verdict) | `DEVLOG.md` строка `[research:X]` |
-| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** |
+| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** — в **documentation-repo** (two-repo: не в code-repo) |
 | **Эфемерное** (черновик-превью, промежуточное) | scratchpad вне репо / gitignored `_tmp_*` (root-anchored) |
 
 **MUST:**
 - Продукт работы → `work/<stream>/`, где `<stream>` = направление работы. Один-направленный проект → `work/general/` или плоско в `work/`. **Структура папок = живой индекс** (`ls work/`); не вести ручной README-реестр.
+- **Two-repo (code-repo + documentation-repo):** `work/<stream>/` ВСЕГДА живёт в **documentation-repo**, НЕ в code-repo. Code-repo = скрипты и код; documentation-repo = DEVLOG, ROADMAP, work/. Типичная ошибка: агент принимает code-repo за «consumer-workspace» — это неверно.
 - Эфемерное никогда не оседает в корне репо — scratchpad или gitignored `_tmp_*`. (Этот репо дог-фудит: `_tmp_draft-maps.md` /plan-черновиков под root-anchored ignore + `validate-work-home.sh`.)
 - Границы: `inbox/` = вход (не мы); `docs/` = спека системы; `work/` = наш output. Research-вывод остаётся строкой в DEVLOG — **не дублировать** в `work/`.
 
 **MUST NOT:**
 - ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне) — это и есть хаос, который правило закрывает.
-- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в отдельный consumer-workspace (Ось 7).
+- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в **собственный documentation-repo** для этого направления. «Consumer-workspace» = documentation-repo, НЕ code-repo (Ось 7).
+- ❌ **Two-repo:** не класть `work/` в code-repo под предлогом что «pipeline там» — pipeline и work-артефакты живут в разных репо by design.
 
 **Forward-only (grandfather, closes [opinion:artifact-migration-scope] council 7/7):** правило применяется к **новым** артефактам. Существующие организованные папки (`docs/analysis/`, `docs/design/`, `contracts/`, `runbooks/` и т.п.) — **остаются на месте**, не мигрируются массово (часто это durable-спеки с входящими ссылками из ADR/living-артефактов — `git mv` порвёт их). Ретро-перенос в `work/` — только **реактивно** при подтверждённой боли «не могу найти» по конкретной папке. Детектор `validate-work-home.sh` сканирует **только корневой litter** (`-maxdepth 1`, scratch-паттерны), `docs/`-подпапки не трогает by-construction.
 

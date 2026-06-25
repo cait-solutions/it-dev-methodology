@@ -1,14 +1,14 @@
 ---
 name: design-spec
-description: Помогает создать или обновить Design Spec — спецификацию как работает конкретная фича/механизм сервиса. Активируй когда пользователь упоминает design spec, спецификацию фичи, нужно описать как работает X, написать design document, создать VCD, feature spec, нужен документ на механизм, опиши как должно работать, design doc, RFC. Создаёт docs/services/<service>/<FEATURE>_DESIGN.md по VCD-протоколу (Anti-Loss, Draft/Final режимы, аргументация + пример на каждый пункт). Отличие от ADR: ADR = почему именно так (решение, принятое навсегда); Design Spec = как именно работает (спецификация, может уточняться). Читает шаблон templates/DESIGN_SPEC.template.md.
+description: "Помогает создать или обновить Design Spec — спецификацию как работает конкретная фича/механизм сервиса. Активируй когда пользователь упоминает design spec, спецификацию фичи, нужно описать как работает X, написать design document, создать VCD, feature spec, нужен документ на механизм, опиши как должно работать, design doc, RFC. Создаёт docs/services/<service>/<FEATURE>_DESIGN.md по VCD-протоколу (Anti-Loss, Draft/Final режимы, аргументация + пример на каждый пункт). Отличие от ADR: ADR = почему именно так (решение, принятое навсегда); Design Spec = как именно работает (спецификация, может уточняться). Читает шаблон templates/DESIGN_SPEC.template.md. НЕ активируй для открытых целей и директив типа 'сделай X' или 'проанализируй Y' — для них используй /plan; design-spec нужен только когда механизм уже известен и нужно его задокументировать."
 metadata:
-  version: 1.1.0
+  version: 1.2.0
   type: workflow-skill
   auto_generated: false
-  methodology_version: v5.56.0
+  methodology_version: v7.19.6
   synced_at: "{{SYNCED_AT}}"
   source: https://github.com/cait-solutions/it-dev-methodology
-  banner: "Synced from methodology-platform v5.56.0 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
+  banner: "Synced from methodology-platform v7.19.6 — DO NOT EDIT skill logic directly. Modify via PR to methodology repo."
 ---
 
 # design-spec — Создание и обновление Design Spec
