@@ -362,8 +362,8 @@ sync_managed_block() {
     # FAIL-SAFE: файл есть, но markers нет → НЕ перезаписывать. Возможен
     # заполненный консьюмером fill — clobber потеряет его. Warn + skip.
     echo "  ⚠️  $dest_rel (managed-block — markers ОТСУТСТВУЮТ → preserved, NOT overwritten)"
-    echo "      → файл заполнен до managed-block эпохи. Запусти /sync-audit (Gap 18)"
-    echo "        чтобы безопасно добавить markers и получать обновления managed-секции."
+    echo "      → файл заполнен до managed-block эпохи. Добавь markers вручную (см. шаблон)"
+    echo "        или удали файл — следующий sync пересоздаст его с markers."
     return
   fi
 
@@ -977,8 +977,8 @@ if [[ -d "$METHODOLOGY_DIR/templates/.claude/hooks" ]] && compgen -G "$METHODOLO
     # Но если остался прямой хардкод python3/py/python — предупредить о platform-риске.
     if grep -qE '"command": "(python3|py|python) \.claude/hooks/' "$settings_json" 2>/dev/null; then
       echo "  ⚠️  INTERPRETER-HARDCODE: settings.json вызывает hooks напрямую (python3/py/python)."
-      echo "      → на платформе без этого интерпретатора hook упадёт молча. Запусти /sync-audit —"
-      echo "        миграция settings-interpreter переведёт на run-hook.sh резолвер. (closes G-081)"
+      echo "      → на платформе без этого интерпретатора hook упадёт молча. Миграция"
+      echo "        settings-interpreter применяется автоматически при sync (run-hook.sh резолвер). (closes G-081)"
     fi
     # Проверка доступности интерпретатора на текущей платформе:
     _hook_py=""
@@ -1018,7 +1018,7 @@ if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/script
       echo "  ✓ $name"
     done
     # Migration registry subdir (Flyway/Alembic-style) — consumers need these
-    # locally so /sync-audit can run versioned format-migrations on filled artifacts.
+    # locally so versioned format-migrations (_runner.sh) run during sync on filled artifacts.
     if [[ -d "$METHODOLOGY_DIR/templates/scripts/migrations" ]]; then
       mkdir -p "$TARGET_DIR/scripts/migrations"
       for mig in "$METHODOLOGY_DIR"/templates/scripts/migrations/*; do
@@ -1116,8 +1116,8 @@ if [[ "$IS_SELF_APPLY" == "true" ]]; then
   # Dogfood own hook-wiring (closes mechanism #3 «watchdog не запускался»):
   # self-apply раньше НЕ вызывал merge_settings_json (он жил только в consumer-ветке) →
   # own .claude/settings.json методологии оставался без SessionStart wiring →
-  # auto-update-watchdog.py НИКОГДА не запускался у самой методологии (sync/sync-audit/
-  # check_hook_health спали; last_auto_pull отсутствовал). Методология должна dog-food'ить
+  # auto-update-watchdog.py НИКОГДА не запускался у самой методологии (check_hook_health
+  # спал). Методология должна dog-food'ить
   # own delivery: применяем тот же merge к себе. НЕ merge_triggers_json — own triggers.json
   # это runtime state (gitignored), его merge при self-apply конфликтует с активными сессиями.
   echo "  [self-apply — dogfood hook-wiring]"

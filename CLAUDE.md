@@ -112,7 +112,7 @@ Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LON
 ## Workflow rules
 
 **Command-first invariant (первичная персона = AI engineer):** целевой пользователь методологии — **AI engineer**, который оркеструет AI через **команды и skills** (PRODUCT.md «Целевые пользователи»). Скрипты **не скрыты и доступны** — но это **внутренняя реализация**, не пользовательский путь. Правило:
-- ❌ НЕ рекомендовать пользователю «запусти `bash scripts/...`» как действие. Направлять на **команду** (`/sync-audit`, `/deploy`, `/secrets`, …). Скрипт упоминать только как «что команда делает внутри».
+- ❌ НЕ рекомендовать пользователю «запусти `bash scripts/...`» как действие. Направлять на **команду** (`/deploy`, `/secrets`, `/push-consumers`, …). Скрипт упоминать только как «что команда делает внутри».
 - ✅ **Архитектуру взаимодействия выстраивать через команды:** новая операция доступная консьюмеру ОБЯЗАНА иметь command/skill точку входа. Если операция требует ручного `bash scripts/X.sh` от пользователя → это gap, обернуть в команду. Скрипт = как, команда = интерфейс.
 - ✅ Исключение: **владелец методологии** (this repo) при разработке самой методологии запускает скрипты напрямую (сопровождение, не consumer-path). Внутри команд агент тоже вызывает скрипты — это реализация. Запрет узкий: не инструктировать **консьюмера** запускать скрипт вместо команды.
 
@@ -165,7 +165,7 @@ Consumers: остаток держит агентская `/code` pathspec+commi
 | cross-repo git-инструкция третьей стороне | `git ls-remote --heads origin` (фактические ветки, не generic flow) | G-014, [[G-018]], 2026-… |
 | «что делает команда / методология X» | актуальный текст `commands/<X>.md` (не по памяти) | L778-класс |
 | описание legacy/механизма в design-spec/доке | real code `file:line` (не по памяти модели) | G-105 |
-| sync/adoption «версия актуальна?» у консьюмера | `.claude/.version` consumer vs актуальный `VERSION` клона | sync-audit-version |
+| sync/adoption «версия актуальна?» у консьюмера | `.claude/.version` consumer vs актуальный `VERSION` клона (drift-таблица `/push-consumers`) | push-consumers-drift |
 
 ⛔ «Уверен на N%» про структуру/состояние **без чтения источника** = это hunch, не evidence → понизить до verify-first. Пользовательская инструкция «проверь не галлюцинируешь ли» — человек, компенсирующий именно этот класс; правило делает компенсацию структурной. Detection: `/retro` + `/architecture-audit` Шаг 6.3 мониторят recurrence_rate по `assumption-gap` — рост ≥0.4 = правило не держит, нужен L4. Закрывает класс G-039/G-085/G-100/G-105/G-106/G-109/G-116/G-117 (один корень, ≥8 раз cross-ref в AGENT-GAPS).
 
@@ -491,7 +491,7 @@ Phase-теги: `[phase-a]` … — milestone history.
 
 **Утечка GitHub PAT и других токенов (was High → Mitigated):** Структурно закрыто секцией [Secrets & Credentials](#secrets--credentials) — 4 слоя защиты (gitignore, pre-commit hook, /review detector, tool deny). См. ниже.
 
-**Прямой push в main (High → Mitigated v5.43.0):** Структурно закрыто тремя слоями: (1) `setup-branch-protection.sh` — required PR, enforce_admins, no force-push (GitHub layer); (2) `deploy-push.sh` GH006-классификация — при блоке направляет на PR-путь, а не ложный auth-flow; (3) `/sync-audit` Gap 13 — WARN если protection отключена. Emergency: `--off --yes` + re-apply. ADR-002 amendment 2026-06-11.
+**Прямой push в main (High → Mitigated v5.43.0):** Структурно закрыто двумя слоями: (1) `setup-branch-protection.sh` — required PR, enforce_admins, no force-push (GitHub layer); (2) `deploy-push.sh` GH006-классификация — при блоке направляет на PR-путь, а не ложный auth-flow. Emergency: `--off --yes` + re-apply. ADR-002 amendment 2026-06-11. *(Периодический WARN-детект отключённой protection — ранее `/sync-audit` Gap 13 — deferred при push-only консолидации; структурные слои 1-2 enforce независимо.)*
 
 **Drift между методологией и консьюмерами (Med):** Sync ручной. Будущая задача — auto version-drift check в `/plan` Шаг -3.
 

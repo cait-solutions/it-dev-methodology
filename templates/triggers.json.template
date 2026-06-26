@@ -41,18 +41,6 @@
     "date": null,
     "time": null
   },
-  "last_auto_pull": {
-    "at": null,
-    "version_before": null,
-    "version_after": null,
-    "status": null
-  },
-  "last_sync_audit": {
-    "date": null,
-    "methodology_version": null,
-    "gaps_found": 0,
-    "gaps_high_severity": 0
-  },
   "session_gap_counter": {
     "session_marker": null,
     "counts": {}

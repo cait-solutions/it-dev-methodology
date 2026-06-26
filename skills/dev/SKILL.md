@@ -83,7 +83,7 @@ metadata:
 |---|---|
 | Архитектура и компоненты | `/architecture-audit` |
 | Документация актуальна? | `/doc-audit` |
-| Методология у консьюмера актуальна? | `/sync-audit` |
+| Методология у консьюмеров актуальна? | `/push-consumers` (maintainer доставляет, push-only) · healthcheck: `scripts/sync-doctor.sh` |
 | Стратегия тестирования | `/plan-test` → `/test` |
 | PR перед мержем | `/review` |
 

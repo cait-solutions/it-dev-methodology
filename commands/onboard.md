@@ -31,7 +31,7 @@
 Прежде чем читать README — убедись в правильной настройке:
 - [ ] Открыт `<project>-documentation/` как workspace root в Claude Code (не родительская папка, не `it-dev-methodology`)?
 - [ ] Команды доступны? (в Claude Code должно работать `/plan`)
-- [ ] Если команд нет → запусти `/sync-audit` (если уже есть `.claude/`) ИЛИ `bash it-dev-methodology/scripts/sync-methodology.sh .` напрямую (bootstrap-исключение: до `.claude/` команды ещё недоступны). Скрипт обновляет методологию из origin/main перед синком.
+- [ ] Если команд нет → `bash it-dev-methodology/scripts/sync-methodology.sh .` напрямую (bootstrap-исключение: до `.claude/` команды ещё недоступны). Скрипт обновляет методологию из origin/main перед синком. После bootstrap обновления доставляет maintainer через `/push-consumers` (push-only).
 
 **USER-MAP check:**
 - [ ] Открыть `docs/product/USER-MAP.md`

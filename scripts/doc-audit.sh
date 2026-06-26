@@ -18,7 +18,7 @@
 #   artifact-map   — ARTIFACT-MAP консистентность с commands/
 #
 # НЕ делает: semantic drift диаграмм vs код (/architecture-audit), adoption drift
-# методология↔консьюмер (/sync-audit). Presence/freshness ≠ semantics (P-009).
+# методология↔консьюмер (push-consumers delivery). Presence/freshness ≠ semantics (P-009).
 #
 # Usage: bash scripts/doc-audit.sh [--doc-root DIR] [--fix]
 #   --doc-root DIR  корень documentation-репо (two-repo, напр. ../it-dev-methodology-documentation)

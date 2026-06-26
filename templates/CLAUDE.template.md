@@ -81,7 +81,7 @@ where `<methodology_path>` defaults to `../it-dev-methodology` (configurable in 
 
 При записи в /plan Шаг -4: classify семантически. «Причина в том что **я не подумал**» → AGENT-GAPS. «Причина в том что **продукт не умеет**» → PRODUCT-GAPS. При сомнении → AGENT-GAPS (можно reclassify в /retro). `agent-gaps-watchdog.py` hook продолжает писать только в AGENT-GAPS (детектирует agent's confessions, не feature requests). Existing AGENT-GAPS records могут быть мигрированы через `scripts/migrate-agent-to-product-gaps.sh` (interactive, manual trigger).
 
-**Methodology adoption audit rule:** `/sync-audit` checks which methodology features (накопленные при обновлениях) **not yet applied** to this project. 5 gap checks: PRODUCT.md ## Логика компонентов, CLAUDE.local.md ## Sync validators, ## Auto-update + hook, Mermaid hybrid language, Skills frontmatter spec. Output: severity report + obligatory user disposition (которые gaps взять в /plan). NOT auto-runs /plan — user chooses. Auto-trigger from `auto-update-watchdog.py` after successful sync if methodology version delta ≥ `audit_threshold` (default 3 minor versions). Fallback trigger from `/plan` Step -3. Cross-reference from `/architecture-audit` Step 0. Different from `/architecture-audit` (architecture drift) and `/retro` (tactical hygiene) — see /sync-audit purpose at top of command.
+**Methodology delivery rule (push-only):** обновления методологии доставляются **только** maintainer'ом через `/push-consumers` с репозитория методологии — проект **не обновляется сам** (нет consumer-side self-sync / adoption-команд). Healthcheck install'а (read-only, версия / hooks / secrets / deps): `bash scripts/sync-doctor.sh`. SessionStart hook `auto-update-watchdog.py` — **read-only детектор** version-drift + hook-health (не пишет, не синкает). Adoption gaps чинятся на стороне maintainer (`/push-consumers` Шаг 7 sweep), не консьюмером.
 
 **Sync validators framework rule:** `/review` reads [CLAUDE.local.md](CLAUDE.local.md) `## Sync validators` section — config-driven L3 framework for checking that doc artifacts are updated alongside code changes. Default validators (in template): PRODUCT-whole, PRODUCT-components, USER-MAP, SYSTEM-MAP, ARTIFACT-MAP, ADR-status. Each validator has `trigger_paths` (code globs) + `required_artifact` (doc path). If trigger paths match `git diff main..HEAD` but required artifact is not in diff → 🔵 **Recommendation** with explicit disposition (fix now / deferred / backlog / irrelevant + reason). Opt-in: section absent → validators skipped (no regression for projects without config). Adding a new sync validator = one YAML block in CLAUDE.local.md, no methodology code changes needed. PRODUCT components check (v4.19.0) refactored into this framework — единый механизм для всех артефактов Категории А.
 
@@ -99,17 +99,19 @@ For rationale and historical examples — [CLAUDE_LONG.md § Workflow rules](CLA
 | Пришло **извне** (VCD, чужой анализ, дамп) | `inbox/` → `_processed/` |
 | Durable-**спека** о продукте (ADR, design-spec, architecture) | `docs/adr` · `docs/architecture` · `docs/services/<svc>/` |
 | **Research-вывод** (короткий verdict) | `DEVLOG.md` строка `[research:X]` |
-| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** |
+| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** — в **documentation-repo** (two-repo: не в code-repo) |
 | **Эфемерное** (черновик-превью, промежуточное) | scratchpad вне репо / gitignored `_tmp_*` (root-anchored) |
 
 **MUST:**
 - Продукт работы → `work/<stream>/`, где `<stream>` = направление работы (`marketing`, `lead-gen`, …). Один-направленный проект → `work/general/` или плоско в `work/`. **Структура папок = живой индекс** (`ls work/`); не вести ручной README-реестр.
+- **Two-repo (code-repo + documentation-repo):** `work/<stream>/` ВСЕГДА живёт в **documentation-repo**, НЕ в code-repo. Code-repo = скрипты и код; documentation-repo = DEVLOG, ROADMAP, work/. Типичная ошибка: агент принимает code-repo за «consumer-workspace» — это неверно.
 - Эфемерное никогда не оседает в корне репо — scratchpad или gitignored `_tmp_*`.
 - Границы: `inbox/` = вход (не мы создавали); `docs/` = спека системы; `work/` = наш output. Research-вывод остаётся строкой в DEVLOG — **не дублировать** в `work/`.
 
 **MUST NOT:**
 - ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне) — это и есть хаос, который правило закрывает.
-- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в отдельный consumer-workspace.
+- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в **собственный documentation-repo** для этого направления. «Consumer-workspace» = documentation-repo, НЕ code-repo.
+- ❌ **Two-repo:** не класть `work/` в code-repo под предлогом что «pipeline там» — pipeline и work-артефакты живут в разных репо by design.
 
 **Forward-only (grandfather):** правило применяется к **новым** артефактам. Существующие организованные папки (`docs/analysis/`, `docs/design/`, `contracts/` и т.п.) — **остаются на месте**, не мигрируются массово (часто это durable-спеки с входящими ссылками — `git mv` их порвёт). Ретро-перенос в `work/` — только **реактивно** при подтверждённой боли «не могу найти» по конкретной папке. Детектор сканирует **только корневой litter**, `docs/`-подпапки не трогает.
 

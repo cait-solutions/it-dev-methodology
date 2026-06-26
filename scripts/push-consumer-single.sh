@@ -39,18 +39,46 @@ fi
 CONSUMER_NAME="$(basename "$CONSUMER_PATH")"
 
 # ---------------------------------------------------------------------------
-# 1. Pre-flight dirty check on .claude/ BEFORE sync (closes a17ecc1 class).
-#    WHY before sync: after sync all written files appear as M (modified) —
-#    a post-sync dirty check would always fire. This check detects parallel
-#    sessions that have uncommitted .claude/ work BEFORE we overwrite anything.
+# 1. Pre-flight dirty TRIAGE on .claude/ BEFORE sync (push-only consolidation).
+#    ROOT FIX: the previous blunt `exit 1` on ANY dirty .claude/ created a perpetual
+#    deadlock. A failed consumer self-sync (the now-removed auto-update-watchdog UPDATE
+#    mode) left derived churn — e.g. `D .claude/commands/<deprecated>.md` (verified erp,
+#    last_auto_pull=failed) — which this guard then blocked forever, with no auto-resolve.
+#
+#    New triage: derived churn (commands/hooks/skills/model-tiers/.version/settings.json)
+#    is SYNC-OWNED and re-resolvable → let it through (sync re-applies, commit captures,
+#    incl. deletions of deprecated commands). This makes deadlock structurally impossible:
+#    derived churn is always re-resolved on the next run. Block ONLY on real work we must
+#    never auto-touch: `.claude/state/` (per-developer counters — TRACKED in some consumers,
+#    verified erp) or any other non-derived .claude/ path (secrets-manifest, agents/, rules/,
+#    local edits) → warn+skip with specifics. No `git clean -f` / `git reset --hard`
+#    (blocked by bash_protect.py + would risk real work) — triage is read-only classification.
 # ---------------------------------------------------------------------------
-PRE_DIRTY=$(git -C "$CONSUMER_PATH" status --short -- .claude/ 2>/dev/null \
-            | grep -v "^$" | head -1)
-if [ -n "$PRE_DIRTY" ]; then
-  echo "  ⚠️  $CONSUMER_NAME: dirty .claude/ перед синком — пропуск (паралельна сесія?)" >&2
-  echo "      Грязний: $PRE_DIRTY" >&2
-  echo "      Вирішіть: /sync-audit Gap 17, потім повторіть /push-consumers" >&2
-  exit 1
+DIRTY_LINES=$(git -C "$CONSUMER_PATH" status --short -- .claude/ 2>/dev/null | grep -v "^$")
+if [ -n "$DIRTY_LINES" ]; then
+  BLOCKING=""
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    # `git status --short` line: "XY path" or "XY old -> new" (rename). Take final path.
+    p=$(echo "$line" | sed 's/^...//' | sed 's/.* -> //')
+    case "$p" in
+      .claude/commands/*|.claude/hooks/*|.claude/skills/*|.claude/model-tiers.md|.claude/task-types.md|.claude/.version|.claude/settings.json)
+        : ;;  # derived — sync-owned, re-resolvable, allow through
+      *)
+        BLOCKING="${BLOCKING}${line}
+" ;;  # real work / per-developer state (.claude/state/) / consumer body (.claude/agents/) — never auto-touch
+    esac
+  done <<EOF
+$DIRTY_LINES
+EOF
+  if [ -n "$BLOCKING" ]; then
+    echo "  ⚠️  $CONSUMER_NAME: dirty .claude/ містить НЕ-derived зміни — пропуск (реальна робота / параллельна сесія):" >&2
+    printf '%s' "$BLOCKING" | grep -v "^$" | sed 's/^/        /' >&2
+    echo "      Це не sync-churn (commands/hooks/skills) — методологія не чіпає це автоматично." >&2
+    echo "      Вирішіть вручну (commit / stash / discard), потім повторіть /push-consumers." >&2
+    exit 1
+  fi
+  echo "  ↺ $CONSUMER_NAME: derived .claude/ churn — sync переприменить + commit захопить, продовжую"
 fi
 
 # ---------------------------------------------------------------------------
@@ -100,11 +128,25 @@ fi
 #    scripts/*) silently never committed/pushed across the consumer fleet.
 # ---------------------------------------------------------------------------
 MSG="sync methodology ${NEW_VER:-?}"
+
+# Derived scope — sync-owned dirs/files. Comprehensive `git add -A` here captures
+# DELETIONS of deprecated commands left by a prior failed self-sync (root case: erp had
+# `D .claude/commands/product-vision.md` etc that the manifest --print-changed never lists,
+# so they'd stay dirty forever). `git add -A` on a gitignored path is a silent no-op; on
+# tracked/untracked derived paths it stages M/D/??. Narrow pathspec → a17ecc1-safe, never
+# .claude/state/, never project files.
+DERIVED_SCOPE=".claude/commands .claude/hooks .claude/skills .claude/model-tiers.md .claude/task-types.md .claude/.version .claude/settings.json"
+# shellcheck disable=SC2086
+git -C "$CONSUMER_PATH" add -A -- $DERIVED_SCOPE 2>/dev/null || true
+# Stage the rest of the manifest (CLAUDE.md, scripts/, docs/adr — tracked non-.claude).
 # shellcheck disable=SC2086
 git -C "$CONSUMER_PATH" add -- $CHANGED_PATHS 2>/dev/null || true
 
+# COMMIT scope = actually-staged subset of {derived scope} ∪ {manifest paths}. Explicit
+# pathspec keeps a17ecc1 parallel-safety (never another session's staged work); `git diff
+# --cached` (not `git commit <pathspec>`) never aborts on gitignored/untracked entries.
 # shellcheck disable=SC2086
-COMMIT_PATHS=$(git -C "$CONSUMER_PATH" diff --cached --name-only -- $CHANGED_PATHS 2>/dev/null | grep -v "^$")
+COMMIT_PATHS=$(git -C "$CONSUMER_PATH" diff --cached --name-only -- $DERIVED_SCOPE $CHANGED_PATHS 2>/dev/null | grep -v "^$")
 if [ -z "$COMMIT_PATHS" ]; then
   echo "  ℹ️  $CONSUMER_NAME: немає trackable змін для коміту (manifest = derived/gitignored або вже актуально)"
   exit 0
@@ -116,6 +158,11 @@ if ! git -C "$CONSUMER_PATH" commit $COMMIT_PATHS -m "$MSG" 2>"$COMMIT_ERR"; the
   echo "  ❌ $CONSUMER_NAME: commit failed:" >&2
   cat "$COMMIT_ERR" 2>/dev/null | head -3 | sed 's/^/      /' >&2
   rm -f "$COMMIT_ERR" 2>/dev/null || true
+  # BELT: unstage our paths so a failed commit leaves no staged index for the next session.
+  # Derived churn that remains is harmless — the smart pre-flight above re-resolves it on the
+  # next run (no permanent deadlock). No destructive checkout/clean (would risk real work).
+  # shellcheck disable=SC2086
+  git -C "$CONSUMER_PATH" reset -q -- $COMMIT_PATHS 2>/dev/null || true
   exit 1
 fi
 rm -f "$COMMIT_ERR" 2>/dev/null || true

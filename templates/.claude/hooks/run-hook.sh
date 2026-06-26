@@ -6,7 +6,7 @@
 # ("python3 .claude/hooks/X.py" или "py ..."). На Windows доступен только `py`
 # (Python Launcher), на Linux/Mac — `python3`. Хардкод → hook падает молча на
 # "чужой" платформе → SessionStart/PreToolUse/PostToolUse не срабатывают,
-# auto-update + sync-audit + security-хуки мертвы без предупреждения. (closes G-081)
+# auto-update + security-хуки мертвы без предупреждения. (closes G-081)
 #
 # FIX: единый резолвер (один источник, не 7 inline-копий в JSON).
 # settings.json вызывает: sh .claude/hooks/run-hook.sh <hook-file.py> [args...]
