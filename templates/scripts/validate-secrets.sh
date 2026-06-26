@@ -79,10 +79,10 @@ PLACEHOLDER_RE='^(changeme|your[-_]?token|paste[-_]?here|TODO|xxx+|placeholder|<
 _parse_manifest() {
   awk '
     /^[[:space:]]*-[[:space:]]*key:[[:space:]]*/ {
-      if (cur_key) print cur_key "\037" cur_req "\037" cur_sn "\037" cur_url "\037" cur_rot "\037" cur_exp "\037" cur_ver "\037" cur_typ
+      if (cur_key) print cur_key "\037" cur_req "\037" cur_sn "\037" cur_url "\037" cur_rot "\037" cur_exp "\037" cur_ver "\037" cur_typ "\037" cur_scope
       cur_key=$0; sub(/^[[:space:]]*-[[:space:]]*key:[[:space:]]*/, "", cur_key)
       gsub(/[[:space:]"'"'"']/, "", cur_key)
-      cur_req="false"; cur_sn=""; cur_url=""; cur_rot=""; cur_exp=""; cur_ver=""; cur_typ="value"
+      cur_req="false"; cur_sn=""; cur_url=""; cur_rot=""; cur_exp=""; cur_ver=""; cur_typ="value"; cur_scope=""
       next
     }
     cur_key && /^[[:space:]]*required:[[:space:]]*true/ { cur_req="true" }
@@ -110,7 +110,11 @@ _parse_manifest() {
       cur_typ=$0; sub(/^[[:space:]]*type:[[:space:]]*/, "", cur_typ)
       gsub(/[[:space:]"'"'"']/, "", cur_typ)
     }
-    END { if (cur_key) print cur_key "\037" cur_req "\037" cur_sn "\037" cur_url "\037" cur_rot "\037" cur_exp "\037" cur_ver "\037" cur_typ }
+    cur_key && /^[[:space:]]*scope:[[:space:]]*/ {
+      cur_scope=$0; sub(/^[[:space:]]*scope:[[:space:]]*/, "", cur_scope)
+      gsub(/[[:space:]"'"'"']/, "", cur_scope)
+    }
+    END { if (cur_key) print cur_key "\037" cur_req "\037" cur_sn "\037" cur_url "\037" cur_rot "\037" cur_exp "\037" cur_ver "\037" cur_typ "\037" cur_scope }
   ' "$MANIFEST"
 }
 
@@ -170,7 +174,7 @@ total_required=0
 declared_keys=""
 warns=0
 
-while IFS=$'\037' read -r key req sn url rot exp ver typ; do
+while IFS=$'\037' read -r key req sn url rot exp ver typ scope; do
   [[ -z "$key" ]] && continue
   declared_keys="$declared_keys $key"
   loc=$(_locate "$key")
@@ -180,6 +184,12 @@ while IFS=$'\037' read -r key req sn url rot exp ver typ; do
       printf "  ✅ %-25s (%s)" "$key" "${loc#found:}"
       [[ -n "$sn" ]] && printf "  →  %s" "$sn"
       echo ""
+      # Wrong-scope detection: declared shared but found in per-project .env.
+      if [[ "${scope:-}" == "shared" && "$loc" == "found:.env" ]]; then
+        printf "       ⚠️  scope:shared declared but found in per-project .env\n"
+        printf "              Migrate: bash scripts/set-secret.sh %s  (will offer shared storage)\n" "$key"
+        warns=$((warns+1))
+      fi
       if [[ "${typ:-value}" == "file" && "$loc" == "found:.env" ]]; then
         _file_val=$(grep -E "^${key}=" ".env" 2>/dev/null | head -1 | sed -E "s/^${key}=//; s/^\"(.*)\"$/\1/")
         if [[ -z "$_file_val" ]]; then

@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.20.2 — fix: secrets scope-routing (set-secret.sh prompt-with-confirmation + validate-secrets.sh wrong-scope detection) (2026-06-26)
+
+**Приоритет:** 🟢 OPTIONAL (улучшение UX при `scope: shared` в manifest; нет breaking changes)
+
+**Consumer-facing changes:**
+- **`scripts/set-secret.sh`** — scope-routing: при наличии `scope: shared` в manifest и вызове без `--shared` флага → интерактивный prompt `"write to ~/.config/it-dev/secrets.env? [Y/n]"`. Дефолт Y. Non-TTY (CI/CD) — prompt пропускается, поведение без изменений.
+- **`scripts/set-secret.sh`** — sensitivity:high block смягчён: теперь WARN (не exit 4) когда manifest явно объявляет `scope: shared` (intentional sharing). Accidental `--shared` на high-sensitivity ключах без манифестной декларации — по-прежнему exit 4.
+- **`scripts/validate-secrets.sh`** — новое поле `scope` (9-е в `_parse_manifest`). Wrong-scope detection: если manifest `scope: shared`, но ключ найден в per-project `.env` → `⚠️ scope:shared declared but found in per-project .env` + инструкция как мигрировать.
+
+**Зависимость:** нет. Backward-compatible: старые манифесты без `scope` поля → graceful fallback "per-project".
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
+---
+
 ## v7.20.0 — feat: push-only consolidation (remove /sync-audit + consumer self-sync rudiments) (2026-06-26)
 
 **Приоритет:** 🟡 RECOMMENDED (поведение SessionStart hook меняется; dirty-deadlock fix)

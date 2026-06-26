@@ -108,6 +108,31 @@ if ! [[ "$KEY" =~ ^[A-Z][A-Z0-9_]*$ ]]; then
   exit 2
 fi
 
+# Read manifest scope for this KEY (before target-file determination).
+# Used for scope-routing (prompt) and sensitivity-check softening below.
+MANIFEST_SCOPE="per-project"
+if [[ -f "$MANIFEST" ]]; then
+  _ms=$(awk -v k="$KEY" '
+    $0 ~ "^[[:space:]]*-[[:space:]]*key:[[:space:]]*"k"[[:space:]]*$" { found=1; next }
+    found && /^[[:space:]]*-[[:space:]]*key:/ { exit }
+    found && /^[[:space:]]*scope:[[:space:]]*/ {
+      sub(/^[[:space:]]*scope:[[:space:]]*/, "")
+      gsub(/[[:space:]"'"'"']/, "")
+      print; exit
+    }' "$MANIFEST")
+  [[ -n "$_ms" ]] && MANIFEST_SCOPE="$_ms"
+fi
+
+# Scope-routing: manifest declares shared but --shared not passed → prompt (TTY only).
+# Non-TTY (CI/CD): skip prompt, keep SCOPE=project; caller must pass --shared explicitly.
+if [[ "$MANIFEST_SCOPE" == "shared" && "$SCOPE" == "project" && -t 0 ]]; then
+  printf 'ℹ️  Manifest declares scope:shared for %s → write to %s? [Y/n] ' "$KEY" "$SHARED_ENV"
+  read -r _scope_confirm
+  if [[ -z "$_scope_confirm" || "$_scope_confirm" =~ ^[Yy] ]]; then
+    SCOPE="shared"
+  fi
+fi
+
 # Determine target file.
 if [[ "$SCOPE" == "shared" ]]; then
   TARGET="$SHARED_ENV"
@@ -265,10 +290,14 @@ if [[ "$SCOPE" == "shared" && -f "$MANIFEST" ]]; then
       gsub(/[[:space:]"'"'"']/, "")
       print; exit
     }' "$MANIFEST")
-  if [[ "$sens" == "high" ]]; then
+  if [[ "$sens" == "high" && "$MANIFEST_SCOPE" != "shared" ]]; then
+    # Block accidental --shared for high-sensitivity keys not declared shared in manifest.
     echo "BLOCKED: $KEY marked sensitivity:high → cannot store in --shared scope." >&2
     echo "Use per-project: bash scripts/set-secret.sh $KEY" >&2
     exit 4
+  elif [[ "$sens" == "high" && "$MANIFEST_SCOPE" == "shared" ]]; then
+    # Manifest explicitly declares scope:shared → allow, but warn.
+    echo "⚠️  sensitivity:high token written to shared location (manifest declares scope:shared)." >&2
   fi
 fi
 
