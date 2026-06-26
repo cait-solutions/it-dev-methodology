@@ -27,6 +27,13 @@
     "product_vision_skipped": 0,
     "opinion_skipped": 0
   },
+  "decision_review": {
+    "opinion_skipped_single": 0,
+    "opinion_skipped_compound": 0,
+    "opinion_ran_caught": 0,
+    "opinion_ran_clean": 0,
+    "review_caught_after_skip": 0
+  },
   "last_plan_session": {
     "completed_at": null,
     "task_id": null,
