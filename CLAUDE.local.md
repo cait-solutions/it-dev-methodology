@@ -68,8 +68,8 @@ auto_commit_consumers:
     branch: ai-dev
     gh_account: cait-solutions
   - path: ../org-company-documentation
-    # fresh repo (inited 2026-06-21), solo на main; gh_account=cait-solutions
-    branch: main
+    # agent_branch=ai-dev (switched 2026-06-26); gh_account=cait-solutions
+    branch: ai-dev
     gh_account: cait-solutions
   - path: ../ai-assistant-documentation
     # agent_branch=ai-dev; gh_account=IDK-IDK (repo owner, switch before push)
