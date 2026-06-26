@@ -14,7 +14,6 @@
 |---|---|---|
 | `/doc-audit` | **mechanical freshness** — содержимое актуально? ссылки живы? копии синхронны? | script-driven, детерминированный, on-demand |
 | `/architecture-audit` | **semantic drift** — SYSTEM-MAP соответствует реальному коду? | LLM-driven, cadence ≥5 планов |
-| `/sync-audit` | **adoption drift** — проект догнал версию методологии? | checklist, по version-delta |
 
 Cadence-аудиты /doc-audit **не заменяет** — semantic ≠ mechanical. Семантику стрелок/связей grep не проверит (P-009).
 
@@ -170,7 +169,7 @@ Severity: обязателен → WARN · рекомендован → INFO · 
 ## Граница (что /doc-audit НЕ делает)
 
 - ❌ Не проверяет semantic drift диаграмм vs код — это `/architecture-audit` (presence ≠ semantics, P-009).
-- ❌ Не проверяет adoption методологии — это `/sync-audit`.
+- ❌ Не проверяет adoption методологии — это push-only delivery (`/push-consumers` + `scripts/sync-doctor.sh` healthcheck).
 - ❌ Не меняет файлы сам (read-only прогон); fixes — отдельными шагами с подтверждением.
 - ❌ Не заменяет deploy-gate — gate остаётся последним рубежом перед push.
 - ❌ Не заполняет созданные артефакты контентом — только указывает команды; каждая команда ведёт свой intake.

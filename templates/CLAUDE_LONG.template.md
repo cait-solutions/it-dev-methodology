@@ -359,7 +359,7 @@
 
 | Hook | Event | Цель |
 |---|---|---|
-| `auto-update-watchdog.py` | SessionStart | Авто-pull методологии (interval-based, default 2h) + bootstrap detection + /sync-audit recommendation при version delta ≥ threshold |
+| `auto-update-watchdog.py` | SessionStart | **Read-only детектор** (push-only): bootstrap detection + hook-health drift + version-drift notify. НЕ синкает, НЕ пишет — доставка через `/push-consumers` |
 | `agent-gaps-watchdog.py` | Stop | Детектирует agent's admission ("я пропустил", "ты прав") → предлагает AGENT-GAPS entry. Только AGENT-GAPS, не PRODUCT-GAPS. |
 | `docs_reminder.py` | UserPromptSubmit | Reminder фетчить doc URLs перед editing library кода |
 | `protect.py` | PreToolUse (Edit/Write) | Защита sensitive files от случайной правки (.env, secrets, deploy scripts) |
@@ -384,7 +384,7 @@
 | Artifact | Цель |
 |---|---|
 | `.claude/.version` | Marker «методология инициализирована» + tracking текущей semver |
-| `.claude/state/triggers.json` | State tracking: счётчики plans_since per command, timestamps last_*, skipped_warnings, last_auto_pull, last_sync_audit |
+| `.claude/state/triggers.json` | State tracking: счётчики plans_since per command, timestamps last_*, skipped_warnings, session_gap_counter |
 | `.claude/.auto-update.lock` | Race condition защита для параллельных auto-pull (PID + timeout 60s) |
 | `CLAUDE.local.md` | Project-specific config (Branching, Remotes, Auto-update, Sync validators, Artifact budgets) |
 | `AGENT-GAPS.md` | Agent's reasoning failures log (G-NNN entries) — methodology signal |

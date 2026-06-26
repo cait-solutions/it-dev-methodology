@@ -167,17 +167,19 @@ Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов —
 | Пришло **извне** (VCD, чужой анализ, дамп) | `inbox/` → `_processed/` |
 | Durable-**спека** о продукте (ADR, design-spec, architecture) | `docs/adr` · `docs/architecture` · `docs/services/<svc>/` |
 | **Research-вывод** (короткий verdict) | `DEVLOG.md` строка `[research:X]` |
-| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** |
+| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** — в **documentation-repo** (two-repo: не в code-repo) |
 | **Эфемерное** (черновик-превью, промежуточное) | scratchpad вне репо / gitignored `_tmp_*` (root-anchored) |
 
 **MUST:**
 - Продукт работы → `work/<stream>/`, где `<stream>` = направление работы. Один-направленный проект → `work/general/` или плоско в `work/`. **Структура папок = живой индекс** (`ls work/`); не вести ручной README-реестр.
+- **Two-repo (code-repo + documentation-repo):** `work/<stream>/` ВСЕГДА живёт в **documentation-repo**, НЕ в code-repo. Code-repo = скрипты и код; documentation-repo = DEVLOG, ROADMAP, work/. Типичная ошибка: агент принимает code-repo за «consumer-workspace» — это неверно.
 - Эфемерное никогда не оседает в корне репо — scratchpad или gitignored `_tmp_*`. (Этот репо дог-фудит: `_tmp_draft-maps.md` /plan-черновиков идут под root-anchored ignore + `validate-work-home.sh`.)
 - Границы: `inbox/` = вход; `docs/` = спека системы; `work/` = наш output. Research-вывод остаётся строкой в DEVLOG — **не дублировать** в `work/`.
 
 **MUST NOT:**
 - ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне).
-- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в отдельный consumer-workspace (Ось 7).
+- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в **собственный documentation-repo** для этого направления. «Consumer-workspace» = documentation-repo, НЕ code-repo (Ось 7).
+- ❌ **Two-repo:** не класть `work/` в code-repo под предлогом что «pipeline там» — pipeline и work-артефакты живут в разных репо by design.
 
 Enforcement: `validate-work-home.sh` (warn в `deploy-push.sh` methodology-gate — рецидив виден с дня 1; эскалация warn→error по evidence, Ось 1). Полный rationale, границы и migration — в `work/README.md`.
 
@@ -349,7 +351,7 @@ Phase-теги: `[phase-a]` … — milestone history.
 
 **Drift между методологией и консьюмерами (Med):** Sync ручной. Будущая задача — auto version-drift check в `/plan` Шаг -3.
 
-**Sync overwrites local fills (Low → Mitigated v6.4.1):** managed-block контракт — методология пишет только между markers, per-project fill (`docs_reminder.py` LIBS) сохраняется by-construction. Fail-safe: файл без markers НЕ перезаписывается. Детали: `/sync-audit` Gap 18.
+**Sync overwrites local fills (Low → Mitigated v6.4.1):** managed-block контракт — методология пишет только между markers, per-project fill (`docs_reminder.py` LIBS) сохраняется by-construction. Fail-safe: файл без markers НЕ перезаписывается (sync выводит предупреждение — добавь markers вручную или удали файл чтобы следующий sync пересоздал).
 
 Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md).
 
@@ -485,17 +487,14 @@ Manual через `bash scripts/set-secret.sh KEY <new-value>` атомарно 
 
 ## Migration guide
 
-При обновлении методологии (после `sync-methodology.sh`) — запусти `/sync-audit`. Команда автоматически:
-1. Определяет delta между твоей версией и текущей
-2. Показывает ordered action plan (Critical → Recommended → Optional)
-3. Проверяет 5 gap-классов в твоём проекте
+Обновления доставляются **push-only**: maintainer методологии запускает `/push-consumers`
+с репозитория методологии — проект не обновляется сам. После доставки проверь install:
+
+```bash
+bash scripts/sync-doctor.sh    # read-only healthcheck: версия / hooks / secrets / deps
+```
 
 Полный changelog с actions: [CHANGELOG.md](CHANGELOG.md) в methodology repo.
-
-**Быстрый старт после sync:**
-```bash
-/sync-audit    # посмотреть что нужно сделать
-```
 
 ---
 

@@ -137,11 +137,9 @@ HEAD_SHA=$(git -C <consumer-path> rev-parse HEAD 2>/dev/null)   # состоян
 
 ---
 
-## Шаг 1.5 — Guard: dirty .claude/ pre-check
+## Шаг 1.5 — Guard: dirty .claude/ pre-check (info-only)
 
-**Цель:** предупредить перед батч-синком если в whitelisted consumer repo есть грязные `.claude/` файлы. Работает для обоих режимов (`COMMIT_PUSH=true` и `--sync-only`).
-
-> **Почему:** sync перезапишет dirty файлы даже при `--sync-only`. Пользователь должен явно подтвердить что это его намерение.
+**Цель:** дать обзор dirty `.claude/` перед батч-синком. ⚠️ Это **информационный** pre-check — реальную триаж-логику исполняет `push-consumer-single.sh` (Шаг 5 Режим B): **derived churn** (commands/hooks/skills/model-tiers/task-types/.version/settings.json) авто-разрешается (sync переприменит, commit захватит, включая удаления deprecated-команд); блокируется **только** non-derived работа (`.claude/state/` per-developer счётчики, `.claude/agents/` consumer-body, secrets-manifest, локальные правки) → repo пропускается с конкретным сообщением. Deadlock структурно невозможен: derived churn всегда re-resolvable.
 
 **Для каждого whitelisted repo** (из `auto_commit_consumers`):
 ```bash
@@ -149,19 +147,18 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null | head -1
 ```
 - exit ≠ 0 → skip с предупреждением `⚠️ git недоступен для <repo>`, продолжить
 
-**Если dirty обнаружены:**
+**Если dirty обнаружены:** показать обзор (info, не блок):
 ```
-⚠️ Dirty .claude/ обнаружены перед синком:
-   • ai-assistant-documentation: .version, commands/code.md, ...
-   • social-promo-documentation: settings.json, ...
+ℹ️ Dirty .claude/ перед синком (триаж в push-consumer-single.sh):
+   • ai-assistant-documentation: commands/code.md (derived → авто-разрешится)
+   • some-repo: .claude/state/triggers.json (non-derived → repo будет пропущен)
 
-Синк перезапишет эти файлы (даже при --sync-only).
-Рекомендация: запусти /sync-audit (Gap 17) чтобы разрешить dirty ПЕРЕД синком.
-
-Продолжить несмотря на dirty? (y = продолжить / n = выйти)
+Derived churn авто-разрешается синком. Non-derived (state/agents/secrets/локальные правки)
+→ repo пропускается, разреши вручную (commit / stash / discard) и повтори.
+Продолжить? (y = продолжить / n = выйти)
 ```
-- **y** → продолжить Шаг 2 (решение пользователя, его ответственность)
-- **n** → `Запусти /sync-audit (Gap 17) для разрешения dirty, затем повтори /push-consumers.` → выход
+- **y** → продолжить Шаг 2 (per-repo триаж выполнит скрипт)
+- **n** → выход
 
 **Если все clean:**
 → продолжить к Шагу 2 (без сообщения)
@@ -230,10 +227,10 @@ git -C <consumer-path> status --short -- .claude/ 2>/dev/null | head -1
 git -C <consumer-path> status --short -- .claude/ 2>/dev/null
 ```
 
-- Вывод непустой → пометить `[skip: dirty]` + причина. **НЕ синкать** — dirty `.claude/` = in-progress работа параллельной сессии. Запусти `/sync-audit` Gap 17 для разрешения (stash / ignore / ignore-always), затем повтори `/push-consumers`.
+- Вывод непустой → **не помечать слепо `[skip: dirty]`** — финальный триаж в `push-consumer-single.sh` (Шаг 5): derived churn авто-разрешается, только non-derived (`.claude/state/`, `.claude/agents/`, secrets, локальные правки) → repo пропускается с конкретным сообщением, разрешается вручную (commit / stash / discard).
 - Вывод пустой → добавить в список «будет обновлено».
 
-**`[not-initialized]` — inline init (Gap 14 pattern, closes P-010):**
+**`[not-initialized]` — inline init (closes P-010):**
 
 Репо без `.claude/` не может быть sync'нуто напрямую. Предложить per-repo выбор сразу в drift-таблице до батч-подтверждения Шага 4:
 
@@ -303,7 +300,7 @@ exclude_paths:
   - <absolute-path-to-consumer>
 ```
 
-Затем пропустить в текущем и всех будущих прогонах (тот же механизм что `/sync-audit` Gap 14 never-flow).
+Затем пропустить в текущем и всех будущих прогонах (never-flow: добавление в `exclude_paths`).
 
 **`[inited, not-whitelisted]` — onboarding в whitelist (closes «update ALL = только те, кого вспомнили внести»):**
 
@@ -315,7 +312,7 @@ exclude_paths:
 
    add   — добавить в whitelist (предложу branch + gh_account), затем включить в commit+push батч
    sync  — только sync в этом прогоне (останется не-whitelisted)
-   never — exclude_paths (как Gap 14 never-flow)
+   never — exclude_paths (исключить из всех будущих прогонов)
 
 Выбор для <repo>: (add / sync / never)
 ```
@@ -334,7 +331,7 @@ exclude_paths:
 **При `sync`:** оставить как `[not-whitelisted]` — только sync в этом прогоне (Шаг 5 Режим A).
 **При `never`:** добавить в `exclude_paths` (тот же flow что выше).
 
-> **NB:** этот же drift («inited + не в whitelist») стоит сюрфейсить и в `/sync-audit` отдельным Gap — тогда онбординг доступен и вне `/push-consumers`. Кандидат на отдельный план (не блок этого).
+> **NB:** drift («inited + не в whitelist») сюрфейсится здесь, в `/push-consumers` — единственной точке доставки (push-only). Отдельной adoption-команды у консьюмера нет by-design.
 
 ---
 
@@ -415,7 +412,7 @@ bash scripts/push-consumer-single.sh "<consumer-abs-path>" "<branch-from-whiteli
 **Условие:** выполняется только для whitelisted репо где Шаг 5 Режим B прошёл. Цель — снять
 stale-копии maintainer-only скриптов (`clone-consumer.sh`, `sync-doctor.sh`), снятых из
 `templates/scripts/` в v7.6.0. Sync **не удаляет** removed-upstream скрипты → нужна явная чистка.
-Распространяется и pull-путём (миграция применяется на consumer `/sync-audit`); этот шаг — push-сторона.
+Миграция применяется автоматически при sync (`_runner.sh` в `sync-methodology.sh`); этот шаг — явная чистка removed-upstream скриптов на push-стороне.
 
 **Per-whitelisted-consumer (parallel-safe, идемпотентно):**
 
@@ -450,7 +447,7 @@ fi
 - ✅ Dirty-check по этим 2 путям (`diff --cached -- <2 пути>`), не по всему дереву.
 
 **Граница read-only:** только whitelisted `*-documentation` репы (CLAUDE.local.md `auto_commit_consumers`).
-Код-репы консьюмеров **не трогаются** — они самочистятся миграцией на своём `/sync-audit`. Финальный
+Код-репы консьюмеров **не трогаются** — они самочистятся миграцией при следующем sync. Финальный
 push — после твоего подтверждения (Шаг 4 батч-confirm покрывает).
 
 ---

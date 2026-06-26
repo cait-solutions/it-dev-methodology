@@ -2,7 +2,7 @@
 #
 # sync-doctor.sh — READ-ONLY health snapshot of methodology install.
 # MAINTAINER-INTERNAL (scripts/-only): НЕ доставляется консьюмерам — вызывается
-# только maintainer-командами /push-consumers + /sync-audit (commands-local/, не синкаются).
+# только maintainer-командой /push-consumers (commands-local/, не синкается).
 # Снят из templates/scripts/ как orphan-в-delivery (consumer-delivery-hygiene v7.x.0):
 # ни одна consumer-facing команда его не зовёт. parity intersection-only → scripts/-only legit.
 #
@@ -14,7 +14,7 @@
 #   dev-checks — gated: info-only if dev profile detected
 #
 # READ-ONLY: ничего не пишет (ни файлы, ни state, ни triggers.json).
-# При FAIL — направляет на полный /sync-audit (который чинит).
+# При FAIL — maintainer доставляет фиксы через /push-consumers.
 #
 # Usage:
 #   bash scripts/sync-doctor.sh [--json] [--online] [--methodology-path DIR]
@@ -23,7 +23,7 @@
 #   --online            also check clone-vs-remote via git ls-remote
 #   --methodology-path  path to methodology clone (default: CLAUDE.local.md methodology_path)
 #
-# Not for direct user invocation — use /sync-audit --doctor command instead.
+# Not for direct user invocation — invoked by /push-consumers Шаг 7 (post-sync adoption sweep).
 
 set -u
 
@@ -312,13 +312,13 @@ echo ""
 
 if [ "$FAILS" -gt 0 ]; then
   echo "=== HEALTH: FAIL ($FAILS issue(s)) ==="
-  echo "→ для починки: запусти полный /sync-audit (применяет фиксы и обновляет state)"
+  echo "→ для починки: maintainer доставляет обновления через /push-consumers (push-only delivery)"
   echo "→ для clone-vs-remote оси: bash scripts/sync-doctor.sh --online"
   exit 1
 else
   echo "=== HEALTH: PASS — install выглядит здоровым ==="
   if [ "$VER_UPSTREAM" = "not checked (offline)" ]; then
-    echo "ℹ  upstream не проверен (offline snapshot) — для полной проверки: /sync-audit или --online"
+    echo "ℹ  upstream не проверен (offline snapshot) — для полной проверки: --online"
   fi
   exit 0
 fi

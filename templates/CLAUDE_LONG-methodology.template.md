@@ -164,7 +164,7 @@
 **Фикс — MANAGED-BLOCK (4-й режим taxonomy в `sync-methodology.sh`):**
 Методология пишет только между markers `# >>> methodology managed >>>` … `# <<< methodology managed <<<`. Fill-зона (`LIBS = {}`) находится ВНЕ markers и физически не трогается на sync.
 
-**Fail-safe:** если dest существует без markers (pre-managed-block fill) → sync НЕ перезаписывает файл, выводит предупреждение и направляет в `/sync-audit` Gap 18. Gap 18 показывает текущий fill и предлагает безопасно добавить markers (аналог Gap 14 write-only паттерна).
+**Fail-safe:** если dest существует без markers (pre-managed-block fill) → sync НЕ перезаписывает файл, выводит предупреждение. Резолюция: добавь markers вручную (см. шаблон) или удали файл — следующий sync пересоздаст его с markers.
 
 **Marker-синтаксис (Python):**
 ```

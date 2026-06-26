@@ -87,7 +87,7 @@ Defaults если секция отсутствует: `consumers_root=..`, `mar
    - Пропустить если не существует или не директория
    - Пропустить если `resolved_path == methodology_repo_path` (self)
    - Пропустить если нет `.git/` (не git repo)
-   - **Пропустить если `resolved_path` присутствует в `exclude_paths`** (CLAUDE.local.md ## Consumers) — без вывода в inventory (владелец сознательно исключил через `/sync-audit` Gap 14 → `never`)
+   - **Пропустить если `resolved_path` присутствует в `exclude_paths`** (CLAUDE.local.md ## Consumers) — без вывода в inventory (владелец сознательно исключил через `/push-consumers` Шаг 3 → `never`)
    - Определить тип: `[marker]` если есть `<path>/<marker_file>`, иначе `[no-marker]`
    - Добавить в список consumers с флагом типа
 
@@ -133,7 +133,7 @@ Discovered consumers:
 
 Для каждого discovered консьюмера ДО pull:
 
-- [ ] **Dirty .claude/ check:** `git -C <path> status --short -- .claude/ 2>/dev/null` непусто? → SKIP только этот репо `[skip: dirty .claude/]` + сообщение; **продолжить следующий** (не блокировать весь батч). Dirty вне `.claude/` (DEVLOG.md, ROADMAP.md и т.п.) — не повод для skip; `git merge --ff-only` сам разберётся если нет конфликтов. Для разрешения dirty: запусти `/sync-audit` Gap 17 (stash / ignore / ignore-always), затем повтори `/pull-consumers`.
+- [ ] **Dirty .claude/ check:** `git -C <path> status --short -- .claude/ 2>/dev/null` непусто? → SKIP только этот репо `[skip: dirty .claude/]` + сообщение; **продолжить следующий** (не блокировать весь батч). Dirty вне `.claude/` (DEVLOG.md, ROADMAP.md и т.п.) — не повод для skip; `git merge --ff-only` сам разберётся если нет конфликтов. Для разрешения dirty: commit / stash / discard вручную, затем повтори `/pull-consumers`.
 - [ ] `git -C <path> remote get-url origin` существует? Если нет → SKIP «no origin remote»
 - [ ] Запомнить `prev_sha = git -C <path> rev-parse HEAD`
 - [ ] **GitHub multi-account check** — выполнить **один раз перед циклом**, не per-consumer:
@@ -431,7 +431,7 @@ Pulled: 6 ok, 1 skipped (fetch failed), 1 skipped (uncommitted changes)
 New gap entries [marker repos]: 2 AGENT-GAPS, 0 PRODUCT-GAPS, 1 IDEAS
 Recommendations:
   • 2+ new AGENT-GAPS → consider /retro --consumers
-  • 4 repos [no-marker] — запусти /sync-audit для per-repo решения (Gap 14: init / skip / never)
+  • 4 repos [no-marker] — запусти /push-consumers (Шаг 3: init / skip / never per-repo)
 ```
 
 **Brevity rules:**
@@ -482,9 +482,9 @@ marker_file: .claude/.version
 
 **Pull failed «non-ff»:** консьюмер local diverged от origin. Решение: вручную `cd <consumer> && git rebase origin/<branch>` или `git reset --hard origin/<branch>` (если local изменения не нужны).
 
-**`[no-marker]` repos видны но нет gap-tracking:** ожидаемо — методология не инициализирована. Запусти `/sync-audit` — Gap 14 предложит per-repo решение (init / skip / never) без ручного bash. После init + commit репо появится как `[marker]` в следующем запуске.
+**`[no-marker]` repos видны но нет gap-tracking:** ожидаемо — методология не инициализирована. Запусти `/push-consumers` — Шаг 3 предложит per-repo решение (init / skip / never) без ручного bash. После init + commit репо появится как `[marker]` в следующем запуске.
 
-**`[no-marker]` repos НЕ должны быть в /pull-consumers:** запусти `/sync-audit` и выбери `never` в Gap 14 для этого репо — путь автоматически добавится в `exclude_paths` в `CLAUDE.local.md ## Consumers`. При следующем запуске `/pull-consumers` этот репо исчезнет из inventory.
+**`[no-marker]` repos НЕ должны быть в /pull-consumers:** запусти `/push-consumers` и выбери `never` в Шаге 3 для этого репо — путь автоматически добавится в `exclude_paths` в `CLAUDE.local.md ## Consumers`. При следующем запуске `/pull-consumers` этот репо исчезнет из inventory.
 
 **404 на одном консьюмере:** repo private/удалён/wrong URL. Проверь `git -C <consumer> remote get-url origin`. Исправь через `git remote set-url origin <correct-url>`.
 

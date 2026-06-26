@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.20.0 — feat: push-only consolidation (remove /sync-audit + consumer self-sync rudiments) (2026-06-26)
+
+**Приоритет:** 🟡 RECOMMENDED (поведение SessionStart hook меняется; dirty-deadlock fix)
+
+**Consumer-facing changes:**
+- **`auto-update-watchdog.py`** (template) — **UPDATE mode удалён**: hook больше НЕ запускает `sync-methodology.sh --auto-commit` на консьюмере автономно (был второй конкурирующий писатель `.claude/` → оставлял dirty при сбое → deadlock). Hook теперь **read-only детектор**: bootstrap + hook-health drift + version-drift notify. `/sync-audit` директива удалена.
+- **`CLAUDE.local.md ## Auto-update`** — удалены ключи `interval_hours` / `on_failure` / `audit_threshold` / `auto_pull` (относились к removed UPDATE-mode). Остаются `enabled` / `methodology_path` / `doc_repo_path`. Read defensively — старый `.local.md` с этими ключами не падает (graceful).
+- **`triggers.json.template`** — удалены `last_auto_pull` / `last_sync_audit` (dead-fields; читались через `.get()` → graceful).
+- **`/sync-audit` удалён** (рудимент, был LOCAL-ONLY с v7.0.0): adoption-аудит для консьюмера убран. Доставка обновлений — **push-only через `/push-consumers`** (maintainer-driven, единственный атомарный писатель). Healthcheck install'а — `bash scripts/sync-doctor.sh` (read-only). Init нового консьюмера — `/push-consumers` Шаг 3.
+- **`push-consumer-single.sh`** — atomic commit-rollback (commit-fail → восстановление манифест-путей) + smart diff-gated pre-flight (derived churn авто-разрешается, `.claude/state/` / non-derived блокируются с warn+skip) → perpetual-dirty deadlock структурно невозможен.
+
+**Зависимость:** Gap 13 (branch-protection WARN-детект) — deferred; структурные слои (`setup-branch-protection.sh` + `deploy-push.sh` GH006) enforce независимо.
+
+**Actions (при sync):** `auto-update-watchdog.py` обновится автоматически. Никаких ручных шагов — консьюмер не обновляется сам, maintainer доставляет через `/push-consumers`.
+
+---
+
 ## v7.19.1 — fix: sync self-heal corrupted command files (conflict markers) (2026-06-24)
 
 **Приоритет:** 🟡 RECOMMENDED (recovery-path robustness)

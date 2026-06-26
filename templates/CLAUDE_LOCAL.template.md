@@ -236,39 +236,20 @@ See: [skills/secrets-management/SKILL.md](../skills/secrets-management/SKILL.md)
 
 ## Auto-update
 
-Конфиг для `auto-update-watchdog.py` SessionStart hook — авто-pull методологии + bootstrap detection. При каждом запуске Claude Code hook проверяет интервал и при необходимости запускает `sync-methodology.sh`.
+Конфиг для `auto-update-watchdog.py` SessionStart hook — **read-only детектор** (push-only consolidation). Hook НЕ синкает и НЕ пишет `.claude/`: он только детектирует bootstrap, hook-health drift и version-drift, и печатает уведомление. Обновления доставляет **maintainer методологии** через `/push-consumers` — проект не обновляется сам.
 
 ```yaml
 enabled: true
-interval_hours: 2
-on_failure: notify
 methodology_path: ../it-dev-methodology
 doc_repo_path: null
-audit_threshold: 3
-# auto_pull не задан → /sync-audit обновляет автоматически (дефолт с v5.20.0).
-# Раскомментируй `auto_pull: false` ниже ТОЛЬКО если хочешь подтверждать pull вручную.
-# auto_pull: false
 ```
 
 **Поля:**
-- `enabled` — `true` / `false`. Отключить для offline-окружений или CI/CD где sync управляется внешним процессом.
-- `interval_hours` — частота проверки (часы). Default `2` — баланс актуальности и шума. Можно ставить `0.5` для max-fresh или `24` для daily.
-- `on_failure` — поведение при ошибке (нет интернета, GitHub down, sync fail):
-  - `notify` — warning в чат, агент продолжает работать (рекомендуется)
-  - `silent` — игнорировать тихо
-  - `block` — exit 1 (hook fail; не рекомендуется кроме CI/CD)
-- `methodology_path` — путь к склонированному `it-dev-methodology` относительно корня проекта. Default `../it-dev-methodology`.
-- `doc_repo_path` — **(two-repo проекты)** путь к sibling documentation-репо (где живут DEVLOG/карты/ADR) относительно корня проекта. `null` (default) = **single-repo** проект: артефакты и код в одном репо, команды работают с локальными путями. Задать (например `../my-project-documentation`) только если проект использует two-repo pattern (код + отдельный doc-репо). ⛔ Команды (`/code`, `/review`, `/retro`) читают это значение: если `null` → артефакты ищутся локально; если задан → также проверяется doc-репо. Closes G-076 (раньше путь был hardcoded `../it-dev-methodology-documentation` — ломал single-repo consumers).
-- `audit_threshold` — minor version delta после auto-pull при котором hook рекомендует запустить `/sync-audit` (default `3`). Например, sync с `v4.18.0` на `v4.22.0` = delta 4 ≥ 3 → recommendation. Major bump (`v4.X.Y` → `v5.X.Y`) → forced trigger независимо от threshold.
-- `auto_pull` — **семантика инвертирована в v5.20.0 (closes G-094):** поле **отсутствует / `true`** (default) → `/sync-audit` Шаг -0.5 обновляет `it-dev-methodology/` **автоматически без вопроса** (`git pull --ff-only` + `sync-methodology.sh .`). `--ff-only` неразрушающий, поэтому подтверждение не нужно. Установи **`auto_pull: false`** ТОЛЬКО если хочешь подтверждать каждый pull вручную (opt-out для осторожных — вернёт вопрос y/n).
-  - **Pre-pull safety:** перед авто-pull `/sync-audit` проверяет `git status --porcelain` в клоне методологии. Если есть незакоммиченные изменения — pull **откладывается** с инструкцией закоммитить/stash (не трогает твои правки). Diverged (non-ff) коммиты → явное сообщение, не молчит.
+- `enabled` — `true` / `false`. `false` отключает hook целиком (offline / CI/CD).
+- `methodology_path` — путь к склонированному `it-dev-methodology` относительно корня проекта (используется для version-drift сравнения). Default `../it-dev-methodology`.
+- `doc_repo_path` — **(two-repo проекты)** путь к sibling documentation-репо (где живут DEVLOG/карты/ADR) относительно корня проекта. `null` (default) = **single-repo** проект: артефакты и код в одном репо, команды работают с локальными путями. Задать (например `../my-project-documentation`) только если проект использует two-repo pattern. ⛔ Команды (`/code`, `/review`, `/retro`) читают это значение: если `null` → артефакты ищутся локально; если задан → также проверяется doc-репо. Closes G-076.
 
-> **⚠️ Почему авто-pull — правильный дефолт:**
-> Watchdog каждые 2 часа обновляет `.claude/commands/` и `.claude/hooks/` (что агент выполняет),
-> но **НЕ обновляет** `it-dev-methodology/` (source-шаблоны для `sync-methodology.sh`).
-> При `auto_pull: false` и пропуске обновления в Шаг -0.5 — `it-dev-methodology/` source
-> остаётся stale и `sync-methodology.sh` берёт старые шаблоны. Дефолт (авто) этого избегает:
-> source обновляется автоматически при каждом `/sync-audit`, delta всегда актуален.
+> **Почему read-only (push-only consolidation):** раньше watchdog имел UPDATE mode — автономно каждые N часов запускал `sync-methodology.sh --auto-commit` на консьюмере. Это создавало **второго конкурирующего писателя** рядом с `/push-consumers` → при сбое оставлял dirty `.claude/` → deadlock в доставке. Удалён: единственный писатель `.claude/` консьюмера = `/push-consumers` (maintainer-driven, атомарный). Watchdog теперь только наблюдает и сообщает.
 
 **Bootstrap mode:** если `.claude/.version` отсутствует — методология не была инициализирована в этом проекте. Hook печатает рекомендацию для агента, агент в первом ответе предложит запустить `new-project-init.sh`.
 

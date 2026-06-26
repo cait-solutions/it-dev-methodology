@@ -1,6 +1,6 @@
 # /architecture-audit — Структурный аудит проекта
 
-> **Цель:** структурный аудит **архитектуры проекта** — SYSTEM-MAP ↔ code drift, AGENT-GAPS pattern analysis (Level 4+ ladder), decommission candidates, cross-project aggregation. НЕ для methodology adoption (это `/sync-audit`), НЕ для тактических проблем (это `/retro`), НЕ для product gaps (это `/vision review`).
+> **Цель:** структурный аудит **архитектуры проекта** — SYSTEM-MAP ↔ code drift, AGENT-GAPS pattern analysis (Level 4+ ladder), decommission candidates, cross-project aggregation. НЕ для methodology adoption (push-only delivery через `/push-consumers`), НЕ для тактических проблем (это `/retro`), НЕ для product gaps (это `/vision review`).
 
 Универсальная команда структурного анализа. Применима к **любому проекту** (консьюмер или methodology-platform). Способности команды активируются автоматически по наличию артефактов в проекте:
 
@@ -62,12 +62,10 @@ Detected capabilities:
 
 Способность D выполняется в **Шаге 3.5** (после drift-сравнения A, перед gap-анализом B) — независима от A/B/C, может быть единственной активной.
 
-**Cross-reference на `/sync-audit`:**
+**Scope-граница (methodology adoption):**
 
 > /architecture-audit это **архитектурный** audit — что **построено в проекте** vs design (SYSTEM-MAP drift, AGENT-GAPS pattern analysis).
-> Для **methodology adoption** audit — что **methodology предлагает** vs **применено в проекте** (PRODUCT components, Sync validators, Mermaid hybrid, Skills frontmatter) — запусти `/sync-audit`.
-> Особенно если methodology version delta ≥ 3 minor versions с момента последнего audit.
-> Эти команды **дополняют друг друга**: одна про архитектуру проекта, другая про adoption features методологии. Не дублируют scope. См. также IDEAS 2026-05-28 — рассматривается возможное объединение в `/project-audit` через 2-3 /retro циклов если empirical signal покажет нужность.
+> **Methodology adoption** (что методология доставила vs применено) — это push-only delivery: maintainer доставляет обновления через `/push-consumers`, а `scripts/sync-doctor.sh` даёт read-only healthcheck install'а. Консьюмеры не запускают adoption-команды сами.
 
 ---
 
