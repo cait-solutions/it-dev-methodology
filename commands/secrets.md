@@ -287,6 +287,32 @@ To verify how_to_obtain for KEY:
 - ❌ **НИКОГДА** не выводить полные значения
 - ✅ Exit codes: 0 = OK, 1 = required missing, 2 = manifest error, 3 = script error, 5 = user aborted
 
+### ⛔ One-secret-per-block rule (multi-secret сценарии — closes batch-paste breakage)
+
+`set-secret.sh` **интерактивный** (read -s prompts). Если вывести несколько `set-secret.sh`-команд **в одном** fenced-блоке (```), пользователь копирует всё разом → терминал выполняет первую команду, входит в её prompt, а следующие строки (`cd ...`, второй `set-secret.sh`) **съедаются как ввод в prompt** → хаос, неверные значения, прерванный ввод.
+
+**ПРАВИЛО:** когда нужно ввести **≥2 секрета** — выводить **РОВНО ОДНУ** `set-secret.sh`-команду на fenced-блок. Каждый секрет = свой ``` блок. Никогда не группировать несколько команд ввода секрета в один блок.
+
+- ✅ Каждая команда (включая предшествующий `cd`) — в **отдельном** ``` блоке.
+- ✅ Над каждым блоком — номер + что создать (URL, scopes) одной строкой.
+- ✅ Явная инструкция: «Вводи по одному. Дождись `✅ Set KEY` перед следующим блоком.»
+- ❌ НЕ выводить 6 команд списком в одном блоке (даже с комментариями-разделителями) — это и есть баг batch-paste.
+
+**Эталон (2 секрета → 2 блока):**
+
+> **1. ebay** — создай Project Access Token: `<url>` (Developer, read+write_repository)
+> ```
+> cd "<path>/ebay-template-documentation" && bash scripts/set-secret.sh GITLAB_EBAY_DOCS
+> ```
+> Дождись `✅ Set GITLAB_EBAY_DOCS`, затем:
+>
+> **2. erp** — создай Project Access Token: `<url>` (Developer, read+write_repository)
+> ```
+> cd "<path>/erp-documentantion" && bash scripts/set-secret.sh GITLAB_ERP_DOCS
+> ```
+
+`cd` + `set-secret.sh` объединяй через `&&` в **одну строку одного блока** — тогда даже если пользователь скопирует блок целиком, выполнится ровно один интерактивный вызов, без зависших `cd` в prompt.
+
 ---
 
 ## Examples
