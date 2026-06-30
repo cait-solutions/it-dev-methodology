@@ -1043,9 +1043,16 @@ Binding minimums: #4 = X%, остальные = Y%
 ⛔ Нельзя рекомендовать ниже floor своего tier без явного обоснования.
 ⛔ Рекомендованный minimum — порог для этого плана, не пожелание.
 
-**[critical]-tier adversarial spot-check (closes framing-bias-blind-spot, empirical: erp UButton 2026-06-26):**
+**New-build / structural adversarial spot-check (closes framing-bias-blind-spot, empirical: erp UButton 2026-06-26 + secrets-export 2026-06-30):**
 
-Если Tier = `[critical]` — **перед заполнением таблицы ниже** — автоматически (без вопроса к пользователю) запустить одного adversarial sub-agent через **Agent tool** с чистым контекстом:
+Запустить одного adversarial sub-agent через **Agent tool** с чистым контекстом — автоматически (без вопроса к пользователю), **перед заполнением таблицы ниже** — если выполнено **любое одно** из условий (mode-independent: проверяется и в Full, и в Lite):
+- **Tier = `[critical]`** (Risk Tier выше), ИЛИ
+- **Decision-class ∈ {Structural, Level 4+}** (классификация из Шага -1.3 Adjacent Impact), ИЛИ
+- **План вводит новое** — новый модуль / механизм / артефакт / data-flow / интеграция / команда / hook / скрипт (тот же сигнал new-build что триггерит architect sub-agent).
+
+⛔ **Гейт — по новизне фрейма, не по режиму и не по размеру.** Lite-режим НЕ освобождает: если Lite-план всё же вводит новый артефакт — критик срабатывает (в Lite, где Шаг -1.3 пропущен, признак new-build определяется напрямую вопросом «создаёт ли план новый артефакт/механизм?»). И наоборот: план, который **правит известный артефакт** (фикс известного бага, доработка существующей команды/валидатора, typo) — критик НЕ запускается: фрейм задан существующим артефактом, рефреймить нечего, спавн был бы шумом (warning-fatigue класс).
+
+**Почему этот слой (не «always-on» и не «[critical]-only»):** framing-bias («решаю не ту проблему / правильный артефакт уже существует») — единственный класс, который авторский агент структурно не видит изнутри своего фрейма; он концентрируется в new-build решениях, не распределён равномерно по всем планам. Гейт по уже-собираемому сигналу new-build/structural = **level-3 структурный регулятор**. «Прогонять на каждом Full-плане» = level-6 prompt-rule + warning-fatigue на modify-known (отвергнуто, class-conflation fix — DEVLOG 2026-06-30). «Только [critical]» — слишком узко: пропускало new-build не-критические планы (secrets-export кейс 2026-06-30, где критик поймал «строю новый export-скрипт, когда per-project `.env` уже существует»).
 
 **Что передать sub-agent:**
 - Краткое описание задачи (1-3 предложения: что именно меняется и зачем)
@@ -1060,17 +1067,18 @@ Binding minimums: #4 = X%, остальные = Y%
 ⛔ Передача pre-mortem выводов или confidence в prompt sub-agent = нарушение (structural independence теряется).
 
 **Мандат для sub-agent (передать verbatim):**
-> «Ты adversarial reviewer. Две линзы, обе обязательны:
+> «Ты adversarial reviewer. Три линзы, все обязательны:
 > (1) **Неверный механизм** — найди одно конкретное место где выбран НЕВЕРНЫЙ механизм, слой или архитектурный подход.
 > (2) **Over-engineering / simpler-path** — есть ли принципиально более простой путь, дающий ~80% эффекта? Если плана проще нет — одна строка почему сложность необходима.
-> Только атака по обеим линзам — без анализа плюсов, без сбалансированного взгляда. Если реального изъяна нет ни по одной — одна строка почему.
-> Формат: [Атака-механизм: <механизм/слой> — <причина почему неверен>] + [Атака-простота: <более простой путь> — <чем лучше> ИЛИ <почему сложность оправдана>] ИЛИ [No flaw found: <причина по обеим линзам>]»
+> (3) **Не та проблема / артефакт уже существует** — решает ли план НЕ ту проблему? Строит ли новый артефакт/механизм, когда правильный (решающий ту же задачу) УЖЕ существует и его достаточно? Это framing-bias: автор плана видит задачу изнутри своей рамки и может не заметить, что цель уже достижима существующим.
+> Только атака по всем линзам — без анализа плюсов, без сбалансированного взгляда. Если реального изъяна нет ни по одной — одна строка почему.
+> Формат: [Атака-механизм: <механизм/слой> — <причина>] + [Атака-простота: <более простой путь> — <чем лучше> ИЛИ <почему сложность оправдана>] + [Атака-фрейм: <та ли проблема / существующий артефакт> — <причина> ИЛИ <почему фрейм верен>] ИЛИ [No flaw found: <причина по всем линзам>]»
 
 *(Вторая линза добавлена net-zero к существующему spawn'у, не как отдельный sub-agent: «найди дыру» и «найди проще» — два удара одного adversarial-молотка по плану, не конфликтующие роли. Council 7/7 [opinion:plan-second-critic-role] отклонил отдельный второй sub-agent (дублирование /opinion + Pre-Mortem #8, accretion против Оси 5). Эскалация до отдельной роли — только при ≥3 retro-подтверждённых пропусков over-engineering до /code, см. `docs/analysis/*-pivot-class-tally.md` в doc-репо, Ось 1 data-driven.)*
 
-**Вывод sub-agent** вставить как секцию **«Adversarial check (independent context):»** в колонку Evidence свойств #1 (Architecturally sound) и #4 (No regressions) ниже. Линза (1) механизм → релевантна #1; линза (2) over-engineering / simpler-path → также отражается в #1 (выбран ли правильный regulator level — не переусложнён ли).
+**Вывод sub-agent** вставить как секцию **«Adversarial check (independent context):»** в колонку Evidence свойств #1 (Architecturally sound) и #4 (No regressions) ниже. Линза (1) механизм → #1; линза (2) over-engineering / simpler-path → #1 (правильный ли regulator level, не переусложнён ли); линза (3) не та проблема / существующий артефакт → #1 (тот ли класс решения) и #4 (дубль существующего = риск регрессии).
 
-⛔ Пустая секция «Adversarial check» или её отсутствие при Tier = `[critical]` = Шаг 99.3 не зачтён (тот же anti-perfunctory механизм что уже применяется к Evidence колонкам).
+⛔ Пустая секция «Adversarial check» или её отсутствие когда гейт сработал (new-build / Structural / Level 4+ / `[critical]`) = Шаг 99.3 не зачтён (тот же anti-perfunctory механизм что уже применяется к Evidence колонкам).
 
 *(Эмпирика: erp UButton 2026-06-26 — 8 pre-mortem-сценариев + Confidence #4=85% пропустили ложную no-regression предпосылку; 1 adversarial sub-agent поймал мгновенно. Структурный источник: чистый контекст sub-agent устраняет framing-bias сессии — не остановка, а независимость.)*
 
@@ -1115,7 +1123,7 @@ Binding minimums: #4 = X%, остальные = Y%
 - [ ] **Dogfood check:** если меняется template/правило для consumers — то же изменение применено к methodology repo own соответствующему файлу? *(methodology не должна shipping rules которые сама не использует)*
 - [ ] **Adjacent file pair grep:** для каждого `templates/X.template` — проверен соответствующий `X` в repo own (gitignore, settings.json, scripts)? Если pair не существует — явное `[N/A — нет own version]` с обоснованием
 - [ ] **Class-bug grep:** найден pattern в одной точке → grep по другим возможным точкам того же класса в проекте?
-- [ ] **[critical]-tier adversarial check:** если Tier = `[critical]` → секция «Adversarial check (independent context):» присутствует и непустая в Evidence #4? `[N/A — Tier ≠ critical]` если не критический.
+- [ ] **New-build/structural adversarial check:** если гейт сработал (Tier=`[critical]` ИЛИ Structural/Level 4+ ИЛИ new-build) → секция «Adversarial check (independent context):» присутствует и непустая в Evidence #4? `[N/A — гейт не сработал: modify-known план]` если не применимо.
 
 Для **#5 (Forward-thinking)**:
 - [ ] **Cross-platform verification:** изменение testируется на ALL supported platforms (Git Bash Windows + Linux + macOS если применимо)? Если только одна — явное `[N/A — text-only / methodology-rule]` *(assumption "POSIX universal" without empirical verification)*
@@ -1129,7 +1137,7 @@ Binding minimums: #4 = X%, остальные = Y%
 
 Для **#1 (Architecturally sound) — mechanism feasibility (closes lock-hook класс «механизм опирается на непроверенный примитив»):**
 - [ ] **Primitive-behavior verified by READING, not assumed:** если план вводит новый механизм опирающийся на платформенный примитив (hook event, tool behavior, API/harness contract, exit-code семантика) — подтверждено **чтением** (grep / Read `file:line`), что примитив реально делает предполагаемое? `[N/A — нет нового механизма на платформенном примитиве]` если не применимо. Few-shot (что ловит): lock-hook предполагал «PreToolUse(Edit|Write) перехватит запись в файл» — чтение показало бы что Bash/git-запись минует Edit-хук; и «session_id доступен в hook-stdin» — `grep session_id templates/.claude/hooks/` = 0 показал бы отсутствие прецедента. Оба — assumptions о примитиве, опровержимые чтением ДО реализации.
-- [ ] **[critical]-tier adversarial check:** если Tier = `[critical]` → секция «Adversarial check (independent context):» присутствует и непустая в Evidence #1? `[N/A — Tier ≠ critical]` если не критический.
+- [ ] **New-build/structural adversarial check:** если гейт сработал (Tier=`[critical]` ИЛИ Structural/Level 4+ ИЛИ new-build) → секция «Adversarial check (independent context):» присутствует и непустая в Evidence #1? `[N/A — гейт не сработал: modify-known план]` если не применимо.
 
 **Жёсткое правило:** хотя бы один `[ ]` (unchecked, not marked `[N/A — ...]`) → confidence для свойства автоматически ≤ 80%. Не subjective оценка agent'а. Если agent заявляет 95%+ при unchecked sub-check — review caller (или sam agent в Шаге 99.3 self-review) reverts confidence к 80% явно.
 
