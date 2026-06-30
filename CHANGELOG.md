@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.22.0 — feat: /last-repo-changes — что изменилось в repos workspace простым языком (2026-06-30)
+
+**Приоритет:** 🟢 OPTIONAL (новая read-only команда; ничего не ломает)
+
+**Consumer-facing changes:**
+- **`commands/last-repo-changes.md`** (новая) — read-only отчёт простым языком по изменениям во всех repos workspace: что подтянулось/наработано, что ждёт на remote, кто отстаёт. Группировка по смыслу, **причины из входящего diff DEVLOG** (`[fix:X]`/`[feat:X]`), не из угадывания по diffstat. Default tier (синтез), в отличие от `/pull` (Fast, механика). НЕ мутирует — для подтягивания `/pull`.
+- **`scripts/repo-changes-collect.sh`** (новый) — read-only коллектор: per-repo divergence (ahead/behind), PULLED (commit-msgs + DEVLOG-diff), AVAILABLE (на remote, не локально), STRUCTURAL (renames). Окно: дефолт = дельта последнего pull (ORIG_HEAD..HEAD); `<N>` коммитов; `<since>` spec; `--no-fetch` (по кэшу после /pull).
+- **`scripts/lib/read-workspace-repos.sh`** (новый) — source-able энумератор repos из `.code-workspace` (единый walker; `consumer-pull.sh` мигрирует на него в будущем релизе). Inline-fallback в потребителях если lib отсутствует.
+- **`commands/pull.md`** — pointer в summary: «детальный разбор → `/last-repo-changes --no-fetch`».
+
+**Эффект:** после `/pull` (или в любой момент) — понятный разбор «что и почему изменилось» одной командой, вместо ручного чтения git log по каждому репо.
+
+**Зависимость:** нет. Read-only.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: команда, коллектор, `scripts/lib/` (sync теперь копирует lib/-subdir). Ручных шагов не требует.
+
 ## v7.21.3 — fix: Deploy rule приведён к ai-dev-only (агент не пушит main) (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (убирает ловушку «прочитал правило → запушил main»)
