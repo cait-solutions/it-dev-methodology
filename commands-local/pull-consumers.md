@@ -67,8 +67,8 @@ Defaults если секция отсутствует: `consumers_root=..`, `mar
 1. **Найти workspace file:**
    - Если `workspace_file` задан в конфиге → resolve абсолютный путь относительно methodology repo
    - Если не задан → автопоиск: `ls "<consumers_root>"/*.code-workspace 2>/dev/null | head -1`
-   - Если файл не найден → перейти к Режиму B, показать предупреждение:
-     `⚠️ .code-workspace не найден — fallback к sibling scan`
+   - Если файл не найден → перейти к Режиму B (fallback), показать **ГРОМКОЕ** предупреждение:
+     `⚠️ Mode B MEMBERSHIP-BLIND: workspace_file не задан → sibling scan. Репо удалённые из workspace всё ещё на диске → появятся как managed consumers. Fix: добавь workspace_file в CLAUDE.local.md ## Consumers.`
 
 2. **Парсить JSON** (Python, избегать bash-only JSON parsing):
    ```bash
@@ -111,6 +111,8 @@ done
 ```
 
 > **Отличие от Режима A:** sibling scan в Режиме B требует marker_file (строгий фильтр). Режим A включает `[no-marker]` repos — потому что workspace = явный список выбранных разработчиком.
+>
+> **`[stale-on-disk]`:** sibling scan находит ВСЕ repos с marker_file на диске независимо от workspace-членства. Репо, удалённый из workspace, появится как managed consumer. Inventory-эвристика: имя НЕ содержит суффикс `-documentation` → пометить `⚠️ [suspect: code-repo?]` в inventory output.
 
 ### Подшаг 0.4 — Вывести inventory
 
