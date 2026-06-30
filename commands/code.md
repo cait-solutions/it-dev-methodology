@@ -43,6 +43,11 @@
 ## Шаг 0 — State check
 
 1. Прочитать `.claude/state/triggers.json`
+1.1. **Авторитетный план из `plan_file` (durable-handoff, closes shared-tree state-clobber):** прочитать `last_plan_session.plan_file` (defensive `.get('plan_file')`):
+   - **Задан и файл существует** → читать план ИЗ ЭТОГО ФАЙЛА (`docs/plans/<date>-<task>.md`), не из triggers summary. Это авторитет — переживает затирание `last_plan_session` параллельной сессией.
+   - **Задан, но файл отсутствует/нечитаем** (переименован/удалён) → 🟡 fallback на `last_plan_session` summary; если и его нет → спросить пользователя путь к плану.
+   - **Поле отсутствует/`null`** (Lite без файла / старый consumer / план до schema-бампа) → fallback на `last_plan_session` summary (прежнее поведение, graceful).
+   - Если задание `/code` явно указало путь к плану (как в аргументах) → он приоритетнее (пользователь знает актуальный).
 2. Если применимо для проекта — проверить триггеры (architecture_audit, etc)
 3. Установить `last_plan_session.code_run = true`
 4. Сохранить triggers.json
@@ -514,6 +519,7 @@ Lint-7 Summary fidelity: если меняли табличный артефак
   "service": "<сервис из плана>",
   "mode": "<Lite|Full>",
   "code_run": true,
+  "plan_file": "<carry-over без изменений из last_plan_session — указатель на docs/plans/ план>",
   "commitments": [ ... обновлённые status ... ],
   "sustainment": [ ... carry-over без изменений из last_plan_session ... ],
   "deferred": [ ... carry-over без изменений из last_plan_session ... ]
@@ -525,7 +531,7 @@ Lint-7 Summary fidelity: если меняли табличный артефак
 }
 ```
 
-**⛔ Carry-over `sustainment[]` и `deferred[]` (closes latent-drop bug):** при записи `last_plan_session` — **обязательно перенести** `sustainment[]` и `deferred[]` из текущего `last_plan_session` без изменений. Шаблон выше намеренно показывает `... carry-over ...` — не пустые массивы. Если записать `"sustainment": []` / `"deferred": []` без carry — данные плана исчезают после первого commit (FMEA-1 класс). Алгоритм: прочитать `triggers.json → last_plan_session.sustainment` → вставить в новый объект как есть. То же для `deferred[]`. Defensive: если поле отсутствует у старого consumer → `[]` (не ошибка).
+**⛔ Carry-over `plan_file`, `sustainment[]` и `deferred[]` (closes latent-drop bug):** при записи `last_plan_session` — **обязательно перенести** `plan_file` (указатель на авторитетный план в `docs/plans/`), `sustainment[]` и `deferred[]` из текущего `last_plan_session` без изменений. Без carry `plan_file` теряется указатель на durable-план после первого commit. Шаблон выше намеренно показывает `... carry-over ...` — не пустые массивы. Если записать `"sustainment": []` / `"deferred": []` без carry — данные плана исчезают после первого commit (FMEA-1 класс). Алгоритм: прочитать `triggers.json → last_plan_session.sustainment` → вставить в новый объект как есть. То же для `deferred[]`. Defensive: если поле отсутствует у старого consumer → `[]` (не ошибка).
 
 ⛔ Пропуск этого шага = счётчики и флаги сессии устаревают → /plan следующей сессии видит `code_run: false` и предлагает вернуться к «незавершённому» плану. *(closes G-063)*
 

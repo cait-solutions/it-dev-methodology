@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.25.0 — feat: durable plan-file handoff (план переживает затирание параллельной сессией) (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (устраняет потерю plan-state при concurrent-сессиях в одном working tree)
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** Шаг 100 — `/plan` теперь пишет утверждённый план как **авторитетный файл** `docs/plans/<date>-<task-slug>.md` (под-шаг 1ter) + сохраняет указатель `last_plan_session.plan_file` в triggers.json.
+- **`commands/code.md`** Шаг 0 — `/code` читает план из `plan_file` (авторитет), fallback на triggers summary / ask если файл отсутствует. Carry-over `plan_file` в Шаг 7.
+- **`templates/triggers.json.template`** — новое аддитивное поле `last_plan_session.plan_file` (default `null`, defensive `.get` — старые консьюмеры не ломаются).
+
+**Эффект:** `triggers.json last_plan_session` — single-writer; параллельная сессия в одном working tree затирала его → план терялся (наблюдалось 3× 2026-06-30, спасали вручную в docs/plans/). Теперь план — durable-файл, переживает затирание. Закрывает **value-overwrite** слой shared-tree collision (append-журналы DEVLOG уже self-preserve через merge=union).
+
+**Зависимость:** нет. `plan_file` аддитивно — план без файла (Lite / старый consumer) работает как раньше (fallback).
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: `commands/plan.md`, `commands/code.md`, `templates/triggers.json.template`. Ручных шагов не требует.
+
+**НЕ закрывает (отдельные задачи):** gh active account гонка (machine-global → Layer 3 fleet-auth); deploy auto-merge в main vs ai-dev-only (G-132); форс-worktree (бьётся с IDE-concurrent workflow владельца).
+
 ## v7.24.1 — feat: scan-sources анализ по 6 осям полезности (fix code-bias) (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (улучшает охват анализа источников — не только код)
