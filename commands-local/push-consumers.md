@@ -319,12 +319,12 @@ exclude_paths:
 
 **При `add` (Recommendation-first):**
 1. Прочитать `<repo>/CLAUDE.local.md ## Branching` → `agent_branch`. Предложить его как `branch:` (дефолт). ⚠️ **G-117 branch-mismatch:** whitelist `branch` ДОЛЖЕН равняться `agent_branch` целевого репо — если у репо solo-on-main, branch=`main`; если team/ai-dev → `ai-dev` (и push в `main` делает человек через PR).
-2. Определить `gh_account`: предложить owner из `git -C <repo> remote get-url origin` (сегмент после хоста). Подтвердить у владельца (это его решение — какой gh-аккаунт имеет write-доступ).
-3. **Append** запись в `CLAUDE.local.md ## auto_commit_consumers` (explicit pathspec edit, не нарушая human-форматирование/комментарии блока):
+2. `gh_account` — **OPTIONAL pre-seed** (council [opinion:git-account-ssot], v7.24.0). Аккаунт для push резолвится автоматически через `lib/gh-account.sh`: learned-cache для remote-URL → иначе URL-owner. Поле `gh_account` больше **не обязательно** — задавай только как явный hint когда write-доступ у аккаунта, отличного от URL-owner (напр. бот). Stale-поле безвредно (URL/cache побеждают); `validate-gh-accounts.sh` лишь warn'ит про рассинхрон.
+3. **Append** запись в `CLAUDE.local.md ## auto_commit_consumers` (explicit pathspec edit, не нарушая human-форматирование/комментарии блока). `gh_account` опускай если совпадает с URL-owner:
    ```yaml
      - path: <relative-path>
        branch: <agent_branch>
-       gh_account: <owner>
+       # gh_account: <owner>   # OPTIONAL — только если write-доступ у НЕ-URL-owner аккаунта
    ```
 4. Включить репо в батч Шага 4 со статусом `[onboarded → sync+commit+push]`.
 

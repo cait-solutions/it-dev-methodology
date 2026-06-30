@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 #
-# validate-gh-accounts.sh — gate: gh_account обязателен для github.com repos в auto_commit_consumers.
+# validate-gh-accounts.sh — correctness warn for the OPTIONAL gh_account pre-seed.
 #
-# WHY (P-012, domain:git-push кластер v6.9.0):
-#   gh_account в CLAUDE.local.md whitelist — OPTIONAL. Нет enforcement → агент забывал поле →
-#   /push-consumers угадывал owner из remote URL (ненадёжно если URL неверный) → wrong account → 403.
-#   Минимум 3 domain:git-push инцидента за 30 дней. Этот gate закрывает класс структурно:
-#   deploy НЕВОЗМОЖЕН если любой github.com repo в whitelist не имеет явного gh_account.
+# WHY (council [opinion:git-account-ssot], 2026-06-30 — reverses the old presence-gate):
+#   Old behaviour: exit 1 (block deploy) if any github.com repo in auto_commit_consumers
+#   lacked an explicit gh_account. That presence-gate PASSED the 2026-06-30 incident: the
+#   field was PRESENT but STALE (cait-solutions) while the URL owner (IDK-IDK) was correct
+#   → push under the stale account → 404. Presence ≠ correctness.
 #
-# Вызывается из deploy-push.sh внутри methodology guard (closes methodology-only scope).
-# Consumers guard=false → этот gate до них не доезжает.
+#   New model: gh_account is now an OPTIONAL pre-seed. The authoritative resolver
+#   (lib/gh-account.sh: learned cache → URL-owner) makes a missing field harmless and a
+#   stale field harmless (URL/cache win). So this script no longer BLOCKS — it WARNS when a
+#   pre-seed gh_account is set AND disagrees with BOTH the URL-owner AND the learned cache
+#   (i.e. a stale manual override that, while harmless, signals config rot worth cleaning).
 #
-# Exit 0 = все github.com repos имеют gh_account (или нет github.com repos).
-# Exit 1 = gate failure: ≥1 repos missing gh_account → deploy blocked.
-# Exit 2 = config error (CLAUDE.local.md не найден → skip gracefully, exit 0).
+# Called from deploy-push.sh inside the methodology guard. Consumers guard=false → skipped.
+#
+# Exit 0 = always (warn-only — never blocks deploy).
 #
 # Bash 3.2+ compatible (Git Bash on Windows): no associative arrays, no ${var,,}.
 
@@ -28,9 +31,16 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
-# _parse_whitelist: outputs TSV lines "RELATIVE_PATH\tGH_ACCOUNT" for each entry.
-# Parses the ```yaml auto_commit_consumers: block in CLAUDE.local.md.
-# GH_ACCOUNT is empty string if the field is absent for an entry.
+# Source the gh-account lib (URL-owner + cache lookup). Defensive inline fallback.
+if [ -f "$SCRIPT_DIR/lib/gh-account.sh" ]; then
+  # shellcheck source=scripts/lib/gh-account.sh
+  . "$SCRIPT_DIR/lib/gh-account.sh"
+else
+  gh_owner_from_url() { case "${1:-}" in https://github.com/*) local o="${1#https://github.com/}"; o="${o%%/*}"; printf '%s\n' "${o%.git}";; *) printf '%s\n' "";; esac; }
+  gh_cache_get() { printf '%s\n' ""; }
+fi
+
+# _parse_whitelist: outputs TSV "RELATIVE_PATH\tGH_ACCOUNT" per entry (GH_ACCOUNT empty if absent).
 _parse_whitelist() {
   awk '
     /^```yaml/ && !in_block { in_block=1; next }
@@ -57,55 +67,56 @@ _parse_whitelist() {
   ' "$CONFIG"
 }
 
-FAILED=0
+STALE=0
 CHECKED=0
 
 while IFS="	" read -r ENTRY_PATH ENTRY_GH; do
   [ -z "$ENTRY_PATH" ] && continue
 
-  # Resolve path relative to methodology repo directory
   ABS_PATH=""
   if cd "$METHODOLOGY_DIR/$ENTRY_PATH" 2>/dev/null; then
     ABS_PATH="$(pwd)"
     cd - >/dev/null 2>&1
   else
-    # Repo not present on this machine — skip silently
+    continue   # repo not present on this machine — skip silently
+  fi
+
+  REMOTE_URL="$(git -C "$ABS_PATH" remote get-url origin 2>/dev/null || true)"
+  OWNER="$(gh_owner_from_url "$REMOTE_URL")"
+  [ -n "$OWNER" ] || continue   # not github.com → gh not applicable
+
+  CHECKED=$((CHECKED + 1))
+  REPO_NAME="$(basename "$ABS_PATH")"
+
+  # No pre-seed → fine. The resolver uses URL-owner; field is optional now.
+  if [ -z "$ENTRY_GH" ]; then
+    echo "  ℹ️  $REPO_NAME: no gh_account pre-seed → URL-owner ($OWNER) will be used (OK)."
     continue
   fi
 
-  # Check if this repo has a github.com HTTPS remote
-  REMOTE_URL="$(git -C "$ABS_PATH" remote get-url origin 2>/dev/null || true)"
-  case "$REMOTE_URL" in
-    https://github.com/*) : ;;
-    *) continue ;;   # GitLab / SSH / other → no gh CLI needed → skip
-  esac
+  CACHED="$(gh_cache_get "$REMOTE_URL")"
 
-  CHECKED=$((CHECKED + 1))
-
-  if [ -z "$ENTRY_GH" ]; then
-    REPO_NAME="$(basename "$ABS_PATH")"
-    OWNER="${REMOTE_URL#https://github.com/}"
-    OWNER="${OWNER%%/*}"
-    OWNER="${OWNER%.git}"
-    printf "  ❌ MISSING gh_account: %s\n     path: %s\n     remote: %s\n     Добавь в CLAUDE.local.md → auto_commit_consumers:\n       gh_account: %s\n" \
-      "$REPO_NAME" "$ENTRY_PATH" "$REMOTE_URL" "$OWNER" >&2
-    FAILED=$((FAILED + 1))
-  else
-    echo "  ✅ gh_account: $ENTRY_GH → $(basename "$ABS_PATH")"
+  # Pre-seed agrees with URL-owner or with the learned cache → trustworthy.
+  if [ "$ENTRY_GH" = "$OWNER" ] || { [ -n "$CACHED" ] && [ "$ENTRY_GH" = "$CACHED" ]; }; then
+    echo "  ✅ gh_account: $ENTRY_GH → $REPO_NAME"
+    continue
   fi
+
+  # Stale override: set, but disagrees with BOTH URL-owner AND cache. Harmless
+  # (URL/cache win at push time) but signals config rot.
+  printf "  🟡 STALE gh_account pre-seed: %s\n     path: %s\n     whitelist gh_account: %s\n     URL-owner: %s%s\n     Harmless (URL/cache win), но почисти поле или выровняй под URL-owner.\n" \
+    "$REPO_NAME" "$ENTRY_PATH" "$ENTRY_GH" "$OWNER" \
+    "$([ -n "$CACHED" ] && printf ' · learned-cache: %s' "$CACHED")" >&2
+  STALE=$((STALE + 1))
 
 done < <(_parse_whitelist)
 
 echo ""
-if [ "$FAILED" -gt 0 ]; then
-  echo "❌ validate-gh-accounts: $FAILED repo(s) missing gh_account (checked $CHECKED github.com repos)." >&2
-  echo "   Заполни gh_account для каждого репо → затем повтори деплой." >&2
-  exit 1
-fi
-
 if [ "$CHECKED" -eq 0 ]; then
   echo "  ℹ️  validate-gh-accounts: нет github.com repos в whitelist — OK."
+elif [ "$STALE" -gt 0 ]; then
+  echo "🟡 validate-gh-accounts: $STALE stale gh_account pre-seed(s) of $CHECKED github.com repo(s) — warn-only, деплой не блокируется." >&2
 else
-  echo "✅ validate-gh-accounts: все $CHECKED github.com repo(s) имеют gh_account."
+  echo "✅ validate-gh-accounts: все $CHECKED github.com repo(s) — gh_account отсутствует или согласован (OK)."
 fi
 exit 0

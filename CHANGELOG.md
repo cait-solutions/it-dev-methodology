@@ -4,6 +4,22 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.24.0 — feat: gh-account SSOT — единый self-learning резолвер git-аккаунта (Layer 1+2) (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (исправляет класс «push под wrong account → 404/403»; поведение деплоя улучшается, ничего не ломает)
+
+**Consumer-facing changes:**
+- **`scripts/lib/gh-account.sh`** (новый, source-able) — единственная реализация derivation «какой gh-аккаунт для push». Резолвинг: **learned cache** для remote-URL → иначе **URL-owner** (сегмент после `github.com/`). Функции: `gh_owner_from_url`, `gh_resolve_account`, `gh_cache_get/put/del`, `gh_whitelist_account` (optional hint), `gh_switch_to`. Inline-fallback в потребителях если lib отсутствует.
+- **`scripts/deploy-push.sh`** — `_ensure_gh_account` теперь резолвит через lib (cache→URL вместо inline URL-only); после **успешного** push пишет `(remote-URL → активный аккаунт)` в кэш (`_persist_gh_cache`). Машинная запись не дрейфует как hand-typed поле.
+
+**Methodology-internal (не синкается, для справки):** новый кэш `.claude/state/gh-account-cache` (gitignored, per-clone, machine-written только при успешном push, self-heal при failure). `check-gh-account.sh` / `validate-gh-accounts.sh` / `push-consumer-single.sh` мигрированы на lib. `validate-gh-accounts.sh`: presence-gate → **correctness warn-only** (поле `gh_account` стало OPTIONAL pre-seed; warn если stale ≠ URL-owner ≠ cache — закрывает инцидент 2026-06-30, который presence-gate пропускал). `test-check-gh-account.sh` покрывает URL/cache/incident-regression/ask-once. Parity-gate расширен на `lib/`.
+
+**Эффект:** «какой аккаунт пушит» определяется надёжным URL + самообучающимся кэшем, а не ручным полем, которое дрейфует. Stale `gh_account` в whitelist теперь безвреден (URL/cache побеждают) и видим как warn. На wrong-account failure — invalidate кэша + ask-once → persist (больше не спрашивает).
+
+**Зависимость:** нет. `gh_account` в `CLAUDE.local.md` стал опциональным — существующие поля продолжают работать (валидируются, не требуются).
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: `scripts/deploy-push.sh` + `scripts/lib/gh-account.sh` (lib/-subdir loop). Ручных шагов не требует.
+
 ## v7.22.0 — feat: /last-repo-changes — что изменилось в repos workspace простым языком (2026-06-30)
 
 **Приоритет:** 🟢 OPTIONAL (новая read-only команда; ничего не ломает)
