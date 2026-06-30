@@ -98,37 +98,67 @@ _wire_credential_helper() {
 _wire_credential_helper
 
 # ---------------------------------------------------------------------------
+# gh-account derivation: single source of truth = scripts/lib/gh-account.sh
+# (council [opinion:git-account-ssot]). Defensive source — inline fallback if the
+# lib is absent (older clone mid-migration): fallback = URL-owner only, no cache.
+# ---------------------------------------------------------------------------
+_DP_SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$_DP_SELF_DIR/lib/gh-account.sh" ]; then
+  # shellcheck source=scripts/lib/gh-account.sh
+  . "$_DP_SELF_DIR/lib/gh-account.sh"
+else
+  gh_owner_from_url() {
+    case "${1:-}" in
+      https://github.com/*) local o="${1#https://github.com/}"; o="${o%%/*}"; printf '%s\n' "${o%.git}" ;;
+      *) printf '%s\n' "" ;;
+    esac
+  }
+  gh_remote_url()      { git -C "${1:-.}" remote get-url origin 2>/dev/null || true; }
+  gh_active_account()  { command -v gh >/dev/null 2>&1 || { echo ""; return 0; }; gh api user -q .login 2>/dev/null || echo ""; }
+  gh_resolve_account() { gh_owner_from_url "$(gh_remote_url "${1:-.}")"; }
+  gh_cache_put()       { :; }   # no cache without lib — derivation still correct (URL-owner)
+fi
+
+# ---------------------------------------------------------------------------
 # Ensure correct gh account before push (closes G-083).
 # Машина может иметь несколько gh-аккаунтов (gh auth login --user X). Push в
 # github.com/<owner>/<repo> требует активного аккаунта с доступом к <owner>.
 # 403 при push под чужим активным аккаунтом — НЕ "нет токена", а wrong account.
-# Деривируем требуемый аккаунт из owner remote-а и переключаем если есть среди
-# залогиненных. Это L4: deploy сам восстанавливается, не полагаясь на память агента.
-# Только github.com (gh не управляет gitlab/self-hosted).
+# Требуемый аккаунт резолвится через gh_resolve_account (learned cache → URL-owner)
+# и переключается если есть среди залогиненных. Это L4: deploy сам восстанавливается,
+# не полагаясь на память агента. Только github.com (gh не управляет gitlab/self-hosted).
 # ---------------------------------------------------------------------------
 _ensure_gh_account() {
   command -v gh >/dev/null 2>&1 || return 0
-  local remote_url owner
-  remote_url=$(git remote get-url origin 2>/dev/null || true)
-  case "$remote_url" in
-    https://github.com/*) : ;;
-    *) return 0 ;;                          # не github.com → gh не применим
-  esac
-  owner="${remote_url#https://github.com/}"; owner="${owner%%/*}"
-  [[ -n "$owner" ]] || return 0
-  local active
-  active=$(gh api user -q .login 2>/dev/null || echo "")
-  [[ "$active" == "$owner" ]] && return 0   # уже правильный
-  if gh auth status 2>/dev/null | grep -q "account ${owner} "; then
-    if gh auth switch --user "$owner" >/dev/null 2>&1; then
-      echo "🔄 gh account: ${active:-none} → ${owner} (для push в ${owner}/*)"
+  local want active
+  want="$(gh_resolve_account .)"
+  [[ -n "$want" ]] || return 0              # не github.com → gh не применим
+  active="$(gh_active_account)"
+  [[ "$active" == "$want" ]] && return 0    # уже правильный
+  if gh auth status 2>/dev/null | grep -q "account ${want} "; then
+    if gh auth switch --user "$want" >/dev/null 2>&1; then
+      echo "🔄 gh account: ${active:-none} → ${want} (для push в ${want}/*)"
     fi
   else
-    echo "⚠️  gh: аккаунт '${owner}' не залогинен (активен: ${active:-none})."
-    echo "    Push может вернуть 403. Залогинься: gh auth login --user ${owner}"
+    echo "⚠️  gh: аккаунт '${want}' не залогинен (активен: ${active:-none})."
+    echo "    Push может вернуть 403. Залогинься: gh auth login --user ${want}"
   fi
 }
 _ensure_gh_account
+
+# _persist_gh_cache — record (remote-URL → active gh account) AFTER a confirmed
+# successful push. Machine-written → never drifts like a hand-typed whitelist field.
+# Only github.com; no-op without the lib (gh_cache_put stub) or non-github remote.
+_persist_gh_cache() {
+  command -v gh >/dev/null 2>&1 || return 0
+  local url owner active
+  url="$(gh_remote_url .)"
+  owner="$(gh_owner_from_url "$url")"
+  [[ -n "$owner" ]] || return 0
+  active="$(gh_active_account)"
+  [[ -n "$active" ]] || return 0
+  gh_cache_put "$url" "$active"
+}
 
 # ---------------------------------------------------------------------------
 # Push-failure classification (closes G-083 level-4 + P-005).
@@ -236,7 +266,7 @@ _classify_push_failure() {
       https://github.com/*)
         if command -v gh >/dev/null 2>&1; then
           local owner active
-          owner="${url#https://github.com/}"; owner="${owner%%/*}"
+          owner="$(gh_owner_from_url "$url")"
           active=$(gh api user -q .login 2>/dev/null || echo "")
           echo "      Активный gh-аккаунт: ${active:-none}, нужен: ${owner}"
           echo "      Скорее всего НЕ ТОТ активный аккаунт (не отсутствие PAT):"
@@ -316,15 +346,14 @@ if [ -d "commands" ] && [ -f "scripts/sync-methodology.sh" ]; then
       exit 1
     fi
   fi
-  # GH-accounts gate (P-012 / v6.9.0): gh_account обязателен для github.com repos в whitelist.
-  # Без этого поля /push-consumers угадывает owner из URL (ненадёжно) → wrong account → 403.
-  # Gate graceful-skip если скрипт отсутствует (migration window).
+  # GH-accounts correctness warn (council [opinion:git-account-ssot], v7.24.0):
+  # gh_account стало OPTIONAL pre-seed — derivation = lib/gh-account.sh (learned cache →
+  # URL-owner). Раньше это был presence-gate (exit 1 если поле отсутствует), но он ПРОПУСКАЛ
+  # инцидент 2026-06-30 (поле было PRESENT но STALE). Теперь warn-only: surfaces stale
+  # pre-seed, не блокирует (URL/cache побеждают). Graceful-skip если скрипт отсутствует.
   if [ -f "scripts/validate-gh-accounts.sh" ]; then
-    echo "▶ GH-accounts gate (methodology-platform)..."
-    if ! bash scripts/validate-gh-accounts.sh; then
-      echo "❌ BLOCKED: добавь gh_account для github.com repos в CLAUDE.local.md → повтори деплой." >&2
-      exit 1
-    fi
+    echo "▶ GH-accounts correctness warn (methodology-platform)..."
+    bash scripts/validate-gh-accounts.sh || true   # warn-only — никогда не блокирует
   fi
   echo "▶ Maps-coverage gate (methodology-platform)..."
   # tee-pattern: show output in realtime AND capture for WARN count (G-119 surfacing)
@@ -410,6 +439,7 @@ _check_remote_alignment
 if [[ "$MODE" == "team" ]]; then
   echo "▶ Team mode → git push origin ${PUSH_BRANCH}:${PUSH_BRANCH}"
   _push origin "${PUSH_BRANCH}:${PUSH_BRANCH}" || exit 1
+  _persist_gh_cache   # success → learn (remote-URL → active account)
   echo ""
 
   if [[ "$PR_TOOL" == "auto-merge" ]]; then
@@ -440,6 +470,7 @@ if [[ "$MODE" == "team" ]]; then
 else
   echo "▶ Solo mode → git push origin ${PUSH_BRANCH}:${PRODUCTION_BRANCH}"
   _push origin "${PUSH_BRANCH}:${PRODUCTION_BRANCH}" || exit 1
+  _persist_gh_cache   # success → learn (remote-URL → active account)
   echo ""
   echo "✅ Deployed to ${PRODUCTION_BRANCH}"
 fi

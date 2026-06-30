@@ -38,6 +38,18 @@ fi
 
 CONSUMER_NAME="$(basename "$CONSUMER_PATH")"
 
+# gh-account derivation/cache: single source of truth = lib/gh-account.sh (council
+# [opinion:git-account-ssot]). Defensive — stub if absent (cache becomes a no-op).
+if [ -f "$SCRIPT_DIR/lib/gh-account.sh" ]; then
+  # shellcheck source=scripts/lib/gh-account.sh
+  . "$SCRIPT_DIR/lib/gh-account.sh"
+else
+  gh_owner_from_url() { case "${1:-}" in https://github.com/*) local o="${1#https://github.com/}"; o="${o%%/*}"; printf '%s\n' "${o%.git}";; *) printf '%s\n' "";; esac; }
+  gh_cache_put() { :; }
+  gh_cache_del() { :; }
+  gh_switch_to() { return 1; }
+fi
+
 # ---------------------------------------------------------------------------
 # 1. Pre-flight dirty TRIAGE on .claude/ BEFORE sync (push-only consolidation).
 #    ROOT FIX: the previous blunt `exit 1` on ANY dirty .claude/ created a perpetual
@@ -189,8 +201,16 @@ PUSH_EXIT=$?
 PUSH_ERR="$(cat "$PUSH_ERRFILE" 2>/dev/null)"
 rm -f "$PUSH_ERRFILE" 2>/dev/null || true
 
+REMOTE_URL_PCS="$(git -C "$CONSUMER_PATH" remote get-url origin 2>/dev/null || true)"
+OWNER_PCS="$(gh_owner_from_url "$REMOTE_URL_PCS")"
+
 if [ $PUSH_EXIT -eq 0 ]; then
   echo "  ✅ push → $BRANCH"
+  # SUCCESS → learn (remote-URL → active account). Machine-written, never drifts.
+  if [ -n "$OWNER_PCS" ] && command -v gh >/dev/null 2>&1; then
+    ACTIVE_PCS="$(gh api user -q .login 2>/dev/null || echo "")"
+    [ -n "$ACTIVE_PCS" ] && gh_cache_put "$REMOTE_URL_PCS" "$ACTIVE_PCS"
+  fi
   # Pull to confirm local stays current after push (ff-only: safe no-op if already equal,
   # catches fast-forward updates from parallel sessions).
   PULL_OUT=$(git -C "$CONSUMER_PATH" pull --ff-only origin "$BRANCH" 2>&1) || true
@@ -204,13 +224,38 @@ echo "  ❌ $CONSUMER_NAME: push failed (exit $PUSH_EXIT):" >&2
 echo "$PUSH_ERR" | head -5 | sed 's/^/      /' >&2
 
 if echo "$PUSH_ERR" | grep -qiE 'repository not found|not found|does not exist|404'; then
-  echo "  → 404: репо не існує на remote. Перевір: git -C \"$CONSUMER_PATH\" remote -v" >&2
+  echo "  → 404: репо не існує на remote (або wrong account). Перевір: git -C \"$CONSUMER_PATH\" remote -v" >&2
 elif echo "$PUSH_ERR" | grep -qiE '403|permission|denied|forbidden'; then
   ACTIVE=$(gh api user -q .login 2>/dev/null || echo "unknown")
-  echo "  → 403: wrong gh account (активний: $ACTIVE). Запусти check-gh-account.sh вручну." >&2
+  echo "  → 403: wrong gh account (активний: $ACTIVE)." >&2
 elif echo "$PUSH_ERR" | grep -qiE 'GH006|protected branch'; then
   echo "  → Branch protection: потрібен PR. Push-only не дозволений." >&2
+  exit 1
 elif echo "$PUSH_ERR" | grep -qiE 'network|resolve|timed out'; then
   echo "  → Мережа недоступна. Повтори пізніше." >&2
+  exit 1
+fi
+
+# Account-related failure (404/403) → self-heal: invalidate any learned cache entry
+# (it was wrong → re-derive next run) + ask the human ONCE (interactive only), switch,
+# retry once. Success → persist the answer so we never ask again for this repo.
+if echo "$PUSH_ERR" | grep -qiE 'repository not found|not found|does not exist|404|403|permission|denied|forbidden'; then
+  [ -n "$REMOTE_URL_PCS" ] && gh_cache_del "$REMOTE_URL_PCS"
+  if [ -n "$OWNER_PCS" ] && [ -t 0 ] && command -v gh >/dev/null 2>&1; then
+    printf "  ❓ Який gh-аккаунт має write-доступ до %s? (Enter — пропустити): " "$CONSUMER_NAME" >&2
+    read -r ANS_PCS
+    if [ -n "$ANS_PCS" ] && gh_switch_to "$ANS_PCS"; then
+      RETRY_ERR="$(mktemp 2>/dev/null || echo "/tmp/push_retry_$$")"
+      if LC_ALL=C git -C "$CONSUMER_PATH" push origin "HEAD:$BRANCH" 2>"$RETRY_ERR"; then
+        echo "  ✅ push → $BRANCH (після ask-once)"
+        gh_cache_put "$REMOTE_URL_PCS" "$ANS_PCS"   # learn → більше не питати
+        rm -f "$RETRY_ERR" 2>/dev/null || true
+        exit 0
+      fi
+      echo "  ❌ retry під '$ANS_PCS' теж не вдався:" >&2
+      head -3 "$RETRY_ERR" 2>/dev/null | sed 's/^/      /' >&2
+      rm -f "$RETRY_ERR" 2>/dev/null || true
+    fi
+  fi
 fi
 exit 1
