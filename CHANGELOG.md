@@ -4,6 +4,65 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.22.0 — feat: /last-repo-changes — что изменилось в repos workspace простым языком (2026-06-30)
+
+**Приоритет:** 🟢 OPTIONAL (новая read-only команда; ничего не ломает)
+
+**Consumer-facing changes:**
+- **`commands/last-repo-changes.md`** (новая) — read-only отчёт простым языком по изменениям во всех repos workspace: что подтянулось/наработано, что ждёт на remote, кто отстаёт. Группировка по смыслу, **причины из входящего diff DEVLOG** (`[fix:X]`/`[feat:X]`), не из угадывания по diffstat. Default tier (синтез), в отличие от `/pull` (Fast, механика). НЕ мутирует — для подтягивания `/pull`.
+- **`scripts/repo-changes-collect.sh`** (новый) — read-only коллектор: per-repo divergence (ahead/behind), PULLED (commit-msgs + DEVLOG-diff), AVAILABLE (на remote, не локально), STRUCTURAL (renames). Окно: дефолт = дельта последнего pull (ORIG_HEAD..HEAD); `<N>` коммитов; `<since>` spec; `--no-fetch` (по кэшу после /pull).
+- **`scripts/lib/read-workspace-repos.sh`** (новый) — source-able энумератор repos из `.code-workspace` (единый walker; `consumer-pull.sh` мигрирует на него в будущем релизе). Inline-fallback в потребителях если lib отсутствует.
+- **`commands/pull.md`** — pointer в summary: «детальный разбор → `/last-repo-changes --no-fetch`».
+
+**Эффект:** после `/pull` (или в любой момент) — понятный разбор «что и почему изменилось» одной командой, вместо ручного чтения git log по каждому репо.
+
+**Зависимость:** нет. Read-only.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: команда, коллектор, `scripts/lib/` (sync теперь копирует lib/-subdir). Ручных шагов не требует.
+
+## v7.21.3 — fix: Deploy rule приведён к ai-dev-only (агент не пушит main) (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (убирает ловушку «прочитал правило → запушил main»)
+
+**Consumer-facing changes:**
+- **`commands/deploy.md`** — для methodology-platform «деплой» агента = `git push origin ai-dev` (`deploy-push.sh` сам выбирает target по branching-config); merge в `main` — владелец вручную (PR / `/push-merge`), не агент. Раньше текст говорил «деплой = git push origin main», что противоречило AI branch rule.
+
+**Methodology-internal (не синкается, для справки):** `CLAUDE.md` + `templates/CLAUDE-methodology.template.md` Deploy rule приведены к тому же; снято внутреннее противоречие (одна строка говорила ai-dev, другая main). `deploy-push.sh` не менялся — он уже пушил ai-dev/current branch.
+
+**Эффект:** текст правил совпадает с реальным поведением скрипта и с политикой «агент → только ai-dev».
+
+**Зависимость:** нет. Поведение деплоя НЕ меняется (скрипт и так пушил ai-dev) — правка только текста.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
+## v7.21.2 — feat: Plain-language output rule (вывод пользователю простым языком) (2026-06-30)
+
+**Приоритет:** 🟢 NICE-TO-HAVE (улучшает читаемость вывода команд, ничего не ломает)
+
+**Consumer-facing changes:**
+- **`CLAUDE.md` (Workflow rules)** — новое правило **Plain-language output**: команды, выдающие аналитический вывод (`/opinion`, `/research`, `/retro`, `/architecture-audit`, `/diagnose`, `/review`, `/roadmap`, `/product-check`, `/vision`, `/scan-sources`), ведут изложение **простым языком**; жаргон (verdict-метки, Tier, RPN) вторичен. Внутренние артефакты (DEVLOG, AGENT-GAPS) — жаргон уместен. Обобщает прецеденты scan-sources Шаг 2.6 + Confidence Declaration + /opinion.
+
+**Эффект:** вывод команд понятен без расшифровки, консистентно.
+
+**Зависимость:** нет. Backward-compatible. Always-loaded правило (без правок в отдельных командах).
+
+**Actions (при sync):** автоматически через `/push-consumers` (CLAUDE.md overwrite). Ручных шагов не требует.
+
+## v7.21.1 — feat: scan-sources обязательный синтез понятным языком + защита от skip-by-title (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (улучшает вывод /scan-sources — синтез вместо реестра находок)
+
+**Consumer-facing changes:**
+- **`commands/scan-sources.md` Шаг 2.6 (новый)** — обязательный финальный **синтез понятным языком**: «что из всего скана полезно нам», приоритизированно, без жаргона (Tier/verdict/harness запрещены в выводе пользователю; verdict остаётся только в DEVLOG). Закрывает класс «скан = реестр находок, а не вывод».
+- **`commands/scan-sources.md` Шаг 2 augment** — большой источник (>~50KB / >~30 элементов) → читать через exploration-subagent с coverage-log (сколько прочитано/отброшено/категории шума), НЕ skim заголовков. «Отброшено как шум» легитимно только если прочитано.
+- **`commands/skill.md`** — напоминание: skill с bundled-исполняемым кодом (.py/.sh) проходит code-level проверку (/review + secrets-guard).
+
+**Эффект:** `/scan-sources` и `/scan-sources-full` дают читаемый приоритизированный вывод + полное покрытие больших дайджестов вместо title-скимминга.
+
+**Зависимость:** нет. Backward-compatible.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
 ## v7.21.0 — feat: adversarial-критик в /plan re-gated на new-build/structural (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (поведение /plan Шаг 99.3 расширяется — критик срабатывает на большем числе планов)

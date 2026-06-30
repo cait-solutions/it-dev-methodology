@@ -20,7 +20,7 @@
 
 1. **`/secrets` (без аргументов) ИЛИ `/secrets --help`** → немедленно вывести **help screen** (секция `/secrets (без аргументов)` ниже). Context check **не нужен** — меню информационное, скриптов не запускает.
 
-2. **Любой другой аргумент** (`--list`, `--audit`, `--add`, `--show`, `--edit`, `--update`, `--rollback`, `--scrub`, `--rotate`, `--delete`, `--verify-link`) → сначала Context check, затем подкоманда.
+2. **Любой другой аргумент** (`--list`, `--audit`, `--add`, `--show`, `--edit`, `--update`, `--rollback`, `--scrub`, `--rotate`, `--delete`, `--verify-link`, `--sync-consumers`) → сначала Context check, затем подкоманда.
 
 ---
 
@@ -80,6 +80,18 @@
            OPENAI_API_KEY              # OpenAI (стандартное имя)
          [ПРОЕКТ] добавляй только если один провайдер = несколько аккаунтов/проектов.
 
+  🖥️  Одна машина — все local repos (enter once)
+     Секреты с scope:shared → ввести ОДИН РАЗ, все repos на этой машине читают автоматически:
+     bash scripts/set-secret.sh KEY   # при вопросе "scope" выбери shared → сохранится в
+                                      # ~/.config/it-dev/secrets.env (читают ВСЕ твои repos)
+     /secrets --audit  в любом другом repo → покажет "set (shared)" без повторного ввода.
+
+  🔄 Синк shared-service секретов в consumer repos (одна машина, несколько repos)
+     bash scripts/secrets-sync-consumers.sh              # interactive: спросит перед каждым
+     bash scripts/secrets-sync-consumers.sh --dry-run    # показать что изменится без записи
+     Синкаются ТОЛЬКО ключи с sharing_type: shared-service в manifest.
+     Identity secrets (GitHub PAT, личные токены) никогда не синкаются — каждый создаёт сам.
+
   👁  Посмотреть какие секреты есть/нужны
      bash scripts/secrets-show.sh                    (table, без значений)
      bash scripts/secrets-show.sh KEY                (детальный view, без значения)
@@ -101,6 +113,15 @@
   ↩️  Восстановить из backup (если ошибся)
      bash scripts/secrets-rollback.sh                (latest backup)
      bash scripts/secrets-rollback.sh --list         (показать все backups)
+
+  👥 Передать секреты другому разработчику (другая машина)
+     Identity secrets (GitHub PAT, личные токены) → каждый создаёт СВОЙ через how_to_obtain:
+       bash scripts/secrets-show.sh KEY   # → покажет инструкцию how_to_obtain
+     Shared-service secrets (VPS пароль, shared API key) → отправь per-project .env файл:
+       • Файл уже изолирован по проекту (только secrets этого проекта)
+       • Передай через Bitwarden Send / Signal / зашифрованный архив
+       • Разработчик Б кладёт файл в <project>/.env
+     ⛔ Не передавать через Slack/email в открытом виде.
 
   📥 Git over HTTPS без токена в URL (credential helper)
      git config credential.helper "$(pwd)/scripts/git-credential-from-env.sh"
@@ -149,15 +170,21 @@ See also: secrets-management — knowledge-skill (full runbook: threat-model, ro
 
 **Шаг 2 — показать пользователю готовую строку для ввода ТОЛЬКО значения:**
 ```
-✅ Декларация KEY записана в manifest (service/url/login). Осталось ввести значение.
-
-Запусти в ЛЮБОМ интерактивном терминале — отдельный git bash НЕ нужен:
-встроенный терминал VSCode (Ctrl+`), Windows Terminal, или git bash:
+✅ Декларация KEY готова. Введи токен одной командой:
 
     bash scripts/set-secret.sh KEY
 
-Скрипт скрыто (read -s) спросит значение + re-paste confirm → атомарно запишет в .env
-(метаданные уже в manifest — нажимай Enter чтобы оставить их как есть).
+(Запускай в ЛЮБОМ терминале — встроенный VSCode Ctrl+`, Windows Terminal, git bash)
+
+📋 Скрипт спросит 4 вопроса перед токеном — нажимай Enter чтобы пропустить каждый
+   (метаданные уже заполнены агентом):
+
+   Service name [...]: ←  Enter
+   Service URL  [...]: ←  Enter
+   Login        [...]: ←  Enter
+   Expires at   [...]: ←  Enter
+   Token/password value (hidden): ← СЮДА вставь токен (glpat-... / ghp_... / sk-ant-...)
+   Re-paste to confirm (hidden):  ← вставь ещё раз для подтверждения
 
 ⛔ Значение НЕ вставляй в чат — только в скрытый prompt скрипта.
 
@@ -219,6 +246,26 @@ To restore .env from latest backup:
    ```
 3. **Агент НЕ выполняет** — manual process.
 
+### `/secrets --sync-consumers`
+
+Показать пользователю:
+```
+To sync sharing_type:shared-service secrets to all local consumer repos:
+    bash scripts/secrets-sync-consumers.sh              # interactive
+    bash scripts/secrets-sync-consumers.sh --dry-run    # preview only
+
+Что делает:
+  - Читает CLAUDE.local.md → consumers_root → все local repo с manifest
+  - Синкает только ключи с sharing_type: shared-service
+  - Identity secrets (GitHub PAT и т.п.) — НИКОГДА не копирует
+  - Перед перезаписью спрашивает (conflict detection)
+  - Создаёт backup .env.backup-sync-{timestamp} перед изменениями
+  - Только локально — никакого git, remote, сети
+```
+
+Агент может запустить `bash scripts/secrets-sync-consumers.sh --dry-run` сам (read-only preview).
+Реальный sync с записью — пользователь запускает в терминале.
+
 ### `/secrets --verify-link KEY`
 Показать пользователю инструкцию verify что `how_to_obtain` URL still valid + обновить `how_to_obtain_verified_at`:
 ```
@@ -239,6 +286,32 @@ To verify how_to_obtain for KEY:
 - ✅ Masked previews (first 4 + last 4 chars) при confirmation step
 - ❌ **НИКОГДА** не выводить полные значения
 - ✅ Exit codes: 0 = OK, 1 = required missing, 2 = manifest error, 3 = script error, 5 = user aborted
+
+### ⛔ One-secret-per-block rule (multi-secret сценарии — closes batch-paste breakage)
+
+`set-secret.sh` **интерактивный** (read -s prompts). Если вывести несколько `set-secret.sh`-команд **в одном** fenced-блоке (```), пользователь копирует всё разом → терминал выполняет первую команду, входит в её prompt, а следующие строки (`cd ...`, второй `set-secret.sh`) **съедаются как ввод в prompt** → хаос, неверные значения, прерванный ввод.
+
+**ПРАВИЛО:** когда нужно ввести **≥2 секрета** — выводить **РОВНО ОДНУ** `set-secret.sh`-команду на fenced-блок. Каждый секрет = свой ``` блок. Никогда не группировать несколько команд ввода секрета в один блок.
+
+- ✅ Каждая команда (включая предшествующий `cd`) — в **отдельном** ``` блоке.
+- ✅ Над каждым блоком — номер + что создать (URL, scopes) одной строкой.
+- ✅ Явная инструкция: «Вводи по одному. Дождись `✅ Set KEY` перед следующим блоком.»
+- ❌ НЕ выводить 6 команд списком в одном блоке (даже с комментариями-разделителями) — это и есть баг batch-paste.
+
+**Эталон (2 секрета → 2 блока):**
+
+> **1. ebay** — создай Project Access Token: `<url>` (Developer, read+write_repository)
+> ```
+> cd "<path>/ebay-template-documentation" && bash scripts/set-secret.sh GITLAB_EBAY_DOCS
+> ```
+> Дождись `✅ Set GITLAB_EBAY_DOCS`, затем:
+>
+> **2. erp** — создай Project Access Token: `<url>` (Developer, read+write_repository)
+> ```
+> cd "<path>/erp-documentantion" && bash scripts/set-secret.sh GITLAB_ERP_DOCS
+> ```
+
+`cd` + `set-secret.sh` объединяй через `&&` в **одну строку одного блока** — тогда даже если пользователь скопирует блок целиком, выполнится ровно один интерактивный вызов, без зависших `cd` в prompt.
 
 ---
 

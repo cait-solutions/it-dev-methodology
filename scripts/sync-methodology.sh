@@ -1030,6 +1030,20 @@ if [[ "$IS_SELF_APPLY" == "false" ]] && [[ -d "$METHODOLOGY_DIR/templates/script
         echo "  ✓ migrations/$(basename "$mig")"
       done
     fi
+    # Shared source-able libs subdir (read-workspace-repos.sh, etc) — consumers
+    # need these locally because scripts source them at runtime. The top-level
+    # loop skips subdirs ([[ -f ]] || continue), so deliver lib/ explicitly.
+    if [[ -d "$METHODOLOGY_DIR/templates/scripts/lib" ]]; then
+      mkdir -p "$TARGET_DIR/scripts/lib"
+      for libf in "$METHODOLOGY_DIR"/templates/scripts/lib/*; do
+        [[ -f "$libf" ]] || continue
+        ldest="$TARGET_DIR/scripts/lib/$(basename "$libf")"
+        cp "$libf" "$ldest"
+        chmod +x "$ldest" 2>/dev/null || true
+        _track_changed "scripts/lib/$(basename "$libf")"
+        echo "  ✓ lib/$(basename "$libf")"
+      done
+    fi
   fi
 fi
 

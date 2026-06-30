@@ -38,7 +38,7 @@
 | 4 Smoke test — after-effects check (только ai-agent) | ✓ | — | — | — | — | — |
 | 5 Обновить triggers.json (last_deploy) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-Прочитай таблицу ПЕРВЫМ. Пропускай шаги не отмеченные для project_type. Для methodology-platform "деплой" = `git push origin main`; smoke test = ручной запуск `new-project-init.sh` + `sync-methodology.sh` на тестовом target.
+Прочитай таблицу ПЕРВЫМ. Пропускай шаги не отмеченные для project_type. Для methodology-platform "деплой" агента = `git push origin ai-dev` (`deploy-push.sh` сам выбирает target по branching-config); merge в `main` — владелец вручную (PR / `/push-merge`), не агент. Smoke test = ручной запуск `new-project-init.sh` + `sync-methodology.sh` на тестовом target.
 
 ---
 
