@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.21.0 — feat: adversarial-критик в /plan re-gated на new-build/structural (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (поведение /plan Шаг 99.3 расширяется — критик срабатывает на большем числе планов)
+
+**Consumer-facing changes:**
+- **`commands/plan.md` Шаг 99.3** — adversarial spot-check теперь запускается не только на `[critical]`, а на **любом** из: `[critical]` ИЛИ Structural/Level 4+ (Шаг -1.3) ИЛИ план вводит новый модуль/механизм/артефакт/data-flow/интеграцию/команду/hook/скрипт. **Mode-independent** — срабатывает и в Lite, если план new-build.
+- **Modify-known планы** (фикс известного бага, доработка существующего, typo) — критик НЕ запускается (по признаку фрейма, не режима).
+- Мандат критика расширен 3-й линзой — «не та проблема / правильный артефакт уже существует» (framing-bias).
+
+**Эффект:** больше планов получают независимую adversarial-проверку → раньше ловится класс «решаю не ту проблему». Cost: +1 дешёвый sub-agent на new-build плане.
+
+**Зависимость:** нет. Backward-compatible — `[critical]` планы работают как прежде, расширяется только охват.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
+---
+
 ## v7.20.2 — fix: secrets scope-routing (set-secret.sh prompt-with-confirmation + validate-secrets.sh wrong-scope detection) (2026-06-26)
 
 **Приоритет:** 🟢 OPTIONAL (улучшение UX при `scope: shared` в manifest; нет breaking changes)
