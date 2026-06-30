@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.21.1 — feat: scan-sources обязательный синтез понятным языком + защита от skip-by-title (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (улучшает вывод /scan-sources — синтез вместо реестра находок)
+
+**Consumer-facing changes:**
+- **`commands/scan-sources.md` Шаг 2.6 (новый)** — обязательный финальный **синтез понятным языком**: «что из всего скана полезно нам», приоритизированно, без жаргона (Tier/verdict/harness запрещены в выводе пользователю; verdict остаётся только в DEVLOG). Закрывает класс «скан = реестр находок, а не вывод».
+- **`commands/scan-sources.md` Шаг 2 augment** — большой источник (>~50KB / >~30 элементов) → читать через exploration-subagent с coverage-log (сколько прочитано/отброшено/категории шума), НЕ skim заголовков. «Отброшено как шум» легитимно только если прочитано.
+- **`commands/skill.md`** — напоминание: skill с bundled-исполняемым кодом (.py/.sh) проходит code-level проверку (/review + secrets-guard).
+
+**Эффект:** `/scan-sources` и `/scan-sources-full` дают читаемый приоритизированный вывод + полное покрытие больших дайджестов вместо title-скимминга.
+
+**Зависимость:** нет. Backward-compatible.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
 ## v7.21.0 — feat: adversarial-критик в /plan re-gated на new-build/structural (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (поведение /plan Шаг 99.3 расширяется — критик срабатывает на большем числе планов)
