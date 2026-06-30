@@ -70,6 +70,8 @@ bash scripts/with-secret.sh YOUTUBE_PROXY_URL -- py yt-fetch.py --scan
 
 `/scan-sources` Шаг 2 прочитает `file://`-записи в `external-sources.md` (TG-дайджесты, YT-дайджесты) как локальные файлы — статус `fetched` вместо `login-required`.
 
+> **Синтез + coverage наследуются:** большие дайджесты (TG/YT обычно крупные) → `/scan-sources` Шаг 2 делегирует чтение exploration-subagent'у с coverage-log (не skim заголовков), а Шаг 2.6 даёт итоговый синтез понятным языком. Отдельно здесь не дублировать — `scan-sources-full` именно для этого и делегирует в `/scan-sources`.
+
 ---
 
 ## Добавление источников в реестр
