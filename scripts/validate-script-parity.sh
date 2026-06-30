@@ -27,10 +27,13 @@ fi
 ERRORS=0
 CHECKED=0
 
-for tf in templates/scripts/*; do
+# Scope: top-level templates/scripts/* AND the lib/ subdir (source-able shared libs,
+# e.g. read-workspace-repos.sh, gh-account.sh — also under ADR-014 dual-copy contract).
+# Mirror path mapping: templates/scripts/<rel> ↔ scripts/<rel>.
+for tf in templates/scripts/* templates/scripts/lib/*; do
   [ -f "$tf" ] || continue
-  name="$(basename "$tf")"
-  sf="scripts/$name"
+  rel="${tf#templates/scripts/}"   # keeps the lib/ prefix for subdir files
+  sf="scripts/$rel"
   [ -f "$sf" ] || continue   # consumer-only файл — не intersection
   CHECKED=$((CHECKED+1))
   if ! diff -q "$sf" "$tf" > /dev/null 2>&1; then
@@ -38,7 +41,7 @@ for tf in templates/scripts/*; do
     lines="$(diff "$sf" "$tf" | wc -l | tr -d ' ')"
     s_date="$(git log -1 --format=%ci -- "$sf" 2>/dev/null | cut -c1-10)"
     t_date="$(git log -1 --format=%ci -- "$tf" 2>/dev/null | cut -c1-10)"
-    echo "[ERROR] parity: $name — копии расходятся ($lines diff-строк; scripts/=$s_date templates/=$t_date)"
+    echo "[ERROR] parity: $rel — копии расходятся ($lines diff-строк; scripts/=$s_date templates/=$t_date)"
     echo "        Направление выравнивания: свежая дата = intended → перенеси изменение в отставшую копию."
   fi
 done

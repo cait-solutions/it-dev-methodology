@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 #
-# test-check-gh-account.sh — regression guard for the whitelist gh_account parser.
+# test-check-gh-account.sh — regression guard for gh-account resolution (lib/gh-account.sh)
+# and the whitelist parser.
 #
-# WHY: the awk lookup in check-gh-account.sh had a dead-code emit bug — it only resolved
-# the LAST whitelist entry; every other (middle) entry returned empty → URL-owner fallback.
-# Masked because the URL owner usually coincided with the intended gh_account. This test
-# asserts that a MIDDLE entry resolves (the failure that was invisible) + a no-gh_account
-# entry returns empty. Scripts-only (check-gh-account.sh is maintainer push tooling,
-# not delivered to consumers) — no dual-copy.
+# Covers (council [opinion:git-account-ssot]):
+#   (a) cache-path and URL-path resolve to the SAME owner when consistent;
+#   (b) INCIDENT REGRESSION (2026-06-30): URL-owner (IDK-IDK) wins; a stale hand-typed
+#       whitelist gh_account (cait-solutions) does NOT override it — gh_resolve_account
+#       never consults the whitelist;
+#   (c) ask-once → persist → never ask again: once a successful push persists (URL→account),
+#       gh_resolve_account returns the learned account (cache wins over URL-owner);
+#   + whitelist parser middle-entry regression (closes the awk dead-code that only ever
+#     resolved the LAST entry).
 #
-# Hermetic: uses a fixture CLAUDE.local.md + the --lookup-whitelist internal hook
-# (no gh CLI, no auth switch, no real consumer dirs needed).
+# Hermetic: temp git repos with fake remotes + a temp GH_ACCOUNT_CACHE. No gh CLI, no auth.
+# Scripts-only (methodology push tooling, not delivered to consumers) — no dual-copy.
 #
 # Bash 3.2+ compatible.
 
@@ -18,30 +22,11 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CGA="$SCRIPT_DIR/check-gh-account.sh"
-FIX="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/_test_cga_$$.md")"
+LIB="$SCRIPT_DIR/lib/gh-account.sh"
 fails=0
 
-cat > "$FIX" <<'EOF'
-# fixture CLAUDE.local.md
-
-## auto_commit_consumers
-
-```yaml
-auto_commit_consumers:
-  - path: ../first-documentation
-    branch: ai-dev
-    gh_account: first-acct
-  - path: ../middle-documentation
-    # middle entry — the one the dead-code bug never resolved
-    branch: main
-    gh_account: middle-acct
-  - path: ../no-account-documentation
-    branch: ai-dev
-  - path: ../last-documentation
-    branch: ai-dev
-    gh_account: last-acct
-```
-EOF
+# shellcheck source=scripts/lib/gh-account.sh
+. "$LIB"
 
 _assert() {
   local desc="$1" expected="$2" actual="$3"
@@ -53,18 +38,77 @@ _assert() {
   fi
 }
 
-echo "test-check-gh-account: whitelist parser regression"
+# Hermetic temp git repo with a github.com remote.
+_mkrepo() {
+  local dir url
+  dir="$(mktemp -d 2>/dev/null || echo "${TMPDIR:-/tmp}/_cga_repo_$$_$RANDOM")"
+  mkdir -p "$dir"
+  url="$1"
+  ( cd "$dir" && git init -q && git remote add origin "$url" ) >/dev/null 2>&1
+  printf '%s\n' "$dir"
+}
 
-_assert "first entry resolves"  "first-acct"  "$(bash "$CGA" --lookup-whitelist '../first-documentation'  "$FIX")"
-_assert "MIDDLE entry resolves (dead-code bug guard)" "middle-acct" "$(bash "$CGA" --lookup-whitelist '../middle-documentation' "$FIX")"
-_assert "last entry resolves"   "last-acct"   "$(bash "$CGA" --lookup-whitelist '../last-documentation'   "$FIX")"
-_assert "no-gh_account entry → empty" "" "$(bash "$CGA" --lookup-whitelist '../no-account-documentation' "$FIX")"
-_assert "absent entry → empty" "" "$(bash "$CGA" --lookup-whitelist '../does-not-exist' "$FIX")"
+echo "test-check-gh-account: gh-account resolution + whitelist parser"
 
-rm -f "$FIX" 2>/dev/null || true
+# ---- isolate the cache to a temp file (never touch the real one) ----
+export GH_ACCOUNT_CACHE="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/_cga_cache_$$")"
+: > "$GH_ACCOUNT_CACHE"
 
+URL="https://github.com/IDK-IDK/foo.git"
+REPO="$(_mkrepo "$URL")"
+
+# (b) INCIDENT REGRESSION — URL-owner wins, no cache yet.
+_assert "URL-owner derivation"            "IDK-IDK" "$(gh_owner_from_url "$URL")"
+_assert "(b) resolve = URL-owner (no cache)" "IDK-IDK" "$(gh_resolve_account "$REPO")"
+# Stale whitelist value must NOT change resolution (resolver ignores whitelist):
+STALE_WL="cait-solutions"
+_assert "(b) stale whitelist != resolved" "true" "$([ "$STALE_WL" != "$(gh_resolve_account "$REPO")" ] && echo true || echo false)"
+
+# (a) cache-path and URL-path agree when consistent.
+gh_cache_put "$URL" "IDK-IDK"
+_assert "(a) resolve = cache-hit (consistent w/ URL)" "IDK-IDK" "$(gh_resolve_account "$REPO")"
+
+# (c) ask-once → persist → never ask again: human answered a DIFFERENT account
+#     (e.g. a bot with write access) → cache wins over URL-owner on next resolve.
+gh_cache_put "$URL" "deploy-bot"
+_assert "(c) resolve = learned account (cache > URL)" "deploy-bot" "$(gh_resolve_account "$REPO")"
+# invalidate → falls back to URL-owner (self-heal on owner change / failure):
+gh_cache_del "$URL"
+_assert "(c) after invalidate → URL-owner again" "IDK-IDK" "$(gh_resolve_account "$REPO")"
+
+# non-github remote → empty (gh not applicable).
+GLREPO="$(_mkrepo "https://gitlab.com/group/proj.git")"
+_assert "non-github → empty (no gh action)" "" "$(gh_resolve_account "$GLREPO")"
+
+# ---- whitelist parser middle-entry regression (via --lookup-whitelist hook) ----
+FIX="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/_test_cga_$$.md")"
+cat > "$FIX" <<'EOF'
+# fixture CLAUDE.local.md
+```yaml
+auto_commit_consumers:
+  - path: ../first-documentation
+    gh_account: first-acct
+  - path: ../middle-documentation
+    gh_account: middle-acct
+  - path: ../no-account-documentation
+    branch: ai-dev
+  - path: ../last-documentation
+    gh_account: last-acct
+```
+EOF
+_assert "whitelist first"  "first-acct"  "$(bash "$CGA" --lookup-whitelist '../first-documentation'  "$FIX")"
+_assert "whitelist MIDDLE (dead-code guard)" "middle-acct" "$(bash "$CGA" --lookup-whitelist '../middle-documentation' "$FIX")"
+_assert "whitelist last"   "last-acct"   "$(bash "$CGA" --lookup-whitelist '../last-documentation'   "$FIX")"
+_assert "whitelist no-account → empty" "" "$(bash "$CGA" --lookup-whitelist '../no-account-documentation' "$FIX")"
+_assert "whitelist absent → empty"     "" "$(bash "$CGA" --lookup-whitelist '../does-not-exist' "$FIX")"
+
+# ---- cleanup ----
+rm -rf "$REPO" "$GLREPO" 2>/dev/null || true
+rm -f "$FIX" "$GH_ACCOUNT_CACHE" 2>/dev/null || true
+
+echo ""
 if [ "$fails" -eq 0 ]; then
-  echo "PASS: test-check-gh-account (5/5)"
+  echo "PASS: test-check-gh-account (all assertions)"
   exit 0
 else
   echo "FAIL: test-check-gh-account ($fails failed)"
