@@ -36,6 +36,7 @@ WHITELIST_PATTERNS = [
     r'templates[\\/]secrets[^/\\]*\.template(?:\.[a-z]+)?$',
     # methodology canonical skill content
     r'skills[\\/]secrets-management[\\/]SKILL\.md$',
+    r'skills[\\/]secrets[\\/]SKILL\.md$',
     # methodology scripts that manage secrets (defined-name pattern, no wildcards)
     r'(?:^|[\\/])scripts[\\/]with-secret\.sh$',
     r'(?:^|[\\/])scripts[\\/]set-secret\.sh$',
@@ -49,12 +50,13 @@ WHITELIST_PATTERNS = [
     r'(?:^|[\\/])scripts[\\/]secrets-rollback\.sh$',
     r'(?:^|[\\/])scripts[\\/]secrets-cleanup-backups\.sh$',
     r'(?:^|[\\/])scripts[\\/]secrets-delete\.sh$',
+    r'(?:^|[\\/])scripts[\\/]secrets-sync-consumers\.sh$',
     r'(?:^|[\\/])scripts[\\/]git-credential-from-env\.sh$',
     r'(?:^|[\\/])scripts[\\/]clone-consumer\.sh$',
     # mirror in templates/scripts/ (consumer-distribution copies)
     r'templates[\\/]scripts[\\/](?:with-secret|set-secret|check-secret|validate-secrets|'
     r'git-credential-from-env|_get-secret-raw|secrets-scrub|secrets-show|secrets-edit|'
-    r'secrets-update|secrets-rollback|secrets-cleanup-backups|secrets-delete|clone-consumer)\.sh$',
+    r'secrets-update|secrets-rollback|secrets-cleanup-backups|secrets-delete|secrets-sync-consumers|clone-consumer)\.sh$',
     # hooks that enforce secret protection (canonical + synced runtime)
     r'(?:^|[\\/])hooks[\\/]secrets-guard\.py$',
     r'templates[\\/]\.claude[\\/]hooks[\\/]secrets-guard\.py$',
