@@ -93,3 +93,8 @@ TG-каналы и YouTube-каналы регистрируются в `externa
 - YouTube-каналы: `yt-sources.json` (корень репо, untracked)
 - Добавить TG-канал: `bash scripts/with-secret.sh TELEGRAM_API_ID TELEGRAM_API_HASH TELEGRAM_SESSION -- py tg-fetch.py --init` (пересоздаёт реестр из аккаунта)
 - Добавить YouTube-канал: вручную вписать строку в `yt-sources.json`
+---
+
+## Вывод простым языком (обязательно — Plain-language output rule)
+
+Заверши вывод этой команды коротким блоком `## Простыми словами` (2-5 строк): что это значит для пользователя и что делать дальше — понятным языком, без жаргона/меток/внутренних терминов. Остальной вывод (разбор, метки, детали) оставь как есть — резюме добавляется в конце. См. CLAUDE.md → Plain-language output rule.
