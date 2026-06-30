@@ -53,7 +53,7 @@ Rationale: [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md).
 - **Хуки:** Python 3.10+
 - **Шаблоны:** Markdown + JSON + YAML
 - **CI/CD:** ручной push в GitHub
-- **Деплой:** `git push origin main`; consumers подтягивают через `sync-methodology.sh`
+- **Деплой:** агент — `git push origin ai-dev` (через `deploy-push.sh`); merge `ai-dev → main` — владелец (PR / `/push-merge`); consumers подтягивают из `main` через `sync-methodology.sh`
 
 ---
 
@@ -134,7 +134,7 @@ Consumers: остаток держит агентская `/code` pathspec+commi
 
 **Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
 
-**Deploy rule:** "деплой" = `git push origin main`. Перед каждым push:
+**Deploy rule:** «деплой» агента = `git push origin ai-dev` (через `deploy-push.sh` — он сам выбирает target по branching-config). Merge `ai-dev → main` — явное действие владельца (PR / `/push-merge`), **не агента** (AI branch rule). Перед каждым push:
 1. `/review` если не запускался
 2. DEVLOG запись `[deploy]` / `[feat:X]` / `[fix:X]` / `[methodology]`
 3. Bump VERSION если изменены команды / шаблоны / хуки

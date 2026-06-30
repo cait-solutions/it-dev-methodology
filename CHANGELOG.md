@@ -4,6 +4,21 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.21.3 — fix: Deploy rule приведён к ai-dev-only (агент не пушит main) (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (убирает ловушку «прочитал правило → запушил main»)
+
+**Consumer-facing changes:**
+- **`commands/deploy.md`** — для methodology-platform «деплой» агента = `git push origin ai-dev` (`deploy-push.sh` сам выбирает target по branching-config); merge в `main` — владелец вручную (PR / `/push-merge`), не агент. Раньше текст говорил «деплой = git push origin main», что противоречило AI branch rule.
+
+**Methodology-internal (не синкается, для справки):** `CLAUDE.md` + `templates/CLAUDE-methodology.template.md` Deploy rule приведены к тому же; снято внутреннее противоречие (одна строка говорила ai-dev, другая main). `deploy-push.sh` не менялся — он уже пушил ai-dev/current branch.
+
+**Эффект:** текст правил совпадает с реальным поведением скрипта и с политикой «агент → только ai-dev».
+
+**Зависимость:** нет. Поведение деплоя НЕ меняется (скрипт и так пушил ai-dev) — правка только текста.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
 ## v7.21.2 — feat: Plain-language output rule (вывод пользователю простым языком) (2026-06-30)
 
 **Приоритет:** 🟢 NICE-TO-HAVE (улучшает читаемость вывода команд, ничего не ломает)
