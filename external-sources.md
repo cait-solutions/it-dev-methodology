@@ -21,13 +21,13 @@
 
 | # | Source | URL | Что ловить | Частота | last_scanned |
 |---|---|---|---|---|---|
-| 1 | anthropic-cookbook | https://github.com/anthropics/anthropic-cookbook | multi-agent patterns, tool-use, agent skills examples | каждый /retro | — |
-| 2 | anthropic-courses | https://github.com/anthropics/courses | структурированные гайды по Claude, prompt engineering best practices | ежеквартально | — |
-| 3 | claude-code releases | https://github.com/anthropics/claude-code/releases | новые hooks API, slash-commands изменения, agent capabilities (CRITICAL: следить за breaking) | каждый /retro | — |
-| 4 | marketingskills | https://github.com/coreyhaines31/marketingskills | новые marketing-skill patterns, структурные обновления skill-файлов | ежеквартально | — |
-| 5 | mattpocock/skills | https://github.com/mattpocock/skills | engineering-discipline skill patterns (TDD, grill-me, architecture) — эталон для нашего engineering-skill layer | каждый /retro | — |
-| 6 | TG-digest (приватные AI-каналы) | file://tg-digests/digest-2026-06-23.md | AI/автоматизация паттерны из 12 приватных TG-каналов (URAI @vdidreal) | каждый /scan-sources-full | 2026-06-23 |
-| 7 | YT-digest (AI YouTube-каналы) | file://yt-digests/digest-2026-06-23.md | транскрипты 9 YouTube AI-каналов (NicholasPuru, DavidOndrej, VercelHQ, ALEKSEIULIANOV, VolchenkoAI, AIAutomation-n8n, krllmrzv, Zero2LaunchAI, SerhiiNemchynskyi) | каждый /scan-sources-full | 2026-06-23 |
+| 1 | anthropic-cookbook | https://github.com/anthropics/anthropic-cookbook | multi-agent patterns, tool-use, agent skills examples | каждый /retro | 2026-06-30 |
+| 2 | anthropic-courses | https://github.com/anthropics/courses | структурированные гайды по Claude, prompt engineering best practices | ежеквартально | 2026-06-30 |
+| 3 | claude-code releases | https://github.com/anthropics/claude-code/releases | новые hooks API, slash-commands изменения, agent capabilities (CRITICAL: следить за breaking) | каждый /retro | 2026-06-30 |
+| 4 | marketingskills | https://github.com/coreyhaines31/marketingskills | новые marketing-skill patterns, структурные обновления skill-файлов | ежеквартально | 2026-06-30 |
+| 5 | mattpocock/skills | https://github.com/mattpocock/skills | engineering-discipline skill patterns (TDD, grill-me, architecture) — эталон для нашего engineering-skill layer | каждый /retro | 2026-06-30 |
+| 6 | TG-digest (приватные AI-каналы) | file://tg-digests/digest-2026-06-30.md | AI/автоматизация паттерны из 12 приватных TG-каналов (URAI @vdidreal) | каждый /scan-sources-full | 2026-06-30 |
+| 7 | YT-digest (AI YouTube-каналы) | file://yt-digests/digest-2026-06-30.md | транскрипты 9 YouTube AI-каналов (NicholasPuru, DavidOndrej, VercelHQ, ALEKSEIULIANOV, VolchenkoAI, AIAutomation-n8n, krllmrzv, Zero2LaunchAI, SerhiiNemchynskyi) | каждый /scan-sources-full | 2026-06-30 |
 
 > **`last_scanned`** — дата последнего скана через `/scan-sources` (watermark «что нового»). `—` = ещё не сканировался. Колонка опциональна: старый реестр без неё читается graceful (`/scan-sources` дополняет при первом скане).
 
