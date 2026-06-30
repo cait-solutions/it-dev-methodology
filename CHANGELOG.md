@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.21.2 — feat: Plain-language output rule (вывод пользователю простым языком) (2026-06-30)
+
+**Приоритет:** 🟢 NICE-TO-HAVE (улучшает читаемость вывода команд, ничего не ломает)
+
+**Consumer-facing changes:**
+- **`CLAUDE.md` (Workflow rules)** — новое правило **Plain-language output**: команды, выдающие аналитический вывод (`/opinion`, `/research`, `/retro`, `/architecture-audit`, `/diagnose`, `/review`, `/roadmap`, `/product-check`, `/vision`, `/scan-sources`), ведут изложение **простым языком**; жаргон (verdict-метки, Tier, RPN) вторичен. Внутренние артефакты (DEVLOG, AGENT-GAPS) — жаргон уместен. Обобщает прецеденты scan-sources Шаг 2.6 + Confidence Declaration + /opinion.
+
+**Эффект:** вывод команд понятен без расшифровки, консистентно.
+
+**Зависимость:** нет. Backward-compatible. Always-loaded правило (без правок в отдельных командах).
+
+**Actions (при sync):** автоматически через `/push-consumers` (CLAUDE.md overwrite). Ручных шагов не требует.
+
 ## v7.21.1 — feat: scan-sources обязательный синтез понятным языком + защита от skip-by-title (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (улучшает вывод /scan-sources — синтез вместо реестра находок)
