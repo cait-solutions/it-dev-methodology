@@ -142,13 +142,14 @@ grep -A10 '## Branching' CLAUDE.local.md | grep 'mode:'
 
 ### Шаг 3.1 — Push
 
-**Рекомендуется (если есть `scripts/deploy-push.sh`):**
+**Default-путь (если есть `scripts/deploy-push.sh` — methodology-platform и большинство консьюмеров):**
 ```bash
 bash scripts/deploy-push.sh
 ```
-Скрипт читает mode из CLAUDE.local.md и запускает правильную команду. Вывод покажет mode, ветку и target.
+Скрипт читает mode из CLAUDE.local.md, делает `gh auth switch` на правильный аккаунт автоматически (`_ensure_gh_account`) и запускает правильную команду. Вывод покажет mode, ветку и target.
+⛔ Не использовать сырой `git push` при наличии скрипта — он минует `_ensure_gh_account()` → 403 под wrong account.
 
-**Вручную (если скрипта нет) — используй значение mode из Шага 3.0. `{branch}` = текущая ветка (`git branch --show-current`); при `worktree_isolation: auto` это namespaced `{agent_branch}/<task>`, иначе `{agent_branch}`:**
+**Fallback — только если `scripts/deploy-push.sh` отсутствует.** Используй значение mode из Шага 3.0. `{branch}` = текущая ветка (`git branch --show-current`); при `worktree_isolation: auto` это namespaced `{agent_branch}/<task>`, иначе `{agent_branch}`:
 
 `solo` → push напрямую в production:
 ```bash

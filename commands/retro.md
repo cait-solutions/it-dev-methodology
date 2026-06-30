@@ -42,10 +42,23 @@
    - `skipped_warnings.*` — сколько warnings игнорировано
    - `agent_gaps_open_count` — для сигнала в Шаге 2а
 
-**Decision-review skip-rate (Ось 1 data-driven hardening, opinion:mandatory-council 2026-06-20):** прочитать `skipped_warnings.opinion_skipped` (defensive: `.get(...) or 0`). Это число high-stakes планов, где агент пропустил `/opinion` decision-review (council 7/7, soft-триггер /plan Шаг -3). Интерпретация:
-- `0-1` → 🟢 норма (триггер soft by design, эпизодический skip ОК).
-- `≥3` за период → 🟡 **сигнал к hardening**: soft-рекомендация систематически пропускается → рассмотреть усиление (например /code Шаг 0 hard-block при `opinion_skipped`-без-причины, ИЛИ объективный diff-detect перенести раньше в /code). Это и есть Ось 1 переход soft→hard **по данным**, не преждевременно. Зафиксировать в DEVLOG `[retro]` как кандидата на /plan.
-- ⛔ Без этих данных hardening был бы преждевременным (dead-rule риск, урок v4.7.1). Skip-rate — то измеримое, что разблокирует решение «твердеть или нет».
+**Decision-review skip-rate (Ось 1 data-driven hardening, opinion:mandatory-council 2026-06-20):** прочитать `skipped_warnings.opinion_skipped` (backward compat) + `decision_review` блок (defensive: `.get(...) or {}` — старые проекты до schema-бампа не имеют; graceful). Это число high-stakes планов, где агент пропустил `/opinion` decision-review (council 7/7, soft-триггер /plan Шаг -3).
+
+**Метрики (split counters, closes framing-bias instrument, 2026-06-26):**
+- `decision_review.opinion_skipped_single` — планы с одним high-stakes критерием, где opinion пропущен
+- `decision_review.opinion_skipped_compound` — планы с ≥2 критериями (выше риск), где opinion пропущен
+- `decision_review.opinion_ran_caught` — планы где council запущен и поймал реальный дефект
+- `decision_review.opinion_ran_clean` — планы где council запущен, дефектов не найдено
+- `decision_review.review_caught_after_skip` — планы где /review поймал проблему после opinion-skip
+
+**Интерпретация:**
+- `skipped_compound = 0-1` → 🟢 норма. `≥2` → 🟡 сигнал: compound-планы пропускают council систематически.
+- `opinion_ran_caught ≥ 2` при `skipped_compound ≥ 3` → сигнал к рассмотрению hard-block для compound-tier (Ось 1: enforce по данным, не преждевременно).
+- `review_caught_after_skip ≥ 2` → /review gate работает как backstop, но это дорогой сигнал (поздно в цикле).
+- `opinion_ran_clean ≫ opinion_ran_caught` → low signal/noise — рассмотреть сужение compound-критерия (Complexity tax).
+- Любой счётчик `0-1` → 🟢 норма (данных недостаточно для hardening-решения).
+- ⛔ Без этих данных hardening был бы преждевременным (dead-rule риск, урок v4.7.1). Split counters — то измеримое, что разблокирует решение «твердеть или нет».
+- ⛔ `decision_review` блок отсутствует → старый проект до sync; не ошибка, прочитать только `opinion_skipped`.
 
 ---
 
