@@ -298,6 +298,32 @@ if [[ -f "$METHODOLOGY_DIR/templates/secrets-manifest.yaml.template" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Git credential helper auto-config (closes "added repo → no push access" gap).
+# Per-repo, per-host: git-credential-from-env.sh reads THIS repo's .env, so no
+# token duplication into a central .env is needed. Push from inside the consumer
+# (git -C <consumer> push) authenticates via the consumer's own .env.
+# Idempotent: skips if a helper is already configured for the host.
+# Path uses the consumer's OWN scripts/ dir (machine-specific absolute path).
+# ---------------------------------------------------------------------------
+_cred_remote=$(cd "$TARGET_DIR" 2>/dev/null && git remote get-url origin 2>/dev/null || true)
+if [[ -n "$_cred_remote" ]]; then
+  # Extract scheme://host (strip path, user@, port) → credential.<host> key.
+  _cred_host=$(echo "$_cred_remote" | sed -E 's#^([a-z]+://[^/]+).*#\1#; s#//[^@/]+@#//#')
+  if [[ "$_cred_host" == http*://* ]]; then
+    _cred_abspath="$(cd "$TARGET_DIR" && pwd)/scripts/git-credential-from-env.sh"
+    _existing=$(cd "$TARGET_DIR" && git config --get "credential.${_cred_host}.helper" 2>/dev/null || true)
+    if [[ -n "$_existing" ]]; then
+      echo "  - credential helper: уже настроен для $_cred_host (пропуск)"
+    elif [[ -f "$TARGET_DIR/scripts/git-credential-from-env.sh" ]]; then
+      (cd "$TARGET_DIR" && git config "credential.${_cred_host}.helper" "!bash $_cred_abspath")
+      echo "  ✅ credential helper: настроен для $_cred_host → читает .env этого репо (push готов после ввода токена)"
+    else
+      echo "  ⚠️ credential helper: scripts/git-credential-from-env.sh не найден — настрой вручную после sync"
+    fi
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Vision — both single-tier and multi-tier structures created.
 # Solo-dev projects use VISION.md; multi-service projects use docs/vision/
 # ---------------------------------------------------------------------------
