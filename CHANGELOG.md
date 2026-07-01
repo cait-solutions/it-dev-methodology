@@ -4,6 +4,17 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.28.0 — refactor: CLAUDE.md prune (Часть A — обрезка bloat, WHAT/WHY split) (2026-07-01)
+
+**Приоритет:** 🟡 MEDIUM (Anthropic best-practice: lean always-loaded CLAUDE.md — правила не тонут в шуме)
+
+**Consumer-facing changes:**
+- **`templates/CLAUDE.template.md`** обрезан 26k→18k символов (−31%): все 23 workflow-правила + 11 секций сохранены как WHAT (норма + где enforcement), verbose-rationale/примеры/история → cross-ref в `CLAUDE_LONG.md`. Ни одно правило не потеряно (verified grep-инвентарь). Sync OVERWRITE доставит обрезанный CLAUDE.md консьюмерам — правила те же, файл легче для агента.
+
+**Actions (consumer):** ничего — обрезанный CLAUDE.md доедет через sync. Твой `CLAUDE.local.md` не тронут (project-config там). Rationale правил — в `CLAUDE_LONG.md` (read on demand).
+
+**Пара к v7.27.0:** механизм (split-coupling rule в /code) + эта обрезка = один логический milestone (обрезал → закрепил механизм чтобы не распухало снова). Own methodology CLAUDE.md обрезан аналогично 60k→28k. Methodology-bootstrap-шаблон (`CLAUDE-methodology.template.md`) — follow-up (divergent, near-never used).
+
 ## v7.27.0 — feat: CLAUDE.md WHAT/WHY split-coupling rule (механизм против bloat) (2026-07-01)
 
 **Приоритет:** 🟡 MEDIUM (закрывает класс claude-md-bloat-recurrence: правила тонут в шуме раздутого always-loaded файла — Anthropic best-practice #5)
