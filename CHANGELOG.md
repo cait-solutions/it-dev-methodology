@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.27.0 — feat: CLAUDE.md WHAT/WHY split-coupling rule (механизм против bloat) (2026-07-01)
+
+**Приоритет:** 🟡 MEDIUM (закрывает класс claude-md-bloat-recurrence: правила тонут в шуме раздутого always-loaded файла — Anthropic best-practice #5)
+
+**Consumer-facing changes:**
+- **`commands/code.md`** Шаг 5 — новый пункт чеклиста «CLAUDE.md WHAT/WHY split-coupling»: добавляя/расширяя правило в CLAUDE.md, класть в сам файл только WHAT (норма + где enforcement, ≤~5 строк), а WHY (rationale/примеры/история) — парным блоком в CLAUDE_LONG.md. Бьёт в момент создания правила (где раздувание рождается), не блокирующий gate. `validate-artifact-size.sh` остаётся confirmer.
+
+**Обоснование механизма (не блокирующий size-gate):** /opinion council 7/7 — блокирующий size-gate отклонён: конфликтует с anti-cheat (легчайший зелёный путь = удалить правило, а не вынести WHY) + VISION Ось 5 «gaming неотличим машиной» + Ось 1 (эскалация по evidence, не превентивно). Эскалация к by-construction-рендеру (L2) отложена за evidence-trigger (RISKS R-09).
+
+**Actions (consumer):** ничего — правило доедет через sync `commands/`. Применяется при следующем /code, меняющем CLAUDE.md.
+
+**NB:** разовая обрезка уже раздутого CLAUDE.md (Часть A) — отдельный follow-up (см. DEVLOG 2026-07-01, RISKS R-09).
+
 ## v7.26.0 — fix: critic-invocation gap + plain-language закрытый итог (2026-07-01)
 
 **Приоритет:** 🟠 HIGH (устраняет класс ошибок: поведенческий сдвиг нормы проходил без adversarial-проверки)
