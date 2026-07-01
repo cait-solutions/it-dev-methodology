@@ -57,7 +57,7 @@ Centralized model recommendation registry. Команды читают этот 
 
 | Команда | Recommended tier | Effort | Thinking | Upgrade to Capable if | Notes |
 |---|---|---|---|
-| `/plan` | **Default** | High | ON | `[contract]` + threat model; multi-service refactor; 50+ файлов в scope | ❌ Не downgrade to Fast — требуется reasoning и синтез. **Cost-нота:** new-build / Structural / Level 4+ / `[critical]` план спавнит +1 adversarial sub-agent (Шаг 99.3, дешёвый — минимальный промпт без истории); modify-known планы — нет |
+| `/plan` | **Default** | High | ON | `[contract]` + threat model; multi-service refactor; 50+ файлов в scope | ❌ Не downgrade to Fast — требуется reasoning и синтез. **Cost-нота:** new-build / Structural / Level 4+ / `[critical]` план спавнит +1 adversarial sub-agent (Шаг 99.3, дешёвый — минимальный промпт без истории); modify-known без семантического сдвига — нет |
 | `/code` | **Default** (inherits from `/plan`) | High | ON | new class bug discovered mid-task; 50+ файлов в scope обнаружено после верификации | ❌ Не downgrade to Fast — даже на < 20 строк |
 | `/review` | **Default** (никогда не ниже) | High | ON | `[security]` + новый endpoint; обнаружен class-bug при review | ✅ Rule: review_tier ≥ Default всегда. Требуется reasoning для консистентности |
 | `/deploy` | Fast | Low | OFF | smoke test failed; regression detected at after-effects | (always Fast — это чек-листы) |

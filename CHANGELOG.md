@@ -4,6 +4,25 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.26.0 — fix: critic-invocation gap + plain-language закрытый итог (2026-07-01)
+
+**Приоритет:** 🟠 HIGH (устраняет класс ошибок: поведенческий сдвиг нормы проходил без adversarial-проверки)
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** Шаг 99.3 — добавлено **4-е условие** запуска критика: «правка меняет поведенческую семантику нормативного правила / команды / гейта / критерия приёмки». Negative-list сужен: modify-known освобождает **только** если семантика не меняется (typo / bug-fix восстанавливающий уже-задуманное / рефакторинг / пример). Downstream-refs (1081/1126/1140) обобщены до «см. список условий выше» — устранена дрейфуемая дублированная формулировка. Шаг 100 json-шаблон получил поле `adversarial_check: { ran, gate_reason }`.
+- **`commands/review.md`** — добавлен **L4 гейт «Normative-semantics adversarial gate»**: diff в `commands/*.md` / `CLAUDE.md` без `last_plan_session.adversarial_check.ran = true` → 🔵 Recommendation с disposition-вариантами. Backstop не зависит от самооценки автора.
+- **`templates/triggers.json.template`** — новое аддитивное поле `last_plan_session.adversarial_check` (default `null`).
+- **`templates/model-tiers.md`** + **`.claude/model-tiers.md`** — Cost-нота `/plan`: `modify-known без семантического сдвига — нет` (уточнение формулировки).
+- **Plain-language rule v3 (17 команд + 2 шаблона):** footer-блок «## Простыми словами» исправлен — `закрытый итог: либо следующий шаг, либо развилка с критерием`. ⛔ Запрет выдумывать рекомендацию где её нет (anti-cheat). Устраняет overcorrection v2 («конкретная committed-рекомендация / следующий шаг… а НЕ открытый вопрос») которая форсировала инвентирование совета в fact-командах (scope-out, research, last-repo-changes).
+
+**Root cause (G-133):** adversarial critic в Шаге 99.3 не вызывался на modify-known планах — modify-known маскировал семантический сдвиг; plain-language overcorrection прошла без review.
+
+**Эффект:** L3 (preventive, plan-time) + L4 (backstop, review-time). Два слоя закрывают класс «нормативный сдвиг без adversarial-review».
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: `commands/plan.md`, `commands/review.md`, `commands/*.md` (17 файлов), `commands-local/*.md` (3), `templates/triggers.json.template`, `templates/model-tiers.md`, `templates/CLAUDE.template.md`, `templates/CLAUDE-methodology.template.md`. Ручных шагов не требует.
+
+---
+
 ## v7.25.0 — feat: durable plan-file handoff (план переживает затирание параллельной сессией) (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (устраняет потерю plan-state при concurrent-сессиях в одном working tree)
