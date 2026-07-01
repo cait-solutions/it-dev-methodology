@@ -4,6 +4,97 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.29.0 — feat: read-grounding gate (S-1) + /ux-audit + concurrent ID-hazard (SRS upstream) (2026-07-01)
+
+**Приоритет:** 🟠 HIGH (закрывает assumption-gap класс, recurrence 1.0 на инстансе-источнике: `/plan` систематически строил архитектуру на непроверенном предположении о коде)
+
+**Происхождение:** два consumer-authored SRS из ERP (`work/methodology-srs/`) переданы в методологию. Adversarial-критик в `/plan` отклонил предложенный SRS «новый Шаг 1.9» как дубль существующего механизма → усилены два существующих вместо нового шага.
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** Шаг -1.5 — новый чеклист-пункт «Load-bearing assumption falsification»: для `[code]/[contract]/[data]` Full-mode назвать 1-3 предположения о существующем коде/контракте на которых держится архитектура + прочитать артефакт который их ОПРОВЕРГНЕТ (adversarial, не confirming) + `file:line`. «0 предположений» — валидный явный ответ. Ранний redirect до построения архитектуры.
+- **`commands/plan.md`** Шаг 99.3 Confidence #1 sub-check — расширен с платформенных примитивов на любые load-bearing domain-code/contract предпосылки (4 промаха на инстансе были про endpoint-семантику/closure-scope/CSS-coupling — не примитивы). Поздний enforcement-backstop (cap ≤80% если не прочитано).
+- **`commands/ux-audit.md`** (новая) — структурный аудит UX существующих флоу: flow-map → friction-points (HICCUPPS-эвристики) → сравнение с эталонами → приоритизированный список. Сосед `/architecture-audit`/`/doc-audit`/`/product-check`.
+- **`templates/model-tiers.md`** — строка `/ux-audit` (Default · High · ON).
+- **`templates/AGENTS.md.template`** — shared-state hazards расширены ID-allocation registries (Bug-ID `C-NNN`/Gap-ID `G-NNN` коллизия при concurrent worktree-сессиях, G-044): координация через существующий claim-механизм, later-merged renumber'ит свои ID.
+
+**Actions (consumer):** ничего — правила и новая команда доедут через sync `commands/` + `templates/`. Применяется при следующем `/plan`/`/code`.
+
+**Отложено (не в этом релизе):** Layered-Testing SRS (skill `explore-verify` + ярус property/contract) — на паузе: SRS ссылался на «существующий skill `verify-ai-visual`», но тот оказался consumer-local ops-skill (ERP), не глобальный. Нужен либо 2-й валидирующий инстанс, либо отдельный `/plan`.
+
+## v7.28.0 — refactor: CLAUDE.md prune (Часть A — обрезка bloat, WHAT/WHY split) (2026-07-01)
+
+**Приоритет:** 🟡 MEDIUM (Anthropic best-practice: lean always-loaded CLAUDE.md — правила не тонут в шуме)
+
+**Consumer-facing changes:**
+- **`templates/CLAUDE.template.md`** обрезан 26k→18k символов (−31%): все 23 workflow-правила + 11 секций сохранены как WHAT (норма + где enforcement), verbose-rationale/примеры/история → cross-ref в `CLAUDE_LONG.md`. Ни одно правило не потеряно (verified grep-инвентарь). Sync OVERWRITE доставит обрезанный CLAUDE.md консьюмерам — правила те же, файл легче для агента.
+
+**Actions (consumer):** ничего — обрезанный CLAUDE.md доедет через sync. Твой `CLAUDE.local.md` не тронут (project-config там). Rationale правил — в `CLAUDE_LONG.md` (read on demand).
+
+**Пара к v7.27.0:** механизм (split-coupling rule в /code) + эта обрезка = один логический milestone (обрезал → закрепил механизм чтобы не распухало снова). Own methodology CLAUDE.md обрезан аналогично 60k→28k. Methodology-bootstrap-шаблон (`CLAUDE-methodology.template.md`) — follow-up (divergent, near-never used).
+
+## v7.27.0 — feat: CLAUDE.md WHAT/WHY split-coupling rule (механизм против bloat) (2026-07-01)
+
+**Приоритет:** 🟡 MEDIUM (закрывает класс claude-md-bloat-recurrence: правила тонут в шуме раздутого always-loaded файла — Anthropic best-practice #5)
+
+**Consumer-facing changes:**
+- **`commands/code.md`** Шаг 5 — новый пункт чеклиста «CLAUDE.md WHAT/WHY split-coupling»: добавляя/расширяя правило в CLAUDE.md, класть в сам файл только WHAT (норма + где enforcement, ≤~5 строк), а WHY (rationale/примеры/история) — парным блоком в CLAUDE_LONG.md. Бьёт в момент создания правила (где раздувание рождается), не блокирующий gate. `validate-artifact-size.sh` остаётся confirmer.
+
+**Обоснование механизма (не блокирующий size-gate):** /opinion council 7/7 — блокирующий size-gate отклонён: конфликтует с anti-cheat (легчайший зелёный путь = удалить правило, а не вынести WHY) + VISION Ось 5 «gaming неотличим машиной» + Ось 1 (эскалация по evidence, не превентивно). Эскалация к by-construction-рендеру (L2) отложена за evidence-trigger (RISKS R-09).
+
+**Actions (consumer):** ничего — правило доедет через sync `commands/`. Применяется при следующем /code, меняющем CLAUDE.md.
+
+**NB:** разовая обрезка уже раздутого CLAUDE.md (Часть A) — отдельный follow-up (см. DEVLOG 2026-07-01, RISKS R-09).
+
+## v7.26.0 — fix: critic-invocation gap + plain-language закрытый итог (2026-07-01)
+
+**Приоритет:** 🟠 HIGH (устраняет класс ошибок: поведенческий сдвиг нормы проходил без adversarial-проверки)
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** Шаг 99.3 — добавлено **4-е условие** запуска критика: «правка меняет поведенческую семантику нормативного правила / команды / гейта / критерия приёмки». Negative-list сужен: modify-known освобождает **только** если семантика не меняется (typo / bug-fix восстанавливающий уже-задуманное / рефакторинг / пример). Downstream-refs (1081/1126/1140) обобщены до «см. список условий выше» — устранена дрейфуемая дублированная формулировка. Шаг 100 json-шаблон получил поле `adversarial_check: { ran, gate_reason }`.
+- **`commands/review.md`** — добавлен **L4 гейт «Normative-semantics adversarial gate»**: diff в `commands/*.md` / `CLAUDE.md` без `last_plan_session.adversarial_check.ran = true` → 🔵 Recommendation с disposition-вариантами. Backstop не зависит от самооценки автора.
+- **`templates/triggers.json.template`** — новое аддитивное поле `last_plan_session.adversarial_check` (default `null`).
+- **`templates/model-tiers.md`** + **`.claude/model-tiers.md`** — Cost-нота `/plan`: `modify-known без семантического сдвига — нет` (уточнение формулировки).
+- **Plain-language rule v3 (17 команд + 2 шаблона):** footer-блок «## Простыми словами» исправлен — `закрытый итог: либо следующий шаг, либо развилка с критерием`. ⛔ Запрет выдумывать рекомендацию где её нет (anti-cheat). Устраняет overcorrection v2 («конкретная committed-рекомендация / следующий шаг… а НЕ открытый вопрос») которая форсировала инвентирование совета в fact-командах (scope-out, research, last-repo-changes).
+
+**Root cause (G-133):** adversarial critic в Шаге 99.3 не вызывался на modify-known планах — modify-known маскировал семантический сдвиг; plain-language overcorrection прошла без review.
+
+**Эффект:** L3 (preventive, plan-time) + L4 (backstop, review-time). Два слоя закрывают класс «нормативный сдвиг без adversarial-review».
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: `commands/plan.md`, `commands/review.md`, `commands/*.md` (17 файлов), `commands-local/*.md` (3), `templates/triggers.json.template`, `templates/model-tiers.md`, `templates/CLAUDE.template.md`, `templates/CLAUDE-methodology.template.md`. Ручных шагов не требует.
+
+---
+
+## v7.25.0 — feat: durable plan-file handoff (план переживает затирание параллельной сессией) (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (устраняет потерю plan-state при concurrent-сессиях в одном working tree)
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** Шаг 100 — `/plan` теперь пишет утверждённый план как **авторитетный файл** `docs/plans/<date>-<task-slug>.md` (под-шаг 1ter) + сохраняет указатель `last_plan_session.plan_file` в triggers.json.
+- **`commands/code.md`** Шаг 0 — `/code` читает план из `plan_file` (авторитет), fallback на triggers summary / ask если файл отсутствует. Carry-over `plan_file` в Шаг 7.
+- **`templates/triggers.json.template`** — новое аддитивное поле `last_plan_session.plan_file` (default `null`, defensive `.get` — старые консьюмеры не ломаются).
+
+**Эффект:** `triggers.json last_plan_session` — single-writer; параллельная сессия в одном working tree затирала его → план терялся (наблюдалось 3× 2026-06-30, спасали вручную в docs/plans/). Теперь план — durable-файл, переживает затирание. Закрывает **value-overwrite** слой shared-tree collision (append-журналы DEVLOG уже self-preserve через merge=union).
+
+**Зависимость:** нет. `plan_file` аддитивно — план без файла (Lite / старый consumer) работает как раньше (fallback).
+
+**Actions (при sync):** автоматически через `/push-consumers`. Доставляются: `commands/plan.md`, `commands/code.md`, `templates/triggers.json.template`. Ручных шагов не требует.
+
+**НЕ закрывает (отдельные задачи):** gh active account гонка (machine-global → Layer 3 fleet-auth); deploy auto-merge в main vs ai-dev-only (G-132); форс-worktree (бьётся с IDE-concurrent workflow владельца).
+
+## v7.24.1 — feat: scan-sources анализ по 6 осям полезности (fix code-bias) (2026-06-30)
+
+**Приоритет:** 🟡 RECOMMENDED (улучшает охват анализа источников — не только код)
+
+**Consumer-facing changes:**
+- **`commands/scan-sources.md` Шаг 2 п.4** — анализ находок теперь по **явному 6-осевому чеклисту** (эффективность/стоимость · поведение агента · процесс/гейты · контекст · тулинг · домен проекта), с выводом по каждой оси «всплыло/пусто». Раньше было голое «decision-relevant» → агент сваливался в code-bias (отметал не-код находки). Домен проекта **инстанцируется** из `NORTH-STAR.md` / `CLAUDE.local.md` / имени репо — не дефолтит к коду.
+- Per-project override осей — **отложен** за evidence-gate (добавляется реактивно через /plan для конкретного проекта, не секцией у всех).
+
+**Эффект:** /scan-sources перестаёт молча отбрасывать не-код находки (эффективность, процесс, поведение); каждый консьюмер оценивает по своему домену.
+
+**Зависимость:** нет. Backward-compatible.
+
+**Actions (при sync):** автоматически через `/push-consumers`. Ручных шагов не требует.
+
 ## v7.24.0 — feat: gh-account SSOT — единый self-learning резолвер git-аккаунта (Layer 1+2) (2026-06-30)
 
 **Приоритет:** 🟡 RECOMMENDED (исправляет класс «push под wrong account → 404/403»; поведение деплоя улучшается, ничего не ломает)

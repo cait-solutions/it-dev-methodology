@@ -40,9 +40,11 @@
     "service": null,
     "mode": "Full",
     "code_run": true,
+    "plan_file": null,
     "commitments": [],
     "sustainment": [],
-    "deferred": []
+    "deferred": [],
+    "adversarial_check": null
   },
   "last_deploy": {
     "date": null,

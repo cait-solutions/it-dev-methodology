@@ -80,6 +80,6 @@ Decompose tasks along **module boundaries** so concurrent scopes don't overlap. 
 
 ## Notes
 
-- **Shared state hazards** (not file-scoped): `VERSION`, lockfiles (`package-lock.json`, `poetry.lock`), `triggers.json`, migration sequence files. Two sessions bumping these race even in separate worktrees → `/deploy` guards `VERSION` with `git fetch && git diff origin/<branch>`. Coordinate other shared files via a claim row covering them.
+- **Shared state hazards** (not file-scoped): `VERSION`, lockfiles (`package-lock.json`, `poetry.lock`), `triggers.json`, migration sequence files, **ID-allocation registries** (sequential Bug-ID `C-NNN` / Gap-ID `G-NNN` in `AGENT-GAPS.md`/`CODE-GAPS.md` — two worktree sessions independently reading "last ID" and incrementing collide on the same next number, e.g. both claiming `C-002`). Two sessions bumping these race even in separate worktrees → `/deploy` guards `VERSION` with `git fetch && git diff origin/<branch>`. Coordinate other shared files (including ID registries) via a claim row covering them — e.g. `Task: Gap-ID range | Owner: <session> | File-scope: AGENT-GAPS.md ID-space | Claimed: G-1NN reserved`. On a real collision, the later-merged session renumbers its own IDs before merge (cheaper than a locking mechanism for a low-frequency race).
 - **Platform:** `git worktree` needs git ≥ 2.5; verify on Git Bash/Windows before relying on `auto` (see `CLAUDE.local.md ## Branching`).
 - This file is **project-owned** — sync adds it if missing but never overwrites your claims.
