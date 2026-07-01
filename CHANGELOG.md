@@ -4,6 +4,23 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.29.0 — feat: read-grounding gate (S-1) + /ux-audit + concurrent ID-hazard (SRS upstream) (2026-07-01)
+
+**Приоритет:** 🟠 HIGH (закрывает assumption-gap класс, recurrence 1.0 на инстансе-источнике: `/plan` систематически строил архитектуру на непроверенном предположении о коде)
+
+**Происхождение:** два consumer-authored SRS из ERP (`work/methodology-srs/`) переданы в методологию. Adversarial-критик в `/plan` отклонил предложенный SRS «новый Шаг 1.9» как дубль существующего механизма → усилены два существующих вместо нового шага.
+
+**Consumer-facing changes:**
+- **`commands/plan.md`** Шаг -1.5 — новый чеклист-пункт «Load-bearing assumption falsification»: для `[code]/[contract]/[data]` Full-mode назвать 1-3 предположения о существующем коде/контракте на которых держится архитектура + прочитать артефакт который их ОПРОВЕРГНЕТ (adversarial, не confirming) + `file:line`. «0 предположений» — валидный явный ответ. Ранний redirect до построения архитектуры.
+- **`commands/plan.md`** Шаг 99.3 Confidence #1 sub-check — расширен с платформенных примитивов на любые load-bearing domain-code/contract предпосылки (4 промаха на инстансе были про endpoint-семантику/closure-scope/CSS-coupling — не примитивы). Поздний enforcement-backstop (cap ≤80% если не прочитано).
+- **`commands/ux-audit.md`** (новая) — структурный аудит UX существующих флоу: flow-map → friction-points (HICCUPPS-эвристики) → сравнение с эталонами → приоритизированный список. Сосед `/architecture-audit`/`/doc-audit`/`/product-check`.
+- **`templates/model-tiers.md`** — строка `/ux-audit` (Default · High · ON).
+- **`templates/AGENTS.md.template`** — shared-state hazards расширены ID-allocation registries (Bug-ID `C-NNN`/Gap-ID `G-NNN` коллизия при concurrent worktree-сессиях, G-044): координация через существующий claim-механизм, later-merged renumber'ит свои ID.
+
+**Actions (consumer):** ничего — правила и новая команда доедут через sync `commands/` + `templates/`. Применяется при следующем `/plan`/`/code`.
+
+**Отложено (не в этом релизе):** Layered-Testing SRS (skill `explore-verify` + ярус property/contract) — на паузе: SRS ссылался на «существующий skill `verify-ai-visual`», но тот оказался consumer-local ops-skill (ERP), не глобальный. Нужен либо 2-й валидирующий инстанс, либо отдельный `/plan`.
+
 ## v7.28.0 — refactor: CLAUDE.md prune (Часть A — обрезка bloat, WHAT/WHY split) (2026-07-01)
 
 **Приоритет:** 🟡 MEDIUM (Anthropic best-practice: lean always-loaded CLAUDE.md — правила не тонут в шуме)
