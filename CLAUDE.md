@@ -1,10 +1,10 @@
 # CLAUDE.md — methodology-platform
 
-Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md](CLAUDE_LONG.md).
+Operational rules. Short form. For rationale, examples and history — see [CLAUDE_LONG.md](CLAUDE_LONG.md).
 
-> **Convention:** CLAUDE.md = WHAT (rules). CLAUDE_LONG.md = WHY (rationale, edge cases, examples).
+> **Convention:** CLAUDE.md = WHAT (rules). CLAUDE_LONG.md = WHY (rationale, edge cases, examples). При добавлении/расширении правила: WHAT (≤~5 строк) сюда, WHY — в CLAUDE_LONG под тем же якорем. Enforcement: `/code` Шаг 5 split-coupling + `validate-artifact-size.sh` (confirmer).
 
-**Project type:** `methodology-platform` — особый. Это продукт методологии для других проектов. Runtime-проверки неприменимы. Применимы: контракты команд, валидность скриптов, кросс-ссылки артефактов.
+**Project type:** `methodology-platform` — продукт методологии для других проектов. Runtime-проверки неприменимы; применимы контракты команд, валидность скриптов, кросс-ссылки артефактов.
 
 ---
 
@@ -14,34 +14,32 @@ Operational rules. Short form. For rationale and history — see [CLAUDE_LONG.md
 2. [PRODUCT.md](../it-dev-methodology-documentation/PRODUCT.md) — что методология обещает консьюмерам
 3. [SYSTEM-MAP.md](../it-dev-methodology-documentation/docs/architecture/SYSTEM-MAP.md) — связи компонентов
 4. [USER-MAP.md](../it-dev-methodology-documentation/docs/product/USER-MAP.md) — пользовательские потоки и capabilities
-5. [ARTIFACT-MAP.md](../it-dev-methodology-documentation/docs/product/ARTIFACT-MAP.md) — артефакты и их владельцы
+5. [ARTIFACT-MAP.md](../it-dev-methodology-documentation/docs/product/ARTIFACT-MAP.md) — артефакты и владельцы
 
-> **Two-repo architecture:** `it-dev-methodology/` = код (commands/, templates/, skills/, scripts/). `it-dev-methodology-documentation/` = документация (VISION.md, PRODUCT.md, DEVLOG.md, ROADMAP.md, IDEAS.md, AGENT-GAPS.md, PRODUCT-GAPS.md, docs/architecture/, docs/product/, docs/adr/). При поиске любого из этих файлов — искать в `../it-dev-methodology-documentation/`, НЕ в корне methodology repo. Closes G-071.
+> **Two-repo architecture:** `it-dev-methodology/` = код (commands/, templates/, skills/, scripts/). `it-dev-methodology-documentation/` = документация (VISION, PRODUCT, DEVLOG, ROADMAP, IDEAS, AGENT-GAPS, PRODUCT-GAPS, docs/). Эти файлы искать в `../it-dev-methodology-documentation/`, НЕ в корне code-repo. (closes G-071)
 
 ---
 
 ## Architecture invariants (MUST / MUST NOT)
 
-Методология = 6 слоёв (см. [SYSTEM-MAP.md](../it-dev-methodology-documentation/docs/architecture/SYSTEM-MAP.md)): команды / шаблоны / хуки / агенты-скелеты / скрипты / **skills** (Agent Skills, knowledge-domain).
+6 слоёв (см. [SYSTEM-MAP.md](../it-dev-methodology-documentation/docs/architecture/SYSTEM-MAP.md)): команды / шаблоны / хуки / агенты-скелеты / скрипты / skills.
 
 **MUST:**
-- `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/`, `skills/` — единственный источник правды (синхронизируются консьюмерам)
-- `commands-local/` — methodology-only команды (НЕ синхронизируются консьюмерам; пример: `/pull-consumers`)
-- **Committed derived-layer в консьюмерах (v7.8.2+, closes self-contained-clone):** `.claude/commands/`, `.claude/hooks/`, `.claude/model-tiers.md` у консьюмера **коммитятся** (НЕ gitignored) — свежий `git clone` consumer-репо обязан иметь рабочие команды/хуки **без** ручного sync. Они остаются **derived** (канон в `commands/`/`templates/` — MUST NOT редактировать напрямую, sync перезатирает). Ignored у консьюмера только **runtime-local**: `.claude/.version` (per-clone marker, churns каждый sync) + `.claude/state/` (per-developer счётчики). ⚠️ **Граница (dogfood-исключение):** в **самой методологии** `.claude/commands/` остаётся gitignored — канон (`commands/`) локален → регенерируется self-sync'ом; `deploy-push.sh` self-apply churns `SYNCED_AT`+VERSION в banner на каждом деплое без commit → committed-копия дала бы dirty-tree. Existing консьюмеры расклеиваются миграцией `v7.8.2-uningore-derived-layer` (auto, self-applying на sync).
-- Любая правка синхронизируемого артефакта → bump VERSION
-- При **breaking** изменении схемы `triggers.json.template` (удаление / переименование поля, смена типа) → мажор bump + migration инструкция. **Аддитивное** изменение (новое опциональное поле, читаемое через `.get(...) or default`) → minor bump — `merge_triggers_json` дозаливает поле, existing values preserved, старый consumer не падает (graceful read). Критерий: «сломается ли consumer с pre-change triggers.json?» да → major, нет → minor.
-- `skills/*/SKILL.md` — YAML frontmatter MUST быть на строке 1; banner идёт в `metadata:` блок, НЕ как HTML-комментарий сверху (Agent Skills spec: frontmatter на line 1 обязательно)
-- **Dual-copy parity (ADR-014, closes G-122):** файл существующий И в `scripts/`, И в `templates/scripts/` — правится **синхронно в обе копии** в одном PR (канон = `scripts/`, templates = consumer-delivery). Enforcement: `validate-script-parity.sh` — первый gate в `deploy-push.sh` (error, блок) + ось `/doc-audit`. Намеренные расхождения запрещены (whitelist = slope)
-- **Schema→skill parity (closes G-120):** добавление capability-поля в **consumer-facing schema** (`templates/secrets-manifest.yaml.template` и т.п.) ОБЯЗАНО сопровождаться апдейтом соответствующего **knowledge-skill** (`skills/*/SKILL.md`) в том же PR — skill = поверхность авто-активации, которую агент консультирует в runtime. Механизм только в template+validator **невидим агенту** (рекуррент «патч в data-слой, но не в agent-knowledge surface»: type:file v6.4.7 был в validator+template+.gitignore, но `secrets-management/SKILL.md` молчал → агент re-derive'ил с нуля). Enforcement (двухслойный, L3 detect): **`validate-schema-skill-parity.sh`** — deploy-time detector в `deploy-push.sh` (token-presence schema-поле ↔ парный SKILL.md; severity=warn по умолчанию, `SCHEMA_SKILL_SEVERITY=error` для блока; declarative pairs-карта в шапке скрипта) **+** `/review` Schema↔skill parity ось (pre-merge). ⚠️ Это L3 (присутствие токена), не L4 семантика — pure-config / non-agent-knowledge поля допустимо не зеркалить (WARN, не блок)
+- `commands/`, `templates/`, `templates/.claude/hooks/`, `templates/.claude/agents/`, `skills/` — единственный источник правды (синхронизируются консьюмерам). `commands-local/` — methodology-only (НЕ синхронизируются).
+- **Committed derived-layer в консьюмерах** (v7.8.2+): `.claude/commands/`, `.claude/hooks/`, `.claude/model-tiers.md` у консьюмера коммитятся (свежий clone имеет рабочие команды без ручного sync), но остаются derived (канон в `commands/`/`templates/` — не редактировать напрямую). Ignored у консьюмера только runtime-local: `.claude/.version` + `.claude/state/`. Граница: в **самой методологии** `.claude/commands/` gitignored (dogfood-исключение).
+- Любая правка синхронизируемого артефакта → bump VERSION.
+- Breaking-изменение схемы `triggers.json.template` (удаление/переименование поля, смена типа) → major bump + migration. Аддитивное (новое опциональное поле, `.get(...) or default`) → minor bump.
+- `skills/*/SKILL.md` — YAML frontmatter на строке 1; banner в `metadata:` блок, не HTML-комментарий сверху.
+- **Dual-copy parity (ADR-014):** файл в `scripts/` И `templates/scripts/` правится синхронно в обе копии в одном PR. Enforcement: `validate-script-parity.sh` (error-gate в `deploy-push.sh`).
+- **Schema→skill parity:** capability-поле в consumer-facing schema (`secrets-manifest.yaml.template` и т.п.) обязано сопровождаться апдейтом парного `skills/*/SKILL.md` в том же PR. Enforcement: `validate-schema-skill-parity.sh` (warn, `SCHEMA_SKILL_SEVERITY=error` для блока) + `/review`.
 
 **MUST NOT:**
-- ❌ Редактировать `.claude/commands/*.md` напрямую — это банер-prefixed копии; канон в `commands/`
-- ❌ Редактировать `.claude/skills/*/SKILL.md` напрямую — копии с `{{SYNCED_AT}}`; канон в `skills/`
-- ❌ Удалять команды без мажор bump VERSION + migration инструкция (breaking)
-- ❌ Использовать bash 4-features (`${var,,}`, associative arrays) — Git Bash на Windows ставит 3.2
-- ❌ Дублировать контент между шаблонами
-- ❌ Класть команду которая должна попадать к консьюмерам в `commands-local/` (правило: shared → `commands/`, methodology-only → `commands-local/`)
-- ❌ Менять `sync-methodology.sh` / `new-project-init.sh` итерацию команд на recursive (`find`, `**/*.md`) без явного exclude `commands-local/`
+- ❌ Редактировать `.claude/commands/*.md` / `.claude/skills/*/SKILL.md` напрямую — банер-prefixed копии; канон в `commands/` / `skills/`.
+- ❌ Удалять команды без major bump + migration.
+- ❌ Bash 4-features (`${var,,}`, associative arrays) — Git Bash Windows = 3.2.
+- ❌ Дублировать контент между шаблонами.
+- ❌ Класть shared-команду в `commands-local/` (shared → `commands/`, methodology-only → `commands-local/`).
+- ❌ Менять итерацию команд в `sync-methodology.sh` / `new-project-init.sh` на recursive без exclude `commands-local/`.
 
 Rationale: [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md).
 
@@ -49,159 +47,97 @@ Rationale: [CLAUDE_LONG.md § Architecture](CLAUDE_LONG.md).
 
 ## Stack
 
-- **Скрипты:** Bash 3.2+ (Git Bash on Windows)
-- **Хуки:** Python 3.10+
-- **Шаблоны:** Markdown + JSON + YAML
-- **CI/CD:** ручной push в GitHub
-- **Деплой:** агент — `git push origin ai-dev` (через `deploy-push.sh`); merge `ai-dev → main` — владелец (PR / `/push-merge`); consumers подтягивают из `main` через `sync-methodology.sh`
+- **Скрипты:** Bash 3.2+ (Git Bash on Windows) · **Хуки:** Python 3.10+ · **Шаблоны:** Markdown + JSON + YAML · **CI/CD:** ручной push в GitHub.
+- **Деплой:** агент — `git push origin ai-dev` (через `deploy-push.sh`); merge `ai-dev → main` — владелец (PR / `/push-merge`); consumers подтягивают из `main` через `sync-methodology.sh`.
 
 ---
 
 ## Data ownership (short)
 
-| Слой | Источник правды | Кто пишет | Инвалидация |
-|---|---|---|---|
-| `commands/*.md` | да | владелец | при правке + push |
-| `templates/*.md` | да | владелец | при правке + push |
-| `templates/.claude/hooks/*.py` | да | владелец | при правке + push |
-| `templates/.claude/agents/*.template.md` | да | владелец (структура); консьюмер (тело) | при правке + push |
-| `skills/*/SKILL.md` | да | владелец | при правке + push |
-| `VERSION` | да | владелец | при ручном bump |
-| `.claude/` (этот репо) | нет (производное) | `sync-methodology.sh .` | при self-sync |
-| Консьюмер `.claude/commands/*.md` | нет (производное) | `sync-methodology.sh` | при sync |
-| Консьюмер `.claude/skills/*/SKILL.md` | нет (производное) | `sync-methodology.sh` | при sync |
+| Слой | Источник правды | Кто пишет |
+|---|---|---|
+| `commands/*.md` · `templates/*` · `templates/.claude/hooks/*.py` · `skills/*/SKILL.md` · `VERSION` | да | владелец (при правке + push) |
+| `templates/.claude/agents/*.template.md` | да (структура) | владелец (структура) · консьюмер (тело) |
+| `.claude/` (этот репо) · консьюмер `.claude/commands|skills/` | нет (производное) | `sync-methodology.sh` |
 
-Full table with examples and trade-offs: [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данных-полная).
+Full table: [CLAUDE_LONG.md § Data map](CLAUDE_LONG.md#карта-данных-полная).
 
 ---
 
 ## Don'ts
 
-- ❌ Не редактировать `.claude/commands/*.md` напрямую (банер-prefixed копии)
-- ❌ Не удалять команды без мажор bump + migration
-- ❌ Не ломать `methodology-platform` плейсхолдер
-- ❌ Не использовать bash 4+
-- ❌ Не коммитить `.claude/settings.local.json`
-- ❌ Не дублировать контент между шаблонами
-- ❌ Не использовать project-specific имена в templates (canon + consumers должны быть абстрактны; примеры в comments только)
+- ❌ Редактировать `.claude/commands/*.md` напрямую · удалять команды без major bump+migration · ломать `methodology-platform` плейсхолдер · bash 4+ · коммитить `.claude/settings.local.json` · дублировать контент между шаблонами · использовать project-specific имена в templates (canon + consumers абстрактны; примеры только в comments).
 
 ---
 
 ## Design Spec vs ADR
 
-Два типа документации решений. Выбор по одному вопросу:
-
 | Вопрос | Артефакт |
 |---|---|
-| Это архитектурное **решение** (принято навсегда, с отвергнутыми альтернативами)? | **ADR** (`docs/adr/ADR-NNN-*.md`) |
-| Это **спецификация** как именно работает фича/механизм (может уточняться)? | **Design Spec** (`docs/services/<svc>/<FEATURE>_DESIGN.md`) |
-| Нужна аргументация per-requirement + пример на каждый пункт? | **Design Spec** |
-| Одно предложение «мы решили X потому что Y, отвергли Z»? | **ADR** |
+| Архитектурное **решение** (навсегда, с отвергнутыми альтернативами)? | **ADR** (`docs/adr/ADR-NNN-*.md`) |
+| **Спецификация** как работает фича/механизм (уточняется)? Аргументация per-requirement + пример? | **Design Spec** (`docs/services/<svc>/<FEATURE>_DESIGN.md`) |
 
-**Совместное использование:** ADR принимает решение → Design Spec описывает детали реализации этого решения. Пример: ADR-009 (разделить Substitution/BOM/Succession) + `SUBSTITUTION_DESIGN.md` (как именно работает механизм замен).
-
-**Шаблон:** `templates/DESIGN_SPEC.template.md` (синхронизируется консьюмерам).
-**Skill:** `/design-spec` — интерактивное создание/обновление по VCD-протоколу (Anti-Loss, Draft/Final, аргументация + пример на каждый пункт).
-
-**Место хранения в консьюмер-проекте:**
-- Фича одного сервиса → `docs/services/<service>/<FEATURE>_DESIGN.md`
-- Cross-service / платформенная → `docs/architecture/<FEATURE>_DESIGN.md`
+ADR решает → Design Spec описывает детали реализации. Шаблон: `templates/DESIGN_SPEC.template.md`. Skill: `/design-spec` (VCD-протокол). Место: фича одного сервиса → `docs/services/<svc>/`; cross-service → `docs/architecture/`. Детали: [CLAUDE_LONG.md § Design Spec](CLAUDE_LONG.md).
 
 ---
 
 ## Workflow rules
 
-**Command-first invariant (первичная персона = AI engineer):** целевой пользователь методологии — **AI engineer**, который оркеструет AI через **команды и skills** (PRODUCT.md «Целевые пользователи»). Скрипты **не скрыты и доступны** — но это **внутренняя реализация**, не пользовательский путь. Правило:
-- ❌ НЕ рекомендовать пользователю «запусти `bash scripts/...`» как действие. Направлять на **команду** (`/deploy`, `/secrets`, `/push-consumers`, …). Скрипт упоминать только как «что команда делает внутри».
-- ✅ **Архитектуру взаимодействия выстраивать через команды:** новая операция доступная консьюмеру ОБЯЗАНА иметь command/skill точку входа. Если операция требует ручного `bash scripts/X.sh` от пользователя → это gap, обернуть в команду. Скрипт = как, команда = интерфейс.
-- ✅ Исключение: **владелец методологии** (this repo) при разработке самой методологии запускает скрипты напрямую (сопровождение, не consumer-path). Внутри команд агент тоже вызывает скрипты — это реализация. Запрет узкий: не инструктировать **консьюмера** запускать скрипт вместо команды.
+**Command-first invariant:** целевой пользователь = AI engineer, оркеструющий AI через **команды и skills**. ❌ Не рекомендовать пользователю «запусти `bash scripts/...`» — направлять на команду; скрипт = «что команда делает внутри». ✅ Новая consumer-операция обязана иметь command/skill точку входа. Исключение: владелец методологии запускает скрипты напрямую (сопровождение). Детали: [CLAUDE_LONG.md § Command-first](CLAUDE_LONG.md).
 
 **Implementation through /code:** после `/plan` — реализация через `/code`. Прямая правка нетривиальных изменений запрещена.
 
-**Commit-discipline (parallel-safe):** коммить через explicit pathspec — `git commit <пути> -m`, НЕ `git add <file>` + bare `git commit`. Bare commit коммитит **весь staging-индекс**, включая файлы застейдженные параллельной сессией → захват чужой работы (инцидент a17ecc1). Перед commit: `git diff --cached --name-only` → staged ⊆ `/plan` Шаг 1 scope. Деталь: [/code Шаг 2](commands/code.md), [ADR-002 § Index-capture](../it-dev-methodology-documentation/docs/adr/ADR-002-branching-mode-contract.md).
+**Commit-discipline (parallel-safe):** коммить explicit pathspec — `git commit <пути> -m`, НЕ `git add` + bare `git commit` (bare коммитит весь индекс → захват чужой работы). Перед commit: `git diff --cached --name-only` ⊆ scope. Детали: [/code Шаг 2](commands/code.md), ADR-002.
 
-**Parallel-session rule (честные regulator-levels — closes «объявили L4, построили L1» класс):** при рутинной параллельной работе (≥2 сессии) — `worktree_isolation: auto` в `CLAUDE.local.md`. ⚠️ **`auto` НЕ создаёт worktree автоматически** — методология не имеет актора, запускающего `git worktree add`; изоляция требует, чтобы агент/пользователь **реально создал worktree** (opt-in, Windows-verified-once). Только при созданном worktree dirty-коллизия невозможна by-construction (отдельные деревья → отдельные копии VERSION/CHANGELOG/DEVLOG → merge через PR).
+**Parallel-session rule:** при ≥2 сессиях — `worktree_isolation: auto` в `CLAUDE.local.md`. ⚠️ `auto` НЕ создаёт worktree сам — изоляция требует, чтобы агент/пользователь реально создал worktree (opt-in). Non-worktree floor (две сессии в одном дереве): explicit-pathspec commit (L3) + monotonic VERSION-bump в `deploy-push.sh` (L4) + `merge=union` в `.gitattributes` для append-журналов (L4 для PR-пути). Остаточный same-region риск держит агентская `/code` дисциплина (pathspec + commit-immediately), НЕ человек. `AGENTS.md` = L1 read-and-claim. Детали и regulator-разбор: [CLAUDE_LONG.md § Parallel-session](CLAUDE_LONG.md).
 
-**Floor для non-worktree случая** (две сессии в ОДНОМ дереве — частый реальный случай):
-- `git commit <pathspec>` discipline — **L3** (защищает от multi-file index-capture a17ecc1, НЕ от same-file interleave).
-- monotonic VERSION-bump в `deploy-push.sh` — **L4** для version-race (единая точка аллокации на merge; работает через Bash/git, не Edit-tool).
-- **`merge=union` в `.gitattributes`** для append-heavy журналов (CHANGELOG, DEVLOG, AGENT-GAPS, PRODUCT-GAPS, IDEAS) — **L4 для separate-branch/PR-пути**: при 3-way merge обе стороны добавленных строк сохраняются by-construction (verified 2026-06-20: union-драйвер держит оба блока, 0 конфликт-маркеров). Работает ТОЛЬКО при true 3-way merge — `deploy-push.sh` использует `gh pr merge --merge` (не squash), драйвер срабатывает. Детект регрессии merge-стратегии: `validate-log-merge.sh` (section-count guard, warn). ⚠️ **Граница:** union покрывает merge **разных веток**; две сессии в ОДНОМ дереве на ОДНОЙ ветке union не покрывает (нет merge) → для этого случая нужен **worktree** (отдельные деревья → отдельные ветки → PR → union держит). Closes G-117 same-file interleave для worktree/PR-пути. /opinion+ council 7/7 2026-06-20: fragment-files отвергнут (assemble-race + index-overcapture + disproportionate при 0 рецидивах) в пользу union.
-- **Остаточный риск (shared-tree same-branch same-region hand-edit + index-capture незакоммиченного файла) держит АГЕНТ, не человек** (closes G-121 «нет заботы о пользователе»): остаток покрыт агентской `/code` дисциплиной — explicit-pathspec (не захватывает чужой файл) + commit-immediately после write-операции над общим журналом (закрывает окно index-capture). У **пользователя нет remembered-обязанности** — он git руками не делает. ⚠️ Раньше здесь стояло «реально создавай worktree при ≥2 сессиях» — это была L1 human-obligation, которую владелец не может отслеживать (нарушение Ось 1); удалена.
-- `worktree` — **опциональный** выбор того, кто запускает сессию (belt-and-suspenders для редкого same-region edge), НЕ запоминаемая обязанность. Авто-создание worktree хуком **невозможно** (SessionStart не релоцирует уже-запущенную сессию — /opinion 2026-06-21). Concurrency-auto-gate (L4) отложен до evidence (≥2-3 подтверждённых same-region инцидента) — не строим преждевременно (Ось 5).
-- `AGENTS.md` = prompt-coordination doc (**L1** read-and-claim), НЕ L4-enforcement как ошибочно заявлял ADR-002 (исправлено amendment 2026-06-20).
+**Deploy branch tracing (F5):** `/deploy` на ветке `ai-dev` — различает agent-automated от manual (audit trail).
 
-Consumers: остаток держит агентская `/code` pathspec+commit-immediately дисциплина (синкается). `worktree` доступен опционально тому, кто запускает параллельные сессии — не обязанность.
+**Deploy rule:** «деплой» агента = `git push origin ai-dev` (через `deploy-push.sh`). Merge `ai-dev → main` — владелец (PR / `/push-merge`), не агент. Перед каждым push: (1) `/review` если не запускался; (2) DEVLOG `[deploy]`/`[feat:X]`/`[fix:X]`/`[methodology]`; (3) bump VERSION если менялись команды/шаблоны/хуки.
 
-**Deploy branch tracing (F5):** Деплой через `/deploy` команду выполняется на ветке `ai-dev` (или другой designated для agent deploys) чтобы различить agent-automated от manual human work. Team collaboration: git log показывает "commit by Claude on ai-dev" vs "commit by John on feature/auth". Это важно для audit trail и regression tracking.
+**Architecture decision rule:** новая команда/шаблон/изменение схемы `triggers.json` → делегировать `architect` sub-agent (сначала своя рекомендация, потом architect). architect/qa/security — on-demand через auto-discovery, не hard-wired конвейер (VISION Граница 8). Детали: [CLAUDE_LONG.md § Architecture decision rule](CLAUDE_LONG.md).
 
-**Deploy rule:** «деплой» агента = `git push origin ai-dev` (через `deploy-push.sh` — он сам выбирает target по branching-config). Merge `ai-dev → main` — явное действие владельца (PR / `/push-merge`), **не агента** (AI branch rule). Перед каждым push:
-1. `/review` если не запускался
-2. DEVLOG запись `[deploy]` / `[feat:X]` / `[fix:X]` / `[methodology]`
-3. Bump VERSION если изменены команды / шаблоны / хуки
+**Opinion canonical practice:** high-stakes планы (новый механизм / breaking change / `[critical]`) — `/opinion` перед `/code` = канонная практика (explicit opt-in, не hard-block). `/plan` Шаг -3 рекомендует автоматически; skip → `skipped_warnings.opinion_skipped` → `/retro` rate.
 
-**Architecture decision rule:** новая команда / шаблон / изменение `triggers.json` схемы → делегировать `architect` sub-agent. Сначала собственная рекомендация, потом architect. **NB:** architect вызывается **on-demand** через Claude Code auto-discovery (frontmatter `description`), не hard-wired обязательный pass — Claude Code делегирует когда уместно. `qa`/`security` суб-агенты доступны, но **только опционально** (например `/review` Шаг 3.5 при `[security]`/`[quality]` gap); фиксированный multi-agent конвейер отвергнут (VISION Граница 8). Rationale + примеры: [CLAUDE_LONG.md § Architecture decision rule](CLAUDE_LONG.md).
+**Fix rule:** симптом → найди причину. Локальный фикс без обоснования = красный флаг (default — системный).
 
-**Opinion canonical practice:** для high-stakes планов (новый механизм / breaking change / `[critical]` Risk Tier) — `/opinion` перед `/code` = канонная практика. Это explicit opt-in (не hard-block): пользователь запускает явно. `/plan` Шаг -3 автоматически рекомендует `/opinion` при срабатывании high-stakes сигналов. Skip фиксируется в `skipped_warnings.opinion_skipped` → `/retro` показывает rate → data-driven hardening при необходимости.
+**Anti-cheat rule (no-gate-weakening):** ⛔ Никогда не ослабляй артефакт/критерий чтобы пройти гейт — меняй измеряемое, не измеритель. Любой гейт (`/review`, `/doc-audit`, `validate-*`, acceptance, тест). Граница: изменить гейт как явное решение с named-обоснованием (гейт был неверным) — допустимо; ради прохождения без обоснования — cheat. Enforcement: `/code` Шаг 3 п.4 + `/review`. Примеры: [CLAUDE_LONG.md § Anti-cheat](CLAUDE_LONG.md).
 
-**Fix rule:**
-- Симптом или причина? Симптом → найди причину
-- Локальный или системный? Локальный без обоснования = красный флаг
+**Ground-before-act rule:** ПЕРЕД утверждением/действием о структуре / состоянии / версии / cross-repo workflow — прочитать live-источник, не отвечать из памяти или generic-конвенции. Триггеры → что читать:
 
-**Anti-cheat rule (no-gate-weakening, closes no-gate-weakening class):** ⛔ Никогда не ослабляй **артефакт** или **критерий**, чтобы пройти квалити-гейт. Удовлетвори гейт по существу — измеряемое, не измеритель. Применяется к ЛЮБОМУ гейту (универсальный core, не только тесты): `/review`, `/doc-audit`, `validate-maps-coverage`, acceptance-критерий, тест.
-- **Домен разработки (пример):** не отключай падающий тест · не правь реализацию только чтобы check позеленел · не over-mock'ай чтобы обойти coverage.
-- **Не-dev домены (пример):** не удаляй обязательную секцию артефакта чтобы пройти `/doc-audit` · не ослабляй acceptance чтобы пройти `/review` · не выкидывай узел карты чтобы пройти `validate-maps-coverage`.
-- **Граница (легитимно ≠ cheat):** изменить гейт/критерий как явное решение с named обоснованием (гейт был неверным) — допустимо. Изменить ради прохождения без обоснования — cheat.
-- Enforcement: `/code` Шаг 3 п.4 (L1 prompt-rule) + `/review` Completeness-check no-gate-weakening класс (L3 detect). Дополняет «Не маскировать симптом» (`/code` Шаг 3) осью «не ослабляй гейт».
+| Вопрос/действие про… | Прочитать ПЕРЕД ответом |
+|---|---|
+| структуру / «где что» / setup | USER-MAP + SYSTEM-MAP |
+| состояние репо / init | `git ls-remote` + `git log` (не single-clone) |
+| VERSION bump / «свободна ли версия» | `git show HEAD:VERSION` + `git log --oneline -3` |
+| cross-repo git-инструкция третьей стороне | `git ls-remote --heads origin` |
+| «что делает команда/методология X» | актуальный текст `commands/<X>.md` |
+| legacy/механизм в design-spec/доке | real code `file:line` |
+| «версия актуальна?» у консьюмера | `.claude/.version` vs `VERSION` (drift-таблица `/push-consumers`) |
 
-**Ground-before-act rule (closes assumption-gap recurrence class — `/architecture-audit` recurrence_rate=0.53, самый высокий из всех категорий):** ПЕРЕД любым утверждением или действием о **структуре / состоянии / версии / cross-repo workflow** — прочитать live-источник, не отвечать из внутренней модели или generic-конвенции. Это **общий L3-регулятор**, обобщающий разрозненные per-command pre-flights (DOM-rule, commit-discipline, cite-gate), которые чинили класс локально → паттерн возвращался на каждой непокрытой поверхности (free-chat, draft-фаза, version bump, инструкции третьей стороне).
+⛔ «Уверен на N%» без чтения источника = hunch, не evidence → verify-first. Detection: `/retro` + `/architecture-audit` мониторят recurrence_rate по `assumption-gap` (рост ≥0.4 = нужен L4). Детали: [CLAUDE_LONG.md § Ground-before-act](CLAUDE_LONG.md).
 
-Канонические триггеры и обязательная верификация (если хоть один сработал — СНАЧАЛА читать, потом отвечать):
+**Completeness rule:** каждое решение (/plan, /code, /review, /deploy) явно указывает: что закрывается (happy path) · что НЕ закрывается (gaps, edge cases) · почему gaps OK или требуют шагов. Без этого → план не утверждён, код не merged, деплой не выполнен.
 
-| Если вопрос/действие про… | Прочитать ПЕРЕД ответом | Закрывает |
-|---|---|---|
-| структуру проекта / «где что лежит» / setup / workspace | USER-MAP + SYSTEM-MAP (always-available canon) | G-109 |
-| текущее состояние репо / «репо пустой?» / init | `git -C <repo> ls-remote` + `git log` (не single-clone view) | G-117 |
-| VERSION bump / «свободна ли версия» | `git show HEAD:VERSION` + `git log --oneline -3` | G-116 |
-| cross-repo git-инструкция третьей стороне | `git ls-remote --heads origin` (фактические ветки, не generic flow) | G-014, [[G-018]], 2026-… |
-| «что делает команда / методология X» | актуальный текст `commands/<X>.md` (не по памяти) | L778-класс |
-| описание legacy/механизма в design-spec/доке | real code `file:line` (не по памяти модели) | G-105 |
-| sync/adoption «версия актуальна?» у консьюмера | `.claude/.version` consumer vs актуальный `VERSION` клона (drift-таблица `/push-consumers`) | push-consumers-drift |
+**Sustainment rule:** каждый Full `/plan`, создающий/меняющий механизм, обязан выполнить Шаг 97 Sustainment Declaration + вывести секцию «## Жизнеобеспечение» (Trigger · Refresh · Detection · Owner). «❌ НЕТ» без commitment → Self-Lint не passed. `/review`: новый механизм в diff без `sustainment[]` → 🔴. После /code — строка в `docs/architecture/LIVING-ARTIFACTS.md`. Детали: [/plan Шаг 97](commands/plan.md).
 
-⛔ «Уверен на N%» про структуру/состояние **без чтения источника** = это hunch, не evidence → понизить до verify-first. Пользовательская инструкция «проверь не галлюцинируешь ли» — человек, компенсирующий именно этот класс; правило делает компенсацию структурной. Detection: `/retro` + `/architecture-audit` Шаг 6.3 мониторят recurrence_rate по `assumption-gap` — рост ≥0.4 = правило не держит, нужен L4. Закрывает класс G-039/G-085/G-100/G-105/G-106/G-109/G-116/G-117 (один корень, ≥8 раз cross-ref в AGENT-GAPS).
+**HIGH risks action rule:** если `RISKS.md` есть — `/plan` pre-flight проверяет open HIGH без запланированного фикса; HIGH старше 14 дней без /plan → показать до анализа. Нет `RISKS.md` → пропустить тихо.
 
-**Completeness rule:**
-Каждое решение (в /plan, /code, /review, /deploy) ДОЛЖНО явно указать:
-- Что закрывается (main path, happy cases)
-- Что НЕ закрывается (gaps, edge cases, параллельные пути)
-- Почему эти gaps OK или требуют дополнительных шагов
-Без этого анализа → план не утверждён, код не merged, деплой не выполнен.
+**Frontend DOM verification rule:** задача трогающая `.vue`/`.tsx`/`.jsx`/`.svelte`/`.css`/`.html` — верификация DOM до commit. Три пути: (1) Playwright E2E; (2) screenshot + Read tool с описанием DOM; (3) explicit skip с письменной причиной. «Написал → должно работать» без одного из трёх = не завершено.
 
-**Sustainment rule (closes G-099 class):** Каждый Full `/plan`, создающий или меняющий механизм/артефакт, **обязан** выполнить Шаг 97 Sustainment Declaration и вывести пользователю отдельную секцию **«## Жизнеобеспечение (Sustainment)»** с per-артефакт таблицей: Trigger · Refresh · Detection · Owner. «❌ НЕТ» в ячейке без шага/commitment в плане → Self-Lint не passed. `/review` gate: новый механизм в diff без `sustainment[]` в triggers.json → 🔴. После /code — добавить строку нового механизма в `docs/architecture/LIVING-ARTIFACTS.md` (PR-coupling, closes LAR-integration). Детали: [/plan Шаг 97](commands/plan.md).
+**ROADMAP Done-trigger rule:** каждый `/code`, завершающий methodology milestone, добавляет запись в `## Done` в том же PR (planner path — из `## Now`; reactive path — новая строка). Typo/bugfix без milestone → пропустить.
 
-**HIGH risks action rule:** Если `RISKS.md` существует — `/plan` pre-flight проверяет open HIGH severity риски без запланированного фикса. Любой HIGH риск старше 14 дней без связанного /plan → агент показывает его до начала анализа. Закрывает паттерн «долгого пути»: баг найден → записан в RISKS.md → лежит в backlog без action неделями. Если `RISKS.md` отсутствует → пропустить тихо.
+**Recommendation-first rule:** при любом clarifying question — сначала своя рекомендация с обоснованием, потом вопрос. «Не знаю куда» без рекомендации = agent gap. Исключение: вопрос принципиально требует выбора владельца (security/бизнес-приоритет).
 
-**Frontend DOM verification rule:** Любая задача затрагивающая файлы `.vue` / `.tsx` / `.jsx` / `.svelte` / `.css` / `.html` — верификация реального DOM обязательна до commit. Три допустимых пути: (1) Playwright E2E тест запуск, (2) screenshot через Claude Code + Read tool с явным описанием что видно в DOM, (3) explicit skip с письменной причиной. «Написал код → должно работать» без одного из трёх = шаг не завершён.
+**Actor-burden rule:** ⛔ Решение, перекладывающее на **человека** повторяющуюся remembered-обязанность («не забывай делать X»), при наличии агентского/структурного актора — нарушение Ось 1. Дефолт: human-remember = красный флаг → назови агент/структурный актор или обоснуй отсутствие. Освобождены: one-time setup, решения принципиально требующие человека, осознанный opt-in. Enforcement: `/plan` Шаг 1.5 + `/review` eyes-check.
 
-**ROADMAP Done-trigger rule (closes G-101, P-008):** Каждый `/code`, завершающий methodology milestone, **обязан** добавить запись в `## Done` в том же PR (/code Шаг 5 ROADMAP PR-coupling).
-- **Planner path** (задача была в `## Now`) → переместить запись из `## Now` в `## Done`.
-- **Reactive path** (задача не была в `## Now` — gap → /plan → /code) → создать новую строку в `## Done` с кратким описанием.
-Критерий «milestone»: задача имеет самостоятельный task_id И закрывает gap или добавляет capability методологии. Typo/bugfix без самостоятельного milestone → пропускать. Критерий «завершён»: основная часть реализована и задеплоена, edge cases могут быть отложены.
+**Research-capture rule:** решение-влияющий вывод (WebSearch или direct-experience + verdict) → предложить `[research:X]` в DEVLOG до конца сессии (закрывает cross-session gap). Incidental — Stop hook детектирует; planned — `/research`. ❌ Не пропускать под «это понятно из контекста».
 
-**Recommendation-first rule (closes G-102):** При любом clarifying question — **сначала дать собственную рекомендацию с обоснованием**, затем спрашивать если нужно. «Не знаю куда» без рекомендации = agent gap. Исключение: вопрос принципиально требует выбора владельца (security-решение, бизнес-приоритет). Применяется в `/plan` Шаг 0 и везде где агент задаёт вопрос пользователю.
+**Inline `[?]` convention:** маркер `[?]` в тексте → применить Opinion Protocol ([/opinion](commands/opinion.md)): North Star extraction → committed verdict → «Что меня беспокоит». Не давать generic-ответ без VISION-anchor.
 
-**Actor-burden rule (забота о пользователе, closes G-121):** ⛔ Решение, перекладывающее на **человека** повторяющуюся **remembered-обязанность** («не забывай делать X каждый раз / при ≥N»), при том что существует **агентский или структурный актор** — это нарушение Ось 1 (методология сама ведёт процесс, не требует помнить). **Дефолт: human-remember = красный флаг** — назови агент/структурный актор (хук / команда / git-механизм / валидатор) ИЛИ обоснуй почему его нет. Не отдельная ось — это третий вопрос **Actor-discovery-path check** (`/plan` Шаг 1.5): не только «кто запустит», но «не человек ли это, которому придётся помнить». **Освобождены:** one-time setup (`set-secret.sh` раз), решения принципиально требующие человека (бизнес-приоритет, security-выбор), осознанный opt-in. Few-shot: ❌ «при ≥2 сессиях создавай worktree вручную» (burden на человека, не отслеживается) → ✅ «агентская /code pathspec-дисциплина держит остаток; worktree опционален». Enforcement: `/plan` Шаг 1.5 (author-time) + `/review` eyes-check (семантическая, не token-grep — не L3-structural, честно eyes).
+**Self-apply rule (methodology-platform only):** `deploy-push.sh` авто-запускает `sync-methodology.sh .` после merge через guard `[ -d commands ] && [ -f scripts/sync-methodology.sh ]` (consumers не имеют `commands/` → guard false → не затронуты).
 
-**Research-capture rule (closes knowledge-evaporation class, closes cross-session gap):** При обнаружении решение-влияющего вывода в процессе исследования или опытной эксплуатации (WebSearch, или direct-experience + явный verdict) — **предложить запись `[research:X]` в DEVLOG** до конца сессии. Закрывает cross-session gap: вывод записанный в DEVLOG или memory доступен новой сессии того же проекта без повторного открытия.
-- **Incidental finding** (находка попутно во время любой задачи): Stop hook детектирует автоматически (WebSearch + verdict-keyword → `Source: <url>`; operational patterns из execution + verdict-keyword → `Source: direct-experience`).
-- **Planned research** ([/research](commands/research.md)): запись в DEVLOG (Шаг 5 команды) обязательна.
-- **Scope:** ANY research — маркетплейс, технология, конкурент, регуляторика, API, domain knowledge — если вывод влияет на будущее решение.
-- ❌ Не пропускать запись под предлогом «это понятно из контекста» — следующая сессия не имеет этого контекста.
-
-**Inline `[?]` convention:** лёгкий маркер для встраивания в любой текст запроса — означает «нужно твоё честное мнение здесь». Агент при обнаружении `[?]` — применяет Opinion Protocol ([/opinion](commands/opinion.md)): North Star extraction → committed verdict → «Что меня беспокоит». Примеры: `«Думаю добавить X [?]»` · `«[?] стоит ли разделять Y?»` · `«Как думаешь [?]?»`. ❌ Агент НЕ пропускает `[?]` и НЕ даёт generic ответ без VISION.md anchor.
-
-**Self-apply rule (methodology-platform only):** `deploy-push.sh` автоматически запускает `sync-methodology.sh .` после каждого merge через guard `[ -d commands ] && [ -f scripts/sync-methodology.sh ]`. Guard-маркер: consumers не имеют `commands/` source-dir → guard false → consumer не затронут. Ручной self-apply нужен только если deploy-push.sh не использовался.
-
-Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
+Rationale и исторические примеры: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LONG.md).
 
 ---
 
@@ -209,246 +145,111 @@ Rationale and historical examples: [CLAUDE_LONG.md § Workflow rules](CLAUDE_LON
 
 Strong → weak: Schema constraint > No alternative path > Input structure > Few-shot > Description > Prompt rule.
 
-При добавлении правила → спросить "есть ли level-4+ структурный фикс?". Если да — primary, правило secondary.
-
-Пример: defensive `triggers.json` чтение в командах = level-1. Level-4 — единая схема в `templates/triggers.json.template`.
-
-Details: [CLAUDE_LONG.md § Level-4 framework](CLAUDE_LONG.md).
+При добавлении правила → спросить «есть ли level-4+ структурный фикс?». Если да — primary, правило secondary. Пример: defensive `triggers.json` чтение = L1; L4 — единая схема в `templates/triggers.json.template`. Details: [CLAUDE_LONG.md § Level-4 framework](CLAUDE_LONG.md).
 
 ---
 
 ## Model tier rule
 
-Каждая команда методологии MUST содержать секцию `## Рекомендуемая модель` с **6 полями**: Default tier / **Extended (UI settings): effort + thinking** / Upgrade / Downgrade / Mid-task escalation / Pre-flight model check.
+Каждая команда MUST содержит секцию `## Рекомендуемая модель` с 6 полями: Default tier / Extended (effort + thinking) / Upgrade / Downgrade / Mid-task escalation / Pre-flight model check.
 
-**Рекомендации трёхмерны (closes blind-effort/thinking класс, G-123):** любая рекомендация модели — в каждой команде И в **любой динамической точке где агент предлагает следующий шаг — включая свободный чат** (`/plan`/`/code` после `/opinion`, trigger-вопросы, mid-task escalation, **любое предложение запустить `/plan`/`/code` вне команды**) — ОБЯЗАНА быть в формате `tier · effort · thinking`, не только tier. Tier выбирает модель; **Effort** (слайдер Low/Medium/High) + **Thinking** (toggle ON/OFF) — UI-настройки рядом с выбором модели, которые пользователь выставляет для оптимального reasoning. Рекомендация только по tier («Sonnet»/«Opus») оставляет пользователя настраивать effort/thinking вслепую. Дефолты класса + task-shape модификаторы (deep-reasoning / `[critical]` → High+ON; mechanical → Low+OFF) — канон [.claude/model-tiers.md](.claude/model-tiers.md) § Effort & Thinking.
+**Рекомендации трёхмерны:** любая рекомендация модели — в команде И в любой динамической точке (включая свободный чат) — в формате `tier · effort · thinking`, не только tier. Effort (Low/Medium/High) + Thinking (ON/OFF) — UI-настройки. Дефолты класса + task-shape модификаторы (deep-reasoning/`[critical]` → High+ON; mechanical → Low+OFF): [.claude/model-tiers.md](.claude/model-tiers.md).
 
-**Few-shot (свободный чат = покрыт этим правилом, G-123):**
-- ❌ «Хочешь запустить `/plan` на это?» — proposal без рекомендации модели.
-- ❌ «Запускай `/plan` (Sonnet)» — только tier, нет effort+thinking.
-- ✅ «Запускай `/plan` — рекомендуемая: Default (Sonnet) · effort: High · thinking: ON» — трёхмерный формат в свободном чате ✓.
-
-Канон: [.claude/model-tiers.md](.claude/model-tiers.md). При добавлении новой команды → добавь строку в матрицу (включая колонки Effort/Thinking) + секцию в command-файл; `/review` блокирует merge без обеих, и flag'ает секцию `## Рекомендуемая модель` без строки effort+thinking (🔵).
-
-Pre-flight check **спрашивает пользователя** о текущей модели (не self-detect — system prompt unreliable). Подтверждённое значение переиспользуется в сессии. Effort/thinking — advisory тонкая настройка (как tier, выставляется пользователем в UI; auto-switch невозможен).
-
-Когда Anthropic переименовывает модели — обнови **только** Mapping таблицу в `model-tiers.md`.
-
-Details: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
+Pre-flight check **спрашивает пользователя** о модели (не self-detect). При добавлении команды → строка в матрицу model-tiers.md + секция в файл; `/review` блокирует без обеих. Anthropic renames → обновить только Mapping-таблицу. Детали + few-shot: [CLAUDE_LONG.md § Model tier rule](CLAUDE_LONG.md).
 
 ---
 
 ## Mermaid link rule
 
-При каждой записи или обновлении ` ```mermaid ` блока в артефакте — **автоматически** обновить ссылку:
+При каждой записи/обновлении ` ```mermaid ` блока — авто-обновить ссылку:
 
 ```bash
-# Авто-обновление всех ссылок в documentation repo (предпочтительно):
-bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation
-
-# Авто-обновление конкретного файла:
-bash scripts/update-mermaid-links.sh ../it-dev-methodology-documentation/docs/product/USER-MAP.md
-
-# Ручная генерация URL для одного файла (если скрипт недоступен):
-py scripts/mermaid-link.py <file>
+bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation   # все ссылки doc-repo
+bash scripts/update-mermaid-links.sh <file>                                        # конкретный файл
+py scripts/mermaid-link.py <file>                                                  # ручная генерация URL
 ```
 
-Ссылка — дополнение к коду диаграммы, не замена. Self-hosted: изменить `BASE_URL` в `scripts/mermaid-link.py`.
-
-**Формат над каждым mermaid-блоком** (вставляется автоматически скриптом):
-
-```
-https://mermaid.live/edit#pako:...
-```
-
-Голый URL на отдельной строке без обёрток. Ctrl+Click открывает в браузере (VSCode auto-linkify), тройной клик выделяет **только** URL для копирования.
-
-**Одна диаграмма — одна ссылка.** Разбивать на mini + full запрещено: дублирование и путаница.
-
-**⛔ pako-URL НЕ проходит через генерацию модели (G-100):** модель не выводит pako-строки в чат — ни целиком, ни частично. Причина: токен-за-токеном транскрипция 1200+ символов base64 не гарантирует точность — один искажённый символ рушит zlib-поток (доказано: index 71, `X`→`W`). Единственный валидный путь: `update-mermaid-links.sh` пишет URL прямо в файл → агент даёт в чат `[filename:line](path#Lline)` ссылку → пользователь Ctrl+Click по URL внутри файла. Это дополняет G-085 cite-gate (origin) осью fidelity.
-
-**Авто-обновление (two-repo):** для methodology-platform — выполни ОБЕ команды:
-- `bash scripts/update-mermaid-links.sh` — methodology repo
-- `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation` — documentation repo
-
-**Валидация:** `bash scripts/validate-mermaid-links.sh [--root DIR]`
-Exit 1 = MISSING_LINK или STALE_LINK. Для single-repo проектов — только одна команда.
-
-**L2 agent-responsibility rule (closes silent-hook class):** после любого `Edit`/`Write` файла содержащего ` ```mermaid ` блок — агент **обязан** запустить скрипт напрямую:
-- single-repo: `bash scripts/update-mermaid-links.sh <file>`
-- two-repo, файл в doc-repo: `bash scripts/update-mermaid-links.sh --root ../it-dev-methodology-documentation`
-
-`post-edit-watchdog.py` остаётся страховкой — **не primary механизм**. Если скрипт не найден → сообщить явно, не игнорировать молча.
+- Голый URL (`https://mermaid.live/edit#pako:...`) на отдельной строке над блоком, без `[текст](url)` обёрток. Ссылка — дополнение к коду, не замена. Одна диаграмма — одна ссылка.
+- ⛔ **pako-URL НЕ проходит через генерацию модели (G-100):** модель не выводит pako-строки в чат (транскрипция рушит zlib-поток). Только: скрипт пишет URL в файл → агент даёт `[file:line](path#Lline)` → пользователь Ctrl+Click.
+- **Two-repo:** выполнить ОБЕ команды (methodology repo + `--root ../it-dev-methodology-documentation`). Валидация: `bash scripts/validate-mermaid-links.sh` (exit 1 = MISSING/STALE).
+- **L2 agent-responsibility:** после любого Edit/Write файла с ` ```mermaid ` блоком — агент **обязан** запустить скрипт напрямую (`post-edit-watchdog.py` — страховка, не primary). Скрипт не найден → сообщить явно.
 
 ---
 
 ## Artifact Storage Rule
 
-> ⚠️ **Термин-коллизия:** skill `/artifact-design` (Claude Code built-in) — это про HTML-страницы публикуемые на claude.ai через Artifact tool. Он **не относится** к методологическим артефактам (DEVLOG, ADR, ROADMAP, карты). Если нужно создать claude.ai-страницу — `/artifact-design`; если нужно понять где хранить doc-артефакт — это правило ниже.
+> ⚠️ Термин-коллизия: skill `/artifact-design` (built-in) — про HTML-страницы на claude.ai, НЕ про методологические артефакты (DEVLOG, ADR, карты). Ниже — про хранение doc-артефактов.
 
-Единое правило **где живут артефакты**. Полная таксономия и владельцы — в **ARTIFACT-MAP** (data-lineage viewpoint); здесь — правило раскладки в одну таблицу. Когда создаёшь артефакт — определи класс и положи в его дом:
+Где живут артефакты (полная таксономия — в ARTIFACT-MAP):
 
-| Класс артефакта | Дом |
+| Класс | Дом |
 |---|---|
-| Living-артефакт методологии (DEVLOG, IDEAS, ROADMAP, RISKS, *-GAPS, HYPOTHESES) | корень / `docs/…` (свои канонические дома) |
-| Пришло **извне** (VCD, чужой анализ, дамп) | `inbox/` → `_processed/` |
-| Durable-**спека** о продукте (ADR, design-spec, architecture) | `docs/adr` · `docs/architecture` · `docs/services/<svc>/` |
-| **Research-вывод** (короткий verdict) | `DEVLOG.md` строка `[research:X]` |
-| **Продукт работы** (research-отчёт, аналитика, контент, deliverable) | **`work/<stream>/`** — в **documentation-repo** (two-repo: не в code-repo) |
-| **Эфемерное** (черновик-превью, промежуточное) | scratchpad вне репо / gitignored `_tmp_*` (root-anchored) |
+| Living-артефакт (DEVLOG, IDEAS, ROADMAP, RISKS, *-GAPS, HYPOTHESES) | корень / `docs/…` |
+| Пришло извне (VCD, чужой анализ, дамп) | `inbox/` → `_processed/` |
+| Durable-спека (ADR, design-spec, architecture) | `docs/adr` · `docs/architecture` · `docs/services/<svc>/` |
+| Research-вывод (verdict) | `DEVLOG.md` строка `[research:X]` |
+| Продукт работы (отчёт, аналитика, контент, deliverable) | `work/<stream>/` в **documentation-repo** (не code-repo) |
+| Эфемерное (черновик-превью) | scratchpad вне репо / gitignored `_tmp_*` |
 
-**MUST:**
-- Продукт работы → `work/<stream>/`, где `<stream>` = направление работы. Один-направленный проект → `work/general/` или плоско в `work/`. **Структура папок = живой индекс** (`ls work/`); не вести ручной README-реестр.
-- **Two-repo (code-repo + documentation-repo):** `work/<stream>/` ВСЕГДА живёт в **documentation-repo**, НЕ в code-repo. Code-repo = скрипты и код; documentation-repo = DEVLOG, ROADMAP, work/. Типичная ошибка: агент принимает code-repo за «consumer-workspace» — это неверно.
-- Эфемерное никогда не оседает в корне репо — scratchpad или gitignored `_tmp_*`. (Этот репо дог-фудит: `_tmp_draft-maps.md` /plan-черновиков под root-anchored ignore + `validate-work-home.sh`.)
-- Границы: `inbox/` = вход (не мы); `docs/` = спека системы; `work/` = наш output. Research-вывод остаётся строкой в DEVLOG — **не дублировать** в `work/`.
-
-**MUST NOT:**
-- ❌ Не заводить ad-hoc папки под deliverables (`docs/content/`, `research/` в корне) — это и есть хаос, который правило закрывает.
-- ❌ Не разрастаться подпапками `work/<stream>/` когда направление «крутится» самостоятельно → promote в **собственный documentation-repo** для этого направления. «Consumer-workspace» = documentation-repo, НЕ code-repo (Ось 7).
-- ❌ **Two-repo:** не класть `work/` в code-repo под предлогом что «pipeline там» — pipeline и work-артефакты живут в разных репо by design.
-
-**Forward-only (grandfather, closes [opinion:artifact-migration-scope] council 7/7):** правило применяется к **новым** артефактам. Существующие организованные папки (`docs/analysis/`, `docs/design/`, `contracts/`, `runbooks/` и т.п.) — **остаются на месте**, не мигрируются массово (часто это durable-спеки с входящими ссылками из ADR/living-артефактов — `git mv` порвёт их). Ретро-перенос в `work/` — только **реактивно** при подтверждённой боли «не могу найти» по конкретной папке. Детектор `validate-work-home.sh` сканирует **только корневой litter** (`-maxdepth 1`, scratch-паттерны), `docs/`-подпапки не трогает by-construction.
-
-Enforcement: `validate-work-home.sh` (warn в `deploy-push.sh` methodology-gate — рецидив виден с дня 1; эскалация warn→error по evidence, Ось 1). Полный rationale, границы и migration — в `work/README.md`.
+**MUST:** продукт работы → `work/<stream>/` (структура папок = живой индекс, не ручной README). Two-repo: `work/` всегда в documentation-repo. Эфемерное не оседает в корне. Research-вывод — строка в DEVLOG, не дублировать в `work/`.
+**MUST NOT:** ❌ ad-hoc папки под deliverables (`docs/content/`, корневой `research/`) · разрастание `work/<stream>/` вместо promote в свой documentation-repo · `work/` в code-repo.
+**Forward-only (grandfather):** правило для НОВЫХ артефактов; существующие организованные папки (`docs/analysis/`, `docs/design/`, `contracts/`) остаются (git mv порвёт входящие ссылки). Детектор `validate-work-home.sh` сканирует только корневой litter (`-maxdepth 1`). Enforcement: warn в `deploy-push.sh`. Rationale: `work/README.md` + [CLAUDE_LONG.md § Artifact Storage](CLAUDE_LONG.md).
 
 ---
 
 ## Maps Standard Rule
 
-Единый стандарт написания и поддержания **views** (карт и связанных артефактов) проекта. Основан на **arc42 multi-viewpoint** + Living Documentation principles + **C4-inspired diagram discipline** (нотация, не таксономия).
+Стандарт **views** проекта. Основа: arc42 multi-viewpoint + Living Documentation + C4-inspired диаграмм-дисциплина (нотация, не таксономия — карты это ортогональные viewpoints, не C4 zoom levels).
 
-> **Точность модели (исправлено по methodology-audit):** три основные карты — это **arc42-style viewpoints** (ортогональные плоскости одной системы), НЕ C4 zoom levels (C4 = один axis granularity: Context→Container→Component→Code). Раньше CLAUDE.md ошибочно заявлял «основан на C4» — наша таксономия ближе к arc42 / 4+1 (Kruchten) views. C4 берём только для **дисциплины диаграмм внутри SYSTEM-MAP** (уровни детализации), не для разделения карт.
+### 1. Полный набор views (6)
 
-### 1. Полный набор views (6, не «3 карты»)
+**Living maps (3 — обновляются регулярно):**
 
-**Living maps (3 — обновляются регулярно, под Maps Standard ниже):**
+| Карта | Viewpoint | Вопрос |
+|---|---|---|
+| **SYSTEM-MAP** | Logical+Development | Как устроена система (продуктовые сервисы первичны, инфра вторична)? |
+| **USER-MAP** | Scenarios | Что умеет пользователь? |
+| **ARTIFACT-MAP** | Data-lineage | Какой документ описывает часть продукта, кто владелец, когда устаревает? |
 
-| Карта | Viewpoint (4+1/arc42) | Отвечает на вопрос | Читает | Пишет |
-|---|---|---|---|---|
-| **SYSTEM-MAP** | Logical + Development | Как устроена система продукта? Первичны продуктовые сервисы/модули (OrderService, PartyService, CatalogService и т.п.); инфраструктура — вторичный слой. | Developer, /architecture-audit | Developer + /code при структурных изменениях |
-| **USER-MAP** | Scenarios | Что умеет пользователь? | Developer, /product-check, /onboard | Developer + /code при новых capabilities |
-| **ARTIFACT-MAP** | Data-lineage | Какой документ описывает эту часть продукта, кто его владелец и когда он устаревает? Первичны продуктовые артефакты (orders.md, parties.md, flows.md); методологические (DEVLOG, triggers.json) — вторичный слой. | /review, /retro, Developer | Developer при добавлении продуктового или методологического артефакта |
+**Supporting views (3 — по событию, НЕ living):** roadmap-view (Now/Next/Considered/Hold) · data-map (`docs/data-map.md`) · ADR catalog (`docs/adr/`) · threat-model (`docs/threat-model-*.md`).
 
-**Supporting views (3 — существуют, обновляются по событию, НЕ living maps):**
+**Dependency direction:** SYSTEM-MAP ← USER-MAP ← ARTIFACT-MAP (обратные ссылки запрещены). Нет дублирования фактов — cross-reference. Слепое пятно: Temporal/Sequence viewpoint (порядок команд/хуков) не покрыт — 7-й view только при подтверждённом ordering-инциденте (anti-over-engineering).
 
-| View | Viewpoint | Когда обновляется | Файл |
-|---|---|---|---|
-| **roadmap-view** | Temporal/Priorities | Что и в каком порядке строить? Status-карта: Now/Next/Considered/Hold | Developer, /vision review, /vision strategy | Developer после /vision review, /vision strategy, /plan (при добавлении/закрытии узлов) |
-| **data-map** | Process/data flow | при изменении хранилищ/схемы данных | `docs/data-map.md` (если есть runtime-данные) |
-| **ADR catalog** | Decisions (arc42 §9) | при принятии/superseding решения | `docs/adr/` + `README.md` каталог |
-| **threat-model** | Trust-boundary | на `[security]` планах | `docs/threat-model-*.md` (instantiate из template) |
-
-**Dependency direction:** SYSTEM-MAP ← USER-MAP ← ARTIFACT-MAP. Обратные ссылки = circular reference, запрещено. Нет дублирования фактов между views — cross-reference вместо копирования.
-
-**Слепое пятно (methodology-audit finding):** текущий набор НЕ покрывает **Temporal/Sequence viewpoint** (порядок: `/plan→/code→/review→/deploy`, порядок хуков PreToolUse→PostToolUse→Stop). Карты показывают *кто что делает*, не *в каком порядке*. Ordering-баги (sync до merge, hook-reordering) структурно невидимы. Кандидат на 7-й view — добавляется только при подтверждённом ordering-инциденте (anti-over-engineering: не добавлять для теоретической полноты).
-
-### 2. Обязательная структура каждой карты
+### 2. Обязательная структура карты
 
 ```
 # [ТИП] — {{Project Name}}
-**Версия:** vX.Y  |  **Обновлён:** YYYY-MM-DD  |  **Граф проверен:** YYYY-MM-DD
-
-## Agent TL;DR      ← 5-15 строк, scan-friendly (подсистемы, источники правды, gaps)
+**Версия:** vX.Y | **Обновлён:** YYYY-MM-DD | **Граф проверен:** YYYY-MM-DD
+## Agent TL;DR      ← 5-15 строк scan-friendly
 ## [Диаграмма]      ← Mermaid с URL выше
-## [Таблицы]        ← полный реестр компонентов/capabilities/артефактов
-## Refresh Policy   ← когда обновлять + когда НЕ обновлять
+## [Таблицы]        ← полный реестр
+## Refresh Policy   ← когда обновлять + когда НЕ
 ```
 
 ### 3. Правила диаграммы
 
-**Mermaid-only.** ASCII art, PlantUML — запрещены.
-
-**URL над блоком: bare URL only** — никаких `[текст](url)` обёрток. Вставляется скриптом (L2 rule выше), не агентом вручную. Пример нарушения: `` [Открыть в Mermaid Live](https://mermaid.live/...) ``.
-
-**`diagram-sources` annotation (closes G-114, v5.48.0):** каждый mermaid-блок в living-scope `.md` файлах ДОЛЖЕН иметь HTML-комментарий непосредственно перед mermaid.live URL:
-
-```
-<!-- diagram-sources: <type>:<Section>[, <type>:<Section>] -->
-```
-
-Типы (закрытый enum):
-- `table:<Section>` — pipe-table строки в секции (первая ячейка после `|`)
-- `list:<Section>` — top-level bullets `- **Name**` в секции
-- `max-version:<Section>` — максимальная `vX.Y` из секции vs маркер `до vX.Y` в диаграмме
-- `axes` — диаграмма показывает фиксированные оси/структуру (не данные); freshness не применима
-- `none` — статическая диаграмма (концептуальная); freshness не применима
-
-`validate-maps-coverage.sh --report` проверяет каждый mermaid-блок на наличие annotation и на соответствие диаграммы источнику данных. Диаграмма без annotation = WARN (ненулевой exit). Файл с annotation без совпадающей секции = WARN. Severity: `DIAGRAM_FRESHNESS_SEVERITY="warn"` (конфиг в шапке скрипта).
-
-**USER-MAP MUST NOT содержать скрипт-узлы** — только команды (`/cmd`), skills, affordance-узлы (класс `affordance`). Скрипты = внутренняя реализация команд, не user-facing capability. Нарушение: `new-project-init.sh`, `sync-methodology.sh`, `set-secret.sh` как mermaid-узлы. Structural enforcement: `validate-maps-coverage.sh` `USER_MAP_NO_SCRIPTS="gate"` — флагует `.sh`/`.py` внутри mermaid-блоков (не таблиц). Closes G-116. Исключение: `Initial Setup` текстовая секция (bash-команды для bootstrap до `.claude/`) — легитимна. ADR-013.
-
-**Гибридный язык:** технические термины/файлы/команды — EN; описания поведения/аннотации — RU.
-❌ Транслитерация кириллицы латиницей (`"Stanet"`, `"Zapuskaet"`, `"dobavlen"`) — нарушение: это НЕ является RU. Только настоящая кириллица.
-Пример: `Workflow["🔄 Workflow Cycle<br/>/plan → /code → /review → /deploy"]`
-
-**Формат node-описания (closes G-121, v5.57.0):** каждая **компонентная** нода ДОЛЖНА содержать три строки — понятные нетехническому читателю:
-
-```
-NodeID["🔹 Простое имя компонента<br/>Зачем: одно предложение — зачем это нужно<br/>Без него: что сломается или перестанет работать"]
-```
-
-- **Строка 1 — Имя:** простое название без file-path и жаргона. Emoji опционально.
-- **Строка 2 — Зачем:** ≤ 60 символов, объясняет назначение простым языком.
-- **Строка 3 — Без него:** ≤ 60 символов, конкретный impact если компонента нет.
-
-**Освобождены** от формата (навигационные по природе, не компоненты системы):
-- affordance-ноды (класс `affordance`) — `📋 Отложенный scope → /scope-out`, Legend, Workflow-Cycle, repo/setup-контекст
-- deferred-кластер (subgraph «🟪 Отложено»)
-
-**Blob-нода** (несколько компонентов с одинаковыми связями, label через `·`) → один общий Зачем + один общий «Без них».
-
-**Few-shot:**
-✅ `CMDS["📋 Команды (/plan, /code...)<br/>Зачем: пошаговые инструкции для AI<br/>Без них: AI работает хаотично, нет проверок качества"]`
-❌ `CMDS["commands/<br/>slash-команды (полный реестр в таблице)"]` — file-path + жаргон, не зачтено
-❌ `CMDS["📋 Команды<br/>Зачем: нужно<br/>Без них: плохо"]` — формально (perfunctory), не зачтено
-
-**Enforcement:** `validate-maps-coverage.sh` `NODE_READABILITY_SEVERITY="warn"` — WARN если нода без второй/третьей строки через `<br/>`. `/review` проверяет глазами что текст не perfunctory. Миграция существующих карт — отдельный PR.
-
-**Применяется ко ВСЕМ создаваемым mermaid-диаграммам:** living maps, draft maps (/plan Шаг 99.54), design-spec §8 (/design-spec), ad-hoc «было→станет» — везде где пишется компонентная нода.
-
-**Детализация:**
-- Отдельный нод = уникальные связи (читает/пишет иначе чем соседи)
-- Группа-blob = одинаковые связи → один нод, label через `·`
-- Диаграмма ~15-20 нодов (обзор). Детали — в таблице.
-- ⛔ Не дублировать в диаграмме то что уже полностью в таблице
-
-**Группировка по доменам** (не по типу): `subgraph SecretsSkills` + `subgraph MarketingSkills` — раздельно, не `subgraph AllSkills`.
-
-**Repo/setup контекст обязателен в USER-MAP** — показать откуда берутся команды/шаблоны если внешний repo.
-
-**Типы стрелок (единообразно):** `-->` W · `-.->` R · `===` RW · `--o` git · `--x` C · `==>` agent-write
-
-**Класс `affordance` — навигационные узлы (НЕ модельные компоненты):** карта = «что ЕСТЬ» (arc42 viewpoint). Узел, который говорит о **месте карты в workflow** (а не утверждает что компонент существует в системе) — навигационный affordance, а не scope-claim. Примеры: `📋 Отложенный scope → /scope-out`, Workflow-Cycle, Legend, repo/setup-контекст. Помечать стилем:
-```
-classDef affordance fill:#3b0764,stroke:#a855f7,color:#f3e8ff,stroke-dasharray:4 3
-NodeID["📋 Отложенный scope → /scope-out"]:::affordance
-```
-- **Зачем класс, не просто стиль:** `/architecture-audit` Шаг 3 исключает узлы класса `affordance` из phantom/drift-сравнения по **классу** (не по ID — ID-whitelist = slope). Affordance не имеет code-counterpart by design → без класса аудит ложно флагует его как phantom.
-- **Граница:** affordance ≠ deferred-компонент. ❌ НЕ добавлять в living maps узлы «planned/deferred component» (ломает «карта = что ЕСТЬ», даёт ложный drift). Отложенный scope визуализируется **отдельно** через `/scope-out` (эфемерно), а в карте присутствует только **навигационный anchor** к нему. Closes P-002.
+- **Mermaid-only** (ASCII/PlantUML запрещены). URL над блоком: bare URL, вставляется скриптом (L2), не вручную.
+- **`diagram-sources` annotation** (G-114): HTML-комментарий перед URL — `<!-- diagram-sources: <type>:<Section> -->`. Типы (enum): `table:` / `list:` / `max-version:` / `axes` / `none`. `validate-maps-coverage.sh --report` проверяет наличие + соответствие (WARN).
+- **USER-MAP MUST NOT содержать скрипт-узлы** — только команды (`/cmd`), skills, affordance. Скрипты = внутренняя реализация. Enforcement: `USER_MAP_NO_SCRIPTS="gate"`. Исключение: `Initial Setup` bash-секция (ADR-013).
+- **Гибридный язык:** технические термины/файлы/команды — EN; описания поведения — RU. ❌ Транслитерация кириллицы латиницей (`"Stanet"`) — не RU.
+- **Формат node-описания (G-121):** компонентная нода = три строки `NodeID["🔹 Имя<br/>Зачем: ≤60 симв<br/>Без него: ≤60 симв impact"]`. Освобождены: affordance-ноды, deferred-кластер. Blob-нода → один общий Зачем/Без них. Enforcement: `NODE_READABILITY_SEVERITY="warn"` + `/review` глазами. Применяется ко всем mermaid-диаграммам (living, draft, design-spec §8, ad-hoc). Few-shot: [CLAUDE_LONG.md § Node format](CLAUDE_LONG.md).
+- **Детализация:** отдельный нод = уникальные связи; blob = одинаковые связи (label через `·`). ~15-20 нодов (детали в таблице). Группировка по доменам, не по типу. Repo/setup контекст обязателен в USER-MAP.
+- **Типы стрелок:** `-->` W · `-.->` R · `===` RW · `--o` git · `--x` C · `==>` agent-write.
+- **Класс `affordance`** — навигационные узлы (не модельные компоненты): `classDef affordance ...` + `:::affordance`. `/architecture-audit` Шаг 3 исключает класс из phantom/drift-сравнения (не ID-whitelist). Граница: affordance ≠ deferred-компонент (не добавлять planned-узлы в living maps — ломает «карта = что ЕСТЬ»; отложенное — через `/scope-out`). Детали: [CLAUDE_LONG.md § affordance](CLAUDE_LONG.md).
 
 ### 4. Правила таблиц
 
-Таблицы = полный реестр (каждый компонент — отдельная строка).
-
-**Taxonomy триггеров:** `🔁` каждый цикл · `📊` по счётчику · `🔭` стратегический · `⚡` по событию
-
-**Taxonomy акторов:** Developer · PM/Owner · System · External · AI Agent
+Полный реестр (каждый компонент — строка). Триггеры: `🔁` цикл · `📊` счётчик · `🔭` стратегический · `⚡` событие. Акторы: Developer · PM/Owner · System · External · AI Agent.
 
 ### 5. Governance
 
-**PR-coupling:** обновить карту в том же PR что и изменение. Рефакторинг без поведенческих изменений, performance-fix, typo — не обновлять.
+- **PR-coupling:** обновить карту в том же PR. Рефакторинг без поведенческих изменений / performance-fix / typo — не обновлять.
+- **Semantic fidelity (ADR-015):** presence узла (валидатор) ≠ верность семантики. Detect+couple, не авто-генерация: (1) PR-couple L3 — `/code` Шаг 4 п.9.5 + `/review`; (2) periodic — `/architecture-audit` Способность D.
+- **In-progress signal:** незакоммиченные изменения в файлах блока карты = активная работа. Перед правкой → `git status` + `git diff --name-only`; обнаружены — не перезаписывать, спросить.
+- **Audit schedule:** SYSTEM-MAP `/architecture-audit` ≥5 · USER-MAP `/product-check` ≥5 · ARTIFACT-MAP `/retro` ≥15.
+- **`/review` блокирует merge если:** (1) SYSTEM/USER-MAP изменены и Mermaid удалён; (2) новый разработчик не поймёт структуру; (3) новая команда/skill/артефакт — карта не обновлена.
 
-**Semantic fidelity (ADR-015, closes P-009 BS-2/BS-5):** presence узла в карте (валидатор) ≠ верность его **семантики** (стрелки отражают реальные связи, label «Зачем» актуален). Семантика поддерживается **detect+couple, не авто-генерацией** (генерация = OQ-008, отвергнута: ломает рукописную arc42-выразительность): (1) **PR-couple L3** — `/code` Шаг 4 п.9.5 + `/review`: diff трогает компонент → сверить узел/связи/label → обновить в том же PR; (2) **periodic safety-net** — `/architecture-audit` Способность D (semantic review всех living-карт, Capable). Не 100%-гарантия — для рукописной диаграммы выше L3 нельзя.
-
-**In-progress signal (closes assumption-gap класс «тихое перетирание»):** незакоммиченные изменения в файлах связанных с блоком карты (SYSTEM-MAP, USER-MAP, ROADMAP.md и т.п.) — сигнал что над этим блоком активно работают. Перед правкой карты → `git status` + `git diff --name-only`. Если обнаружены незакоммиченные файлы связанного блока — не перезаписывать, спросить пользователя (merge или сначала закоммить текущие?). Иначе риск потери незавершённой работы параллельной сессии.
-
-**Audit schedule:** SYSTEM-MAP `/architecture-audit` ≥5 планов · USER-MAP `/product-check` ≥5 · ARTIFACT-MAP `/retro` ≥15.
-
-**`/review` блокирует merge если:**
-1. SYSTEM-MAP или USER-MAP изменены и Mermaid удалён
-2. Новый разработчик не поймёт структуру из диаграммы
-3. Новая команда/skill/артефакт добавлена — карта не обновлена
+Полный rationale (arc42 vs C4, viewpoints): [CLAUDE_LONG.md § Maps Standard](CLAUDE_LONG.md).
 
 ---
 
@@ -456,162 +257,65 @@ NodeID["📋 Отложенный scope → /scope-out"]:::affordance
 
 `[fix:component]` `[feat:command]` `[feat:template]` `[feat:hook]` `[feat:script]` `[methodology]` `[process:X]` `[milestone]`
 
-`[test-found:category]` — баг найден тестированием (`/test`, Playwright, Schemathesis, прод). `category` = `frontend-visual` / `frontend-logic` / `backend-contract` / `backend-crash` / `regression` / `perf` / … (открытый список, см. `skills/testing-strategy`). **Указатель**, не замена: сам баг + статус ведутся в `CODE-GAPS.md` (регистр), fix-событие дублируется `[fix:component]` (сохраняет QB3 regression-grep `/review`). Closes testing layer Phase 1.
+- `[test-found:category]` — баг найден тестированием (category: frontend-visual/frontend-logic/backend-contract/backend-crash/regression/perf/…). Указатель; сам баг в `CODE-GAPS.md`, fix дублируется `[fix:component]`.
+- `[research:X]` — знание из исследования/опыта. Формат: `[research:<slug>] → <что>: <вывод>. <verdict: viable/not-viable/blocked/confirmed/conditional/unclear>. Source: <url | direct-experience>`. Covers любой research если влияет на решение. Плановое: [/research](commands/research.md).
+- `[opinion:X]` — мнение агента VISION-anchored. Формат: `[opinion:<slug>] → <вопрос>: <✅/⚠️/❌/🤷>. <тезис ≤60 симв>`. Только при decision-relevant. Команда: [/opinion](commands/opinion.md).
+- Phase-теги `[phase-a]`… — milestone history. Команды: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]` `[research]` `[opinion]`.
 
-`[research:X]` — знание зафиксировано исследованием или прямым опытом эксплуатации. `X` = kebab-case slug темы (`otto.de`, `stripe-fees-de`, `gdpr-email-collect`, `react-perf-2026`). Формат строки в DEVLOG: `[research:<slug>] → <что изучали>: <вывод>. <verdict: viable/not-viable/blocked/confirmed/conditional/unclear>. Source: <url | direct-experience>`. `Source: <url>` — вывод получен через WebSearch; `Source: direct-experience` — вывод получен из опыта эксплуатации (blocked API, rate limit, runtime constraint — без внешнего поиска). Covers **ANY** research: маркетплейс, технология, конкурент, регуляторика, API, domain knowledge — если вывод влияет на решение. Stop hook детектирует: WebSearch + verdict-keyword → предлагает `Source: <url>`; operational patterns + verdict-keyword → предлагает `Source: direct-experience`. Плановое исследование: [/research](commands/research.md) (interactive, ≤3 чекпоинта, DEVLOG-only).
+**Semantic tagging rule (D6):** проблемы categorize семантически, не по surface name — одна проблема = один semantic indicator (`[git-failure]` не `[git_push-failed]`/`[github-error]`; `[state-pollution]` не `[history-leak]`/`[cache-contamination]`). Regex-detection ломается когда одно называют по-разному.
 
-`[opinion:X]` — мнение агента по конкретному вопросу с контекстом проекта (VISION-anchored). `X` = kebab-case slug вопроса. Формат строки в DEVLOG: `[opinion:<slug>] → <вопрос кратко>: <verdict ✅/⚠️/❌/🤷>. <главный тезис ≤60 символов>`. Команда: [/opinion](commands/opinion.md). Записывается **только** при decision-relevant мнении (не при каждом /opinion запросе). Inline-аналог: `[?]` маркер в тексте (см. «Inline `[?]` convention» ниже).
-
-Phase-теги: `[phase-a]` … — milestone history.
-
-Команды методологии: `[architecture-audit]` `[sync-vision]` `[retro]` `[diagnose]` `[product-vision]` `[product-review]` `[product-check]` `[research]` `[opinion]`
-
-**Semantic tagging rule (D6):** Проблемы categorize семантически, не по surface name.
-
-Одна проблема — один semantic indicator, даже если люди называют по-разному:
-- `[git-failure]` — не `[git_push-failed]` ИЛИ `[github-error]` ИЛИ `[branch-push-issue]` (все sync failures)
-- `[async-failure:operation]` — не `[vault-sync-error]` И `[queue-dropped]` (оба fire-and-forget failures)
-- `[state-pollution]` — не `[history-leak]` И `[cache-contamination]` (оба внутренние состояния)
-
-**Reason:** Regex-based detection fails когда люди называют одно разными именами. Semantic category stays stable.
-
-**Domain-indicator для `[fix:X]` (D6-enforcement, closes S-1 / push-кластер урок):** surface-тег `[fix:X]` именует **компонент** (`[fix:consumer-push]`, `[fix:deploy-push]`) — этого мало для кластер-детекта. При каждом `[fix:X]` в DEVLOG **добавляй рядом domain-indicator** `[domain:<семантический-домен>]` — общий для всех фиксов одного корня, независимо от того какой компонент чинился:
-- `[fix:consumer-push] [domain:git-push]` · `[fix:deploy-push] [domain:git-push]` · `[fix:command] [domain:git-push]` — три разных компонента, ОДИН домен.
-- Домены гранулярны по корню, не по слою: `git-push` / `git-remote` / `secrets` / `sync` / `mermaid` / `hooks-delivery` — НЕ `methodology` (слишком широко → ложные группировки).
-
-**Зачем:** `/plan` Шаг -1.3 п.3 (N-й фикс) и `/diagnose` grep'ают DEVLOG **по `[domain:X]`**, не только по точному `[fix:X]`. Кластер симптомов одного корня детектится на 3-м фиксе домена даже при разных surface-тегах → /diagnose предлагается рано, не на 9-м симптоме (урок push-кластера v5.19-5.24: первые 3 фикса имели разные теги → grep не сгруппировал → корень P-006 назван поздно). Старые `[fix:X]` без `[domain:X]` → grep fallback на точный тег (graceful).
-
-**Few-shot:**
-✅ `## 2026-06-09 — [fix:consumer-push][domain:git-push] классификация push-failure` → 3-й [domain:git-push] за период → /plan предложит /diagnose.
-❌ `[fix:consumer-push]` без domain → grep по domain пуст → кластер невидим (старое поведение, fallback на точный тег).
+**Domain-indicator для `[fix:X]`:** при каждом `[fix:X]` добавляй `[domain:<корень>]` — общий для всех фиксов одного корня (`[fix:consumer-push] [domain:git-push]` · `[fix:deploy-push] [domain:git-push]`). Домены гранулярны по корню (`git-push`/`secrets`/`sync`/`mermaid`), не по слою. `/plan` Шаг -1.3 и `/diagnose` grep'ают по `[domain:X]` → кластер детектится рано. Старые без domain → fallback на точный тег. Детали: [CLAUDE_LONG.md § Domain-indicator](CLAUDE_LONG.md).
 
 ---
 
 ## Security: real threats
 
-**Утечка GitHub PAT и других токенов (was High → Mitigated):** Структурно закрыто секцией [Secrets & Credentials](#secrets--credentials) — 4 слоя защиты (gitignore, pre-commit hook, /review detector, tool deny). См. ниже.
+- **Утечка GitHub PAT / токенов (was High → Mitigated):** структурно закрыто секцией [Secrets & Credentials](#secrets--credentials) — 4 слоя (gitignore, pre-commit hook, /review detector, tool deny).
+- **Прямой push в main (High → Mitigated v5.43.0):** (1) `setup-branch-protection.sh` (required PR, no force-push); (2) `deploy-push.sh` GH006-классификация → PR-путь. Emergency: `--off --yes` + re-apply. ADR-002.
+- **Drift методология↔консьюмеры (Med):** sync ручной; будущее — auto version-drift check в `/plan` Шаг -3.
+- **Sync overwrites local fills (Low):** `docs_reminder.py` LIBS per-project; будущее — `*.local.py`.
 
-**Прямой push в main (High → Mitigated v5.43.0):** Структурно закрыто двумя слоями: (1) `setup-branch-protection.sh` — required PR, enforce_admins, no force-push (GitHub layer); (2) `deploy-push.sh` GH006-классификация — при блоке направляет на PR-путь, а не ложный auth-flow. Emergency: `--off --yes` + re-apply. ADR-002 amendment 2026-06-11. *(Периодический WARN-детект отключённой protection — ранее `/sync-audit` Gap 13 — deferred при push-only консолидации; структурные слои 1-2 enforce независимо.)*
-
-**Drift между методологией и консьюмерами (Med):** Sync ручной. Будущая задача — auto version-drift check в `/plan` Шаг -3.
-
-**Sync overwrites local fills (Low):** `docs_reminder.py` LIBS заполняется per-project. Будущая задача — поддержка `*.local.py` соседних файлов.
-
-Details with mitigation scenarios: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md).
+Mitigation-сценарии: [CLAUDE_LONG.md § Security threats](CLAUDE_LONG.md).
 
 ---
 
 ## Secrets & Credentials
 
-> **Phase 1 / v4.32.0:** Foundation слой. Phases 2-5 (command integration, full docs/Mermaid, sync rules, consumer migration) — отдельные релизы. Сейчас доступны: templates, scripts core, hooks, tool deny rules.
+**Canonical storage** (приоритет): `./.env` (per-project, gitignored, chmod 600) → `~/.config/it-dev/secrets.env` (shared, опц.) → process env (CI/CD). Декларация: `.claude/secrets-manifest.yaml` (committed, без значений).
 
-### Canonical storage
+**MUST:**
+- ✅ `bash scripts/with-secret.sh KEY -- <cmd>` — передать секрет subprocess'у (значение не в stdout).
+- ✅ `bash scripts/check-secret.sh KEY` — boolean (exit 0/1).
+- ✅ `bash scripts/set-secret.sh KEY value` — one-time добавление (запускает **пользователь**).
+- ✅ git HTTPS — `git-credential-from-env.sh` как credential helper.
+- ✅ Отсутствует required секрет — HARD BLOCK + `how_to_obtain` из manifest (не запрашивать через chat).
+- ✅ Перед `/secrets` / `secrets-*.sh` — проверить наличие `.claude/secrets-manifest.yaml` в cwd; нет — найти репо с manifest, не делать вывод «секретов нет» из отсутствия manifest в cwd (G-065).
 
-Один источник правды для секретов per проект:
+**MUST NOT:**
+- ❌ Агент НЕ читает `.env`/`secrets.env` напрямую (Read/`cat`/`head` блокируются `settings.json` deny + `bash_protect.py`).
+- ❌ Агент НЕ выполняет `env`/`printenv`/`echo $SECRET` (блок `bash_protect.py`).
+- ❌ Агент НЕ вписывает значения в chat/DEVLOG/commit/файлы (случилось → `secrets-scrub.sh` + rotate).
+- ❌ Агент НЕ вызывает `_get-secret-raw.sh` (выводит значение в stdout → transcript; блок `bash_protect.py`; только для пользователя в терминале). (G-062)
+- ❌ Агент НЕ конструирует `KEY="value" bash script.sh` (видно в tool input → transcript; вместо — `with-secret.sh KEY -- ...`; блок `bash_protect.py`). (G-062)
+- ❌ Не storage'ить `sensitivity: high` в shared scope · не bypass pre-commit hook через `--no-verify` без обоснования в DEVLOG · не редактировать `secrets-guard.py`/`bash_protect.py` без понимания whitelist.
 
-| Источник | Назначение | Прио |
-|---|---|---|
-| `./.env` | per-project секреты (gitignored, chmod 600) | 1 |
-| `~/.config/it-dev/secrets.env` | cross-project shared (опционально) | 2 |
-| process env vars | CI/CD compatibility | 3 |
-
-Декларация требуемых секретов: `.claude/secrets-manifest.yaml` (committed, без значений — только names + `how_to_obtain`).
-
-### MUST
-
-- ✅ Использовать `bash scripts/with-secret.sh KEY -- <command>` чтобы передать секрет subprocess'у — значение **не попадает** в stdout агента.
-- ✅ Использовать `bash scripts/check-secret.sh KEY` для boolean проверки (exit 0/1, без значения).
-- ✅ Использовать `bash scripts/set-secret.sh KEY value` для **одноразового** добавления секрета пользователем (это **пользователь** запускает, не агент).
-- ✅ Для git operations с HTTPS — configure `git-credential-from-env.sh` как credential helper (git сам читает токен, агент не в цепочке).
-- ✅ При отсутствии required секрета — HARD BLOCK + показать `how_to_obtain` из manifest. Не запрашивать токен через chat — только one-time setup через `set-secret.sh`.
-- ✅ **Перед `/secrets` и любым `secrets-*.sh`** — проверить что `.claude/secrets-manifest.yaml` существует в текущем `cwd`. Если нет — найти репо с manifest в workspace и сообщить откуда запускать. Никогда не делать вывод "секреты отсутствуют" только из-за отсутствия manifest в текущем cwd (closes G-065).
-
-### MUST NOT
-
-- ❌ Агент НЕ ЧИТАЕТ `.env` / `secrets.env` напрямую (Read tool / `cat .env` / `head .env` блокируются через `settings.json` deny + `bash_protect.py`).
-- ❌ Агент НЕ ВЫПОЛНЯЕТ `env`, `printenv`, `set | grep`, `echo $SECRET_*` — блокируется hook'ом `bash_protect.py`.
-- ❌ Агент НЕ ВПИСЫВАЕТ значения секретов в chat / DEVLOG / commit messages / любые файлы. Если случилось — `bash scripts/secrets-scrub.sh` (Phase 2) + rotate token.
-- ❌ **Агент НЕ ВЫЗЫВАЕТ `_get-secret-raw.sh`** — этот скрипт выводит значение секрета в stdout → попадает в transcript → Anthropic API. Блокируется `bash_protect.py`. Исключительно для ручного запуска пользователем в терминале вне Claude Code. (closes G-062)
-- ❌ **Агент НЕ КОНСТРУИРУЕТ inline env assignment с реальным значением секрета** — паттерн `KEY="secret_value" bash script.sh` виден в tool input → transcript. Использовать `bash scripts/with-secret.sh KEY -- bash script.sh` вместо этого. Блокируется `bash_protect.py`. (closes G-062)
-- ❌ Не storage'ить `sensitivity: high` ключи в shared scope (`set-secret.sh --shared` blocked manifest-ом).
-- ❌ Не bypass-ить pre-commit hook через `--no-verify` без рукописного обоснования в DEVLOG (`/review` всё равно catch-ит leak).
-- ❌ Не editить `templates/.claude/hooks/secrets-guard.py` и `templates/.claude/hooks/bash_protect.py` без понимания whitelist semantics — false negative означает утечку.
-
-### Threat model (краткая)
-
-| Вектор | Защита (слой) | Регулятор |
-|---|---|---|
-| Случайный `git add .env` | `.gitignore` excludes `.env`, `.env.*` (whitelist `.env.example`) | L4 — отсутствие альтернативного пути |
-| Force `git add -f .env` | `secrets-guard.py` PreToolUse блокирует commit | L4 — Schema constraint (hook exit 2) |
-| Token в коде | `secrets-guard.py` token-prefix + entropy на staged diff; `/review` detector на PR | L4 + L3 (двойная проверка) |
-| Агент читает `.env` любой командой (cat/grep/sed/awk/python -c/node -e/...) | `bash_protect.py` **inverted-match**: любая non-whitelisted команда с `.env` arg блокируется. Закрывает класс bypass'ов, не enumerate-list | L5 — нет alternative path |
-| Агент дампит ENV (`env`, `printenv`, `echo $VAR`) | `bash_protect.py` `ENV_DUMP_PATTERNS` блокирует | L5 |
-| Агент читает через Read tool | `settings.json` `permissions.deny` для `Read(./.env)` etc | L5 — tool permission |
-| Утечка через chat history | `secrets-scrub.sh` (Phase 2) cleanup в `~/.claude/projects/`; ротация токена | L2 — reactive |
-
-### Scope limits (что Phase 1 НЕ закрывает)
-
-Phase 1 защищает **agent-mediated утечки** (через transcript, git commits, file system). Эти векторы остаются **открытыми** и требуют OS/process-level mitigation:
-
-- **`/proc/<pid>/environ` visibility** — `with-secret.sh` injects через env subprocess; другие процессы того же UID могут видеть `environ`. Mitigation: trust local OS boundary; full disk encryption; не запускать untrusted code локально.
-- **Core dumps** — содержат full memory с секретами. Mitigation: `ulimit -c 0` в shell init.
-- **Verbose process monitoring** (htop с `-S`) — показывает env vars. Mitigation: не запускать с такими флагами на dev машине.
-- **Git history** — если секрет уже committed, удаление из HEAD не очищает клоны/бэкапы. Mitigation: rotation токена при провайдере + Phase 2 `secrets-scrub.sh`. **Phase 1 предотвращает попадание в первый коммит**, не лечит existing exposure.
-- **CI/CD artifacts** — если CI baking `.env` в images/builds, secrets leak там. Mitigation: mount secrets at runtime, не at build time. Phase 5 skill даст guidance.
-- **OS keyring vs `.env`** — `.env` это **default**, не **mandate**. Consumer проекты с enterprise требованиями могут использовать Vault / AWS Secrets / Azure Key Vault через priority chain step 3 (process env): `vault kv get ... | export KEY=VALUE && bash scripts/with-secret.sh KEY -- cmd`. Phase 5 skill документирует integration patterns.
-- **Token rotation и audit log** — manual через `set-secret.sh`; auto-rotation requires provider-specific adapters (out of methodology scope). Phase 2 skill даст rotation workflow per common providers (GitHub, Anthropic, AWS).
-
-### Что осталось на Phase 2-5
-
-- `/secrets` команда (audit / setup / list / scrub)
-- `secrets-scrub.sh` для cleanup transcripts
-- `clone-consumer.sh` через credential helper
-- `_get-secret-raw.sh` escape-hatch с `--explicit-stdout` forcing function
-- `/code`, `/review`, `/plan` интеграция секций "before any operation requiring secret"
-- Skill `secrets-management/SKILL.md` (knowledge-domain)
-- SYSTEM-MAP / USER-MAP / ARTIFACT-MAP updates
-- `deploy-push.sh` миграция на credential helper
-- `pull-consumers.md` миграция
+**Threat model + scope limits** (что защищено agent-mediated: transcript / git / fs; что вне scope: `/proc/environ`, core dumps, process monitoring, git history existing exposure, CI artifacts, OS keyring) + Phase 2-5 roadmap: [CLAUDE_LONG.md § Secrets](CLAUDE_LONG.md). External managers (Vault/AWS/Azure) — через priority chain step 3. Skill: `secrets-management/SKILL.md`.
 
 ---
 
 ## Key files
 
-- [scripts/new-project-init.sh](scripts/new-project-init.sh) — bootstrap (`--with-marketing` flag для skills слоя)
-- [scripts/sync-methodology.sh](scripts/sync-methodology.sh) — sync (включает `sync_skills()` для `.claude/skills/`)
-- [scripts/deploy-push.sh](scripts/deploy-push.sh) — deploy push (reads mode from CLAUDE.local.md, enforces solo/team pattern)
-- [scripts/update-mermaid-links.sh](scripts/update-mermaid-links.sh) — **авто-обновление** mermaid.live URL во всех .md файлах (MISSING/STALE → fresh); URL любой длины
-- [scripts/migrate-claude-md.sh](scripts/migrate-claude-md.sh) — Phase G2 split migration helper
-- [commands/plan.md](commands/plan.md) — workflow entry point
-- [commands-local/pull-consumers.md](commands-local/pull-consumers.md) — **LOCAL-ONLY** команда: pull всех consumer repos из workspace + diff новых methodology-tracked записей (AGENT-GAPS/PRODUCT-GAPS/DEVLOG/etc). НЕ синхронизируется консьюмерам
-- [templates/triggers.json.template](templates/triggers.json.template) — canonical state schema
-- [templates/model-tiers.md](templates/model-tiers.md) — model recommendation registry
-- [templates/AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) — AI gap capture (consumer artifact)
-- [templates/MARKETING.template.md](templates/MARKETING.template.md) — marketing central context (consumer artifact, --with-marketing)
-- [templates/.claude/hooks/agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) — Stop hook: admission detector
-- [templates/.claude/hooks/post-edit-watchdog.py](templates/.claude/hooks/post-edit-watchdog.py) — PostToolUse hook: после Edit/Write с mermaid-блоком → авто-запуск `update-mermaid-links.sh`. Config в `CLAUDE.local.md ## Post-edit hooks`
-- [templates/DESIGN_SPEC.template.md](templates/DESIGN_SPEC.template.md) — шаблон Design Spec (VCD-протокол: Anti-Loss, Draft/Final, аргументация + пример per-requirement)
-- [templates/LIVING-ARTIFACTS.template.md](templates/LIVING-ARTIFACTS.template.md) — шаблон Living Artifact Registry (lifecycle-реестр: что живёт и требует поддержания; синхронизируется консьюмерам)
-- [../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md](../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md) — dogfood-инстанс LAR для methodology-platform (40+ строк; обновляется в /code Шаг 5 при новом механизме)
-- [skills/design-spec/SKILL.md](skills/design-spec/SKILL.md) — Agent Skill `/design-spec`: интерактивное создание/обновление Design Spec
-- [skills/define-positioning/SKILL.md](skills/define-positioning/SKILL.md) — Agent Skill: positioning framework (12 секций)
-- [scripts/with-secret.sh](scripts/with-secret.sh) — **secrets injection** (primary tool): `bash scripts/with-secret.sh KEY -- <cmd>` — значение не в stdout
-- [scripts/check-secret.sh](scripts/check-secret.sh) — boolean existence check (exit 0/1, без значения)
-- [scripts/set-secret.sh](scripts/set-secret.sh) — atomic write в `.env` (one-time setup пользователем)
-- [scripts/validate-secrets.sh](scripts/validate-secrets.sh) — manifest vs `.env` consistency check
-- [scripts/git-credential-from-env.sh](scripts/git-credential-from-env.sh) — git credential helper для HTTPS push/pull без агента в цепочке
-- [templates/.env.example.template](templates/.env.example.template) — template для consumer `.env`
-- [templates/secrets-manifest.yaml.template](templates/secrets-manifest.yaml.template) — declared secrets schema
-- [templates/.claude/hooks/secrets-guard.py](templates/.claude/hooks/secrets-guard.py) — PreToolUse: блокирует commit с tokens/staged .env
-- [VERSION](VERSION) — semver
-
-**Skills layer:** `skills/*/SKILL.md` — Agent Skills (knowledge-domain, auto-activation). Синхронизируются в `.claude/skills/` через `sync_skills()`. Banner в `metadata:` блоке frontmatter (НЕ HTML-комментарий — YAML frontmatter must be line 1). Workflow-команды (`/plan /code /review /deploy` и др.) остаются slash — это инвариант (VISION Граница 8).
+- **Bootstrap/sync:** [new-project-init.sh](scripts/new-project-init.sh) (`--with-marketing`) · [sync-methodology.sh](scripts/sync-methodology.sh) (вкл. `sync_skills()`) · [deploy-push.sh](scripts/deploy-push.sh) (mode из CLAUDE.local.md) · [update-mermaid-links.sh](scripts/update-mermaid-links.sh) · [migrate-claude-md.sh](scripts/migrate-claude-md.sh).
+- **Workflow:** [commands/plan.md](commands/plan.md) (entry point) · [commands-local/pull-consumers.md](commands-local/pull-consumers.md) (LOCAL-ONLY).
+- **Schemas/templates:** [triggers.json.template](templates/triggers.json.template) · [model-tiers.md](templates/model-tiers.md) · [AGENT-GAPS.md.template](templates/AGENT-GAPS.md.template) · [MARKETING.template.md](templates/MARKETING.template.md) · [DESIGN_SPEC.template.md](templates/DESIGN_SPEC.template.md) · [LIVING-ARTIFACTS.template.md](templates/LIVING-ARTIFACTS.template.md).
+- **Hooks:** [agent-gaps-watchdog.py](templates/.claude/hooks/agent-gaps-watchdog.py) (Stop: admission detector) · [post-edit-watchdog.py](templates/.claude/hooks/post-edit-watchdog.py) (PostToolUse: mermaid autolink) · [secrets-guard.py](templates/.claude/hooks/secrets-guard.py) (PreToolUse: commit block).
+- **Secrets scripts:** [with-secret.sh](scripts/with-secret.sh) · [check-secret.sh](scripts/check-secret.sh) · [set-secret.sh](scripts/set-secret.sh) · [validate-secrets.sh](scripts/validate-secrets.sh) · [git-credential-from-env.sh](scripts/git-credential-from-env.sh).
+- **Skills layer:** `skills/*/SKILL.md` — Agent Skills (knowledge-domain, auto-activation); синкаются в `.claude/skills/` через `sync_skills()`; banner в `metadata:` frontmatter. Workflow-команды остаются slash (VISION Граница 8). LAR dogfood: [../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md](../it-dev-methodology-documentation/docs/architecture/LIVING-ARTIFACTS.md).
+- [VERSION](VERSION) — semver.
 
 ---
 
 ## External links
 
 - GitHub: https://github.com/cait-solutions/it-dev-methodology
-- Примеры консьюмер-проектов:
-  - **Single-developer project** (e.g., solo-dev consumer) — single-tier vision
-  - **Multi-service platform** (e.g., team-based consumer) — multi-tier vision, per-service триггеры, inbox, ADR
+- Примеры консьюмеров: single-developer project (single-tier vision) · multi-service platform (multi-tier, per-service триггеры, inbox, ADR).
