@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.32.0 — feat: skill-capture detector — авто-напоминание фиксировать наработки в /skill (2026-07-02)
+
+**Приоритет:** 🟡 MEDIUM (закрывает P-001: агент по полдня переоткрывает уже решённое — «как деплоить/подключаться», «эта изоляция api никогда не строилась»)
+
+**Проблема:** `/skill` (капитализация наработок в `.claude/skills/<name>/SKILL.md`) запускался **только если человек вспомнил**. Знание не фиксировалось → новая сессия переоткрывала известное дорогой ценой (canonical: erp Party — полдня на «как деплоить на ai.nexchance.de»; DevOps — «изоляция ai-api никогда не существовала, всё через dev-api»). Actor-burden: капитализация зависела от памяти человека (нарушение Оси 1).
+
+**Consumer-facing changes:**
+- **`templates/.claude/hooks/auto-update-watchdog.template.py`** — новый read-only детектор `check_skill_capture()`: на SessionStart сканирует DEVLOG (`[research:X]`/`[fix:X]`/`[infra:X]`), группирует по домену (префикс слага), и если домен имеет ≥3 находки без покрывающего skill → печатает `💡 Capture-сигнал` в контекст агента (до переоткрытия факта). Top-1 домен за сессию (анти-noise); stopword-фильтр глушит мета-теги методологии (`command`/`plan`/`script`/…). Порог `SKILL_CAPTURE_THRESHOLD=3`. Read-only, non-blocking. Бонус: `_force_utf8_stdout()` защищает ВСЕ print'ы хука от Windows cp1252 crash.
+- **`commands/skill.md`** — Шаг 1 расширен: помимо `[research:X]` тянет **project ground-truth** из `[fix/infra/deploy]` (рабочие команды, «что построено vs план на бумаге», verified paths). Body-шаблон получил секцию `## Ground truth — что реально построено` + **freshness-строку** (снимок устаревает → перечитать при изменении инфры).
+- **`commands/code.md`** — Шаг 7 получил лёгкий **capture-nudge**: если агент в сессии переоткрыл уже известный факт → одна строка «зафиксировать в /skill?» (opt-out). Комплемент хуку: хук ловит накопленный сигнал из DEVLOG, nudge — in-session переоткрытие.
+
+**Actions (consumer):** ничего — доставка через `/push-consumers` (maintainer). После sync хук начнёт печатать `💡` при накоплении. Опционально: отключить весь хук через `CLAUDE.local.md ## Auto-update → enabled: false` (не рекомендуется).
+
 ## v7.31.0 — fix: bootstrap/sync skills-mirror drift (2026-07-02)
 
 **Приоритет:** 🟡 MEDIUM (freshly bootstrapped проекты были без Skills discovery в VSCode до первого sync)

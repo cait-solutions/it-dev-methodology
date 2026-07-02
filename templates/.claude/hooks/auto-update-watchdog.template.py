@@ -22,6 +22,10 @@ SessionStart hook — methodology drift DETECTOR (read-only).
 - enabled (default: true) — выключить hook целиком
 - methodology_path (default: ../it-dev-methodology) — где искать клон для version-сравнения
 
+Плюс read-only детектор capture-наработок (check_skill_capture): домен с ≥3
+накопленными DEVLOG-находками ([research:X]/[fix:X]/[infra:X]) без покрывающего
+skill → напоминание «зафиксируй в /skill» на старте сессии (до переоткрытия факта).
+
 Wired в .claude/settings.json под "hooks.SessionStart".
 Output попадает в системный prompt агента.
 """
@@ -35,6 +39,19 @@ DEFAULTS = {
     "enabled": True,
     "methodology_path": "../it-dev-methodology",
 }
+
+# Порог: сколько DEVLOG-находок в домене без skill → напоминание. Read-only сигнал.
+SKILL_CAPTURE_THRESHOLD = 3
+
+# Generic-префиксы = механика методологии/процесса, НЕ проектные домены знаний.
+# Их накопление ([fix:command-X], [fix:plan-Y]) не значит «нужен skill» — это шум.
+# Фильтр держит реальные домены (party, explore, scraping) и глушит мета-теги.
+SKILL_CAPTURE_STOPWORDS = frozenset({
+    "command", "plan", "code", "review", "deploy", "sync", "hook", "doc",
+    "docs", "test", "maps", "map", "gap", "gaps", "retro", "ci", "no", "misc",
+    "process", "infra", "state", "config", "meta", "fix", "chore", "refactor",
+    "script", "scripts", "validator", "template", "templates", "version",
+})
 
 
 def parse_config(claude_local_path: Path) -> dict:
@@ -144,7 +161,105 @@ def check_hook_health(project_root: Path) -> None:
         )
 
 
+def _resolve_devlog(project_root: Path) -> Path | None:
+    """DEVLOG живёт в cwd (single-repo consumer) ИЛИ в doc-repo (two-repo).
+    Порядок: DEVLOG.md рядом с cwd → иначе doc_repo_path из CLAUDE.local.md.
+    None если не найден (graceful — детектор молчит)."""
+    local = project_root / "DEVLOG.md"
+    if local.is_file():
+        return local
+    claude_local = project_root / "CLAUDE.local.md"
+    if not claude_local.is_file():
+        return None
+    try:
+        text = claude_local.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return None
+    m = re.search(r"^\s*doc_repo_path\s*:\s*(.+?)\s*$", text, re.MULTILINE)
+    if not m:
+        return None
+    raw = m.group(1).strip().strip('"').strip("'")
+    if raw.lower() in ("null", "none", ""):
+        return None
+    candidate = (project_root / raw / "DEVLOG.md").resolve()
+    return candidate if candidate.is_file() else None
+
+
+def check_skill_capture(project_root: Path) -> None:
+    """Детектор capture-наработок (read-only): домен с ≥THRESHOLD накопленными
+    DEVLOG-находками без покрывающего skill → напоминание зафиксировать в /skill.
+
+    WHY (closes P-001, класс «знание не капитализируется — новая сессия
+    переоткрывает уже решённое»): erp Party (полдня на «как деплоить/проверять»)
+    + DevOps («изоляция api никогда не строилась — всё через dev-api»). `/skill`
+    существует, но запускается только если человек ВСПОМНИЛ. Структурный сигнал
+    (счётный: N находок домена без skill) → L3 hook, а не L6 self-assessment.
+
+    Домен = префикс слага до первого '-' ([fix:party-role-ssot] → 'party').
+    Печатает максимум ОДИН top-домен за сессию (анти-warning-fatigue). Non-blocking.
+    """
+    devlog = _resolve_devlog(project_root)
+    if devlog is None:
+        return
+    try:
+        text = devlog.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return
+
+    # Находки, несущие domain-слаг: research (что изучено) + fix/infra (что построено).
+    counts: dict[str, int] = {}
+    for m in re.finditer(r"\[(?:research|fix|infra):([a-z0-9]+(?:-[a-z0-9]+)*)\]", text):
+        slug = m.group(1)
+        domain = slug.split("-", 1)[0]
+        if len(domain) < 3:  # слишком короткие префиксы шумны — пропустить
+            continue
+        if domain in SKILL_CAPTURE_STOPWORDS:  # мета-теги методологии — не домен знаний
+            continue
+        counts[domain] = counts.get(domain, 0) + 1
+
+    if not counts:
+        return
+
+    skills_dir = project_root / ".claude" / "skills"
+    existing_skills: set[str] = set()
+    if skills_dir.is_dir():
+        existing_skills = {p.name.lower() for p in skills_dir.iterdir() if p.is_dir()}
+
+    # Домен покрыт если есть skill с совпадающим/содержащим именем домена.
+    candidates = {
+        d: n for d, n in counts.items()
+        if n >= SKILL_CAPTURE_THRESHOLD
+        and not any(d in s or s in d for s in existing_skills)
+    }
+    if not candidates:
+        return
+
+    # top-1: больше всего накопленных находок (при равенстве — алфавит для детерминизма).
+    domain, count = max(candidates.items(), key=lambda kv: (kv[1], kv[0]))
+    print(
+        f"💡 Capture-сигнал: домен «{domain}» имеет {count} накопленных находок в DEVLOG "
+        f"([research/fix/infra]) без покрывающего skill.\n"
+        f"   Знание не зафиксировано → следующая сессия рискует переоткрывать уже решённое.\n"
+        f"   Рекомендация: предложи пользователю запустить `/skill` по домену «{domain}» "
+        f"(рабочие команды / ground-truth / что построено vs план).\n"
+        f"   Read-only сигнал; порог {SKILL_CAPTURE_THRESHOLD} находок (не блокирует)."
+    )
+
+
+def _force_utf8_stdout() -> None:
+    """Windows-консоль по умолчанию cp1252 → emoji/кириллица в print() роняют
+    хук (UnicodeEncodeError). Все ветки этого хука печатают emoji (⚠️/🔧/💡/ℹ️),
+    поэтому переключаем stdout на UTF-8 один раз в main(). errors=replace —
+    graceful даже если reconfigure недоступен на экзотической платформе.
+    (closes Windows/cp1252 execution-context класс, /plan Шаг 98 #7)"""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError, OSError):
+        pass
+
+
 def main() -> int:
+    _force_utf8_stdout()
     project_root = Path.cwd()
     claude_local = project_root / "CLAUDE.local.md"
     version_file = project_root / ".claude" / ".version"
@@ -155,6 +270,9 @@ def main() -> int:
 
     # Drift detector — независим, запускается каждый SessionStart. Read-only.
     check_hook_health(project_root)
+
+    # Capture-детектор — накопленные наработки без skill. Read-only.
+    check_skill_capture(project_root)
 
     # BOOTSTRAP detect — нет .claude/.version, методология не инициализирована
     if not version_file.is_file():
