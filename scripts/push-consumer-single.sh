@@ -182,6 +182,27 @@ N_FILES=$(echo "$COMMIT_PATHS" | grep -c . )
 echo "  ✅ commit: '$MSG' (${N_FILES} файлів)"
 
 # ---------------------------------------------------------------------------
+# 4.5. Branch equality guard — closes the class this script shared with G-134
+#      (deploy-push.sh: hardcoded agent_branch pushed the wrong worktree's branch;
+#      here: BRANCH is caller-supplied from the whitelist, but nothing verified the
+#      consumer repo is actually checked out on it). Same fix shape as G-134 — ask
+#      git for ground truth instead of trusting the config — but this is an
+#      EQUALITY check, not "furthest ahead" detection: there's exactly one expected
+#      branch and one actual branch per consumer, not several candidates to rank.
+#      A consumer accidentally left on a feature/experiment branch would otherwise
+#      silently push that branch's HEAD to the whitelist's target name.
+# ---------------------------------------------------------------------------
+ACTUAL_BRANCH="$(git -C "$CONSUMER_PATH" branch --show-current 2>/dev/null)"
+if [ -z "$ACTUAL_BRANCH" ]; then
+  echo "  ❌ $CONSUMER_NAME: detached HEAD — expected branch '$BRANCH', push пропущено. Переключись на '$BRANCH' і повтори." >&2
+  exit 1
+elif [ "$ACTUAL_BRANCH" != "$BRANCH" ]; then
+  echo "  ❌ $CONSUMER_NAME: checked out на '$ACTUAL_BRANCH', очікувалась '$BRANCH' — push пропущено (не форсуємо чужу роботу)." >&2
+  echo "     Розберись вручну: git -C \"$CONSUMER_PATH\" checkout $BRANCH" >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
 # 5. gh-account check (closes P-012 / P-013 / domain:git-push)
 #    Reads EXPLICIT gh_account from CLAUDE.local.md whitelist — not URL-derived.
 #    This is the step that was bypassed when logic was inline in push-consumers.md.
