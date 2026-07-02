@@ -110,6 +110,11 @@ inject_skill_banner() {
   sed "s/{{SYNCED_AT}}/$SYNCED_AT/g" "$src" > "$dest"
 }
 
+# inject_cmd_as_skill / generate_command_skills: shared with sync-methodology.sh
+# via lib/skills-mirror.sh (single source of truth — closes bootstrap/sync drift).
+# shellcheck source=scripts/lib/skills-mirror.sh
+. "$METHODOLOGY_DIR/scripts/lib/skills-mirror.sh"
+
 # ---------------------------------------------------------------------------
 # Slash commands.
 #
@@ -123,6 +128,18 @@ for cmd in "$METHODOLOGY_DIR"/commands/*.md; do
   inject_md_banner "$cmd" "$TARGET_DIR/.claude/commands/$name"
   echo "  ✓ $name"
 done
+
+# ---------------------------------------------------------------------------
+# Commands-as-skills: mirror every command to .claude/skills/<name>/SKILL.md so
+# it appears in the Claude Code VSCode autocomplete as a discoverable slash command.
+# Unconditional — matches sync-methodology.sh's always-on behavior (v7.31.0+), so a
+# freshly bootstrapped project has the same .claude/skills/ command-mirror state as
+# one that has already run sync-methodology.sh once. include_local=false: bootstrap
+# deliberately never delivers commands-local/ (see NOTE above) — that stays sync-only
+# (self-apply / commands_profile: full, resolved from CLAUDE.local.md which doesn't
+# exist yet at this point in bootstrap).
+# ---------------------------------------------------------------------------
+generate_command_skills "$TARGET_DIR" "$METHODOLOGY_DIR" "false"
 
 # ---------------------------------------------------------------------------
 # Agent skeletons (appear once Phase E lands).

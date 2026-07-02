@@ -4,6 +4,19 @@ Consumer migration guide. Каждый milestone = что добавилось +
 
 ---
 
+## v7.31.0 — fix: bootstrap/sync skills-mirror drift (2026-07-02)
+
+**Приоритет:** 🟡 MEDIUM (freshly bootstrapped проекты были без Skills discovery в VSCode до первого sync)
+
+**Происхождение:** `new-project-init.sh` никогда не генерировал `.claude/skills/<command>/SKILL.md` mirror — только `sync-methodology.sh` делал это, безусловно на каждом запуске. Consumer сразу после bootstrap не видел ни одной команды как Skill в VSCode autocomplete, пока не запускал `sync-methodology.sh` вручную. Обнаружено при инициализации нового consumer-проекта: `--with-marketing` флаг вводил в заблуждение (казалось что управляет ВСЕМИ skills, на деле — только 17 маркетинговыми).
+
+**Consumer-facing changes:**
+- **`scripts/lib/skills-mirror.sh`** (новый, + `templates/scripts/lib/skills-mirror.sh`) — вынесенная общая функция `generate_command_skills()` + `inject_cmd_as_skill()`, единый источник правды для commands-as-skills mirror. Заменяет задублированную inline-логику в `sync-methodology.sh`.
+- **`scripts/new-project-init.sh`** — теперь безусловно вызывает `generate_command_skills()` сразу после копирования `commands/` (без флага, `include_local=false`). Bootstrap с первого раза даёт то же состояние `.claude/skills/` command-mirror, что и после первого `sync-methodology.sh`.
+- **`--with-marketing` флаг** — поведение и имя НЕ изменены в этом релизе (маркетинговые skills остаются opt-in). Это отдельная, не связанная по механизму задача — умышленно не тронута (adversarial review при планировании отклонил rename как scope creep).
+
+**Actions (consumer):** ничего — новый `new-project-init.sh` применяется только maintainer'ом при bootstrap **новых** проектов. Существующие consumers уже получили полное покрытие через прошлые `sync-methodology.sh` запуски — backfill не требуется.
+
 ## v7.29.0 — feat: read-grounding gate (S-1) + /ux-audit + concurrent ID-hazard (SRS upstream) (2026-07-01)
 
 **Приоритет:** 🟠 HIGH (закрывает assumption-gap класс, recurrence 1.0 на инстансе-источнике: `/plan` систематически строил архитектуру на непроверенном предположении о коде)
