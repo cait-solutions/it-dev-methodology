@@ -97,17 +97,26 @@ fi
 # ---------------------------------------------------------------------------
 # Auto-pull: keep methodology up to date before syncing.
 # Skipped for self-apply (methodology IS the source).
+# Targets the CURRENT branch, not a hardcoded "main" — delivery model is
+# push-only from the maintainer's own ai-dev checkout (agents never push
+# main; owner merges manually). Hardcoding main silently no-op'd whenever
+# ai-dev was ahead (the normal case) AND never caught a stale local ai-dev
+# behind origin/ai-dev (another session pushed) — that second case was the
+# real bug this fixes, not just the misleading message. (G-134)
 # ---------------------------------------------------------------------------
 if [[ "$IS_SELF_APPLY" == "false" ]]; then
   if git -C "$METHODOLOGY_DIR" rev-parse --git-dir > /dev/null 2>&1; then
     if git -C "$METHODOLOGY_DIR" remote get-url origin > /dev/null 2>&1; then
-      if [[ -z "$(git -C "$METHODOLOGY_DIR" status --porcelain 2>/dev/null)" ]]; then
-        echo "→ Pulling latest methodology from origin/main..."
-        if git -C "$METHODOLOGY_DIR" pull --ff-only --quiet origin main 2>/dev/null; then
+      _current_branch="$(git -C "$METHODOLOGY_DIR" branch --show-current 2>/dev/null)"
+      if [[ -z "$_current_branch" ]]; then
+        echo "  ⚠️  Methodology repo in detached HEAD — skipping auto-pull, syncing from local $VERSION"
+      elif [[ -z "$(git -C "$METHODOLOGY_DIR" status --porcelain 2>/dev/null)" ]]; then
+        echo "→ Pulling latest methodology from origin/$_current_branch..."
+        if git -C "$METHODOLOGY_DIR" pull --ff-only --quiet origin "$_current_branch" 2>/dev/null; then
           VERSION="$(cat "$METHODOLOGY_DIR/VERSION" | tr -d '[:space:]')"
           echo "  ✓ Updated to v$VERSION"
         else
-          echo "  ⚠️  Auto-pull failed — syncing from local $VERSION"
+          echo "  ⚠️  Auto-pull failed — syncing from local $_current_branch v$VERSION"
         fi
       else
         echo "  ⚠️  Methodology repo has local changes — using local $VERSION"
