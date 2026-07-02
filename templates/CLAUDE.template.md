@@ -50,7 +50,7 @@ Operational rules for AI agents. Short form, scan-friendly. For rationale, edge 
 
 **Frontend DOM verification rule:** any task touching `.vue`/`.tsx`/`.jsx`/`.svelte`/`.css`/`.html` — DOM verification required before commit. Three accepted paths: (1) Playwright E2E; (2) screenshot via Claude Code + Read tool with explicit DOM description; (3) explicit skip with written reason. «Wrote code → should work» without one of the three = not complete.
 
-**Onboard update rule:** adding a new slash command / agent / rules file → update `/onboard` in the same commit/PR.
+**Onboard update rule:** adding a new slash command / agent / rules file → update `/onboard` in the same commit/PR. If the new command is a discoverable **audit / strategy variant** (`*-audit`, roadmap/opinion/vision class) → also add it to the `how` router skill's routing table (that skill routes by task-type, so most commands need no edit — only new *entries in the audit/strategy sub-tables* do). Prevents the stale-router-reference class (e.g. a routing table naming a command that no longer exists).
 
 **Skill frontmatter spec compliance rule:** creating/editing `skills/*/SKILL.md` — frontmatter MUST follow [official Anthropic spec](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview). Top-level keys: `name`, `description` (+ optional `metadata`). `description` = **single-line** ≤1024 chars (multi-line `description: |` → broken). `version`/`type`/custom → inside `metadata:`. `name` — lowercase+digits+hyphens, ≤64 chars, no "anthropic"/"claude". Verify with IDE linter before commit. Details: [CLAUDE_LONG.md § Skill frontmatter](CLAUDE_LONG.md).
 
